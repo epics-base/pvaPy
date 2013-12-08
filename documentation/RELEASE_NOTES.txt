@@ -1,0 +1,10 @@
+Release 0.1 (2013/11/13)
+========================
+
+- initial prototype
+- implemented wrappers for generic PV structure (PvObject), PV scalars and
+  scalar arrays
+- implemented PV get/put 
+- implemented RPC client/server
+- initial exception handling
+- uses epics build structure, with some manual configuration steps
