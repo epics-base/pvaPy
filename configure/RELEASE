@@ -1,0 +1,36 @@
+# RELEASE - Location of external support modules
+#
+# IF YOU MAKE ANY CHANGES to this file you must subsequently
+# do a "gnumake rebuild" in this application's top level
+# directory.
+#
+# The build process does not check dependencies against files
+# that are outside this application, thus you should do a
+# "gnumake rebuild" in the top level directory after EPICS_BASE
+# or any other external module pointed to below is rebuilt.
+#
+# Host- or target-specific settings can be given in files named
+#  RELEASE.$(EPICS_HOST_ARCH).Common
+#  RELEASE.Common.$(T_A)
+#  RELEASE.$(EPICS_HOST_ARCH).$(T_A)
+#
+# This file should ONLY define paths to other support modules,
+# or include statements that pull in similar RELEASE files.
+# Build settings that are NOT module paths should appear in a
+# CONFIG_SITE file.
+include $(TOP)/configure/RELEASE.local
+
+#TEMPLATE_TOP=$(EPICS_BASE)/templates/makeBaseApp/top
+
+PVDATA=$(EPICS4_DIR)/pvDataCPP
+PVCOMMON=$(EPICS4_DIR)/pvCommonCPP
+PVACCESS=$(EPICS4_DIR)/pvAccessCPP
+BOOST=$(BOOST_DIR)
+PYTHON=$(PYTHON_DIR)
+
+# EPICS_BASE usually appears last so other apps can override stuff:
+#EPICS_BASE=
+
+# Set RULES here if you want to take build rules from somewhere
+# other than EPICS_BASE:
+#RULES=/path/to/epics/support/module/rules/x-y

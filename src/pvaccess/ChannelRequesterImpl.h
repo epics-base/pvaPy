@@ -1,0 +1,28 @@
+#ifndef CHANNEL_REQUESTER_IMPL_H
+#define CHANNEL_REQUESTER_IMPL_H
+
+#include <pv/event.h>
+#include <pv/pvData.h>
+#include <pv/pvAccess.h>
+
+#include <string>
+
+class ChannelRequesterImpl : public epics::pvAccess::ChannelRequester
+{
+private:
+    epics::pvData::Event event;
+    bool printOnlyErrors;
+    
+public:
+
+    ChannelRequesterImpl(bool printOnlyErrors = false);
+
+    virtual epics::pvData::String getRequesterName();
+    virtual void message(const epics::pvData::String& message, epics::pvData::MessageType messageType);
+    virtual void channelCreated(const epics::pvData::Status& status, const epics::pvAccess::Channel::shared_pointer& channel);
+    virtual void channelStateChange(const epics::pvAccess::Channel::shared_pointer& channel, epics::pvAccess::Channel::ConnectionState connectionState);
+    
+    bool waitUntilConnected(double timeOut);
+};
+
+#endif

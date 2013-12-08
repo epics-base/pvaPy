@@ -1,0 +1,11 @@
+^QtC-
+^bin/
+^lib/
+^doc/
+^include/
+^db/
+^dbd/
+^documentation/html
+envPaths
+configure/.*\.local
+/O\..*
