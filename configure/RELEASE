@@ -18,18 +18,13 @@
 # or include statements that pull in similar RELEASE files.
 # Build settings that are NOT module paths should appear in a
 # CONFIG_SITE file.
-include $(TOP)/configure/RELEASE.local
+-include $(TOP)/configure/RELEASE.local
 
-#TEMPLATE_TOP=$(EPICS_BASE)/templates/makeBaseApp/top
 
 PVDATA=$(EPICS4_DIR)/pvDataCPP
 PVCOMMON=$(EPICS4_DIR)/pvCommonCPP
 PVACCESS=$(EPICS4_DIR)/pvAccessCPP
 BOOST=$(BOOST_DIR)
-PYTHON=$(PYTHON_DIR)
-
-# EPICS_BASE usually appears last so other apps can override stuff:
-#EPICS_BASE=
 
 # Set RULES here if you want to take build rules from somewhere
 # other than EPICS_BASE:

@@ -1,3 +1,10 @@
+Release 0.2 
+========================
+
+- automated build configuration (RELEASE.local and user setup scripts 
+  can be generated automatically using autoconf scripts, which also check
+  for required libraries)
+
 Release 0.1 (2013/11/13)
 ========================
 
