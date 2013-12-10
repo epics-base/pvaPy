@@ -40,7 +40,7 @@ distclean:
 tidy: distclean
 	rm -f setup.sh
 	rm -f setup.csh
-	rm -f tools/autoconf/configure
+	cd tools/autoconf && rm -f configure install-sh
 
 .PHONY: configure 
 
