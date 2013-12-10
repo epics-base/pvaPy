@@ -9,4 +9,5 @@
 envPaths
 configure/.*\.local
 /O\..*
-setup.*
+setup\..*
+tools/autoconf/config.log
