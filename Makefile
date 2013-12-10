@@ -35,7 +35,7 @@ distclean:
 	rm -rf lib
 	rm -rf src/pvaccess/O.*
 	rm -f configure/RELEASE.local
-	cd tools/autoconf && rm -rf autom4te.cache aclocal.m4 config.log config.status install-sh missing Makefile Makefile.in 
+	cd tools/autoconf && rm -rf autom4te.cache aclocal.m4 config.log config.status missing Makefile Makefile.in 
 
 tidy: distclean
 	rm -f setup.sh
