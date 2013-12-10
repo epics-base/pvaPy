@@ -1,6 +1,8 @@
 #include "ChannelMonitorRequesterImpl.h"
 
-MonitorRequesterImpl::MonitorRequesterImpl(const std::string& channelName_) : channelName(channelName_) 
+MonitorRequesterImpl::MonitorRequesterImpl(const std::string& channelName_, const boost::python::object& pyMonitor_) : 
+    channelName(channelName_),
+    pyMonitor(pyMonitor_),
 {
 }
 
@@ -35,8 +37,10 @@ void MonitorRequesterImpl::monitorEvent(const epics::pvData::Monitor::shared_poi
 {
     epics::pvData::MonitorElement::shared_pointer element;
     while (element = monitor->poll()) {
-            epics::pvData::PVField::shared_pointer value = element->pvStructurePtr->getSubField("value");
-			monitor->release(element);
+        epics::pvData::PVField::shared_pointer value = element->pvStructurePtr->getSubField("value");
+        PvObject pvObject(value);
+        pyMonitor(pvObject);
+        monitor->release(element);
     }
 }
 

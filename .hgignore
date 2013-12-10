@@ -9,3 +9,4 @@
 envPaths
 configure/.*\.local
 /O\..*
+setup.*
