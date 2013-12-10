@@ -1,27 +1,27 @@
 #include "ChannelMonitorRequesterImpl.h"
 #include "PvObject.h"
 
-MonitorRequesterImpl::MonitorRequesterImpl(const std::string& channelName_, const boost::python::object& pyMonitor_) : 
+ChannelMonitorRequesterImpl::ChannelMonitorRequesterImpl(const std::string& channelName_, const boost::python::object& pyMonitor_) : 
     channelName(channelName_),
     pyMonitor(pyMonitor_)
 {
 }
 
-MonitorRequesterImpl::~MonitorRequesterImpl()
+ChannelMonitorRequesterImpl::~ChannelMonitorRequesterImpl()
 {
 }
 
-std::string MonitorRequesterImpl::getRequesterName() const
+std::string ChannelMonitorRequesterImpl::getRequesterName() const
 {
-    return "MonitorRequesterImpl";
+    return "ChannelMonitorRequesterImpl";
 }
 
-void MonitorRequesterImpl::message(const std::string& message, epics::pvData::MessageType messageType)
+void ChannelMonitorRequesterImpl::message(const std::string& message, epics::pvData::MessageType messageType)
 {
     std::cerr << "[" << getRequesterName() << "] message(" << message << ", " << getMessageTypeName(messageType) << ")" << std::endl;
 }
 
-void MonitorRequesterImpl::monitorConnect(const epics::pvData::Status& status, const epics::pvData::Monitor::shared_pointer& monitor, const epics::pvData::StructureConstPtr&) 
+void ChannelMonitorRequesterImpl::monitorConnect(const epics::pvData::Status& status, const epics::pvData::Monitor::shared_pointer& monitor, const epics::pvData::StructureConstPtr&) 
 {
     if (status.isSuccess()) {
         epics::pvData::Status startStatus = monitor->start();
@@ -34,7 +34,7 @@ void MonitorRequesterImpl::monitorConnect(const epics::pvData::Status& status, c
     }
 }
 
-void MonitorRequesterImpl::monitorEvent(const epics::pvData::Monitor::shared_pointer& monitor)
+void ChannelMonitorRequesterImpl::monitorEvent(const epics::pvData::Monitor::shared_pointer& monitor)
 {
     epics::pvData::MonitorElement::shared_pointer element;
     while (element = monitor->poll()) {
@@ -44,7 +44,7 @@ void MonitorRequesterImpl::monitorEvent(const epics::pvData::Monitor::shared_poi
     }
 }
 
-void MonitorRequesterImpl::unlisten(const epics::pvData::Monitor::shared_pointer&)
+void ChannelMonitorRequesterImpl::unlisten(const epics::pvData::Monitor::shared_pointer&)
 {
 }
 

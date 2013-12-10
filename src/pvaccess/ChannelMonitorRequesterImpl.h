@@ -1,5 +1,5 @@
-#ifndef MONITOR_REQUESTER_IMPL_H
-#define MONITOR_REQUESTER_IMPL_H
+#ifndef CHANNEL_MONITOR_REQUESTER_IMPL_H
+#define CHANNEL_MONITOR_REQUESTER_IMPL_H
 
 #include <string>
 #include "pv/pvData.h"
@@ -7,11 +7,11 @@
 #include "PvaClient.h"
 #include "boost/python/object.hpp"
 
-class MonitorRequesterImpl : public epics::pvData::MonitorRequester
+class ChannelMonitorRequesterImpl : public epics::pvData::MonitorRequester
 {
 public:
-    MonitorRequesterImpl(const std::string& channelName, const boost::python::object& pyMonitor);
-    virtual ~MonitorRequesterImpl();
+    ChannelMonitorRequesterImpl(const std::string& channelName, const boost::python::object& pyMonitor);
+    virtual ~ChannelMonitorRequesterImpl();
     virtual std::string getRequesterName() const;
     virtual void message(const std::string& message, epics::pvData::MessageType messageType);
     virtual void monitorConnect(const epics::pvData::Status& status, const epics::pvData::Monitor::shared_pointer& monitor, const epics::pvData::StructureConstPtr& pvStructurePtr);
@@ -23,4 +23,4 @@ private:
     boost::python::object pyMonitor;
 };
 
-#endif // MONITOR_REQUESTER_IMPL_H
+#endif // CHANNEL_MONITOR_REQUESTER_IMPL_H
