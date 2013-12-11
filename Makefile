@@ -1,5 +1,6 @@
 TOP = .
 RELEASE_LOCAL = $(TOP)/configure/RELEASE.local
+CONFIG_SITE_LOCAL = $(TOP)/configure/CONFIG_SITE.local
 
 # Check for configure/distclean targets 
 ifeq ($(filter $(MAKECMDGOALS),configure distclean),)
@@ -8,7 +9,7 @@ ifeq ($(filter $(MAKECMDGOALS),configure distclean),)
 ifeq ($(wildcard $(RELEASE_LOCAL)),)
 
 all %:
-		@echo "File $(RELEASE_LOCAL) does not exist. Please create this file manually, or by running:"
+		@echo "File $(RELEASE_LOCAL) does not exist. Please create both $(RELEASE_LOCAL) and $(CONFIG_SITE_LOCAL) manually, or by running:"
 		@echo ""
 		@echo "  EPICS_BASE=<path> EPICS4_DIR=<path> make configure"
 		@echo ""
@@ -25,16 +26,18 @@ endif # ifeq ($(wildcard $(RELEASE_LOCAL)),)
 endif # ifeq ($(filter $(MAKECMDGOALS),configure distclean),)
 
 configure: tools/autoconf/configure
-	@if [ -f $(RELEASE_LOCAL) ]; then echo "File $(RELEASE_LOCAL) already exists. Please remove it if you would like to reconfigure pvaPy build."; exit 1; fi
+	@if [ -f $(RELEASE_LOCAL) ]; then echo "File $(RELEASE_LOCAL) already exists. Please remove both $(RELEASE_LOCAL) and $(CONFIG_SITE_LOCAL) if you would like to reconfigure pvaPy build."; exit 1; fi
+	@if [ -f $(CONFIG_SITE_LOCAL) ]; then echo "File $(CONFIG_SITE_LOCAL) already exists. Please remove both $(RELEASE_LOCAL) and $(CONFIG_SITE_LOCAL) if you would like to reconfigure pvaPy build."; exit 1; fi
 	cd tools/autoconf && ./configure
 
-bootstrap tools/autoconf/configure:
+bootstrap tools/autoconf/configure: tools/autoconf/configure.ac $(wildcard tools/autoconf/m4/*.m4)
 	cd tools/autoconf && autoreconf --install 
 
 distclean: 
 	rm -rf lib
 	rm -rf src/pvaccess/O.*
 	rm -f configure/RELEASE.local
+	rm -f configure/CONFIG_SITE.local
 	cd tools/autoconf && rm -rf autom4te.cache aclocal.m4 config.log config.status missing Makefile Makefile.in 
 
 tidy: distclean

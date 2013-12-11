@@ -24,7 +24,6 @@
 PVDATA=$(EPICS4_DIR)/pvDataCPP
 PVCOMMON=$(EPICS4_DIR)/pvCommonCPP
 PVACCESS=$(EPICS4_DIR)/pvAccessCPP
-BOOST=$(BOOST_DIR)
 
 # Set RULES here if you want to take build rules from somewhere
 # other than EPICS_BASE:

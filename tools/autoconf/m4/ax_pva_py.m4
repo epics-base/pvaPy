@@ -35,6 +35,15 @@ AC_DEFUN([AX_PVA_PY],
         AC_MSG_RESULT([no])
     fi
 
+    config_site_local=$PVA_PY_TOP/configure/CONFIG_SITE.local
+    AC_MSG_CHECKING(for existing pvaPy $config_site_local file)
+    if test -f $config_site_local; then
+        AC_MSG_RESULT([yes])
+        AC_MSG_ERROR(you must remove existing $config_site_local file in order to recreate pvaPy configuration)
+    else
+        AC_MSG_RESULT([no])
+    fi
+
     # check for boost libraries
     AC_MSG_CHECKING(for boost)
     if test -z $BOOST_DIR; then
@@ -86,15 +95,17 @@ AC_DEFUN([AX_PVA_PY],
     fi
 
     # create RELEASE.local
-    echo "EPICS_BASE=$EPICS_BASE" >> $release_local
     echo "EPICS4_DIR=$EPICS4_DIR" >> $release_local
-    echo "EPICS_HOST_ARCH=$EPICS_HOST_ARCH" >> $release_local
-    echo "BOOST_DIR=$BOOST_DIR" >> $release_local
-    echo "BOOST_PYTHON_LIB=$BOOST_PYTHON_LIB" >> $release_local
-    echo "PVA_PY_CPPFLAGS=$BOOST_CPPFLAGS $PYTHON_CPPFLAGS" >> $release_local
-    echo "PVA_PY_LDFLAGS=$BOOST_LDFLAGS $PYTHON_LDFLAGS" >> $release_local
-
+    echo "EPICS_BASE=$EPICS_BASE" >> $release_local
     AC_MSG_NOTICE([created $release_local file])
+
+    # create CONFIG_SITE.local
+    echo "EPICS_HOST_ARCH=$EPICS_HOST_ARCH" >> $config_site_local
+    echo "BOOST_PYTHON_LIB=$BOOST_PYTHON_LIB" >> $config_site_local
+    echo "PVA_PY_CPPFLAGS=$BOOST_CPPFLAGS $PYTHON_CPPFLAGS" >> $config_site_local
+    echo "PVA_PY_LDFLAGS=$BOOST_LDFLAGS $PYTHON_LDFLAGS" >> $config_site_local
+    AC_MSG_NOTICE([created $config_site_local file])
+
     
     # create setup.sh
     setup_sh=$PVA_PY_TOP/setup.sh

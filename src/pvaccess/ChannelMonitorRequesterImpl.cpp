@@ -3,7 +3,9 @@
 
 ChannelMonitorRequesterImpl::ChannelMonitorRequesterImpl(const std::string& channelName_, const boost::python::object& pyMonitor_) : 
     channelName(channelName_),
-    pyMonitor(pyMonitor_)
+    pyMonitor(pyMonitor_),
+    monitorMap(),
+    monitorMutex()
 {
 }
 
@@ -46,6 +48,17 @@ void ChannelMonitorRequesterImpl::monitorEvent(const epics::pvData::Monitor::sha
 
 void ChannelMonitorRequesterImpl::unlisten(const epics::pvData::Monitor::shared_pointer&)
 {
+}
+
+void ChannelMonitorRequesterImpl::registerMonitor(const std::string& monitorName, const boost::python::object& pyMonitor)
+{
+    epics::pvData::Lock lock(monitorMutex);
+    monitorMap[monitorName] = pyMonitor;
+}
+
+void ChannelMonitorRequesterImpl::unregisterMonitor(const std::string& monitorName)
+{
+    epics::pvData::Lock lock(monitorMutex);
 }
 
 

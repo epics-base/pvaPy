@@ -2,6 +2,7 @@
 #define CHANNEL_MONITOR_REQUESTER_IMPL_H
 
 #include <string>
+#include <map>
 #include "pv/pvData.h"
 #include "pv/pvAccess.h"
 #include "PvaClient.h"
@@ -18,9 +19,14 @@ public:
     virtual void monitorEvent(const epics::pvData::Monitor::shared_pointer& monitor);
     virtual void unlisten(const epics::pvData::Monitor::shared_pointer& monitor);
 
+    virtual void registerMonitor(const std::string& monitorName, const boost::python::object& pyMonitor);
+    virtual void unregisterMonitor(const std::string& monitorName);
+
 private:
     std::string channelName;
     boost::python::object pyMonitor;
+    std::map<std::string, boost::python::object> monitorMap;
+    epics::pvData::Mutex monitorMutex;
 };
 
 #endif // CHANNEL_MONITOR_REQUESTER_IMPL_H

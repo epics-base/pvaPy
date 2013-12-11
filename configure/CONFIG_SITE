@@ -31,3 +31,6 @@ CHECK_RELEASE = NO
 # You must rebuild in the iocBoot directory for this to
 #   take effect.
 #IOCS_APPL_TOP = </IOC/path/to/application/top>
+
+-include $(TOP)/configure/CONFIG_SITE.local
+-include $(TOP)/../CONFIG.local
