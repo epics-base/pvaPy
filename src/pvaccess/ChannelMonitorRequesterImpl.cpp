@@ -1,10 +1,17 @@
 #include "ChannelMonitorRequesterImpl.h"
 #include "PvObject.h"
+#include "ObjectNotFound.h"
 
-ChannelMonitorRequesterImpl::ChannelMonitorRequesterImpl(const std::string& channelName_, const boost::python::object& pyMonitor_) : 
+ChannelMonitorRequesterImpl::ChannelMonitorRequesterImpl(const std::string& channelName_) : 
     channelName(channelName_),
-    pyMonitor(pyMonitor_),
     monitorMap(),
+    monitorMutex()
+{
+}
+
+ChannelMonitorRequesterImpl::ChannelMonitorRequesterImpl(const ChannelMonitorRequesterImpl& channelMonitor) : 
+    channelName(channelMonitor.channelName),
+    monitorMap(channelMonitor.monitorMap),
     monitorMutex()
 {
 }
@@ -13,7 +20,7 @@ ChannelMonitorRequesterImpl::~ChannelMonitorRequesterImpl()
 {
 }
 
-std::string ChannelMonitorRequesterImpl::getRequesterName() const
+std::string ChannelMonitorRequesterImpl::getRequesterName() 
 {
     return "ChannelMonitorRequesterImpl";
 }
@@ -41,7 +48,17 @@ void ChannelMonitorRequesterImpl::monitorEvent(const epics::pvData::Monitor::sha
     epics::pvData::MonitorElement::shared_pointer element;
     while (element = monitor->poll()) {
         PvObject pvObject(element->pvStructurePtr);
-        pyMonitor(pvObject);
+        std::map<std::string,boost::python::object>::iterator iter;
+        for (iter = monitorMap.begin(); iter != monitorMap.end(); iter++) {
+            std::string monitorName = iter->first;
+            boost::python::object pyMonitor = iter->second;
+            try {
+                pyMonitor(pvObject);
+            }
+            catch(const std::exception& ex) {
+                    std::cerr << "Error for monitor " << monitorName << ": " << ex.what();
+            }
+        }
         monitor->release(element);
     }
 }
@@ -59,6 +76,11 @@ void ChannelMonitorRequesterImpl::registerMonitor(const std::string& monitorName
 void ChannelMonitorRequesterImpl::unregisterMonitor(const std::string& monitorName)
 {
     epics::pvData::Lock lock(monitorMutex);
+    std::map<std::string,boost::python::object>::const_iterator iterator = monitorMap.find(monitorName);
+    if (iterator == monitorMap.end()) {
+        throw ObjectNotFound("Monitor " + monitorName + " is not registered.");
+    }
+    monitorMap.erase(monitorName);
 }
 
 

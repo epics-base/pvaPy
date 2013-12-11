@@ -11,9 +11,11 @@
 class ChannelMonitorRequesterImpl : public epics::pvData::MonitorRequester
 {
 public:
-    ChannelMonitorRequesterImpl(const std::string& channelName, const boost::python::object& pyMonitor);
+    POINTER_DEFINITIONS(ChannelMonitorRequesterImpl);
+    ChannelMonitorRequesterImpl(const std::string& channelName);
+    ChannelMonitorRequesterImpl(const ChannelMonitorRequesterImpl& channelMonitor);
     virtual ~ChannelMonitorRequesterImpl();
-    virtual std::string getRequesterName() const;
+    virtual std::string getRequesterName();
     virtual void message(const std::string& message, epics::pvData::MessageType messageType);
     virtual void monitorConnect(const epics::pvData::Status& status, const epics::pvData::Monitor::shared_pointer& monitor, const epics::pvData::StructureConstPtr& pvStructurePtr);
     virtual void monitorEvent(const epics::pvData::Monitor::shared_pointer& monitor);
@@ -24,7 +26,6 @@ public:
 
 private:
     std::string channelName;
-    boost::python::object pyMonitor;
     std::map<std::string, boost::python::object> monitorMap;
     epics::pvData::Mutex monitorMutex;
 };
