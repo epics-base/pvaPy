@@ -24,6 +24,7 @@ public:
     virtual void unlisten(const epics::pvData::Monitor::shared_pointer& monitor);
 
     virtual PvObject getQueuedPvObject(double timeout) throw(ChannelTimeout);
+    virtual void cancelGetQueuedPvObject();
 
 private:
     std::string channelName;

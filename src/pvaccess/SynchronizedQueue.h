@@ -19,6 +19,7 @@ public:
     void pop();
     void push(const T& t);
     void waitForItem(double timeout);
+    void cancelWaitForItem();
 private:
     void throwInvalidStateIfEmpty() throw(InvalidState);
     T frontAndPopUnsynchronized();
@@ -115,6 +116,12 @@ template <class T>
 void SynchronizedQueue<T>::waitForItem(double timeout) 
 {
     event.wait(timeout);
+}
+
+template <class T>
+void SynchronizedQueue<T>::cancelWaitForItem() 
+{
+    event.signal();
 }
 
 #endif

@@ -133,24 +133,49 @@ void Channel::unsubscribe(const std::string& subscriberName)
 void Channel::callSubscribers(PvObject& pvObject)
 {
     epics::pvData::Lock lock(subscriberMutex);
+
     std::map<std::string,boost::python::object>::iterator iter;
     for (iter = subscriberMap.begin(); iter != subscriberMap.end(); iter++) {
         std::string subscriberName = iter->first;
         boost::python::object pySubscriber = iter->second;
+
+        // Acquire GIL. This is required because callSubscribers()
+        // is called in a monitoring thread. Before monitoring thread
+        // is created, one must call PyEval_InitThreads() in the main thread
+        // to initialize things properly. If this is not done, code will
+        // most likely crash while invoking python from c++, or while
+        // attempting to release GIL.
+        logger.trace("Acquiring python GIL");
+        PyGILState_STATE gilState = PyGILState_Ensure();
+        logger.trace("Python GIL state: %d", gilState);
+
         try {
             logger.debug("Invoking subscriber: " + subscriberName);
+
+            // Call python code
             pySubscriber(pvObject);
+
         }
-        catch(const std::exception& ex) {
-            logger.error("Channel subscriber " + subscriberName + " error: " + ex.what());
+        catch(const boost::python::error_already_set&) {
+            logger.error("Channel subscriber " + subscriberName + " error");
         }
+
+        // Release GIL. 
+        logger.trace("Releasing python GIL");
+        PyGILState_Release(gilState);
     }
+    logger.trace("Done calling subscribers");
 }
 
 void Channel::startMonitor()
 {
     if (monitorThreadDone) {
         monitorThreadDone = false;
+
+        // One must call PyEval_InitThreads() in the main thread
+        // to initialize thread state, which is needed for proper functioning
+        // of PyGILState_Ensure()/PyGILState_Release().
+        PyEval_InitThreads();
         epics::pvData::PVStructure::shared_pointer pvRequest = epics::pvAccess::getCreateRequest()->createRequest(DEFAULT_REQUEST, requester);
         channel->createMonitor(monitorRequester, pvRequest);
         epicsThreadCreate("ChannelMonitorThread", epicsThreadPriorityLow, epicsThreadGetStackSize(epicsThreadStackSmall), (EPICSTHREADFUNC)monitorThread, this);
@@ -159,6 +184,8 @@ void Channel::startMonitor()
 
 void Channel::stopMonitor()
 {
+    ChannelMonitorRequesterImpl* monitorRequester = getMonitorRequester();
+    monitorRequester->cancelGetQueuedPvObject();
     monitorThreadDone = true;
 }
 

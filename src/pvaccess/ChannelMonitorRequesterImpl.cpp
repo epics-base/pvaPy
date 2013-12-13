@@ -60,7 +60,12 @@ PvObject ChannelMonitorRequesterImpl::getQueuedPvObject(double timeout) throw(Ch
         return pvObjectMonitorQueue.frontAndPop(timeout);
     }
     catch (InvalidState& ex) {
-        throw ChannelTimeout("No PV changes for channel %s received in %f seconds.", channelName.c_str(), timeout);
+        throw ChannelTimeout("No PV changes for channel %s received.", channelName.c_str());
     }
+}
+
+void ChannelMonitorRequesterImpl::cancelGetQueuedPvObject()
+{
+    pvObjectMonitorQueue.cancelWaitForItem();
 }
 
