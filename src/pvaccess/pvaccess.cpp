@@ -294,6 +294,8 @@ BOOST_PYTHON_MODULE(pvaccess)
         .def("put", &Channel::put)
         .def("subscribe", &Channel::subscribe)
         .def("unsubscribe", &Channel::unsubscribe)
+        .def("startMonitor", &Channel::startMonitor)
+        .def("stopMonitor", &Channel::stopMonitor)
         ;
 
     // RPC Client

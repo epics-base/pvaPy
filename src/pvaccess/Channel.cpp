@@ -1,5 +1,6 @@
 #include <iostream>
 #include "Channel.h"
+#include "epicsThread.h"
 #include "ChannelGetRequesterImpl.h"
 #include "ChannelPutRequesterImpl.h"
 #include "GetFieldRequesterImpl.h"
@@ -10,6 +11,7 @@
 #include "InvalidRequest.h"
 #include "ObjectNotFound.h"
 
+PvaPyLogger Channel::logger("Channel");
 PvaClient Channel::pvaClient;
 epics::pvData::Requester::shared_pointer Channel::requester(new RequesterImpl("Channel"));
 epics::pvAccess::ChannelProvider::shared_pointer Channel::provider = epics::pvAccess::getChannelAccess()->getProvider("pva");
@@ -20,7 +22,7 @@ Channel::Channel(const epics::pvData::String& channelName) :
     channelGetRequester(channelName),
     channel(provider->createChannel(channelName, requesterImpl)),
     monitorRequester(new ChannelMonitorRequesterImpl(channelName)),
-    monitorStarted(false),
+    monitorThreadDone(true),
     pvObjectMonitorQueue(),
     subscriberMap(),
     subscriberMutex()
@@ -31,16 +33,16 @@ Channel::Channel(const Channel& c) :
     channelGetRequester(c.channelGetRequester),
     channel(c.channel),
     monitorRequester(c.monitorRequester),
-    monitorStarted(c.monitorStarted),
+    monitorThreadDone(true),
     pvObjectMonitorQueue(),
     subscriberMap(),
     subscriberMutex()
 {
-    //epics::pvAccess::pvAccessSetLogLevel(epics::pvAccess::logLevelAll);
 }
 
 Channel::~Channel()
 {
+    stopMonitor();
     channel->destroy();
 }
  
@@ -106,18 +108,15 @@ void Channel::put(const PvObject& pvObject)
     throw ChannelTimeout("Channel %s put request timed out", channel->getChannelName().c_str());
 }
 
+ChannelMonitorRequesterImpl* Channel::getMonitorRequester()
+{
+    return static_cast<ChannelMonitorRequesterImpl*>(monitorRequester.get());
+}
+
 void Channel::subscribe(const std::string& subscriberName, const boost::python::object& pySubscriber)
 {
     epics::pvData::Lock lock(subscriberMutex);
     subscriberMap[subscriberName] = pySubscriber;
-
-    //ChannelMonitorRequesterImpl* requesterImpl = static_cast<ChannelMonitorRequesterImpl*>(monitorRequester.get());
-    //requesterImpl->subscribe(subscriberName, pySubscriber);
-    if (!monitorStarted) {
-        monitorStarted = true;
-        epics::pvData::PVStructure::shared_pointer pvRequest = epics::pvAccess::getCreateRequest()->createRequest(DEFAULT_REQUEST, requester);
-        channel->createMonitor(monitorRequester, pvRequest);
-    }
 }
 
 void Channel::unsubscribe(const std::string& subscriberName)
@@ -129,4 +128,68 @@ void Channel::unsubscribe(const std::string& subscriberName)
         throw ObjectNotFound("Subscriber " + subscriberName + " is not registered.");
     }
     subscriberMap.erase(subscriberName);
+}
+
+void Channel::callSubscribers(PvObject& pvObject)
+{
+    epics::pvData::Lock lock(subscriberMutex);
+    std::map<std::string,boost::python::object>::iterator iter;
+    for (iter = subscriberMap.begin(); iter != subscriberMap.end(); iter++) {
+        std::string subscriberName = iter->first;
+        boost::python::object pySubscriber = iter->second;
+        try {
+            logger.debug("Invoking subscriber: " + subscriberName);
+            pySubscriber(pvObject);
+        }
+        catch(const std::exception& ex) {
+            logger.error("Channel subscriber " + subscriberName + " error: " + ex.what());
+        }
+    }
+}
+
+void Channel::startMonitor()
+{
+    if (monitorThreadDone) {
+        monitorThreadDone = false;
+        epics::pvData::PVStructure::shared_pointer pvRequest = epics::pvAccess::getCreateRequest()->createRequest(DEFAULT_REQUEST, requester);
+        channel->createMonitor(monitorRequester, pvRequest);
+        epicsThreadCreate("ChannelMonitorThread", epicsThreadPriorityLow, epicsThreadGetStackSize(epicsThreadStackSmall), (EPICSTHREADFUNC)monitorThread, this);
+    }
+}
+
+void Channel::stopMonitor()
+{
+    monitorThreadDone = true;
+}
+
+bool Channel::isMonitorThreadDone() const
+{
+    return monitorThreadDone;
+}
+
+void Channel::monitorThread(Channel* channel)
+{
+    logger.debug("Started monitor thread %s", epicsThreadGetNameSelf());
+    ChannelMonitorRequesterImpl* monitorRequester = channel->getMonitorRequester();
+    while (true) {
+        if (channel->isMonitorThreadDone()) {
+            logger.debug("Monitor thread %s is done", epicsThreadGetNameSelf());
+            break;
+        }
+        
+        // Handle possible exceptions while retrieving data from empty queue.
+        try {
+            PvObject pvObject = monitorRequester->getQueuedPvObject(DEFAULT_TIMEOUT);
+            std::cout << "Got object in monitor: " << pvObject << std::endl;
+            channel->callSubscribers(pvObject);
+        }
+        catch (const ChannelTimeout& ex) {
+            // Ignore, no changes received.
+        }
+        catch (const std::exception& ex) {
+            // Not good.
+            logger.error("Exception caught in monitor thread %s: %s", epicsThreadGetNameSelf(), ex.what());
+        }
+    }
+    logger.debug("Exiting monitor thread %s", epicsThreadGetNameSelf());
 }

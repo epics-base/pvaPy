@@ -35,6 +35,7 @@ pvaccess_SRCS += ObjectNotFound.cpp
 pvaccess_SRCS += PvaClient.cpp
 pvaccess_SRCS += PvaException.cpp
 pvaccess_SRCS += PvaExceptionTranslator.cpp
+pvaccess_SRCS += PvaPyLogger.cpp
 pvaccess_SRCS += PvBoolean.cpp
 pvaccess_SRCS += PvByte.cpp
 pvaccess_SRCS += PvDouble.cpp

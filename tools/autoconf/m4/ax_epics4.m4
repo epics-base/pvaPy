@@ -83,20 +83,20 @@ AC_DEFUN([AX_EPICS4],
         fi
     fi
 
-    # At the moment there is no way of getting epics4 version
     # get epics4 version info
-    #epics4_version_major=`grep EPICS_VERSION $epics4_version_h | head -1 | awk '{print $NF}'`
-    #epics4_version_minor=`grep EPICS_REVISION $epics4_version_h | head -1 | awk '{print $NF}'`
-    #epics4_version_sub_minor=`grep EPICS_MODIFICATION $epics4_version_h | head -1 | awk '{print $NF}'`
-    #epics4_version_patch=`grep EPICS_PATCH_LEVEL $epics4_version_h | head -1 | awk '{print $NF}'`
+    # assume release version is always 4
+    epics4_version_release=4
+    epics4_version_major=`grep EPICS_PVA_MAJOR_VERSION $epics4_version_h | head -1 | awk '{print $NF}'`
+    epics4_version_minor=`grep EPICS_PVA_MINOR_VERSION $epics4_version_h | head -1 | awk '{print $NF}'`
+    epics4_version_maintenance=`grep EPICS_PVA_MAINTENANCE_VERSION $epics4_version_h | head -1 | awk '{print $NF}'`
 
     # test version
     want_epics4_version=`expr $epics4_version_req_major \* 1000000 \+  $epics4_version_req_minor \* 10000 \+ $epics4_version_req_sub_minor \* 100 \+ $epics4_version_req_patch`
-    #have_epics4_version=`expr $epics4_version_major \* 1000000 \+  $epics4_version_minor \* 10000 \+ $epics4_version_sub_minor \* 100 \+ $epics4_version_patch`
-    #if ! test $have_epics4_version -ge $want_epics4_version; then
-    #    AC_MSG_RESULT([no])
-    #    AC_MSG_ERROR("EPICS4 installation in $ac_epics4_dir_path is too old (required: $want_epics4_version, found: $have_epics4_version)")
-    #fi
+    have_epics4_version=`expr $epics4_version_release \* 1000000 \+  $epics4_version_major \* 10000 \+ $epics4_version_minor \* 100 \+ $epics4_version_maintenance`
+    if ! test $have_epics4_version -ge $want_epics4_version; then
+        AC_MSG_RESULT([no])
+        AC_MSG_ERROR("EPICS4 installation in $ac_epics4_dir_path is too old (required: $want_epics4_version, found: $have_epics4_version)")
+    fi
     AC_MSG_RESULT([yes])
 
     # test basic libraries
