@@ -8,21 +8,33 @@
 #include "pv/logger.h"
 #include "ChannelTimeout.h"
 #include "InvalidRequest.h"
+#include "ObjectNotFound.h"
 
 PvaClient Channel::pvaClient;
 epics::pvData::Requester::shared_pointer Channel::requester(new RequesterImpl("Channel"));
 epics::pvAccess::ChannelProvider::shared_pointer Channel::provider = epics::pvAccess::getChannelAccess()->getProvider("pva");
 std::tr1::shared_ptr<ChannelRequesterImpl> Channel::requesterImpl(new ChannelRequesterImpl(true));
 
-Channel::Channel(const epics::pvData::String& channelName) 
-    :  channelGetRequester(channelName),
-    channel(provider->createChannel(channelName, requesterImpl))
+
+Channel::Channel(const epics::pvData::String& channelName) :
+    channelGetRequester(channelName),
+    channel(provider->createChannel(channelName, requesterImpl)),
+    monitorRequester(new ChannelMonitorRequesterImpl(channelName)),
+    monitorStarted(false),
+    pvObjectMonitorQueue(),
+    subscriberMap(),
+    subscriberMutex()
 {
 }
     
-Channel::Channel(const Channel& c) 
-    :  channelGetRequester(c.channelGetRequester),
-    channel(c.channel)
+Channel::Channel(const Channel& c) :
+    channelGetRequester(c.channelGetRequester),
+    channel(c.channel),
+    monitorRequester(c.monitorRequester),
+    monitorStarted(c.monitorStarted),
+    pvObjectMonitorQueue(),
+    subscriberMap(),
+    subscriberMutex()
 {
     //epics::pvAccess::pvAccessSetLogLevel(epics::pvAccess::logLevelAll);
 }
@@ -92,4 +104,29 @@ void Channel::put(const PvObject& pvObject)
         }
     }
     throw ChannelTimeout("Channel %s put request timed out", channel->getChannelName().c_str());
+}
+
+void Channel::subscribe(const std::string& subscriberName, const boost::python::object& pySubscriber)
+{
+    epics::pvData::Lock lock(subscriberMutex);
+    subscriberMap[subscriberName] = pySubscriber;
+
+    //ChannelMonitorRequesterImpl* requesterImpl = static_cast<ChannelMonitorRequesterImpl*>(monitorRequester.get());
+    //requesterImpl->subscribe(subscriberName, pySubscriber);
+    if (!monitorStarted) {
+        monitorStarted = true;
+        epics::pvData::PVStructure::shared_pointer pvRequest = epics::pvAccess::getCreateRequest()->createRequest(DEFAULT_REQUEST, requester);
+        channel->createMonitor(monitorRequester, pvRequest);
+    }
+}
+
+void Channel::unsubscribe(const std::string& subscriberName)
+{
+    epics::pvData::Lock lock(subscriberMutex);
+    boost::python::object pySubscriber = subscriberMap[subscriberName];
+    std::map<std::string,boost::python::object>::const_iterator iterator = subscriberMap.find(subscriberName);
+    if (iterator == subscriberMap.end()) {
+        throw ObjectNotFound("Subscriber " + subscriberName + " is not registered.");
+    }
+    subscriberMap.erase(subscriberName);
 }

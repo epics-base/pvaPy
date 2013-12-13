@@ -14,7 +14,7 @@
 const char* PvObject::ValueFieldKey("value");
 
 // Constructors
-PvObject::PvObject(epics::pvData::PVStructurePtr pvStructurePtr_)
+PvObject::PvObject(const epics::pvData::PVStructurePtr& pvStructurePtr_)
     : pvStructurePtr(pvStructurePtr_)
 {
 }

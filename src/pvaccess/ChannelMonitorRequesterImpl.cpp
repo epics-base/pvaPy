@@ -1,18 +1,14 @@
 #include "ChannelMonitorRequesterImpl.h"
-#include "PvObject.h"
-#include "ObjectNotFound.h"
 
 ChannelMonitorRequesterImpl::ChannelMonitorRequesterImpl(const std::string& channelName_) : 
     channelName(channelName_),
-    monitorMap(),
-    monitorMutex()
+    pvObjectMonitorQueue()
 {
 }
 
 ChannelMonitorRequesterImpl::ChannelMonitorRequesterImpl(const ChannelMonitorRequesterImpl& channelMonitor) : 
     channelName(channelMonitor.channelName),
-    monitorMap(channelMonitor.monitorMap),
-    monitorMutex()
+    pvObjectMonitorQueue()
 {
 }
 
@@ -48,17 +44,8 @@ void ChannelMonitorRequesterImpl::monitorEvent(const epics::pvData::Monitor::sha
     epics::pvData::MonitorElement::shared_pointer element;
     while (element = monitor->poll()) {
         PvObject pvObject(element->pvStructurePtr);
-        std::map<std::string,boost::python::object>::iterator iter;
-        for (iter = monitorMap.begin(); iter != monitorMap.end(); iter++) {
-            std::string monitorName = iter->first;
-            boost::python::object pyMonitor = iter->second;
-            try {
-                pyMonitor(pvObject);
-            }
-            catch(const std::exception& ex) {
-                    std::cerr << "Error for monitor " << monitorName << ": " << ex.what();
-            }
-        }
+        pvObjectMonitorQueue.push(pvObject);
+        std::cout << "Got object: " << pvObject << std::endl;
         monitor->release(element);
     }
 }
@@ -67,20 +54,13 @@ void ChannelMonitorRequesterImpl::unlisten(const epics::pvData::Monitor::shared_
 {
 }
 
-void ChannelMonitorRequesterImpl::registerMonitor(const std::string& monitorName, const boost::python::object& pyMonitor)
+PvObject ChannelMonitorRequesterImpl::getQueuedPvObject(double timeout) throw(ChannelTimeout)
 {
-    epics::pvData::Lock lock(monitorMutex);
-    monitorMap[monitorName] = pyMonitor;
-}
-
-void ChannelMonitorRequesterImpl::unregisterMonitor(const std::string& monitorName)
-{
-    epics::pvData::Lock lock(monitorMutex);
-    std::map<std::string,boost::python::object>::const_iterator iterator = monitorMap.find(monitorName);
-    if (iterator == monitorMap.end()) {
-        throw ObjectNotFound("Monitor " + monitorName + " is not registered.");
+    try {
+        return pvObjectMonitorQueue.frontAndPop(timeout);
     }
-    monitorMap.erase(monitorName);
+    catch (InvalidState& ex) {
+        throw ChannelTimeout("No PV changes for channel %s received in %f seconds.", channelName.c_str(), timeout);
+    }
 }
-
 

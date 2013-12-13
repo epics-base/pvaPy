@@ -14,7 +14,7 @@ public:
     static const char* ValueFieldKey;
 
     // Constructors
-    PvObject(epics::pvData::PVStructurePtr pvStructurePtr);
+    PvObject(const epics::pvData::PVStructurePtr& pvStructurePtr);
     PvObject(const boost::python::dict& pyDict);
     PvObject(const PvObject& pvObject);
 

@@ -30,6 +30,7 @@ pvaccess_SRCS += GetFieldRequesterImpl.cpp
 pvaccess_SRCS += InvalidArgument.cpp
 pvaccess_SRCS += InvalidDataType.cpp
 pvaccess_SRCS += InvalidRequest.cpp
+pvaccess_SRCS += InvalidState.cpp
 pvaccess_SRCS += ObjectNotFound.cpp
 pvaccess_SRCS += PvaClient.cpp
 pvaccess_SRCS += PvaException.cpp

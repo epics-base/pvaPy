@@ -30,7 +30,6 @@
 #include "PvString.h"
 #include "PvScalarArray.h"
 #include "Channel.h"
-#include "ChannelMonitorRequesterImpl.h"
 #include "RpcClient.h"
 #include "RpcServer.h"
 #include "RpcServiceImpl.h"
@@ -293,6 +292,8 @@ BOOST_PYTHON_MODULE(pvaccess)
         .def("get", &Channel::get, 
             return_value_policy<manage_new_object>())
         .def("put", &Channel::put)
+        .def("subscribe", &Channel::subscribe)
+        .def("unsubscribe", &Channel::unsubscribe)
         ;
 
     // RPC Client
@@ -312,10 +313,4 @@ BOOST_PYTHON_MODULE(pvaccess)
         .def("listen", static_cast<void(RpcServer::*)(int)>(&RpcServer::listen), RpcServerListen())
         ;
     
-    // Channel Monitor Impl
-    class_<ChannelMonitorRequesterImpl, boost::shared_ptr<ChannelMonitorRequesterImpl> >("ChannelMonitor", init<std::string>())
-        .def("registerMonitor", &ChannelMonitorRequesterImpl::registerMonitor)
-        .def("unregisterMonitor", &ChannelMonitorRequesterImpl::unregisterMonitor)
-        ;
-
 }

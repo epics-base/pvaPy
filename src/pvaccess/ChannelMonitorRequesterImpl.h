@@ -5,8 +5,10 @@
 #include <map>
 #include "pv/pvData.h"
 #include "pv/pvAccess.h"
+#include "PvObject.h"
 #include "PvaClient.h"
-#include "boost/python/object.hpp"
+#include "SynchronizedQueue.h"
+#include "ChannelTimeout.h"
 
 class ChannelMonitorRequesterImpl : public epics::pvData::MonitorRequester
 {
@@ -21,13 +23,11 @@ public:
     virtual void monitorEvent(const epics::pvData::Monitor::shared_pointer& monitor);
     virtual void unlisten(const epics::pvData::Monitor::shared_pointer& monitor);
 
-    virtual void registerMonitor(const std::string& monitorName, const boost::python::object& pyMonitor);
-    virtual void unregisterMonitor(const std::string& monitorName);
+    virtual PvObject getQueuedPvObject(double timeout) throw(ChannelTimeout);
 
 private:
     std::string channelName;
-    std::map<std::string, boost::python::object> monitorMap;
-    epics::pvData::Mutex monitorMutex;
+    SynchronizedQueue<PvObject> pvObjectMonitorQueue;
 };
 
 #endif // CHANNEL_MONITOR_REQUESTER_IMPL_H
