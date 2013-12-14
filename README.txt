@@ -105,8 +105,8 @@ Basic Usage: PV monitor
 
 1) In a separate terminal, start testDbPv IOC:
 
-cd $EPICS4_DIR/pvaSrv/testApp/iocBoot/testDbPv
-../../bin/$EPICS_HOST_ARCH/testDbPv st.cmd
+$ cd $EPICS4_DIR/pvaSrv/testApp/iocBoot/testDbPv
+$ ../../bin/$EPICS_HOST_ARCH/testDbPv st.cmd
 
 2) In the IOC shell change PV values using the dbpf command, e.g:
 
@@ -143,7 +143,7 @@ Advanced Usage: RPC Client Class
 
 1) In a separate terminal, start v4 test RPC service:
 
-cd $EPICS4_DIR/pvAccessCPP/bin/$EPICS_HOST_ARCH
+$ cd $EPICS4_DIR/pvAccessCPP/bin/$EPICS_HOST_ARCH
 $ ./rpcServiceExample # in terminal 2
 
 2) RPC test channel is “sum”: 
