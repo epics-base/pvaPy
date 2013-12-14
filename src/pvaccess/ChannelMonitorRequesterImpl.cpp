@@ -45,7 +45,6 @@ void ChannelMonitorRequesterImpl::monitorEvent(const epics::pvData::Monitor::sha
     while (element = monitor->poll()) {
         PvObject pvObject(element->pvStructurePtr);
         pvObjectMonitorQueue.push(pvObject);
-        std::cout << "Got object: " << pvObject << std::endl;
         monitor->release(element);
     }
 }

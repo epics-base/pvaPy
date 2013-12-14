@@ -207,7 +207,6 @@ void Channel::monitorThread(Channel* channel)
         // Handle possible exceptions while retrieving data from empty queue.
         try {
             PvObject pvObject = monitorRequester->getQueuedPvObject(DEFAULT_TIMEOUT);
-            std::cout << "Got object in monitor: " << pvObject << std::endl;
             channel->callSubscribers(pvObject);
         }
         catch (const ChannelTimeout& ex) {

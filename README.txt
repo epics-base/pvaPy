@@ -5,8 +5,8 @@ The python PV Access API package requires the following software:
 
 1) EPICS base release (v3.14.12.3)
 2) EPICS4 CPP release (v4.3.0)
-3) Python development header files/libraries (v2.7.3)
-4) Boost (v1.54.0); build must have boost_python library
+3) Python development header files/libraries (v2.6.6)
+4) Boost (v1.41.0); build must have boost_python library
 
 Software versions listed above were used for prototype development and testing.
 It is likely that any recent version of python and boost libraries (such as
@@ -20,16 +20,59 @@ Note that nothing special needs to be done to EPICS4 CPP build.
 Build
 =======
 
-1) Edit configure/RELEASE.local and correct directories pointing to the
-above packages.
+1) Configure pvaPy. In the top level directory run
 
-2) make (in the top level package directory)
+$ EPICS_BASE=<EPICS_BASE> EPICS4_DIR=<EPICS4_DIR> make configure
+ 
+For the above command replace <EPICS_BASE> with the full path to your 
+epics base directory, and <EPICS4_DIR> with the full path of your v4 top level
+directory containing pvDataCPP, pvAccessCPP, etc.
 
-3) Create soft link pvaccess.so => libpvaccess.so in lib/$EPICS_HOST_ARCH
-directory (needs to be done only after the first build)
+The "make configure" command will check for your Boost/Python libraries, and
+create RELEASE.local and CONFIG_SITE.local files. They should look
+like in the example below:
 
-4) (Optional) Prepare setup file (PYTHONPATH needs to have entry to 
-$PVAPY_DIR/lib/$EPICS_HOST_ARCH). 
+$ cat configure/RELEASE.local 
+EPICS4_DIR=/home/sveseli/Work/support/EPICS-CPP-4.3.0
+EPICS_BASE=/home/sveseli/Work/support/epics/base
+
+$ cat configure/CONFIG_SITE.local 
+EPICS_HOST_ARCH=linux-x86_64
+BOOST_PYTHON_LIB=boost_python-mt
+PVA_PY_CPPFLAGS=-I/usr/include -I/usr/include/python2.6
+PVA_PY_LDFLAGS=-L/usr/lib64 -L/usr/lib64 -lpython2.6
+
+The above files were created automatically on a 64-bit CentOS 6.4 machine, with
+the following boost/python packages installed:
+
+$ rpm -qa | grep boost-python
+boost-python-1.41.0-17.el6_4.x86_64
+$ rpm -qa | grep python-devel
+python-devel-2.6.6-37.el6_4.x86_64
+
+Note that the "make configure" command also creates setup.(c)sh files
+that configure PYTHONPATH for using pvaccess python module, e.g.:
+
+$ cat setup.sh 
+#!/bin/sh
+#
+# pvaPy sh setup script
+#
+# modifies PYTHONPATH environment variable
+#
+if test -z "$PYTHONPATH" ; then
+    export PYTHONPATH=/home/sveseli/Work/pvaPy/lib/linux-x86_64
+else
+    export PYTHONPATH=/home/sveseli/Work/pvaPy/lib/linux-x86_64:$PYTHONPATH
+fi
+
+2) Compile pvaPy source. In the top level package directory run:
+
+$ make
+
+This will create pvaccess.so library in lib/$EPICS_HOST_ARCH directory.
+
+
 
 Basic Usage: PV put/get
 =========================
@@ -42,7 +85,7 @@ cd $EPICS4_DIR/pvaSrv/testApp/iocBoot/testDbPv
 ../../bin/$EPICS_HOST_ARCH/testDbPv st.cmd
 
 2) Source setup file (or export PYTHONPATH=$PVAPY_DIR/lib/$EPICS_HOST_ARCH)
-and start oython (python PVA module is called pvaccess):
+and start python (python PVA module is called pvaccess):
 
 $ python
 >>> import pvaccess
@@ -56,6 +99,43 @@ uri:ev4:nt/2012/pwd:NTScalar
 >>> print c.get()
 uri:ev4:nt/2012/pwd:NTScalar 
     int value 5
+
+Basic Usage: PV monitor
+=========================
+
+1) In a separate terminal, start testDbPv IOC:
+
+cd $EPICS4_DIR/pvaSrv/testApp/iocBoot/testDbPv
+../../bin/$EPICS_HOST_ARCH/testDbPv st.cmd
+
+2) In the IOC shell change PV values using the dbpf command, e.g:
+
+epics> dbpr 'float01'
+ASG:                DESC:               DISA: 0             DISP: 0             
+DISV: 1             NAME: float01       SEVR: MAJOR         STAT: LOLO          
+TPRO: 0             VAL: 0              
+epics> dbpf 'float01' 11.1
+DBR_FLOAT: 
+
+3) Monitor channel in python, by passing in subscriber object (function
+that processes PvObject instance):
+
+>>> c = pvaccess.Channel('float01')
+>>> def echo(x):
+...     print 'New PV value:', x
+... 
+>>> c.subscribe('echo', echo)
+>>> c.startMonitor()
+>>> New PV value: uri:ev4:nt/2012/pwd:NTScalar 
+    float value 11.1
+
+New PV value: uri:ev4:nt/2012/pwd:NTScalar 
+    float value 11.2
+
+New PV value: uri:ev4:nt/2012/pwd:NTScalar 
+    float value 11.3
+
+>>> c.stopMonitor()
 
 
 Advanced Usage: RPC Client Class
