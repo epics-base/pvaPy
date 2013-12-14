@@ -1,4 +1,4 @@
-Release 0.2 
+Release 0.2 (2013/12/13)
 ========================
 
 - automated build configuration (RELEASE.local, CONFIG_SITE.local and 
