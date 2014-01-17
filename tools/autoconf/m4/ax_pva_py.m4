@@ -102,7 +102,7 @@ AC_DEFUN([AX_PVA_PY],
     # create CONFIG_SITE.local
     echo "EPICS_HOST_ARCH=$EPICS_HOST_ARCH" >> $config_site_local
     echo "BOOST_PYTHON_LIB=$BOOST_PYTHON_LIB" >> $config_site_local
-    echo "PVA_PY_CPPFLAGS=$BOOST_CPPFLAGS $PYTHON_CPPFLAGS" >> $config_site_local
+    echo "PVA_PY_CPPFLAGS=-DPVA_API_VERSION=$PVA_API_VERSION $BOOST_CPPFLAGS $PYTHON_CPPFLAGS" >> $config_site_local
     echo "PVA_PY_LDFLAGS=$BOOST_LDFLAGS $PYTHON_LDFLAGS" >> $config_site_local
     AC_MSG_NOTICE([created $config_site_local file])
 

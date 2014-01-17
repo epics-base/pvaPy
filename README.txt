@@ -7,6 +7,7 @@ The python PV Access API package requires the following software:
 2) EPICS4 CPP release (v4.3.0)
 3) Python development header files/libraries (v2.6.6)
 4) Boost (v1.41.0); build must have boost_python library
+5) Standard development tools (gcc, make, autoconf, etc.) 
 
 Software versions listed above were used for prototype development and testing.
 It is likely that any recent version of python and boost libraries (such as

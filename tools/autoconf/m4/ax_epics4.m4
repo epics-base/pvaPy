@@ -17,6 +17,7 @@
 #   This macro sets:
 #
 #     HAVE_EPICS4
+#     PVA_API_VERSION
 #     EPICS4_DIR
 #
 # LICENSE
@@ -103,6 +104,7 @@ AC_DEFUN([AX_EPICS4],
     AC_MSG_CHECKING(for usable EPICS4 libraries for $EPICS_OS_CLASS OS and host arhitecture $EPICS_HOST_ARCH)
 
     succeeded=no
+    pva_api_version=430
     CPPFLAGS_SAVED="$CPPFLAGS"
     CPPFLAGS="$CPPFLAGS $EPICS_CPPFLAGS -I$EPICS_BASE/include -I$EPICS_BASE/include/os/$EPICS_OS_CLASS -I$EPICS4_DIR/pvDataCPP/include -I$EPICS4_DIR/pvAccessCPP/include"
     export CPPFLAGS
@@ -123,14 +125,33 @@ AC_DEFUN([AX_EPICS4],
             epics::pvData::FieldConstPtrArray fields;
             ]])
         ],[succeeded=yes],[succeeded=no])
+        AC_LINK_IFELSE([AC_LANG_PROGRAM(
+            [[
+            #include "pv/pvAccess.h"
+            #include "pv/pvData.h"
+            class RequesterImpl : public epics::pvData::Requester
+            {
+            public:
+                RequesterImpl(const epics::pvData::String& requesterName) {}
+                virtual epics::pvData::String getRequesterName() { return "requester"; }
+                virtual void message(const epics::pvData::String& message, epics::pvData::MessageType messageType) {}
+            };
+            ]],
+            [[
+            epics::pvData::Requester::shared_pointer requester(new RequesterImpl("Channel"));
+            epics::pvData::PVStructure::shared_pointer pvRequest = epics::pvAccess::getCreateRequest()->createRequest("field(value)", requester);
+            ]])
+        ],[pva_api_version=430],[pva_api_version=440])
     AC_LANG_POP([C++])
 
     if test "$succeeded" != "yes" ; then
         AC_MSG_RESULT([no])
         AC_MSG_ERROR(could not compile and link EPICS4 test code: check your EPICS4 installation)
     else
-        AC_MSG_RESULT([yes])
+        AC_MSG_RESULT([yes (pva api version: $pva_api_version)])
         AC_DEFINE(HAVE_EPICS4,,[define if the EPICS4 libraries are available])
+        AC_DEFINE(PVA_API_VERSION,$pva_api_version,[define PVA API version])
+        AC_SUBST(PVA_API_VERSION, $pva_api_version)
         AC_SUBST(EPICS4_DIR)
     fi
 

@@ -48,7 +48,15 @@ Channel::~Channel()
  
 PvObject* Channel::get() 
 {
+    // API change for getCreateRequest()
+    // old: epics::pvAccess::getCreateRequest()->createRequest(xxx,requester);
+    // new: epics::pvAccess::CreateRequest::create()->createRequest(xxx); 
+#if defined PVA_API_VERSION && PVA_API_VERSION == 430
     epics::pvData::PVStructure::shared_pointer pvRequest = epics::pvAccess::getCreateRequest()->createRequest(DEFAULT_REQUEST, requester);
+#else
+    epics::pvData::PVStructure::shared_pointer pvRequest = epics::pvAccess::CreateRequest::create()->createRequest(DEFAULT_REQUEST);
+#endif // if defined PVA_API_VERSION && PVA_API_VERSION == 430
+
     std::tr1::shared_ptr<ChannelRequesterImpl> channelRequesterImpl = std::tr1::dynamic_pointer_cast<ChannelRequesterImpl>(channel->getChannelRequester());
 
     if (channel->getConnectionState() != epics::pvAccess::Channel::CONNECTED) {
@@ -73,7 +81,11 @@ PvObject* Channel::get()
 	    std::tr1::dynamic_pointer_cast<const epics::pvData::Structure>(getFieldRequesterImpl->getField());
 	if (structure.get() == 0 || structure->getField("value").get() == 0) {
 	    // fallback to structure
+#if defined PVA_API_VERSION && PVA_API_VERSION == 430
 		pvRequest = epics::pvAccess::getCreateRequest()->createRequest("field()", requester);
+#else
+		pvRequest = epics::pvAccess::CreateRequest::create()->createRequest("field()");
+#endif // if defined PVA_API_VERSION && PVA_API_VERSION == 430
     }
 
 	std::tr1::shared_ptr<ChannelGetRequesterImpl> getRequesterImpl(new ChannelGetRequesterImpl(channel->getChannelName()));
@@ -86,7 +98,11 @@ PvObject* Channel::get()
 
 void Channel::put(const PvObject& pvObject) 
 {
+#if defined PVA_API_VERSION && PVA_API_VERSION == 430
     epics::pvData::PVStructure::shared_pointer pvRequest = epics::pvAccess::getCreateRequest()->createRequest(DEFAULT_REQUEST, requester);
+#else
+    epics::pvData::PVStructure::shared_pointer pvRequest = epics::pvAccess::CreateRequest::create()->createRequest(DEFAULT_REQUEST);
+#endif // if defined PVA_API_VERSION && PVA_API_VERSION == 430
     std::tr1::shared_ptr<ChannelRequesterImpl> channelRequesterImpl = std::tr1::dynamic_pointer_cast<ChannelRequesterImpl>(channel->getChannelRequester());
 
     if (channel->getConnectionState() != epics::pvAccess::Channel::CONNECTED) {
@@ -176,7 +192,11 @@ void Channel::startMonitor()
         // to initialize thread state, which is needed for proper functioning
         // of PyGILState_Ensure()/PyGILState_Release().
         PyEval_InitThreads();
+#if defined PVA_API_VERSION && PVA_API_VERSION == 430
         epics::pvData::PVStructure::shared_pointer pvRequest = epics::pvAccess::getCreateRequest()->createRequest(DEFAULT_REQUEST, requester);
+#else
+        epics::pvData::PVStructure::shared_pointer pvRequest = epics::pvAccess::CreateRequest::create()->createRequest(DEFAULT_REQUEST);
+#endif // if defined PVA_API_VERSION && PVA_API_VERSION == 430
         channel->createMonitor(monitorRequester, pvRequest);
         epicsThreadCreate("ChannelMonitorThread", epicsThreadPriorityLow, epicsThreadGetStackSize(epicsThreadStackSmall), (EPICSTHREADFUNC)monitorThread, this);
     }
