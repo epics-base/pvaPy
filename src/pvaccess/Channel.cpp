@@ -13,13 +13,12 @@
 
 PvaPyLogger Channel::logger("Channel");
 PvaClient Channel::pvaClient;
-epics::pvData::Requester::shared_pointer Channel::requester(new RequesterImpl("Channel"));
-epics::pvAccess::ChannelProvider::shared_pointer Channel::provider = epics::pvAccess::getChannelAccess()->getProvider("pva");
-std::tr1::shared_ptr<ChannelRequesterImpl> Channel::requesterImpl(new ChannelRequesterImpl(true));
-
 
 Channel::Channel(const epics::pvData::String& channelName) :
+    requester(new RequesterImpl(channelName)),
+    requesterImpl(new ChannelRequesterImpl(true)),
     channelGetRequester(channelName),
+    provider(epics::pvAccess::getChannelAccess()->getProvider("pva")),
     channel(provider->createChannel(channelName, requesterImpl)),
     monitorRequester(new ChannelMonitorRequesterImpl(channelName)),
     monitorThreadDone(true),

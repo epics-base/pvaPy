@@ -35,13 +35,14 @@ public:
 private:
     static PvaPyLogger logger;
     static PvaClient pvaClient;
-    static epics::pvData::Requester::shared_pointer requester;
-    static epics::pvAccess::ChannelProvider::shared_pointer provider;
-    static std::tr1::shared_ptr<ChannelRequesterImpl> requesterImpl;
     static void monitorThread(Channel* channel);
 
     ChannelMonitorRequesterImpl* getMonitorRequester(); 
+
+    epics::pvData::Requester::shared_pointer requester;
+    std::tr1::shared_ptr<ChannelRequesterImpl> requesterImpl;
     ChannelGetRequesterImpl channelGetRequester;
+    epics::pvAccess::ChannelProvider::shared_pointer provider;
     epics::pvAccess::Channel::shared_pointer channel;
     epics::pvData::MonitorRequester::shared_pointer monitorRequester;
     bool monitorThreadDone;
