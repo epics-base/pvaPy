@@ -29,6 +29,10 @@
 #include "PvDouble.h"
 #include "PvString.h"
 #include "PvScalarArray.h"
+
+#include "NtType.h"
+#include "NtTable.h"
+
 #include "Channel.h"
 #include "RpcClient.h"
 #include "RpcServer.h"
@@ -285,6 +289,22 @@ BOOST_PYTHON_MODULE(pvaccess)
         .def("get", &PvScalarArray::get)
         .def("set", &PvScalarArray::set)
         .def("toList", &PvScalarArray::toList)
+        ;
+
+    //
+    // NT Type
+    //
+    class_<NtType, bases<PvObject> >("NtType", no_init)
+        ;
+
+    //
+    // NT Table 
+    //
+    class_<NtTable, bases<NtType> >("NtTable", init<int, PvType::ScalarType>())
+        .def("getLabels", &NtTable::getLabels)
+        .def("getColumn", &NtTable::getColumn)
+        .def("setLabels", &NtTable::setLabels)
+        .def("setColumn", &NtTable::setColumn)
         ;
 
     // Channel
