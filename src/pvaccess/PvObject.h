@@ -12,11 +12,11 @@ public:
 
     // Constants
     static const char* ValueFieldKey;
-    static const char* DefaultStructureId;
+    static const char* StructureId;
 
     // Constructors
     PvObject(const epics::pvData::PVStructurePtr& pvStructurePtr);
-    PvObject(const boost::python::dict& pyDict, const std::string& structureId=DefaultStructureId);
+    PvObject(const boost::python::dict& pyDict, const std::string& structureId=StructureId);
     PvObject(const PvObject& pvObject);
 
     // Destructor

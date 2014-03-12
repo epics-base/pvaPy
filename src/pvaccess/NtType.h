@@ -7,11 +7,14 @@
 class NtType : public PvObject
 {
 public:
-    static const char* NtTypeStructureId;
+    // Constants
+    static const char* StructureId;
+
+    // Instance methods
     NtType(const NtType& ntType); 
     virtual ~NtType();
 protected:
-    NtType(const boost::python::dict& pyDict, const std::string& structureId=NtTypeStructureId);
+    NtType(const boost::python::dict& pyDict, const std::string& structureId=StructureId);
     NtType(const epics::pvData::PVStructurePtr& pvStructurePtr);
 };
 

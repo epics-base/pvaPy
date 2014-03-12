@@ -30,6 +30,8 @@
 #include "PvString.h"
 #include "PvScalarArray.h"
 
+#include "PvTimeStamp.h"
+
 #include "NtType.h"
 #include "NtTable.h"
 
@@ -292,6 +294,33 @@ BOOST_PYTHON_MODULE(pvaccess)
         ;
 
     //
+    // PV TimeStamp
+    //
+    class_<PvTimeStamp, bases<PvObject> >("PvTimeStamp", init<>())
+        .def(init<long long, int>())
+        .def(init<long long, int, int>())
+        .def("getSecondsPastEpoch", &PvTimeStamp::getSecondsPastEpoch)
+        .def("setSecondsPastEpoch", &PvTimeStamp::setSecondsPastEpoch)
+        .def("getNanoSeconds", &PvTimeStamp::getNanoSeconds)
+        .def("setNanoSeconds", &PvTimeStamp::setNanoSeconds)
+        .def("getUserTag", &PvTimeStamp::getUserTag)
+        .def("setUserTag", &PvTimeStamp::setUserTag)
+        ;
+
+    //
+    // PV Alarm
+    //
+    class_<PvAlarm, bases<PvObject> >("PvAlarm", init<>())
+        .def(init<int, int, const std::string&>())
+        .def("getSeverity", &PvAlarm::getSeverity)
+        .def("setSeverity", &PvAlarm::setSeverity)
+        .def("getStatus", &PvAlarm::getStatus)
+        .def("setStatus", &PvAlarm::setStatus)
+        .def("getMessage", &PvAlarm::getMessage)
+        .def("setMessage", &PvAlarm::setMessage)
+        ;
+
+    //
     // NT Type
     //
     class_<NtType, bases<PvObject> >("NtType", no_init)
@@ -302,10 +331,17 @@ BOOST_PYTHON_MODULE(pvaccess)
     //
     class_<NtTable, bases<NtType> >("NtTable", init<int, PvType::ScalarType>())
         .def(init<const boost::python::list&>())
+        .def("getNColumns", &NtTable::getNColumns)
         .def("getLabels", &NtTable::getLabels)
-        .def("getColumn", &NtTable::getColumn)
         .def("setLabels", &NtTable::setLabels)
+        .def("getColumn", &NtTable::getColumn)
         .def("setColumn", &NtTable::setColumn)
+        .def("getDescriptor", &NtTable::getDescriptor)
+        .def("setDescriptor", &NtTable::setDescriptor)
+        .def("getTimeStamp", &NtTable::getTimeStamp)
+        .def("setTimeStamp", &NtTable::setTimeStamp)
+        .def("getAlarm", &NtTable::getAlarm)
+        .def("setAlarm", &NtTable::setAlarm)
         ;
 
     // Channel

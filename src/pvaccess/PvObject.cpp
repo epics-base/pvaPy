@@ -13,7 +13,7 @@
 
 // Static constants
 const char* PvObject::ValueFieldKey("value");
-const char* PvObject::DefaultStructureId("structure");
+const char* PvObject::StructureId("structure");
 
 // Constructors
 PvObject::PvObject(const epics::pvData::PVStructurePtr& pvStructurePtr_)

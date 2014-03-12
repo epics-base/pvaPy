@@ -3,11 +3,17 @@
 #include "PyPvDataUtility.h"
 #include "InvalidArgument.h"
 
+const char* NtTable::StructureId("uri:ev4:nt/2012/pwd:NTTable");
 const char* NtTable::LabelsFieldKey("labels");
-const char* NtTable::NtTableStructureId("uri:ev4:nt/2012/pwd:NTTable");
+const char* NtTable::DescriptorFieldKey("descriptor");
+const char* NtTable::TimeStampFieldKey("timeStamp");
+const char* NtTable::AlarmFieldKey("alarm");
 
 boost::python::dict NtTable::createStructureDict(int nColumns, PvType::ScalarType scalarType)
 {
+    if (nColumns < 0) {
+        throw InvalidArgument("Number of columns cannot be negative.");
+    }
     boost::python::list pyList;
     pyList.append(PvType::String);
     boost::python::dict pyDict;
@@ -20,6 +26,9 @@ boost::python::dict NtTable::createStructureDict(int nColumns, PvType::ScalarTyp
         pyDict2[columnName] = pyList2;
     }
     pyDict[ValueFieldKey] = pyDict2;
+    pyDict[DescriptorFieldKey] = PvType::String;
+    pyDict[TimeStampFieldKey] = PvTimeStamp::createStructureDict();
+    pyDict[AlarmFieldKey] = PvAlarm::createStructureDict();
     return pyDict;
 }
 
@@ -40,10 +49,13 @@ boost::python::dict NtTable::createStructureDict(const boost::python::list& scal
             pyDict2[columnName] = pyList2;
         }
         else {
-            throw InvalidArgument("Element list must be valid scalar type.");
+            throw InvalidArgument("Element list must be valid PV scalar type.");
         }
     }
     pyDict[ValueFieldKey] = pyDict2;
+    pyDict[DescriptorFieldKey] = PvType::String;
+    pyDict[TimeStampFieldKey] = PvTimeStamp::createStructureDict();
+    pyDict[AlarmFieldKey] = PvAlarm::createStructureDict();
     return pyDict;
 }
 
@@ -53,13 +65,15 @@ std::string NtTable::getColumnName(int column)
     return columnName;
 }
 
-NtTable::NtTable(int nColumns, PvType::ScalarType scalarType)
-    : NtType(createStructureDict(nColumns, scalarType), NtTableStructureId)
+NtTable::NtTable(int nColumns_, PvType::ScalarType scalarType)
+    : NtType(createStructureDict(nColumns_, scalarType), StructureId),
+    nColumns(nColumns_)
 {
 }
 
 NtTable::NtTable(const boost::python::list& scalarTypePyList)
-    : NtType(createStructureDict(scalarTypePyList), NtTableStructureId)
+    : NtType(createStructureDict(scalarTypePyList), StructureId),
+    nColumns(boost::python::len(scalarTypePyList))
 {
 }
 
@@ -72,13 +86,24 @@ NtTable::~NtTable()
 {
 }
 
+int NtTable::getNColumns() const 
+{
+    return nColumns;
+}
+
 void NtTable::setLabels(const boost::python::list& pyList)
 {
+    if (boost::python::len(pyList) != nColumns) {
+        throw InvalidArgument("Number of column labels must be %d.", nColumns);
+    }
     PyPvDataUtility::pyListToScalarArrayField(pyList, LabelsFieldKey, pvStructurePtr);
 }
 
 void NtTable::setColumn(int column, const boost::python::list& pyList)
 {
+    if (column < 0 || column >= nColumns) {
+        throw InvalidArgument("Column index must be in range [0,%d].", nColumns-1);
+    }
     std::string columnName = getColumnName(column);
     epics::pvData::PVStructurePtr pvStructurePtr2 = PyPvDataUtility::getStructureField(ValueFieldKey, pvStructurePtr);
     PyPvDataUtility::pyListToScalarArrayField(pyList, columnName, pvStructurePtr2);
@@ -93,10 +118,42 @@ boost::python::list NtTable::getLabels() const
 
 boost::python::list NtTable::getColumn(int column) const
 {
+    if (column < 0 || column >= nColumns) {
+        throw InvalidArgument("Column index must be in range [0,%d].", nColumns-1);
+    }
     std::string columnName = getColumnName(column);
     boost::python::list pyList;
     epics::pvData::PVStructurePtr pvStructurePtr2 = PyPvDataUtility::getStructureField(ValueFieldKey, pvStructurePtr);
     PyPvDataUtility::scalarArrayFieldToPyList(columnName, pvStructurePtr2, pyList);
     return pyList;
+}
+void NtTable::setDescriptor(const std::string& descriptor)
+{
+        pvStructurePtr->getStringField(DescriptorFieldKey)->put(descriptor);
+}
+
+std::string NtTable::getDescriptor() const
+{
+        return pvStructurePtr->getStringField(DescriptorFieldKey)->get();
+}
+
+PvTimeStamp NtTable::getTimeStamp() const
+{
+    return PvTimeStamp(PyPvDataUtility::getStructureField(TimeStampFieldKey, pvStructurePtr));
+}
+
+void NtTable::setTimeStamp(const PvTimeStamp& pvTimeStamp)
+{
+    PyPvDataUtility::pyDictToStructureField(pvTimeStamp, TimeStampFieldKey, pvStructurePtr);
+}
+
+PvAlarm NtTable::getAlarm() const
+{
+    return PvAlarm(PyPvDataUtility::getStructureField(AlarmFieldKey, pvStructurePtr));
+}
+
+void NtTable::setAlarm(const PvAlarm& pvAlarm)
+{
+    PyPvDataUtility::pyDictToStructureField(pvAlarm, AlarmFieldKey, pvStructurePtr);
 }
 
