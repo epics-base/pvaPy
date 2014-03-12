@@ -1,8 +1,10 @@
 #include "NtTable.h"
 #include "StringUtility.h"
 #include "PyPvDataUtility.h"
+#include "InvalidArgument.h"
 
 const char* NtTable::LabelsFieldKey("labels");
+const char* NtTable::NtTableStructureId("uri:ev4:nt/2012/pwd:NTTable");
 
 boost::python::dict NtTable::createStructureDict(int nColumns, PvType::ScalarType scalarType)
 {
@@ -21,6 +23,30 @@ boost::python::dict NtTable::createStructureDict(int nColumns, PvType::ScalarTyp
     return pyDict;
 }
 
+boost::python::dict NtTable::createStructureDict(const boost::python::list& scalarTypePyList)
+{
+    boost::python::list pyList;
+    pyList.append(PvType::String);
+    boost::python::dict pyDict;
+    pyDict[LabelsFieldKey] = pyList;
+    boost::python::dict pyDict2;
+    for (int column = 0; column < boost::python::len(scalarTypePyList); column++) {
+        boost::python::extract<int> scalarTypeExtract(scalarTypePyList[column]);
+        if (scalarTypeExtract.check()) {
+            PvType::ScalarType scalarType = static_cast<PvType::ScalarType>(scalarTypeExtract());
+            boost::python::list pyList2;
+            pyList2.append(scalarType);
+            std::string columnName = getColumnName(column);
+            pyDict2[columnName] = pyList2;
+        }
+        else {
+            throw InvalidArgument("Element list must be valid scalar type.");
+        }
+    }
+    pyDict[ValueFieldKey] = pyDict2;
+    return pyDict;
+}
+
 std::string NtTable::getColumnName(int column) 
 {
     std::string columnName = "column" + StringUtility::toString(column);
@@ -28,7 +54,12 @@ std::string NtTable::getColumnName(int column)
 }
 
 NtTable::NtTable(int nColumns, PvType::ScalarType scalarType)
-    : NtType(createStructureDict(nColumns, scalarType))
+    : NtType(createStructureDict(nColumns, scalarType), NtTableStructureId)
+{
+}
+
+NtTable::NtTable(const boost::python::list& scalarTypePyList)
+    : NtType(createStructureDict(scalarTypePyList), NtTableStructureId)
 {
 }
 

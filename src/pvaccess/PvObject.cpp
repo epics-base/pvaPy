@@ -1,6 +1,7 @@
 #include "PvObject.h"
 #include "PvaException.h"
 #include "PyPvDataUtility.h"
+#include "StringUtility.h"
 #include "InvalidRequest.h"
 #include "InvalidDataType.h"
 #include "InvalidArgument.h"
@@ -12,6 +13,7 @@
 
 // Static constants
 const char* PvObject::ValueFieldKey("value");
+const char* PvObject::DefaultStructureId("structure");
 
 // Constructors
 PvObject::PvObject(const epics::pvData::PVStructurePtr& pvStructurePtr_)
@@ -19,8 +21,8 @@ PvObject::PvObject(const epics::pvData::PVStructurePtr& pvStructurePtr_)
 {
 }
 
-PvObject::PvObject(const boost::python::dict& pyDict)
-    : pvStructurePtr(epics::pvData::getPVDataCreate()->createPVStructure(createStructureFromDict(pyDict)))
+PvObject::PvObject(const boost::python::dict& pyDict, const std::string& structureId)
+    : pvStructurePtr(epics::pvData::getPVDataCreate()->createPVStructure(createStructureFromDict(pyDict, structureId)))
 {
 }
 
@@ -343,7 +345,7 @@ boost::python::list PvObject::getStructureArray(const std::string& key) const
 //
 // Private helper methods.
 //
-epics::pvData::StructureConstPtr PvObject::createStructureFromDict(const boost::python::dict& pyDict)
+epics::pvData::StructureConstPtr PvObject::createStructureFromDict(const boost::python::dict& pyDict, const std::string& structureId)
 {
     epics::pvData::FieldConstPtrArray fields;
     epics::pvData::StringArray names;
@@ -445,6 +447,11 @@ epics::pvData::StructureConstPtr PvObject::createStructureFromDict(const boost::
             // Invalid request.
             throw InvalidArgument("Unrecognized structure type for field name %s", fieldName.c_str());
         }
+    }
+
+    std::string structureName = StringUtility::trim(structureId);
+    if (structureName.length()) {
+        return epics::pvData::getFieldCreate()->createStructure(structureName, names, fields);
     }
     return epics::pvData::getFieldCreate()->createStructure(names, fields);
 }

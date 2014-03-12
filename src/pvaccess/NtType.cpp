@@ -1,7 +1,9 @@
 #include "NtType.h"
 
-NtType::NtType(const boost::python::dict& pyDict)
-    : PvObject(pyDict)
+const char* NtType::NtTypeStructureId("uri:ev4:nt/2012/pwd:NTType");
+
+NtType::NtType(const boost::python::dict& pyDict, const std::string& structureId)
+    : PvObject(pyDict, structureId)
 {
 }
 

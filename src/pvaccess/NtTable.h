@@ -12,8 +12,10 @@ class NtTable : public NtType
 public:
     // Constants
     static const char* LabelsFieldKey;
+    static const char* NtTableStructureId;
 
     NtTable(int nColumns, PvType::ScalarType scalarType);
+    NtTable(const boost::python::list& scalarTypePyList);
     NtTable(const NtTable& ntTable);
     virtual ~NtTable();
 
@@ -24,6 +26,7 @@ public:
 private:
     static std::string getColumnName(int column);
     static boost::python::dict createStructureDict(int nColumns, PvType::ScalarType scalarType);
+    static boost::python::dict createStructureDict(const boost::python::list& scalarTypePyList);
 };
 
 #endif

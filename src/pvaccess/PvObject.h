@@ -12,10 +12,11 @@ public:
 
     // Constants
     static const char* ValueFieldKey;
+    static const char* DefaultStructureId;
 
     // Constructors
     PvObject(const epics::pvData::PVStructurePtr& pvStructurePtr);
-    PvObject(const boost::python::dict& pyDict);
+    PvObject(const boost::python::dict& pyDict, const std::string& structureId=DefaultStructureId);
     PvObject(const PvObject& pvObject);
 
     // Destructor
@@ -115,7 +116,7 @@ protected:
 private:
 
     // Static helper methods
-    static epics::pvData::StructureConstPtr createStructureFromDict(const boost::python::dict& pyDict);
+    static epics::pvData::StructureConstPtr createStructureFromDict(const boost::python::dict& pyDict, const std::string& structureId="");
     static void addScalarField(const std::string& fieldName, epics::pvData::ScalarType scalarType, epics::pvData::FieldConstPtrArray& fields, epics::pvData::StringArray& names);
     static void addScalarArrayField(const std::string& fieldName, epics::pvData::ScalarType scalarType, epics::pvData::FieldConstPtrArray& fields, epics::pvData::StringArray& names);
     static void addStructureField(const std::string& fieldName, const boost::python::dict& pyDict, epics::pvData::FieldConstPtrArray& fields, epics::pvData::StringArray& names);
