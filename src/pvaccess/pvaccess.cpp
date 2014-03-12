@@ -331,6 +331,7 @@ BOOST_PYTHON_MODULE(pvaccess)
     //
     class_<NtTable, bases<NtType> >("NtTable", init<int, PvType::ScalarType>())
         .def(init<const boost::python::list&>())
+        .def(init<const PvObject&>())
         .def("getNColumns", &NtTable::getNColumns)
         .def("getLabels", &NtTable::getLabels)
         .def("setLabels", &NtTable::setLabels)

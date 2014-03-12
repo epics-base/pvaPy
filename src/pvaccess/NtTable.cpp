@@ -77,6 +77,17 @@ NtTable::NtTable(const boost::python::list& scalarTypePyList)
 {
 }
 
+NtTable::NtTable(const PvObject& pvObject)
+    : NtType(pvObject.getPvStructurePtr()),
+    nColumns(0)
+{
+    PyPvDataUtility::checkFieldExists(LabelsFieldKey, pvStructurePtr);
+    PyPvDataUtility::checkFieldExists(ValueFieldKey, pvStructurePtr);
+    set(pvObject);
+    epics::pvData::PVScalarArrayPtr pvScalarArrayPtr = PyPvDataUtility::getScalarArrayField(LabelsFieldKey, epics::pvData::pvString, pvStructurePtr);
+    nColumns = pvScalarArrayPtr->getLength();
+}
+
 NtTable::NtTable(const NtTable& ntTable)
     : NtType(ntTable.pvStructurePtr)
 {

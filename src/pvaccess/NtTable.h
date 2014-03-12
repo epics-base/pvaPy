@@ -29,6 +29,7 @@ public:
     // Instance methods
     NtTable(int nColumns, PvType::ScalarType scalarType);
     NtTable(const boost::python::list& scalarTypePyList);
+    NtTable(const PvObject& pvObject);
     NtTable(const NtTable& ntTable);
     virtual ~NtTable();
 
