@@ -1,3 +1,10 @@
+Release 0.3 
+========================
+
+- added support for PvTimeStamp
+- added support for PvAlarm
+- added support for NtTable
+
 Release 0.2 (2013/12/13)
 ========================
 
