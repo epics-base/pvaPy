@@ -11,6 +11,9 @@
 #include "InvalidRequest.h"
 #include "ObjectNotFound.h"
 
+const char* Channel::DefaultRequestDescriptor("field(value)");
+const double Channel::DefaultTimeout(3.0);
+
 PvaPyLogger Channel::logger("Channel");
 PvaClient Channel::pvaClient;
 
@@ -24,7 +27,8 @@ Channel::Channel(const epics::pvData::String& channelName) :
     monitorThreadDone(true),
     pvObjectMonitorQueue(),
     subscriberMap(),
-    subscriberMutex()
+    subscriberMutex(),
+    timeout(DefaultTimeout)
 {
 }
     
@@ -35,7 +39,8 @@ Channel::Channel(const Channel& c) :
     monitorThreadDone(true),
     pvObjectMonitorQueue(),
     subscriberMap(),
-    subscriberMutex()
+    subscriberMutex(),
+    timeout(DefaultTimeout)
 {
 }
 
@@ -45,21 +50,26 @@ Channel::~Channel()
     channel->destroy();
 }
  
-PvObject* Channel::get() 
+PvObject* Channel::get()
+{
+    return get(DefaultRequestDescriptor);
+}
+
+PvObject* Channel::get(const std::string& requestDescriptor) 
 {
     // API change for getCreateRequest()
     // old: epics::pvAccess::getCreateRequest()->createRequest(xxx,requester);
     // new: epics::pvAccess::CreateRequest::create()->createRequest(xxx); 
 #if defined PVA_API_VERSION && PVA_API_VERSION == 430
-    epics::pvData::PVStructure::shared_pointer pvRequest = epics::pvAccess::getCreateRequest()->createRequest(DEFAULT_REQUEST, requester);
+    epics::pvData::PVStructure::shared_pointer pvRequest = epics::pvAccess::getCreateRequest()->createRequest(requestDescriptor, requester);
 #else
-    epics::pvData::PVStructure::shared_pointer pvRequest = epics::pvAccess::CreateRequest::create()->createRequest(DEFAULT_REQUEST);
+    epics::pvData::PVStructure::shared_pointer pvRequest = epics::pvAccess::CreateRequest::create()->createRequest(requestDescriptor);
 #endif // if defined PVA_API_VERSION && PVA_API_VERSION == 430
 
     std::tr1::shared_ptr<ChannelRequesterImpl> channelRequesterImpl = std::tr1::dynamic_pointer_cast<ChannelRequesterImpl>(channel->getChannelRequester());
 
     if (channel->getConnectionState() != epics::pvAccess::Channel::CONNECTED) {
-        if (!channelRequesterImpl->waitUntilConnected(DEFAULT_TIMEOUT)) {
+        if (!channelRequesterImpl->waitUntilConnected(timeout)) {
             throw ChannelTimeout("Channel %s timed out", channel->getChannelName().c_str());
         }
     }
@@ -68,7 +78,7 @@ PvObject* Channel::get()
     getFieldRequesterImpl.reset(new GetFieldRequesterImpl(channel));
     channel->getField(getFieldRequesterImpl, "");
 
-    if (!getFieldRequesterImpl->waitUntilFieldGet(DEFAULT_TIMEOUT)) {
+    if (!getFieldRequesterImpl->waitUntilFieldGet(timeout)) {
         throw ChannelTimeout("Channel %s field get timed out", channel->getChannelName().c_str());
     }
             
@@ -89,34 +99,39 @@ PvObject* Channel::get()
 
 	std::tr1::shared_ptr<ChannelGetRequesterImpl> getRequesterImpl(new ChannelGetRequesterImpl(channel->getChannelName()));
 	epics::pvAccess::ChannelGet::shared_pointer channelGet = channel->createChannelGet(getRequesterImpl, pvRequest);
-	if (getRequesterImpl->waitUntilGet(DEFAULT_TIMEOUT)) {
+	if (getRequesterImpl->waitUntilGet(timeout)) {
 	    return new PvObject(getRequesterImpl->getPVStructure());
     }
     throw ChannelTimeout("Channel %s get request timed out", channel->getChannelName().c_str());
 }
 
-void Channel::put(const PvObject& pvObject) 
+void Channel::put(const PvObject& pvObject)
+{
+    put(pvObject, DefaultRequestDescriptor);
+}
+
+void Channel::put(const PvObject& pvObject, const std::string& requestDescriptor) 
 {
 #if defined PVA_API_VERSION && PVA_API_VERSION == 430
-    epics::pvData::PVStructure::shared_pointer pvRequest = epics::pvAccess::getCreateRequest()->createRequest(DEFAULT_REQUEST, requester);
+    epics::pvData::PVStructure::shared_pointer pvRequest = epics::pvAccess::getCreateRequest()->createRequest(requestDescriptor, requester);
 #else
-    epics::pvData::PVStructure::shared_pointer pvRequest = epics::pvAccess::CreateRequest::create()->createRequest(DEFAULT_REQUEST);
+    epics::pvData::PVStructure::shared_pointer pvRequest = epics::pvAccess::CreateRequest::create()->createRequest(requestDescriptor);
 #endif // if defined PVA_API_VERSION && PVA_API_VERSION == 430
     std::tr1::shared_ptr<ChannelRequesterImpl> channelRequesterImpl = std::tr1::dynamic_pointer_cast<ChannelRequesterImpl>(channel->getChannelRequester());
 
     if (channel->getConnectionState() != epics::pvAccess::Channel::CONNECTED) {
-        if (!channelRequesterImpl->waitUntilConnected(DEFAULT_TIMEOUT)) {
+        if (!channelRequesterImpl->waitUntilConnected(timeout)) {
             throw ChannelTimeout("Channel %s timed out", channel->getChannelName().c_str());
         }
     }
 
 	std::tr1::shared_ptr<ChannelPutRequesterImpl> putRequesterImpl(new ChannelPutRequesterImpl(channel->getChannelName()));
 	epics::pvAccess::ChannelPut::shared_pointer channelPut = channel->createChannelPut(putRequesterImpl, pvRequest);
-	if (putRequesterImpl->waitUntilDone(DEFAULT_TIMEOUT)) {
+	if (putRequesterImpl->waitUntilDone(timeout)) {
         epics::pvData::PVStructurePtr pvStructurePtr = putRequesterImpl->getStructure();
         pvStructurePtr << pvObject;
         channelPut->put(false);
-	    if (putRequesterImpl->waitUntilDone(DEFAULT_TIMEOUT)) {
+	    if (putRequesterImpl->waitUntilDone(timeout)) {
 	        return;
         }
     }
@@ -184,6 +199,11 @@ void Channel::callSubscribers(PvObject& pvObject)
 
 void Channel::startMonitor()
 {
+    startMonitor(DefaultRequestDescriptor);
+}
+
+void Channel::startMonitor(const std::string& requestDescriptor)
+{
     if (monitorThreadDone) {
         monitorThreadDone = false;
 
@@ -192,9 +212,9 @@ void Channel::startMonitor()
         // of PyGILState_Ensure()/PyGILState_Release().
         PyEval_InitThreads();
 #if defined PVA_API_VERSION && PVA_API_VERSION == 430
-        epics::pvData::PVStructure::shared_pointer pvRequest = epics::pvAccess::getCreateRequest()->createRequest(DEFAULT_REQUEST, requester);
+        epics::pvData::PVStructure::shared_pointer pvRequest = epics::pvAccess::getCreateRequest()->createRequest(requestDescriptor, requester);
 #else
-        epics::pvData::PVStructure::shared_pointer pvRequest = epics::pvAccess::CreateRequest::create()->createRequest(DEFAULT_REQUEST);
+        epics::pvData::PVStructure::shared_pointer pvRequest = epics::pvAccess::CreateRequest::create()->createRequest(requestDescriptor);
 #endif // if defined PVA_API_VERSION && PVA_API_VERSION == 430
         channel->createMonitor(monitorRequester, pvRequest);
         epicsThreadCreate("ChannelMonitorThread", epicsThreadPriorityLow, epicsThreadGetStackSize(epicsThreadStackSmall), (EPICSTHREADFUNC)monitorThread, this);
@@ -225,7 +245,7 @@ void Channel::monitorThread(Channel* channel)
         
         // Handle possible exceptions while retrieving data from empty queue.
         try {
-            PvObject pvObject = monitorRequester->getQueuedPvObject(DEFAULT_TIMEOUT);
+            PvObject pvObject = monitorRequester->getQueuedPvObject(channel->getTimeout());
             channel->callSubscribers(pvObject);
         }
         catch (const ChannelTimeout& ex) {

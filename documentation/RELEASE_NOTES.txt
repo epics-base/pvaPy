@@ -4,6 +4,8 @@ Release 0.3
 - added support for PvTimeStamp
 - added support for PvAlarm
 - added support for NtTable
+- Channel class can now take arbitrary request descriptors for get(), put()
+  and startMonitor()
 
 Release 0.2 (2013/12/13)
 ========================

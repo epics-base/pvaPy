@@ -746,15 +746,64 @@ void copyStructureToStructure(const epics::pvData::PVStructurePtr& srcPvStructur
                 break;
             }
             case epics::pvData::structure: {
-                //copyStructureToStructure(fieldName, pvStructurePtr);
+                copyStructureToStructure(fieldName, srcPvStructurePtr, destPvStructurePtr);
                 break;
             }
             case epics::pvData::structureArray: {
-                //copyStructureArrayToStructure(fieldName, pvStructurePtr);
+                copyStructureArrayToStructure(fieldName, srcPvStructurePtr, destPvStructurePtr);
                 break;
             }
         }
     }
+}
+
+void copyStructureToStructure(const std::string& fieldName, const epics::pvData::PVStructurePtr& srcPvStructurePtr, epics::pvData::PVStructurePtr& destPvStructurePtr)
+{
+    epics::pvData::PVStructurePtr destPvStructurePtr2 = destPvStructurePtr->getStructureField(fieldName);
+    if (destPvStructurePtr2) {
+        epics::pvData::PVStructurePtr srcPvStructurePtr2 = srcPvStructurePtr->getStructureField(fieldName);
+        if (srcPvStructurePtr2) {
+            copyStructureToStructure(srcPvStructurePtr2, destPvStructurePtr2);
+        }
+        else {
+            throw FieldNotFound("Source structure has no structure field " + fieldName);
+        }
+    }
+    else {
+        throw FieldNotFound("Destination structure has no structure field " + fieldName);
+    }
+}
+
+//
+// Copy PV Structure Array => PV Structure
+//
+void copyStructureArrayToStructure(const std::string& fieldName, const epics::pvData::PVStructurePtr& srcPvStructurePtr, epics::pvData::PVStructurePtr& destPvStructurePtr)
+{
+    epics::pvData::PVStructureArrayPtr destPvStructureArrayPtr = getStructureArrayField(fieldName, destPvStructurePtr);
+    if (!destPvStructureArrayPtr) {
+        throw FieldNotFound("Destination structure has no structure array field " + fieldName);
+    }
+    epics::pvData::StructureArrayConstPtr destStructureArrayPtr = destPvStructureArrayPtr->getStructureArray();
+    epics::pvData::StructureConstPtr structurePtr = destStructureArrayPtr->getStructure();
+
+    epics::pvData::PVStructureArrayPtr srcPvStructureArrayPtr = getStructureArrayField(fieldName, srcPvStructurePtr);
+    if (!srcPvStructureArrayPtr) {
+        throw FieldNotFound("Source structure has no structure array field " + fieldName);
+    }
+
+
+    int nElements = srcPvStructureArrayPtr->getLength();
+    epics::pvData::StructureArrayData srcPvStructures;
+    srcPvStructureArrayPtr->get(0, nElements, srcPvStructures);
+
+    epics::pvData::PVStructurePtrArray destPvStructures(nElements);
+    for (int i = 0; i < nElements; i++) {
+        epics::pvData::PVStructurePtr destPvStructurePtr2 = epics::pvData::getPVDataCreate()->createPVStructure(structurePtr);
+        epics::pvData::PVStructurePtr srcPvStructurePtr2 = srcPvStructures.data[i];
+        copyStructureToStructure(srcPvStructurePtr2, destPvStructurePtr2);
+        destPvStructures[i] = destPvStructurePtr2;
+    }
+    destPvStructureArrayPtr->put(0, nElements, destPvStructures, 0);
 }
 
 //

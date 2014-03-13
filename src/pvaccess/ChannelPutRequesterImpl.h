@@ -7,9 +7,6 @@
 #include "pv/event.h"
 #include "PvaClient.h"
 
-#define DEFAULT_TIMEOUT 3.0
-#define DEFAULT_REQUEST "field(value)"
-
 class ChannelPutRequesterImpl : public epics::pvAccess::ChannelPutRequester
 {
 public:

@@ -59,6 +59,9 @@ BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(PvObjectGetScalarArray, PvObject::getScal
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(PvObjectGetStructure, PvObject::getStructure, 0, 1)
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(PvObjectGetStructureArray, PvObject::getStructureArray, 0, 1)
 
+BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(ChannelGet, Channel::get, 0, 1)
+BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(ChannelPut, Channel::put, 1, 2)
+BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(ChannelStartMonitor, Channel::startMonitor, 0, 1)
 //BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(RpcClientRequest, RpcClient::request, 1, 2)
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(RpcServerListen, RpcServer::listen, 0, 1)
 
@@ -347,13 +350,19 @@ BOOST_PYTHON_MODULE(pvaccess)
 
     // Channel
     class_<Channel>("Channel", init<std::string>())
-        .def("get", &Channel::get, 
-            return_value_policy<manage_new_object>())
-        .def("put", &Channel::put)
+        .def("get", static_cast<PvObject*(Channel::*)(const std::string&)>(&Channel::get), 
+            return_value_policy<manage_new_object>(), ChannelGet())
+        .def("get", static_cast<PvObject*(Channel::*)()>(&Channel::get), 
+            return_value_policy<manage_new_object>(), ChannelGet())
+        .def("put", static_cast<void(Channel::*)(const PvObject&, const std::string&)>(&Channel::put))
+        .def("put", static_cast<void(Channel::*)(const PvObject&)>(&Channel::put))
         .def("subscribe", &Channel::subscribe)
         .def("unsubscribe", &Channel::unsubscribe)
-        .def("startMonitor", &Channel::startMonitor)
+        .def("startMonitor", static_cast<void(Channel::*)(const std::string&)>(&Channel::startMonitor))
+        .def("startMonitor", static_cast<void(Channel::*)()>(&Channel::startMonitor))
         .def("stopMonitor", &Channel::stopMonitor)
+        .def("getTimeout", &Channel::getTimeout)
+        .def("setTimeout", &Channel::setTimeout)
         ;
 
     // RPC Client

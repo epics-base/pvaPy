@@ -146,6 +146,12 @@ void structureToPyDict(const epics::pvData::StructureConstPtr& structurePtr, boo
 // Copy PV Structure => PV Structure
 //
 void copyStructureToStructure(const epics::pvData::PVStructurePtr& srcPvStructurePtr, epics::pvData::PVStructurePtr& destPvStructurePtr);
+void copyStructureToStructure(const std::string& fieldName, const epics::pvData::PVStructurePtr& srcPvStructurePtr, epics::pvData::PVStructurePtr& destPvStructurePtr);
+
+//
+// Copy PV Structure Array => PV Structure
+//
+void copyStructureArrayToStructure(const std::string& fieldName, const epics::pvData::PVStructurePtr& srcPvStructurePtr, epics::pvData::PVStructurePtr& destPvStructurePtr);
 
 // 
 // Copy PV Scalar to PV Structure
