@@ -69,7 +69,6 @@ NtTable::NtTable(int nColumns_, PvType::ScalarType scalarType)
     : NtType(createStructureDict(nColumns_, scalarType), StructureId),
     nColumns(nColumns_)
 {
-    std::cout << "In NtTable::NtTable(int nColumns_, PvType::ScalarType scalarType)" << std::endl;
 }
 
 NtTable::NtTable(const boost::python::list& scalarTypePyList)
@@ -82,7 +81,6 @@ NtTable::NtTable(const PvObject& pvObject)
     : NtType(pvObject.getPvStructurePtr()),
     nColumns(0)
 {
-    std::cout << "In NtTable::NtTable(const PvObject& pvObject)" << std::endl;
     PyPvDataUtility::checkFieldExists(LabelsFieldKey, pvStructurePtr);
     PyPvDataUtility::checkFieldExists(ValueFieldKey, pvStructurePtr);
     set(pvObject);
