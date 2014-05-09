@@ -39,7 +39,7 @@ AC_DEFUN([AX_EPICS4],
     ],
     [
         if test -z "$withval"; then 
-            AC_MSG_ERROR(--with-epics4-dir requires directory name)
+            AC_MSG_ERROR(--with-epics4 requires directory name)
         else
             ac_epics4_dir_path="$withval"
         fi
@@ -103,8 +103,8 @@ AC_DEFUN([AX_EPICS4],
     # test basic libraries
     AC_MSG_CHECKING(for usable EPICS4 libraries for $EPICS_OS_CLASS OS and host arhitecture $EPICS_HOST_ARCH)
 
-    succeeded=no
     pva_api_version=430
+    pva_rpc_api_version=430
     CPPFLAGS_SAVED="$CPPFLAGS"
     CPPFLAGS="$CPPFLAGS $EPICS_CPPFLAGS -I$EPICS_BASE/include -I$EPICS_BASE/include/os/$EPICS_OS_CLASS -I$EPICS4_DIR/pvDataCPP/include -I$EPICS4_DIR/pvAccessCPP/include"
     export CPPFLAGS
@@ -114,6 +114,7 @@ AC_DEFUN([AX_EPICS4],
     LDFLAGS="$LDFLAGS -L$EPICS_BASE/lib/$EPICS_HOST_ARCH -L$EPICS4_DIR/pvDataCPP/lib/$EPICS_HOST_ARCH -L$EPICS4_DIR/pvAccessCPP/lib/$EPICS_HOST_ARCH -lpvData -lpvAccess -lCom"
     export LDFLAGS
 
+    succeeded=no
     AC_REQUIRE([AC_PROG_CXX])
     AC_LANG_PUSH([C++])
         AC_LINK_IFELSE([AC_LANG_PROGRAM(
@@ -153,6 +154,40 @@ AC_DEFUN([AX_EPICS4],
         AC_DEFINE(PVA_API_VERSION,$pva_api_version,[define PVA API version])
         AC_SUBST(PVA_API_VERSION, $pva_api_version)
         AC_SUBST(EPICS4_DIR)
+    fi
+
+    AC_MSG_CHECKING(EPICS4 PVA RPC API version)
+    succeeded=no
+    AC_REQUIRE([AC_PROG_CXX])
+    AC_LANG_PUSH([C++])
+        AC_LINK_IFELSE([AC_LANG_PROGRAM(
+            [[
+            #include "pv/pvAccess.h"
+            #include "pv/pvData.h"
+            #include "pv/event.h"
+            #include "pv/rpcClient.h"
+            ]],
+            [[
+            epics::pvAccess::RPCClient::shared_pointer rpcClient;
+            ]])
+        ],[succeeded=yes],[succeeded=no])
+        AC_LINK_IFELSE([AC_LANG_PROGRAM(
+            [[
+            #include "pv/rpcClient.h"
+            ]],
+            [[
+            epics::pvAccess::RPCClientFactory::create("Channel");
+            ]])
+        ],[pva_rpc_api_version=430],[pva_rpc_api_version=440])
+    AC_LANG_POP([C++])
+
+    if test "$succeeded" != "yes" ; then
+        AC_MSG_RESULT([unknown])
+        AC_MSG_ERROR(could not compile and link EPICS4 RPC test code: check your EPICS4 installation)
+    else
+        AC_MSG_RESULT([$pva_rpc_api_version])
+        AC_DEFINE(PVA_RPC_API_VERSION,$pva_rpc_api_version,[define PVA RPC API version])
+        AC_SUBST(PVA_RPC_API_VERSION, $pva_rpc_api_version)
     fi
 
     CPPFLAGS="$CPPFLAGS_SAVED"

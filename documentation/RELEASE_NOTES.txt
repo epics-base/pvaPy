@@ -1,4 +1,4 @@
-Release 0.3 
+Release 0.3 (2014/05/09)
 ========================
 
 - added support for PvTimeStamp
@@ -6,6 +6,7 @@ Release 0.3
 - added support for NtTable
 - Channel class can now take arbitrary request descriptors for get(), put()
   and startMonitor()
+- Build configuration scripts check for correct RPC API version
 
 Release 0.2 (2013/12/13)
 ========================

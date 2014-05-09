@@ -21,8 +21,8 @@
 -include $(TOP)/configure/RELEASE.local
 
 
+#PVCOMMON=$(EPICS4_DIR)/pvCommonCPP
 PVDATA=$(EPICS4_DIR)/pvDataCPP
-PVCOMMON=$(EPICS4_DIR)/pvCommonCPP
 PVACCESS=$(EPICS4_DIR)/pvAccessCPP
 
 # Set RULES here if you want to take build rules from somewhere
