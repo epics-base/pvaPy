@@ -13,6 +13,7 @@
 
 const char* Channel::DefaultRequestDescriptor("field(value)");
 const double Channel::DefaultTimeout(3.0);
+const double Channel::ShutdownWaitTime(0.1);
 
 PvaPyLogger Channel::logger("Channel");
 PvaClient Channel::pvaClient;
@@ -48,6 +49,7 @@ Channel::~Channel()
 {
     stopMonitor();
     channel->destroy();
+    epicsThreadSleep(ShutdownWaitTime);
 }
  
 PvObject* Channel::get()

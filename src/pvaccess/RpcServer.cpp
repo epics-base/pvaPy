@@ -4,7 +4,7 @@
 #include "InvalidState.h"
 
 PvaPyLogger RpcServer::logger("RpcServer");
-const float RpcServer::ShutdownWaitTime(0.1);
+const double RpcServer::ShutdownWaitTime(0.1);
 
 RpcServer::RpcServer() :
     epics::pvAccess::RPCServer(),

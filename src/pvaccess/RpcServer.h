@@ -25,7 +25,7 @@ public:
     void stop();
     void shutdown();
 private:
-    static const float ShutdownWaitTime;
+    static const double ShutdownWaitTime;
     static PvaPyLogger logger;
     static void listenerThread(RpcServer* rpcServer);
     bool destroyed;

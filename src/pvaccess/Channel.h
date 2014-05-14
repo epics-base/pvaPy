@@ -38,6 +38,8 @@ public:
     virtual double getTimeout() const;
 
 private:
+    static const double ShutdownWaitTime;
+
     static PvaPyLogger logger;
     static PvaClient pvaClient;
     static void monitorThread(Channel* channel);
