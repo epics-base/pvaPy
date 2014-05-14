@@ -7,7 +7,7 @@
 #include "pv/rpcServer.h"
 #include "boost/python/object.hpp"
 #include "RpcServiceImpl.h"
-
+#include "PvaPyLogger.h"
 
 class RpcServer : public epics::pvAccess::RPCServer
 {
@@ -16,7 +16,18 @@ public:
     virtual ~RpcServer();
     void registerService(const std::string& serviceName, const boost::python::object& pyService);
     void unregisterService(const std::string& serviceName);
+
+    void startListener();
+    void stopListener();
+
     void listen(int seconds=0);
+    void start();
+    void stop();
+    void shutdown();
+private:
+    static PvaPyLogger logger;
+    static void listenerThread(RpcServer* rpcServer);
+    bool destroyed;
 };
 
 #endif

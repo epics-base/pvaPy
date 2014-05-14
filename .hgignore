@@ -15,3 +15,5 @@ tools/autoconf/autom4te.cache
 tools/autoconf/Makefile.in
 tools/autoconf/missing
 tools/autoconf/aclocal.m4
+tools/autoconf/configure
+tools/autoconf/install-sh

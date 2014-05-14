@@ -378,8 +378,13 @@ BOOST_PYTHON_MODULE(pvaccess)
     // RPC Server
     class_<RpcServer>("RpcServer", init<>())
         .def("registerService", &RpcServer::registerService)
-        .def("unregisterService", &RpcServer::registerService)
+        .def("unregisterService", &RpcServer::unregisterService)
+        .def("startListener", &RpcServer::startListener)
+        .def("stopListener", &RpcServer::stopListener)
+        .def("start", &RpcServer::start)
+        .def("stop", &RpcServer::start)
         .def("listen", static_cast<void(RpcServer::*)(int)>(&RpcServer::listen), RpcServerListen())
+        .def("shutdown", &RpcServer::shutdown)
         ;
     
 }

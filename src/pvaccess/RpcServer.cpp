@@ -1,13 +1,19 @@
 
 #include "RpcServer.h"
+#include "PyGilManager.h"
+#include "InvalidState.h"
 
-RpcServer::RpcServer() 
-    : epics::pvAccess::RPCServer()
+PvaPyLogger RpcServer::logger("RpcServer");
+
+RpcServer::RpcServer() :
+    epics::pvAccess::RPCServer(),
+    destroyed(false)
 {
 }
 
 RpcServer::~RpcServer() 
 {
+    shutdown();
 }
 
 void RpcServer::registerService(const std::string& serviceName, const boost::python::object& pyService)
@@ -21,8 +27,61 @@ void RpcServer::unregisterService(const std::string& serviceName)
     epics::pvAccess::RPCServer::unregisterService(serviceName);
 }
 
+void RpcServer::startListener()
+{
+    if (destroyed) {
+        throw InvalidState("Invalid state: server has been shutdown and cannot be restarted.");
+    }
+
+    // One must call PyEval_InitThreads() in the main thread
+    // to initialize thread state, which is needed for proper functioning
+    // of PyGILState_Ensure()/PyGILState_Release().
+    PyGilManager::evalInitThreads();
+    epicsThreadCreate("RpcServerListenerThread", epicsThreadPriorityLow, epicsThreadGetStackSize(epicsThreadStackSmall), (EPICSTHREADFUNC)listenerThread, this);
+}
+
+void RpcServer::stopListener()
+{
+    shutdown();
+}
+
+void RpcServer::listenerThread(RpcServer* server)
+{
+    logger.debug("Started listener thread %s", epicsThreadGetNameSelf());
+
+    // Handle possible exceptions 
+    try {
+        server->run();
+    }
+    catch (const std::exception& ex) {
+    // Not good.
+        logger.error("Exception caught in listener thread %s: %s", epicsThreadGetNameSelf(), ex.what());
+    }
+}
+
 void RpcServer::listen(int seconds)
 {
+    if (destroyed) {
+        throw InvalidState("Invalid state: server has been shutdown and cannot be restarted.");
+    }
     printInfo();
     run(seconds);
+    destroyed = true;
 }
+
+void RpcServer::start()
+{
+    listen();
+}
+
+void RpcServer::stop()
+{
+    shutdown();
+}
+
+void RpcServer::shutdown()
+{
+    destroyed = true;
+    epics::pvAccess::RPCServer::destroy();
+}
+

@@ -258,3 +258,5 @@ void Channel::monitorThread(Channel* channel)
     }
     logger.debug("Exiting monitor thread %s", epicsThreadGetNameSelf());
 }
+
+
