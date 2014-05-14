@@ -4,6 +4,7 @@
 #include "InvalidState.h"
 
 PvaPyLogger RpcServer::logger("RpcServer");
+const float RpcServer::ShutdownWaitTime(0.1);
 
 RpcServer::RpcServer() :
     epics::pvAccess::RPCServer(),
@@ -14,6 +15,7 @@ RpcServer::RpcServer() :
 RpcServer::~RpcServer() 
 {
     shutdown();
+    epicsThreadSleep(ShutdownWaitTime);
 }
 
 void RpcServer::registerService(const std::string& serviceName, const boost::python::object& pyService)
