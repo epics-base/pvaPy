@@ -1,3 +1,7 @@
+Release 0.4 
+========================
+- added interactive mode for RPC server
+
 Release 0.3 (2014/05/09)
 ========================
 
@@ -6,7 +10,7 @@ Release 0.3 (2014/05/09)
 - added support for NtTable
 - Channel class can now take arbitrary request descriptors for get(), put()
   and startMonitor()
-- Build configuration scripts check for correct RPC API version
+- build configuration scripts check for correct RPC API version
 
 Release 0.2 (2013/12/13)
 ========================
