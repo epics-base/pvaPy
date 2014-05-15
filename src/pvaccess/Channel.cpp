@@ -10,6 +10,7 @@
 #include "ChannelTimeout.h"
 #include "InvalidRequest.h"
 #include "ObjectNotFound.h"
+#include "PyGilManager.h"
 
 const char* Channel::DefaultRequestDescriptor("field(value)");
 const double Channel::DefaultTimeout(3.0);
@@ -177,9 +178,9 @@ void Channel::callSubscribers(PvObject& pvObject)
         // to initialize things properly. If this is not done, code will
         // most likely crash while invoking python from c++, or while
         // attempting to release GIL.
+        // PyGILState_STATE gilState = PyGILState_Ensure();
         logger.trace("Acquiring python GIL");
-        PyGILState_STATE gilState = PyGILState_Ensure();
-        logger.trace("Python GIL state: %d", gilState);
+        PyGilManager::gilStateEnsure();
 
         try {
             logger.debug("Invoking subscriber: " + subscriberName);
@@ -193,8 +194,9 @@ void Channel::callSubscribers(PvObject& pvObject)
         }
 
         // Release GIL. 
+        // PyGILState_Release(gilState);
         logger.trace("Releasing python GIL");
-        PyGILState_Release(gilState);
+        PyGilManager::gilStateRelease();
     }
     logger.trace("Done calling subscribers");
 }
@@ -212,7 +214,8 @@ void Channel::startMonitor(const std::string& requestDescriptor)
         // One must call PyEval_InitThreads() in the main thread
         // to initialize thread state, which is needed for proper functioning
         // of PyGILState_Ensure()/PyGILState_Release().
-        PyEval_InitThreads();
+        // PyEval_InitThreads();
+        PyGilManager::evalInitThreads();
 #if defined PVA_API_VERSION && PVA_API_VERSION == 430
         epics::pvData::PVStructure::shared_pointer pvRequest = epics::pvAccess::getCreateRequest()->createRequest(requestDescriptor, requester);
 #else
