@@ -111,12 +111,18 @@ void pyDictToStructureField(const boost::python::dict& pyDict, const std::string
 void pyListToStructureArrayField(const boost::python::list& pyList, const std::string& fieldName, epics::pvData::PVStructurePtr& pvStructurePtr);
 
 //
+// Conversion PV Structure Array => PY [{}] 
+//
+void structureArrayFieldToPyList(const std::string& fieldName, const epics::pvData::PVStructurePtr& pvStructurePtr, boost::python::list& pyList);
+
+//
 // Conversion PV Structure => PY {}
 //
 void structureToPyDict(const epics::pvData::PVStructurePtr& pvStructurePtr, boost::python::dict& pyDict);
 
 void structureFieldToPyDict(const std::string& fieldName, const epics::pvData::PVStructurePtr& pvStructurePtr, boost::python::dict& pyDict);
 
+//
 //
 // Add PV Scalar => PY {}
 // 

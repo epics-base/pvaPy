@@ -524,6 +524,23 @@ void pyListToStructureArrayField(const boost::python::list& pyList, const std::s
 }
 
 //
+// Conversion PV Structure Array => PY [{}] 
+//
+void structureArrayFieldToPyList(const std::string& fieldName, const epics::pvData::PVStructurePtr& pvStructurePtr, boost::python::list& pyList)
+{
+    epics::pvData::PVStructureArrayPtr pvStructureArrayPtr = getStructureArrayField(fieldName, pvStructurePtr);
+    epics::pvData::StructureArrayData arrayData;
+    int nDataElements = pvStructureArrayPtr->getLength();
+    pvStructureArrayPtr->get(0, nDataElements, arrayData);
+    for (int i = 0; i < nDataElements; ++i) {
+        epics::pvData::PVStructurePtr pvStructure = arrayData.data[i];
+        boost::python::dict pyDict;
+        structureToPyDict(pvStructure, pyDict);
+        pyList.append(pyDict);
+    }
+}
+
+//
 // Conversion PV Structure => PY {}
 //
 void structureToPyDict(const epics::pvData::PVStructurePtr& pvStructurePtr, boost::python::dict& pyDict)

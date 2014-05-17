@@ -338,7 +338,7 @@ void PvObject::setStructureArray(const boost::python::list& pyList)
 boost::python::list PvObject::getStructureArray(const std::string& key) const
 {
     boost::python::list pyList;
-    //PyPvDataUtility::structureArrayFieldToPyList(key, pvStructurePtr, pyList);
+    PyPvDataUtility::structureArrayFieldToPyList(key, pvStructurePtr, pyList);
     return pyList;
 }
 
