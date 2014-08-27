@@ -331,6 +331,7 @@ void scalarArrayFieldToPyList(const std::string& fieldName, const epics::pvData:
 {
     epics::pvData::ScalarType scalarType = getScalarArrayType(fieldName, pvStructurePtr);
     epics::pvData::PVScalarArrayPtr pvScalarArrayPtr = pvStructurePtr->getScalarArrayField(fieldName, scalarType);
+#if defined PVA_API_VERSION && PVA_API_VERSION == 430
     switch (scalarType) {
         case epics::pvData::pvBoolean: {
             scalarArrayToPyList<epics::pvData::PVBooleanArray, epics::pvData::BooleanArrayData>(pvScalarArrayPtr, pyList);
@@ -384,6 +385,61 @@ void scalarArrayFieldToPyList(const std::string& fieldName, const epics::pvData:
             throw PvaException("Unrecognized scalar type: %d", scalarType);
         }
     }
+#else
+    switch (scalarType) {
+        case epics::pvData::pvBoolean: {
+            scalarArrayToPyList<epics::pvData::PVBooleanArray, epics::pvData::boolean>(pvScalarArrayPtr, pyList);
+            break;
+        }
+        case epics::pvData::pvByte: {
+            scalarArrayToPyList<epics::pvData::PVByteArray, epics::pvData::int8>(pvScalarArrayPtr, pyList);
+            break;
+        }
+        case epics::pvData::pvUByte: {
+            scalarArrayToPyList<epics::pvData::PVUByteArray, epics::pvData::uint8>(pvScalarArrayPtr, pyList);
+            break;
+        }
+        case epics::pvData::pvShort: {
+            scalarArrayToPyList<epics::pvData::PVShortArray, epics::pvData::int16>(pvScalarArrayPtr, pyList);
+            break;
+        }
+        case epics::pvData::pvUShort: {
+            scalarArrayToPyList<epics::pvData::PVUShortArray, epics::pvData::uint16>(pvScalarArrayPtr, pyList);
+            break;
+        }
+        case epics::pvData::pvInt: {
+            scalarArrayToPyList<epics::pvData::PVIntArray, epics::pvData::int32>(pvScalarArrayPtr, pyList);
+            break;
+        }
+        case epics::pvData::pvUInt: {
+            scalarArrayToPyList<epics::pvData::PVUIntArray, epics::pvData::uint32>(pvScalarArrayPtr, pyList);
+            break;
+        }
+        case epics::pvData::pvLong: {
+            scalarArrayToPyList<epics::pvData::PVLongArray, epics::pvData::int64>(pvScalarArrayPtr, pyList);
+            break;
+        }
+        case epics::pvData::pvULong: {
+            scalarArrayToPyList<epics::pvData::PVULongArray, epics::pvData::uint64>(pvScalarArrayPtr, pyList);
+            break;
+        }
+        case epics::pvData::pvFloat: {
+            scalarArrayToPyList<epics::pvData::PVFloatArray, float>(pvScalarArrayPtr, pyList);
+            break;
+        }
+        case epics::pvData::pvDouble: {
+            scalarArrayToPyList<epics::pvData::PVDoubleArray, double>(pvScalarArrayPtr, pyList);
+            break;
+        }
+        case epics::pvData::pvString: {
+            scalarArrayToPyList<epics::pvData::PVStringArray, std::string>(pvScalarArrayPtr, pyList);
+            break;
+        }
+        default: {
+            throw PvaException("Unrecognized scalar type: %d", scalarType);
+        }
+    }
+#endif // if defined PVA_API_VERSION && PVA_API_VERSION == 430
 }
 
 //
@@ -507,20 +563,33 @@ void pyListToStructureArrayField(const boost::python::list& pyList, const std::s
     epics::pvData::StructureArrayConstPtr structureArrayPtr = pvStructureArrayPtr->getStructureArray();
     epics::pvData::StructureConstPtr structurePtr = structureArrayPtr->getStructure();
     int listSize = boost::python::len(pyList);
+#if defined PVA_API_VERSION && PVA_API_VERSION == 430
     epics::pvData::PVStructurePtrArray pvStructures(listSize);
+#else
+    epics::pvData::PVStructureArray::svector pvStructures(listSize);
+#endif // if defined PVA_API_VERSION && PVA_API_VERSION == 430
     for (int i = 0; i < listSize; i++) {
         boost::python::extract<boost::python::dict> dictExtract(pyList[i]);
         if (dictExtract.check()) {
             boost::python::dict pyDict = dictExtract();
             epics::pvData::PVStructurePtr pvStructure = epics::pvData::getPVDataCreate()->createPVStructure(structurePtr);
             pyDictToStructure(pyDict, pvStructure);
+#if defined PVA_API_VERSION && PVA_API_VERSION == 430
             pvStructures[i] = pvStructure;
+#else
+            pvStructures[i] = pvStructure;
+#endif // if defined PVA_API_VERSION && PVA_API_VERSION == 430
         }
         else {
             throw InvalidDataType("Invalid data type for element %d", i);
         }
     }
+#if defined PVA_API_VERSION && PVA_API_VERSION == 430
     pvStructureArrayPtr->put(0, listSize, pvStructures, 0);
+#else
+    pvStructureArrayPtr->setCapacity(listSize);
+    pvStructureArrayPtr->replace(freeze(pvStructures));
+#endif // if defined PVA_API_VERSION && PVA_API_VERSION == 430
 }
 
 //
@@ -529,11 +598,19 @@ void pyListToStructureArrayField(const boost::python::list& pyList, const std::s
 void structureArrayFieldToPyList(const std::string& fieldName, const epics::pvData::PVStructurePtr& pvStructurePtr, boost::python::list& pyList)
 {
     epics::pvData::PVStructureArrayPtr pvStructureArrayPtr = getStructureArrayField(fieldName, pvStructurePtr);
-    epics::pvData::StructureArrayData arrayData;
     int nDataElements = pvStructureArrayPtr->getLength();
+#if defined PVA_API_VERSION && PVA_API_VERSION == 430
+    epics::pvData::StructureArrayData arrayData;
     pvStructureArrayPtr->get(0, nDataElements, arrayData);
+#else
+    epics::pvData::PVStructureArray::const_svector arrayData(pvStructureArrayPtr->view());
+#endif // if defined PVA_API_VERSION && PVA_API_VERSION == 430
     for (int i = 0; i < nDataElements; ++i) {
+#if defined PVA_API_VERSION && PVA_API_VERSION == 430
         epics::pvData::PVStructurePtr pvStructure = arrayData.data[i];
+#else
+        epics::pvData::PVStructurePtr pvStructure = arrayData[i];
+#endif // if defined PVA_API_VERSION && PVA_API_VERSION == 430
         boost::python::dict pyDict;
         structureToPyDict(pvStructure, pyDict);
         pyList.append(pyDict);
@@ -572,6 +649,9 @@ void structureToPyDict(const epics::pvData::PVStructurePtr& pvStructurePtr, boos
                 addStructureArrayFieldToDict(fieldName, pvStructurePtr, pyDict);
                 break;
             }
+            default: {
+                throw PvaException("Unrecognized field type: %d", type);
+            }
         }
     }
 }
@@ -584,7 +664,7 @@ void structureFieldToPyDict(const std::string& fieldName, const epics::pvData::P
 //
 // Add PV Scalar => PY {}
 // 
-void addScalarFieldToDict(const epics::pvData::String& fieldName, epics::pvData::ScalarType scalarType, const epics::pvData::PVStructurePtr& pvStructurePtr, boost::python::dict& pyDict)
+void addScalarFieldToDict(const std::string& fieldName, epics::pvData::ScalarType scalarType, const epics::pvData::PVStructurePtr& pvStructurePtr, boost::python::dict& pyDict)
 {
     switch (scalarType) {
         case epics::pvData::pvBoolean: {
@@ -656,7 +736,7 @@ void addScalarFieldToDict(const epics::pvData::String& fieldName, epics::pvData:
 //
 // Add PV Scalar Array => PY {}
 // 
-void addScalarArrayFieldToDict(const epics::pvData::String& fieldName, epics::pvData::ScalarType scalarType, const epics::pvData::PVStructurePtr& pvStructurePtr, boost::python::dict& pyDict)
+void addScalarArrayFieldToDict(const std::string& fieldName, epics::pvData::ScalarType scalarType, const epics::pvData::PVStructurePtr& pvStructurePtr, boost::python::dict& pyDict)
 {
     boost::python::list pyList;
     scalarArrayFieldToPyList(fieldName, pvStructurePtr, pyList);
@@ -666,7 +746,7 @@ void addScalarArrayFieldToDict(const epics::pvData::String& fieldName, epics::pv
 //
 // Add PV Structure => PY {}
 // 
-void addStructureFieldToDict(const epics::pvData::String& fieldName, const epics::pvData::PVStructurePtr& pvStructurePtr, boost::python::dict& pyDict)
+void addStructureFieldToDict(const std::string& fieldName, const epics::pvData::PVStructurePtr& pvStructurePtr, boost::python::dict& pyDict)
 {
     boost::python::dict pyDict2;
     structureFieldToPyDict(fieldName, pvStructurePtr, pyDict2);
@@ -676,16 +756,24 @@ void addStructureFieldToDict(const epics::pvData::String& fieldName, const epics
 //
 // Add PV Structure Array => PY {}
 // 
-void addStructureArrayFieldToDict(const epics::pvData::String& fieldName, const epics::pvData::PVStructurePtr& pvStructurePtr, boost::python::dict& pyDict) 
+void addStructureArrayFieldToDict(const std::string& fieldName, const epics::pvData::PVStructurePtr& pvStructurePtr, boost::python::dict& pyDict) 
 {
     boost::python::list pyList;
     epics::pvData::PVStructureArrayPtr structureArrayPtr = getStructureArrayField(fieldName, pvStructurePtr);
-    epics::pvData::StructureArrayData arrayData;
     int nDataElements = structureArrayPtr->getLength();
+#if defined PVA_API_VERSION && PVA_API_VERSION == 430
+    epics::pvData::StructureArrayData arrayData;
     structureArrayPtr->get(0, nDataElements, arrayData);
+#else
+    epics::pvData::PVStructureArray::const_svector arrayData(structureArrayPtr->view());
+#endif // if defined PVA_API_VERSION && PVA_API_VERSION == 430
     for (int i = 0; i < nDataElements; ++i) {
         boost::python::dict pyDict2;
+#if defined PVA_API_VERSION && PVA_API_VERSION == 430
         structureToPyDict(arrayData.data[i], pyDict2);   
+#else
+        structureToPyDict(arrayData[i], pyDict2);   
+#endif // if defined PVA_API_VERSION && PVA_API_VERSION == 430
         pyList.append(pyDict2);   
     }
     pyDict[fieldName] = pyList;
@@ -733,6 +821,9 @@ void structureToPyDict(const epics::pvData::StructureConstPtr& structurePtr, boo
                 pyDict[fieldName] = pyList;
                 break;
             }
+            default: {
+                throw PvaException("Unrecognized field type: %d", type);
+            }
         }
     }
 }
@@ -769,6 +860,9 @@ void copyStructureToStructure(const epics::pvData::PVStructurePtr& srcPvStructur
             case epics::pvData::structureArray: {
                 copyStructureArrayToStructure(fieldName, srcPvStructurePtr, destPvStructurePtr);
                 break;
+            }
+            default: {
+                throw PvaException("Unrecognized field type: %d", type);
             }
         }
     }
@@ -810,17 +904,31 @@ void copyStructureArrayToStructure(const std::string& fieldName, const epics::pv
 
 
     int nElements = srcPvStructureArrayPtr->getLength();
+#if defined PVA_API_VERSION && PVA_API_VERSION == 430
     epics::pvData::StructureArrayData srcPvStructures;
     srcPvStructureArrayPtr->get(0, nElements, srcPvStructures);
-
     epics::pvData::PVStructurePtrArray destPvStructures(nElements);
+#else
+    epics::pvData::PVStructureArray::const_svector srcPvStructures(srcPvStructureArrayPtr->view());
+    epics::pvData::PVStructureArray::svector destPvStructures(nElements);
+#endif // if defined PVA_API_VERSION && PVA_API_VERSION == 430
+
     for (int i = 0; i < nElements; i++) {
         epics::pvData::PVStructurePtr destPvStructurePtr2 = epics::pvData::getPVDataCreate()->createPVStructure(structurePtr);
+#if defined PVA_API_VERSION && PVA_API_VERSION == 430
         epics::pvData::PVStructurePtr srcPvStructurePtr2 = srcPvStructures.data[i];
+#else
+        epics::pvData::PVStructurePtr srcPvStructurePtr2 = srcPvStructures[i];
+#endif // if defined PVA_API_VERSION && PVA_API_VERSION == 430
         copyStructureToStructure(srcPvStructurePtr2, destPvStructurePtr2);
         destPvStructures[i] = destPvStructurePtr2;
     }
+#if defined PVA_API_VERSION && PVA_API_VERSION == 430
     destPvStructureArrayPtr->put(0, nElements, destPvStructures, 0);
+#else
+    destPvStructureArrayPtr->setCapacity(nElements);
+    destPvStructureArrayPtr->replace(freeze(destPvStructures));
+#endif // if defined PVA_API_VERSION && PVA_API_VERSION == 430
 }
 
 //
@@ -926,6 +1034,7 @@ void copyScalarArrayToStructure(const std::string& fieldName, epics::pvData::Sca
 {
     epics::pvData::PVScalarArrayPtr srcPvScalarArrayPtr = getScalarArrayField(fieldName, scalarType, srcPvStructurePtr);
     epics::pvData::PVScalarArrayPtr destPvScalarArrayPtr = getScalarArrayField(fieldName, scalarType, destPvStructurePtr);
+#if defined PVA_API_VERSION && PVA_API_VERSION == 430
     switch (scalarType) {
         case epics::pvData::pvBoolean: {
             copyScalarArrayToScalarArray<epics::pvData::PVBooleanArray, epics::pvData::BooleanArrayData>(srcPvScalarArrayPtr, destPvScalarArrayPtr);
@@ -979,6 +1088,61 @@ void copyScalarArrayToStructure(const std::string& fieldName, epics::pvData::Sca
             throw InvalidDataType("Unrecognized scalar type: %d", scalarType);
         }
     }
+#else
+    switch (scalarType) {
+        case epics::pvData::pvBoolean: {
+            copyScalarArrayToScalarArray<epics::pvData::PVBooleanArray, epics::pvData::boolean>(srcPvScalarArrayPtr, destPvScalarArrayPtr);
+            break;
+        }
+        case epics::pvData::pvByte: {
+            copyScalarArrayToScalarArray<epics::pvData::PVByteArray, epics::pvData::int8>(srcPvScalarArrayPtr, destPvScalarArrayPtr);
+            break;
+        }
+        case epics::pvData::pvUByte: {
+            copyScalarArrayToScalarArray<epics::pvData::PVUByteArray, epics::pvData::uint8>(srcPvScalarArrayPtr, destPvScalarArrayPtr);
+            break;
+        }
+        case epics::pvData::pvShort: {
+            copyScalarArrayToScalarArray<epics::pvData::PVShortArray, epics::pvData::int16>(srcPvScalarArrayPtr, destPvScalarArrayPtr);
+            break;
+        }
+        case epics::pvData::pvUShort: {
+            copyScalarArrayToScalarArray<epics::pvData::PVUShortArray, epics::pvData::uint16>(srcPvScalarArrayPtr, destPvScalarArrayPtr);
+            break;
+        }
+        case epics::pvData::pvInt: {
+            copyScalarArrayToScalarArray<epics::pvData::PVIntArray, epics::pvData::int32>(srcPvScalarArrayPtr, destPvScalarArrayPtr);
+            break;
+        }
+        case epics::pvData::pvUInt: {
+            copyScalarArrayToScalarArray<epics::pvData::PVUIntArray, epics::pvData::uint32>(srcPvScalarArrayPtr, destPvScalarArrayPtr);
+            break;
+        }
+        case epics::pvData::pvLong: {
+            copyScalarArrayToScalarArray<epics::pvData::PVLongArray, epics::pvData::int64>(srcPvScalarArrayPtr, destPvScalarArrayPtr);
+            break;
+        }
+        case epics::pvData::pvULong: {
+            copyScalarArrayToScalarArray<epics::pvData::PVULongArray, epics::pvData::uint64>(srcPvScalarArrayPtr, destPvScalarArrayPtr);
+            break;
+        }
+        case epics::pvData::pvFloat: {
+            copyScalarArrayToScalarArray<epics::pvData::PVFloatArray, float>(srcPvScalarArrayPtr, destPvScalarArrayPtr);
+            break;
+        }
+        case epics::pvData::pvDouble: {
+            copyScalarArrayToScalarArray<epics::pvData::PVDoubleArray, double>(srcPvScalarArrayPtr, destPvScalarArrayPtr);
+            break;
+        }
+        case epics::pvData::pvString: {
+            copyScalarArrayToScalarArray<epics::pvData::PVStringArray, std::string>(srcPvScalarArrayPtr, destPvScalarArrayPtr);
+            break;
+        }
+        default: {
+            throw InvalidDataType("Unrecognized scalar type: %d", scalarType);
+        }
+    }
+#endif // if defined PVA_API_VERSION && PVA_API_VERSION == 430
 }
     
 } // namespace PyPvDataUtility

@@ -8,12 +8,12 @@ ChannelRequesterImpl::ChannelRequesterImpl(bool printOnlyErrors_) :
 {
 }
 
-epics::pvData::String ChannelRequesterImpl::getRequesterName()
+std::string ChannelRequesterImpl::getRequesterName()
 {
 	return "ChannelRequesterImpl";
 }
 
-void ChannelRequesterImpl::message(const epics::pvData::String& message, epics::pvData::MessageType messageType)
+void ChannelRequesterImpl::message(const std::string& message, epics::pvData::MessageType messageType)
 {
     if (!printOnlyErrors || messageType > epics::pvData::warningMessage) {
         std::cerr << "[" << getRequesterName() << "] message(" << message << ", " << getMessageTypeName(messageType) << ")" << std::endl;

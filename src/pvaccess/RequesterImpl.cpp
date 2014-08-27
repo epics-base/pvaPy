@@ -3,17 +3,17 @@
 #include "RequesterImpl.h"
 
 
-RequesterImpl::RequesterImpl(const epics::pvData::String& requesterName_) :
+RequesterImpl::RequesterImpl(const std::string& requesterName_) :
     requesterName(requesterName_)
 {
 }
 
-epics::pvData::String RequesterImpl::getRequesterName()
+std::string RequesterImpl::getRequesterName()
 {
 	return "RequesterImpl";
 }
 
-void RequesterImpl::message(const epics::pvData::String& message, epics::pvData::MessageType messageType)
+void RequesterImpl::message(const std::string& message, epics::pvData::MessageType messageType)
 {
 	std::cerr << "[" << getRequesterName() << "] message(" << message << ", " << getMessageTypeName(messageType) << ")" << std::endl;
 }

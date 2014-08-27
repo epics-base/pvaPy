@@ -11,17 +11,30 @@ class ChannelPutRequesterImpl : public epics::pvAccess::ChannelPutRequester
 {
 public:
     
-    ChannelPutRequesterImpl(const epics::pvData::String& channelName);
+    ChannelPutRequesterImpl(const std::string& channelName);
     ChannelPutRequesterImpl(const ChannelPutRequesterImpl& channelPutRequester);
-    virtual epics::pvData::String getRequesterName();
-    virtual void message(const epics::pvData::String& message, epics::pvData::MessageType messageType);
+    virtual std::string getRequesterName();
+    virtual void message(const std::string& message, epics::pvData::MessageType messageType);
+
+#if defined PVA_API_VERSION && PVA_API_VERSION == 430
     virtual void channelPutConnect(const epics::pvData::Status& status,
         const epics::pvAccess::ChannelPut::shared_pointer& channelPut,
         const epics::pvData::PVStructure::shared_pointer& pvStructure, 
         const epics::pvData::BitSet::shared_pointer& bitSet);
     virtual void getDone(const epics::pvData::Status& status);
     virtual void putDone(const epics::pvData::Status& status);
+
+#else
+
+    virtual void channelPutConnect(const epics::pvData::Status& status,
+        const epics::pvAccess::ChannelPut::shared_pointer& channelPut,
+        const epics::pvData::Structure::const_shared_pointer& structure);
+    virtual void getDone(const epics::pvData::Status& status, const epics::pvAccess::ChannelPut::shared_pointer& channelPut, const epics::pvData::PVStructure::shared_pointer& pvStructure, const epics::pvData::BitSet::shared_pointer& bitSet);
+    virtual void putDone(const epics::pvData::Status& status, const epics::pvAccess::ChannelPut::shared_pointer& channelPut);
+#endif // if defined PVA_API_VERSION && PVA_API_VERSION == 430
+
     epics::pvData::PVStructure::shared_pointer getStructure();
+    epics::pvData::BitSet::shared_pointer getBitSet();
     void resetEvent();
     bool waitUntilDone(double timeOut);
 
@@ -32,8 +45,9 @@ private:
     epics::pvData::PVStructure::shared_pointer pvStructure;
     epics::pvData::BitSet::shared_pointer bitSet;
     epics::pvData::Mutex pointerMutex;
-    epics::pvData::Event event;
-    epics::pvData::String channelName;
+    epics::pvData::Mutex eventMutex;
+    epics::pvData::EventPtr event;
+    std::string channelName;
     bool done;
 
 };

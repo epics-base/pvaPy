@@ -8,12 +8,12 @@ GetFieldRequesterImpl::GetFieldRequesterImpl(epics::pvAccess::Channel::shared_po
 {
 }
 
-epics::pvData::String GetFieldRequesterImpl::getRequesterName()
+std::string GetFieldRequesterImpl::getRequesterName()
 {
 	return "GetFieldRequesterImpl";
 }
 
-void GetFieldRequesterImpl::message(const epics::pvData::String& message, epics::pvData::MessageType messageType)
+void GetFieldRequesterImpl::message(const std::string& message, epics::pvData::MessageType messageType)
 {
 	std::cerr << "[" << getRequesterName() << "] message(" << message << ", " << getMessageTypeName(messageType) << ")" << std::endl;
 }

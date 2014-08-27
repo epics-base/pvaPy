@@ -1,6 +1,8 @@
 Release 0.4 
 ========================
 - added interactive mode for RPC server
+- added ability to specify provider name, which enables channel access
+- updated code for most recent C++ API changes
 
 Release 0.3 (2014/05/09)
 ========================

@@ -19,6 +19,7 @@ LDFLAGS += $(PVA_PY_LDFLAGS) -l$(BOOST_PYTHON_LIB)
 
 
 pvaccess_SRCS += pvaccess.cpp
+pvaccess_SRCS += CaClient.cpp
 pvaccess_SRCS += Channel.cpp
 pvaccess_SRCS += ChannelGetRequesterImpl.cpp
 pvaccess_SRCS += ChannelMonitorRequesterImpl.cpp
@@ -47,6 +48,7 @@ pvaccess_SRCS += PvFloat.cpp
 pvaccess_SRCS += PvInt.cpp
 pvaccess_SRCS += PvLong.cpp
 pvaccess_SRCS += PvObject.cpp
+pvaccess_SRCS += PvProvider.cpp
 pvaccess_SRCS += PvScalar.cpp
 pvaccess_SRCS += PvScalarArray.cpp
 pvaccess_SRCS += PvShort.cpp
@@ -74,7 +76,7 @@ pvaccess_LIBS += pvAccess
 pvaccess_LIBS += Com
 
 testClient_SRCS += testClient.cpp
-testClient_LIBS += pvaccess 
+testClient_LIBS += pvaccess
 testClient_LIBS += python
 testClient_LIBS += boost_python
 testClient_LIBS += pvData pvAccess Com

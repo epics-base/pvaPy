@@ -17,8 +17,8 @@ public:
 
     ChannelRequesterImpl(bool printOnlyErrors = false);
 
-    virtual epics::pvData::String getRequesterName();
-    virtual void message(const epics::pvData::String& message, epics::pvData::MessageType messageType);
+    virtual std::string getRequesterName();
+    virtual void message(const std::string& message, epics::pvData::MessageType messageType);
     virtual void channelCreated(const epics::pvData::Status& status, const epics::pvAccess::Channel::shared_pointer& channel);
     virtual void channelStateChange(const epics::pvAccess::Channel::shared_pointer& channel, epics::pvAccess::Channel::ConnectionState connectionState);
     

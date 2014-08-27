@@ -19,8 +19,8 @@ public:
 
     GetFieldRequesterImpl(epics::pvAccess::Channel::shared_pointer channel);
 
-    virtual epics::pvData::String getRequesterName();
-    virtual void message(const epics::pvData::String& message, epics::pvData::MessageType messageType);
+    virtual std::string getRequesterName();
+    virtual void message(const std::string& message, epics::pvData::MessageType messageType);
     virtual void getDone(const epics::pvData::Status& status, const epics::pvData::FieldConstPtr& field);
     epics::pvData::FieldConstPtr getField();
     bool waitUntilFieldGet(double timeOut);

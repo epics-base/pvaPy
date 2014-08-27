@@ -6,6 +6,7 @@ pv = PvObject({
     'i' : INT, 
     'ui' : UINT, 
     's' : STRING,
+    'sa' : [STRING],
     'd' : DOUBLE,
     'l' : LONG,
     'lint' : [INT],
@@ -41,6 +42,10 @@ print pv
 
 print 'Setting long list: '
 pv.setScalarArray('llong', [123456789, 987654321])
+print pv
+
+print 'Setting string list: '
+pv.setScalarArray('sa', ['xyz', 'zyx', 'wwwwwwwwe'])
 print pv
 
 print 'Setting struct: '

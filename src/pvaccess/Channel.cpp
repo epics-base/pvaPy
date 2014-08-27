@@ -9,6 +9,7 @@
 #include "pv/logger.h"
 #include "ChannelTimeout.h"
 #include "InvalidRequest.h"
+#include "InvalidArgument.h"
 #include "ObjectNotFound.h"
 #include "PyGilManager.h"
 
@@ -18,12 +19,17 @@ const double Channel::ShutdownWaitTime(0.1);
 
 PvaPyLogger Channel::logger("Channel");
 PvaClient Channel::pvaClient;
+CaClient Channel::caClient;
 
-Channel::Channel(const epics::pvData::String& channelName) :
+Channel::Channel(const std::string& channelName, PvProvider::ProviderType providerType) :
     requester(new RequesterImpl(channelName)),
     requesterImpl(new ChannelRequesterImpl(true)),
     channelGetRequester(channelName),
-    provider(epics::pvAccess::getChannelAccess()->getProvider("pva")),
+#if defined PVA_API_VERSION && PVA_API_VERSION == 430
+    provider(epics::pvAccess::getChannelAccess()->getProvider(PvProvider::getProviderName(providerType))),
+#else
+    provider(epics::pvAccess::getChannelProviderRegistry()->getProvider(PvProvider::getProviderName(providerType))),
+#endif // if defined PVA_API_VERSION && PVA_API_VERSION == 430
     channel(provider->createChannel(channelName, requesterImpl)),
     monitorRequester(new ChannelMonitorRequesterImpl(channelName)),
     monitorThreadDone(true),
@@ -66,7 +72,7 @@ PvObject* Channel::get(const std::string& requestDescriptor)
 #if defined PVA_API_VERSION && PVA_API_VERSION == 430
     epics::pvData::PVStructure::shared_pointer pvRequest = epics::pvAccess::getCreateRequest()->createRequest(requestDescriptor, requester);
 #else
-    epics::pvData::PVStructure::shared_pointer pvRequest = epics::pvAccess::CreateRequest::create()->createRequest(requestDescriptor);
+    epics::pvData::PVStructure::shared_pointer pvRequest = epics::pvData::CreateRequest::create()->createRequest(requestDescriptor);
 #endif // if defined PVA_API_VERSION && PVA_API_VERSION == 430
 
     std::tr1::shared_ptr<ChannelRequesterImpl> channelRequesterImpl = std::tr1::dynamic_pointer_cast<ChannelRequesterImpl>(channel->getChannelRequester());
@@ -96,7 +102,7 @@ PvObject* Channel::get(const std::string& requestDescriptor)
 #if defined PVA_API_VERSION && PVA_API_VERSION == 430
 		pvRequest = epics::pvAccess::getCreateRequest()->createRequest("field()", requester);
 #else
-		pvRequest = epics::pvAccess::CreateRequest::create()->createRequest("field()");
+		pvRequest = epics::pvData::CreateRequest::create()->createRequest("field()");
 #endif // if defined PVA_API_VERSION && PVA_API_VERSION == 430
     }
 
@@ -118,7 +124,7 @@ void Channel::put(const PvObject& pvObject, const std::string& requestDescriptor
 #if defined PVA_API_VERSION && PVA_API_VERSION == 430
     epics::pvData::PVStructure::shared_pointer pvRequest = epics::pvAccess::getCreateRequest()->createRequest(requestDescriptor, requester);
 #else
-    epics::pvData::PVStructure::shared_pointer pvRequest = epics::pvAccess::CreateRequest::create()->createRequest(requestDescriptor);
+    epics::pvData::PVStructure::shared_pointer pvRequest = epics::pvData::CreateRequest::create()->createRequest(requestDescriptor);
 #endif // if defined PVA_API_VERSION && PVA_API_VERSION == 430
     std::tr1::shared_ptr<ChannelRequesterImpl> channelRequesterImpl = std::tr1::dynamic_pointer_cast<ChannelRequesterImpl>(channel->getChannelRequester());
 
@@ -133,7 +139,12 @@ void Channel::put(const PvObject& pvObject, const std::string& requestDescriptor
 	if (putRequesterImpl->waitUntilDone(timeout)) {
         epics::pvData::PVStructurePtr pvStructurePtr = putRequesterImpl->getStructure();
         pvStructurePtr << pvObject;
+#if defined PVA_API_VERSION && PVA_API_VERSION == 430
         channelPut->put(false);
+#else
+        putRequesterImpl->resetEvent();
+        channelPut->put(pvStructurePtr, putRequesterImpl->getBitSet());
+#endif // if defined PVA_API_VERSION && PVA_API_VERSION == 430
 	    if (putRequesterImpl->waitUntilDone(timeout)) {
 	        return;
         }
@@ -219,7 +230,7 @@ void Channel::startMonitor(const std::string& requestDescriptor)
 #if defined PVA_API_VERSION && PVA_API_VERSION == 430
         epics::pvData::PVStructure::shared_pointer pvRequest = epics::pvAccess::getCreateRequest()->createRequest(requestDescriptor, requester);
 #else
-        epics::pvData::PVStructure::shared_pointer pvRequest = epics::pvAccess::CreateRequest::create()->createRequest(requestDescriptor);
+        epics::pvData::PVStructure::shared_pointer pvRequest = epics::pvData::CreateRequest::create()->createRequest(requestDescriptor);
 #endif // if defined PVA_API_VERSION && PVA_API_VERSION == 430
         channel->createMonitor(monitorRequester, pvRequest);
         epicsThreadCreate("ChannelMonitorThread", epicsThreadPriorityLow, epicsThreadGetStackSize(epicsThreadStackSmall), (EPICSTHREADFUNC)monitorThread, this);

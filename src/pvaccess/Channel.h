@@ -7,7 +7,9 @@
 #include "ChannelRequesterImpl.h"
 #include "SynchronizedQueue.h"
 #include "PvaClient.h"
+#include "CaClient.h"
 #include "PvObject.h"
+#include "PvProvider.h"
 #include "PvaPyLogger.h"
 
 class Channel
@@ -17,7 +19,7 @@ public:
     static const char* DefaultRequestDescriptor;
     static const double DefaultTimeout;
         
-    Channel(const epics::pvData::String& channelName);
+    Channel(const std::string& channelName, PvProvider::ProviderType providerType=PvProvider::PvaProviderType);
     Channel(const Channel& channel);
     virtual ~Channel();
 
@@ -42,6 +44,7 @@ private:
 
     static PvaPyLogger logger;
     static PvaClient pvaClient;
+    static CaClient caClient;
     static void monitorThread(Channel* channel);
 
     ChannelMonitorRequesterImpl* getMonitorRequester(); 

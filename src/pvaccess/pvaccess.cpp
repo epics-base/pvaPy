@@ -10,10 +10,12 @@
 #include "boost/python/overloads.hpp"
 #include "boost/python/exception_translator.hpp"
 #include "boost/python/object.hpp"
+#include "boost/python/docstring_options.hpp"
 #include "boost/shared_ptr.hpp"
 #include "boost/operators.hpp"
 
 #include "PvObject.h"
+#include "PvProvider.h"
 #include "PvScalar.h"
 #include "PvType.h"
 #include "PvBoolean.h"
@@ -68,6 +70,8 @@ BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(RpcServerListen, RpcServer::listen, 0, 1)
 BOOST_PYTHON_MODULE(pvaccess)
 {
     using namespace boost::python;
+    scope().attr("__doc__") = "pvaccess module is a python wrapper for pvAccess and other `EPICS V4 <http://epics-pvdata.sourceforge.net>`_ C++ libraries."; 
+    docstring_options local_docstring_options(true, true, false);
 
     //
     // Exceptions
@@ -95,13 +99,22 @@ BOOST_PYTHON_MODULE(pvaccess)
         ;
 
     //
+    // PvProvider
+    //
+    enum_<PvProvider::ProviderType>("ProviderType")
+        .value("PVA", PvProvider::PvaProviderType)
+        .value("CA", PvProvider::CaProviderType)
+        .export_values()
+        ;
+
+    //
     // PvObject
     //
-    class_<PvObject>("PvObject", init<boost::python::dict>())
+    class_<PvObject>("PvObject", "PvObject represents a generic PV structure.", init<boost::python::dict>(arg("structureDict"), "This is constructor doc"))
         .def(str(self))
 
         .def("set", static_cast<void(PvObject::*)(const boost::python::dict&)>(&PvObject::set))
-        .def("get", static_cast<boost::python::dict(PvObject::*)()const>(&PvObject::get))
+        .def("get", static_cast<boost::python::dict(PvObject::*)()const>(&PvObject::get), "Returns PV structure dictionary\n\n:rtype: dict")
 
         .def("setBoolean", static_cast<void(PvObject::*)(bool)>(&PvObject::setBoolean))
         .def("setBoolean", static_cast<void(PvObject::*)(const std::string&,bool)>(&PvObject::setBoolean))
@@ -350,6 +363,7 @@ BOOST_PYTHON_MODULE(pvaccess)
 
     // Channel
     class_<Channel>("Channel", init<std::string>())
+        .def(init<std::string, PvProvider::ProviderType>())
         .def("get", static_cast<PvObject*(Channel::*)(const std::string&)>(&Channel::get), 
             return_value_policy<manage_new_object>(), ChannelGet())
         .def("get", static_cast<PvObject*(Channel::*)()>(&Channel::get), 

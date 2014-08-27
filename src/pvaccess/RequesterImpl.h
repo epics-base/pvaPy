@@ -9,12 +9,12 @@
 class RequesterImpl : public epics::pvData::Requester
 {
 public:
-    RequesterImpl(const epics::pvData::String& requesterName);
-    virtual epics::pvData::String getRequesterName();
-    virtual void message(const epics::pvData::String& message, epics::pvData::MessageType messageType);
+    RequesterImpl(const std::string& requesterName);
+    virtual std::string getRequesterName();
+    virtual void message(const std::string& message, epics::pvData::MessageType messageType);
 
 private:
-    epics::pvData::String requesterName;
+    std::string requesterName;
 };
 
 #endif
