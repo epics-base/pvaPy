@@ -7,6 +7,7 @@
 #include "boost/python/list.hpp"
 #include "boost/python/dict.hpp"
 
+#include "StringUtility.h"
 #include "InvalidDataType.h"
 #include "FieldNotFound.h"
 
@@ -34,6 +35,7 @@ PyType extractKeyValueFromPyDict(const std::string& key, const boost::python::di
     return extractValueFromPyObject<PyType>(pyObject);
 }
 
+std::string extractStringFromPyObject(const boost::python::object& pyObject);
 
 } // namespace PyUtility
 

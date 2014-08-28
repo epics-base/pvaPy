@@ -1,7 +1,11 @@
 Release 0.4 
 ========================
 - added interactive mode for RPC server
-- added ability to specify provider name, which enables channel access
+- added ability to specify provider name (enables channel access)
+- implemented number of convenience functions for channel put, which 
+  eliminates need to wrap standard python types with corresponding PvObject
+  class instance (i.e., rather than having to do channel.put(PvDouble(3.3)),
+  one can now invoke simply channel.put(3.3))
 - updated code for most recent C++ API changes
 
 Release 0.3 (2014/05/09)

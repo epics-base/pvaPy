@@ -1,4 +1,7 @@
 #include <iostream>
+
+#include "boost/python/extract.hpp"
+
 #include "Channel.h"
 #include "epicsThread.h"
 #include "ChannelGetRequesterImpl.h"
@@ -12,6 +15,8 @@
 #include "InvalidArgument.h"
 #include "ObjectNotFound.h"
 #include "PyGilManager.h"
+#include "PvUtility.h"
+#include "PyUtility.h"
 
 const char* Channel::DefaultRequestDescriptor("field(value)");
 const double Channel::DefaultTimeout(3.0);
@@ -150,6 +155,182 @@ void Channel::put(const PvObject& pvObject, const std::string& requestDescriptor
         }
     }
     throw ChannelTimeout("Channel %s put request timed out", channel->getChannelName().c_str());
+}
+
+void Channel::put(const std::vector<std::string>& values)
+{
+    put(values, DefaultRequestDescriptor);
+}
+
+void Channel::put(const std::vector<std::string>& values, const std::string& requestDescriptor) 
+{
+#if defined PVA_API_VERSION && PVA_API_VERSION == 430
+    epics::pvData::PVStructure::shared_pointer pvRequest = epics::pvAccess::getCreateRequest()->createRequest(requestDescriptor, requester);
+#else
+    epics::pvData::PVStructure::shared_pointer pvRequest = epics::pvData::CreateRequest::create()->createRequest(requestDescriptor);
+#endif // if defined PVA_API_VERSION && PVA_API_VERSION == 430
+    std::tr1::shared_ptr<ChannelRequesterImpl> channelRequesterImpl = std::tr1::dynamic_pointer_cast<ChannelRequesterImpl>(channel->getChannelRequester());
+
+    if (channel->getConnectionState() != epics::pvAccess::Channel::CONNECTED) {
+        if (!channelRequesterImpl->waitUntilConnected(timeout)) {
+            throw ChannelTimeout("Channel %s timed out", channel->getChannelName().c_str());
+        }
+    }
+
+	std::tr1::shared_ptr<ChannelPutRequesterImpl> putRequesterImpl(new ChannelPutRequesterImpl(channel->getChannelName()));
+	epics::pvAccess::ChannelPut::shared_pointer channelPut = channel->createChannelPut(putRequesterImpl, pvRequest);
+	if (putRequesterImpl->waitUntilDone(timeout)) {
+        epics::pvData::PVStructurePtr pvStructurePtr = putRequesterImpl->getStructure();
+        PvUtility::fromString(pvStructurePtr, values);
+
+#if defined PVA_API_VERSION && PVA_API_VERSION == 430
+        channelPut->put(false);
+#else
+        putRequesterImpl->resetEvent();
+        channelPut->put(pvStructurePtr, putRequesterImpl->getBitSet());
+#endif // if defined PVA_API_VERSION && PVA_API_VERSION == 430
+	    if (putRequesterImpl->waitUntilDone(timeout)) {
+	        return;
+        }
+    }
+    throw ChannelTimeout("Channel %s put request timed out", channel->getChannelName().c_str());
+}
+
+void Channel::put(const std::string& value)
+{
+    put(value, DefaultRequestDescriptor);
+}
+
+void Channel::put(const std::string& value, const std::string& requestDescriptor) 
+{
+    std::vector<std::string> values;
+    values.push_back(value);
+    put(values, requestDescriptor);
+}
+
+void Channel::put(const boost::python::list& pyList, const std::string& requestDescriptor) 
+{
+    int listSize = boost::python::len(pyList);
+    std::vector<std::string> values(listSize);
+    for (int i = 0; i < listSize; i++) {
+        values[i] = PyUtility::extractStringFromPyObject(pyList[i]);
+    }
+    put(values, requestDescriptor);
+}
+
+void Channel::put(const boost::python::list& pyList)
+{
+    put(pyList, DefaultRequestDescriptor);
+}
+
+void Channel::put(bool value, const std::string& requestDescriptor)
+{
+    put(StringUtility::toString<bool>(value), requestDescriptor);
+}
+
+void Channel::put(bool value)
+{
+    put(value, DefaultRequestDescriptor);
+}
+
+void Channel::put(char value, const std::string& requestDescriptor)
+{
+    put(StringUtility::toString<char>(value), requestDescriptor);
+}
+
+void Channel::put(char value)
+{
+    put(value, DefaultRequestDescriptor);
+}
+
+void Channel::put(unsigned char value, const std::string& requestDescriptor)
+{
+    put(StringUtility::toString<unsigned char>(value), requestDescriptor);
+}
+
+void Channel::put(unsigned char value)
+{
+    put(value, DefaultRequestDescriptor);
+}
+
+void Channel::put(short value, const std::string& requestDescriptor)
+{
+    put(StringUtility::toString<short>(value), requestDescriptor);
+}
+
+void Channel::put(short value)
+{
+    put(value, DefaultRequestDescriptor);
+}
+
+void Channel::put(unsigned short value, const std::string& requestDescriptor)
+{
+    put(StringUtility::toString<unsigned short>(value), requestDescriptor);
+}
+
+void Channel::put(unsigned short value)
+{
+    put(value, DefaultRequestDescriptor);
+}
+
+void Channel::put(int value, const std::string& requestDescriptor)
+{
+    put(StringUtility::toString<int>(value), requestDescriptor);
+}
+
+void Channel::put(int value)
+{
+    put(value, DefaultRequestDescriptor);
+}
+
+void Channel::put(unsigned int value, const std::string& requestDescriptor)
+{
+    put(StringUtility::toString<unsigned int>(value), requestDescriptor);
+}
+
+void Channel::put(unsigned int value)
+{
+    put(value, DefaultRequestDescriptor);
+}
+
+void Channel::put(long long value, const std::string& requestDescriptor)
+{
+    put(StringUtility::toString<long long>(value), requestDescriptor);
+}
+
+void Channel::put(long long value)
+{
+    put(value, DefaultRequestDescriptor);
+}
+
+void Channel::put(unsigned long long value, const std::string& requestDescriptor)
+{
+    put(StringUtility::toString<unsigned long long>(value), requestDescriptor);
+}
+
+void Channel::put(unsigned long long value)
+{
+    put(value, DefaultRequestDescriptor);
+}
+
+void Channel::put(float value, const std::string& requestDescriptor)
+{
+    put(StringUtility::toString<float>(value), requestDescriptor);
+}
+
+void Channel::put(float value)
+{
+    put(value, DefaultRequestDescriptor);
+}
+
+void Channel::put(double value, const std::string& requestDescriptor)
+{
+    put(StringUtility::toString<double>(value), requestDescriptor);
+}
+
+void Channel::put(double value)
+{
+    put(value, DefaultRequestDescriptor);
 }
 
 ChannelMonitorRequesterImpl* Channel::getMonitorRequester()
