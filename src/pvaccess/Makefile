@@ -15,7 +15,7 @@ LOADABLE_SHRLIB_PREFIX =
 PROD_HOST += $(PROD_HOST_$(T_A))
 
 CXXFLAGS += -g -I$(BOOST_DIR)/include $(PVA_PY_CPPFLAGS)
-LDFLAGS += $(PVA_PY_LDFLAGS) -l$(BOOST_PYTHON_LIB)
+LDFLAGS += $(PVA_PY_LDFLAGS)
 
 
 pvaccess_SRCS += pvaccess.cpp
@@ -76,6 +76,7 @@ pvaccess_SRCS += StringUtility.cpp
 pvaccess_LIBS += pvData
 pvaccess_LIBS += pvAccess
 pvaccess_LIBS += Com
+USR_SYS_LIBS += $(BOOST_PYTHON_LIB)
 
 testClient_SRCS += testClient.cpp
 testClient_LIBS += pvaccess
