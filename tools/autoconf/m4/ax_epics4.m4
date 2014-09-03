@@ -182,12 +182,42 @@ AC_DEFUN([AX_EPICS4],
             [[
             epics::pvAccess::RPCClientFactory::create("Channel");
             ]])
-        ],[pva_rpc_api_version=430],[pva_rpc_api_version=440])
+        ],[pva_rpc_api_version1=430],[pva_rpc_api_version1=undefined])
+        AC_LINK_IFELSE([AC_LANG_PROGRAM(
+            [[
+            #include "pv/event.h"
+            #include "pv/rpcClient.h"
+            ]],
+            [[
+            epics::pvData::PVStructure::shared_pointer pvRequest;
+            epics::pvAccess::RPCClient::shared_pointer rpcClient = epics::pvAccess::RPCClient::create("Channel", pvRequest);
+            ]])
+        ],[pva_rpc_api_version2=435],[pva_rpc_api_version2=undefined])
+        AC_LINK_IFELSE([AC_LANG_PROGRAM(
+            [[
+            #include "pv/rpcClient.h"
+            ]],
+            [[
+            epics::pvAccess::RPCClient::create("Channel");
+            ]])
+        ],[pva_rpc_api_version3=440],[pva_rpc_api_version3=undefined])
     AC_LANG_POP([C++])
+
+    pva_rpc_api_version="undefined"
+    if test "$pva_rpc_api_version1" != "undefined" ; then
+        pva_rpc_api_version=$pva_rpc_api_version1
+    elif test "$pva_rpc_api_version2" != "undefined" ; then
+        pva_rpc_api_version=$pva_rpc_api_version2
+    elif test "$pva_rpc_api_version3" != "undefined" ; then
+        pva_rpc_api_version=$pva_rpc_api_version3
+    fi
 
     if test "$succeeded" != "yes" ; then
         AC_MSG_RESULT([unknown])
         AC_MSG_ERROR(could not compile and link EPICS4 RPC test code: check your EPICS4 installation)
+    elif test "$pva_rpc_api_version" == "undefined" ; then
+        AC_MSG_RESULT([unknown])
+        AC_MSG_ERROR(could not determine EPICS4 RPC API version: check your EPICS4 installation)
     else
         AC_MSG_RESULT([$pva_rpc_api_version])
         AC_DEFINE(PVA_RPC_API_VERSION,$pva_rpc_api_version,[define PVA RPC API version])

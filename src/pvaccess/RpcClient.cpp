@@ -37,13 +37,19 @@ epics::pvAccess::RPCClient::shared_pointer RpcClient::createRpcClient(const std:
 {
 #if defined PVA_RPC_API_VERSION && PVA_RPC_API_VERSION == 430
     return epics::pvAccess::RPCClientFactory::create(channelName);
-#else
+#endif // if defined PVA_RPC_API_VERSION && PVA_RPC_API_VERSION == 430
+
+#if defined PVA_RPC_API_VERSION && PVA_RPC_API_VERSION == 435
     epics::pvAccess::RPCClient::shared_pointer rpcClient = epics::pvAccess::RPCClient::create(channelName, pvRequest);
     if (!rpcClient->connect(timeout)) {
         throw ChannelTimeout("Channel %s timed out.", channelName.c_str());
     }
     return rpcClient;
-#endif // if defined PVA_RPC_API_VERSION && PVA_RPC_API_VERSION == 430
+#endif // if defined PVA_RPC_API_VERSION && PVA_RPC_API_VERSION == 435
+
+#if defined PVA_RPC_API_VERSION && PVA_RPC_API_VERSION == 440
+    return epics::pvAccess::RPCClient::create(channelName);
+#endif // if defined PVA_RPC_API_VERSION && PVA_RPC_API_VERSION == 440
 }
 
 epics::pvAccess::RPCClient::shared_pointer RpcClient::getRpcClient(const epics::pvData::PVStructurePtr& pvRequest, double timeout) 
@@ -61,11 +67,18 @@ epics::pvData::PVStructure::shared_pointer RpcClient::request(const epics::pvDat
         epics::pvAccess::RPCClient::shared_pointer client = getRpcClient(pvRequest, timeout);
 #if defined PVA_RPC_API_VERSION && PVA_RPC_API_VERSION == 430
         epics::pvData::PVStructure::shared_pointer response = client->request(pvRequest, timeout);
-#else
+#endif // if defined PVA_RPC_API_VERSION && PVA_RPC_API_VERSION == 430
+
+#if defined PVA_RPC_API_VERSION && PVA_RPC_API_VERSION == 435
         // When client goes out of scope, it will destroy resources.
         bool lastRequest = false;
         epics::pvData::PVStructure::shared_pointer response = client->request(pvRequest, lastRequest);
-#endif // if defined PVA_RPC_API_VERSION && PVA_RPC_API_VERSION == 430
+#endif // if defined PVA_RPC_API_VERSION && PVA_RPC_API_VERSION == 435
+
+#if defined PVA_RPC_API_VERSION && PVA_RPC_API_VERSION == 440
+        epics::pvData::PVStructure::shared_pointer response = client->request(pvRequest, timeout);
+#endif // if defined PVA_RPC_API_VERSION && PVA_RPC_API_VERSION == 440
+
         return response;
     }
     catch (const epics::pvAccess::RPCRequestException& ex) {

@@ -110,11 +110,14 @@ BOOST_PYTHON_MODULE(pvaccess)
     //
     // PvObject
     //
-    class_<PvObject>("PvObject", "PvObject represents a generic PV structure.", init<boost::python::dict>(arg("structureDict"), "This is constructor doc"))
+    class_<PvObject>("PvObject", 
+            "PvObject represents a generic PV structure.\n\n:param structureDict: dictionary of key:value pairs describing the underlying PV structure\n:type structureDict: dict\n\nThe dictionary key is a string (PV field name), and value is one of:\n\n- PVTYPE: scalar type, can be BOOLEAN, BYTE, UBYTE, SHORT, USHORT, INT, UINT, LONG, ULONG, FLOAT, DOUBLE, or STRING\n- [PVTYPE]: single element list representing scalar array\n- {key:value,…}: structure\n- [{key:value,…}]: single element list representing structure array\n\nExample:\n\npv = PvObject({'aShort' : SHORT,'anUInt' : UINT,'aString' : STRING,'aStringArray' : [STRING],'aStruct' : { 'aString2' : STRING, 'aBoolArray' : [BOOLEAN],'aStruct2' : { 'aFloat' : FLOAT, 'aString3' : [STRING] }},'aStructArray' : [{'anInt' : INT, 'anInt2' : INT, 'aDouble' : DOUBLE}]})\n\n", 
+            init<boost::python::dict>(arg("structureDict")))
+
         .def(str(self))
 
         .def("set", static_cast<void(PvObject::*)(const boost::python::dict&)>(&PvObject::set))
-        .def("get", static_cast<boost::python::dict(PvObject::*)()const>(&PvObject::get), "Returns PV structure dictionary\n\n:rtype: dict")
+        .def("get", static_cast<boost::python::dict(PvObject::*)()const>(&PvObject::get), "Returns PV structure dictionary.\n\n:returns: PV structure dictionary\n:rtype: dict\n\n")
 
         .def("setBoolean", static_cast<void(PvObject::*)(bool)>(&PvObject::setBoolean))
         .def("setBoolean", static_cast<void(PvObject::*)(const std::string&,bool)>(&PvObject::setBoolean))
