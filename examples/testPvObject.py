@@ -59,3 +59,15 @@ pv.setStructureArray('lstruct', [
     {'one' : 111, 'two' : 222, 'three' : 333.0},
     ])
 print pv
+
+pv.set({'i' : 1, 'ui' : 22})
+print pv
+
+print 'Python dictionary: '
+pyDict = pv.get()
+print pyDict
+
+print 'Testing boolean functions: '
+pv = PvObject({'value' : BOOLEAN})
+pv.setBoolean(True)
+

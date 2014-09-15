@@ -4,17 +4,18 @@ Prerequisites
 The python PV Access API package requires the following software:
 
 1) EPICS base release (v3.14.12.3)
-2) EPICS4 CPP release (v4.3.0)
+2) EPICS4 CPP release (v4.3.0 or v4.4.0)
 3) Python development header files/libraries (v2.6.6)
 4) Boost (v1.41.0); build must have boost_python library
 5) Standard development tools (gcc, make, autoconf, etc.) 
+6) Sphinx (used for generating documentation)
 
 Software versions listed above were used for prototype development and testing.
 It is likely that any recent version of python and boost libraries (such as
 those that come with current linux distributions) would work. Similarly, any
 recent version of EPICS base that is supported by EPICS4 CPP should be fine.
-On the other hand, using any EPICS4 CPP version other than release v4.3.0 
-might not work.
+On the other hand, using any EPICS4 CPP version other than releases v4.3.0 
+or v4.4.0 might not work.
 
 Note that nothing special needs to be done to EPICS4 CPP build. 
 
@@ -73,6 +74,12 @@ $ make
 
 This will create pvaccess.so library in lib/$EPICS_HOST_ARCH directory.
 
+3) Generate python html documentation (optional, requires sphinx):
+
+$ make doc
+
+If sphinx-build is present on the system, html pages will be generated
+in doc/sphinx/_build directory.
 
 
 Basic Usage: PV put/get
@@ -96,10 +103,18 @@ $ python
 >>> print c.get()
 uri:ev4:nt/2012/pwd:NTScalar 
     int value 0
+>>> c.put(7)
+>>> print c.get()
+uri:ev4:nt/2012/pwd:NTScalar 
+    int value 7
 >>> c.put(pvaccess.PvInt(5))
 >>> print c.get()
 uri:ev4:nt/2012/pwd:NTScalar 
     int value 5
+
+In the above, note that in addition to PV object classes like PvInt, one
+can also use standard python types as arguments for channel puts.
+
 
 Basic Usage: PV monitor
 =========================
