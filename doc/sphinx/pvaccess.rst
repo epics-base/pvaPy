@@ -16,7 +16,6 @@ PvScalar
 .. autoclass:: pvaccess.PvScalar(structureDict)
     :show-inheritance: 
     :members:
-    :inherited-members:
 
 PvBoolean
 ---------

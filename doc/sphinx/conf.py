@@ -73,7 +73,7 @@ def boostFuncSignature(name,obj,removeSelf=False):
     for i in range(len(strippedDoc)):
         # fix signatures inside docstring (one function with multiple signatures)
         strippedDoc[i],n=re.subn(r'([a-zA-Z_][a-zA-Z0-9_]*\() \([^\)]*\)arg1(, |)',r'\1',strippedDoc[i].replace('->','=>'))
-        strippedDoc[i] = strippedDoc[i].replace(' [, ','[')
+        strippedDoc[i] = strippedDoc[i].replace('( [, ','([')
     # inspect dosctring after mangling
     sig=doc1.split('(',1)[1]
     if removeSelf:
