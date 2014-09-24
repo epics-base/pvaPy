@@ -340,7 +340,7 @@ BOOST_PYTHON_MODULE(pvaccess)
     //
     // PV Scalar
     //
-    class_<PvScalar, bases<PvObject> >("PvScalar", no_init)
+    class_<PvScalar, bases<PvObject> >("PvScalar", "PvScalar is a base class for all scalar PV types. It cannot be instantiated directly from python.\n\n", no_init)
         // use __int__ instead of .def(int_(self)) which requires operator::long()
         // use __float__ instead of .def(float_(self)) 
         .def("__int__", &PvScalar::toInt)   
@@ -352,10 +352,11 @@ BOOST_PYTHON_MODULE(pvaccess)
     //
     // PV Boolean
     //
-    class_<PvBoolean, bases<PvScalar> >("PvBoolean", init<>())
+    class_<PvBoolean, bases<PvScalar> >("PvBoolean", "PvBoolean represents boolean PV type.\n\n:Parameter: value (bool) - boolean value (default: False)\n\n**Example:**\n::\n\n\tpv = PvBoolean(True)\n\n", init<>())
         .def(init<bool>())
-        .def("get", &PvBoolean::get)
-        .def("set", &PvBoolean::set)
+        .def("get", &PvBoolean::get, "Retrieves boolean PV value.\n\n:Returns: boolean PV value\n\n**Example:**\n::\n\n    value = pv.get()\n\n")
+        .def("set", &PvBoolean::set, arg("value"),
+        "Sets boolean PV value.\n\n:Parameter: value (bool) - boolean PV value\n\n**Example:**\n::\n\n    pv.set(False)\n\n")
         ;
 
     //
