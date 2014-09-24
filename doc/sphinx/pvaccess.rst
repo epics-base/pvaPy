@@ -93,6 +93,13 @@ PvDouble
     :show-inheritance: 
     :members: 
 
+PvString
+--------
+
+.. autoclass:: pvaccess.PvString([value])
+    :show-inheritance: 
+    :members: 
+
 Channel
 -------
 

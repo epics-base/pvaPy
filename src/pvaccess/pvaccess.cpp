@@ -352,110 +352,109 @@ BOOST_PYTHON_MODULE(pvaccess)
     //
     // PV Boolean
     //
-    class_<PvBoolean, bases<PvScalar> >("PvBoolean", "PvBoolean represents boolean PV type.\n\n:Parameter: value (bool) - boolean value (default: False)\n\n**Example:**\n::\n\n\tpv = PvBoolean(True)\n\n", init<>())
+    class_<PvBoolean, bases<PvScalar> >("PvBoolean", "PvBoolean represents PV boolean type.\n\n:Parameter: value (bool) - boolean value (default: False)\n\n**Example:**\n::\n\n\tpv = PvBoolean(True)\n\n", init<>())
         .def(init<bool>())
-        .def("get", &PvBoolean::get, "Retrieves boolean PV value.\n\n:Returns: boolean PV value\n\n**Example:**\n::\n\n    value = pv.get()\n\n")
-        .def("set", &PvBoolean::set, arg("value"),
-        "Sets boolean PV value.\n\n:Parameter: value (bool) - boolean PV value\n\n**Example:**\n::\n\n    pv.set(False)\n\n")
+        .def("get", &PvBoolean::get, "Retrieves boolean PV value.\n\n:Returns: boolean value\n\n**Example:**\n::\n\n    value = pv.get()\n\n")
+        .def("set", &PvBoolean::set, arg("value"), "Sets boolean PV value.\n\n:Parameter: value (bool) - boolean value\n\n**Example:**\n::\n\n    pv.set(False)\n\n")
         ;
 
     //
     // PV Byte
     //
-    class_<PvByte, bases<PvScalar> >("PvByte", init<>())
+    class_<PvByte, bases<PvScalar> >("PvByte", "PvByte represents PV byte type.\n\n:Parameter: value (str) - byte value (default: '')\n\n**Example:**\n::\n\n\tpv = PvByte('a')\n\n", init<>())
         .def(init<char>())
-        .def("get", &PvByte::get)
-        .def("set", &PvByte::set)
+        .def("get", &PvByte::get, "Retrieves byte PV value.\n\n:Returns: byte value\n\n**Example:**\n::\n\n    value = pv.get()\n\n")
+        .def("set", &PvByte::set, arg("value"), "Sets byte PV value.\n\n:Parameter: value (str) - byte value\n\n**Example:**\n::\n\n    pv.set('a')\n\n")
         ;
 
     //
     // PV UByte
     //
-    class_<PvUByte, bases<PvScalar> >("PvUByte", init<>())
+    class_<PvUByte, bases<PvScalar> >("PvUByte", "PvUByte represents PV unsigned byte type.\n\n:Parameter: value (int) - unsigned byte value (default: 0)\n\n**Example:**\n::\n\n\tpv = PvUByte(10)\n\n", init<>())
         .def(init<unsigned char>())
-        .def("get", &PvUByte::get)
-        .def("set", &PvUByte::set)
+        .def("get", &PvUByte::get, "Retrieves unsigned byte PV value.\n\n:Returns: unsigned byte value\n\n**Example:**\n::\n\n    value = pv.get()\n\n")
+        .def("set", &PvUByte::set, arg("value"), "Sets unsigned byte PV value.\n\n:Parameter: value (int) - unsigned byte value\n\n**Example:**\n::\n\n    pv.set(10)\n\n")
         ;
 
     //
     // PV Short
     //
-    class_<PvShort, bases<PvScalar> >("PvShort", init<>())
+    class_<PvShort, bases<PvScalar> >("PvShort", "PvShort represents PV short type.\n\n:Parameter: value (int) - short value (default: 0)\n\n**Example:**\n::\n\n\tpv = PvShort(-10)\n\n", init<>())
         .def(init<short>())
-        .def("get", &PvShort::get)
-        .def("set", &PvShort::set)
+        .def("get", &PvShort::get, "Retrieves short PV value.\n\n:Returns: short value\n\n**Example:**\n::\n\n    value = pv.get()\n\n")
+        .def("set", &PvShort::set, arg("value"), "Sets short PV value.\n\n:Parameter: value (int) - short value\n\n**Example:**\n::\n\n    pv.set(-10)\n\n")
         ;
 
     //
     // PV UShort
     //
-    class_<PvUShort, bases<PvScalar> >("PvUShort", init<>())
+    class_<PvUShort, bases<PvScalar> >("PvUShort", "PvUShort represents PV unsigned short type.\n\n:Parameter: value (int) - unsigned short value (default: 0)\n\n**Example:**\n::\n\n\tpv = PvUShort(10)\n\n", init<>())
         .def(init<unsigned short>())
-        .def("get", &PvUShort::get)
-        .def("set", &PvUShort::set)
+        .def("get", &PvUShort::get, "Retrieves unsigned short PV value.\n\n:Returns: unsigned short value\n\n**Example:**\n::\n\n    value = pv.get()\n\n")
+        .def("set", &PvUShort::set, arg("value"), "Sets unsigned short PV value.\n\n:Parameter: value (int) - unsigned short value\n\n**Example:**\n::\n\n    pv.set(10)\n\n")
         ;
 
     //
     // PV Int
     //
-    class_<PvInt, bases<PvScalar> >("PvInt", init<>())
+    class_<PvInt, bases<PvScalar> >("PvInt", "PvInt represents PV integer type.\n\n:Parameter: value (int) - integer value (default: 0)\n\n**Example:**\n::\n\n\tpv = PvInt(-1000)\n\n", init<>())
         .def(init<int>())
-        .def("get", &PvInt::get)
-        .def("set", &PvInt::set)
+        .def("get", &PvInt::get, "Retrieves integer PV value.\n\n:Returns: integer value\n\n**Example:**\n::\n\n    value = pv.get()\n\n")
+        .def("set", &PvInt::set, arg("value"), "Sets integer PV value.\n\n:Parameter: value (int) - integer value\n\n**Example:**\n::\n\n    pv.set(-1000)\n\n")
         ;
 
     //
     // PV UInt
     //
-    class_<PvUInt, bases<PvScalar> >("PvUInt", init<>())
+    class_<PvUInt, bases<PvScalar> >("PvUInt", "PvUInt represents PV unsigned int type.\n\n:Parameter: value (int) - unsigned integer value (default: 0)\n\n**Example:**\n::\n\n\tpv = PvUInt(1000)\n\n", init<>())
         .def(init<unsigned int>())
-        .def("get", &PvUInt::get)
-        .def("set", &PvUInt::set)
+        .def("get", &PvUInt::get,  "Retrieves unsigned integer PV value.\n\n:Returns: unsigned integer value\n\n**Example:**\n::\n\n    value = pv.get()\n\n")
+        .def("set", &PvUInt::set, arg("value"), "Sets unsigned integer PV value.\n\n:Parameter: value (int) - unsigned integer value\n\n**Example:**\n::\n\n    pv.set(1000)\n\n")
         ;
 
     //
     // PV Long
     //
-    class_<PvLong, bases<PvScalar> >("PvLong", init<>())
+    class_<PvLong, bases<PvScalar> >("PvLong", "PvLong represents PV long type.\n\n:Parameter: value (long) - long value (default: 0)\n\n**Example:**\n::\n\n\tpv = PvLong(-100000L)\n\n", init<>())
         .def(init<long long>())
-        .def("get", &PvLong::get)
-        .def("set", &PvLong::set)
+        .def("get", &PvLong::get, "Retrieves long PV value.\n\n:Returns: long value\n\n**Example:**\n::\n\n    value = pv.get()\n\n")
+        .def("set", &PvLong::set, "Sets long PV value.\n\n:Parameter: value (long) - long value\n\n**Example:**\n::\n\n    pv.set(-100000L)\n\n")
         ;
 
     //
     // PV ULong
     //
-    class_<PvULong, bases<PvScalar> >("PvULong", init<>())
+    class_<PvULong, bases<PvScalar> >("PvULong", "PvULong represents PV unsigned long type.\n\n:Parameter: value (long) - unsigned long value (default: 0)\n\n**Example:**\n::\n\n\tpv = PvULong(100000L)\n\n", init<>())
         .def(init<unsigned long long>())
-        .def("get", &PvULong::get)
-        .def("set", &PvULong::set)
+        .def("get", &PvULong::get, "Retrieves unsigned long PV value.\n\n:Returns: unsigned long value\n\n**Example:**\n::\n\n    value = pv.get()\n\n")
+        .def("set", &PvULong::set, arg("value"), "Sets unsigned long PV value.\n\n:Parameter: value (long) - unsigned long value\n\n**Example:**\n::\n\n    pv.set(100000L)\n\n")
         ;
 
     //
     // PV Float
     //
-    class_<PvFloat, bases<PvScalar> >("PvFloat", init<>())
+    class_<PvFloat, bases<PvScalar> >("PvFloat", "PvFloat represents PV float type.\n\n:Parameter: value (float) - float value (default: 0)\n\n**Example:**\n::\n\n\tpv = PvFloat(1.1)\n\n", init<>())
         .def(init<float>())
-        .def("get", &PvFloat::get)
-        .def("set", &PvFloat::set)
+        .def("get", &PvFloat::get, "Retrieves float PV value.\n\n:Returns: float value\n\n**Example:**\n::\n\n    value = pv.get()\n\n")
+        .def("set", &PvFloat::set, arg("value"), "Sets float PV value.\n\n:Parameter: value (float) - float value\n\n**Example:**\n::\n\n    pv.set(1.1)\n\n")
         ;
 
     //
     // PV Double
     //
-    class_<PvDouble, bases<PvScalar> >("PvDouble", init<>())
+    class_<PvDouble, bases<PvScalar> >("PvDouble", "PvDouble represents PV double type.\n\n:Parameter: value (float) - double value (default: 0)\n\n**Example:**\n::\n\n\tpv = PvDouble(1.1)\n\n", init<>())
         .def(init<double>())
-        .def("get", &PvDouble::get)
-        .def("set", &PvDouble::set)
+        .def("get", &PvDouble::get, "Retrieves double PV value.\n\n:Returns: double value\n\n**Example:**\n::\n\n    value = pv.get()\n\n")
+        .def("set", &PvDouble::set, arg("value"), "Sets double PV value.\n\n:Parameter: value (float) - double value\n\n**Example:**\n::\n\n    pv.set(1.1)\n\n")
         ;
 
     //
     // PV String
     //
-    class_<PvString, bases<PvScalar> >("PvString", init<>())
+    class_<PvString, bases<PvScalar> >("PvString", "PvString represents PV string type.\n\n:Parameter: value (str) - string value (default: '')\n\n**Example:**\n::\n\n\tpv = PvString('stringValue')\n\n", init<>())
         .def(init<std::string>())
-        .def("get", &PvString::get)
-        .def("set", &PvString::set)
+        .def("get", &PvString::get, "Retrieves string PV value.\n\n:Returns: string value\n\n**Example:**\n::\n\n    value = pv.get()\n\n")
+        .def("set", &PvString::set, arg("value"), "Sets string PV value.\n\n:Parameter: value (str) - string value\n\n**Example:**\n::\n\n    pv.set('stringValue')\n\n")
         ;
 
     //
