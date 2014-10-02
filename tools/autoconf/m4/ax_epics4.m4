@@ -87,9 +87,9 @@ AC_DEFUN([AX_EPICS4],
     # get epics4 version info
     # assume release version is always 4
     epics4_version_release=4
-    epics4_version_major=`grep EPICS_PVA_MAJOR_VERSION $epics4_version_h | head -1 | awk '{print $NF}'`
-    epics4_version_minor=`grep EPICS_PVA_MINOR_VERSION $epics4_version_h | head -1 | awk '{print $NF}'`
-    epics4_version_maintenance=`grep EPICS_PVA_MAINTENANCE_VERSION $epics4_version_h | head -1 | awk '{print $NF}'`
+    epics4_version_major=`grep EPICS_PVA_MAJOR_VERSION $epics4_version_h | head -1 | awk '{print $NF}' | sed $'s/\r//'`
+    epics4_version_minor=`grep EPICS_PVA_MINOR_VERSION $epics4_version_h | head -1 | awk '{print $NF}' | sed $'s/\r//'`
+    epics4_version_maintenance=`grep EPICS_PVA_MAINTENANCE_VERSION $epics4_version_h | head -1 | awk '{print $NF}' | sed $'s/\r//'`
 
     # test version
     want_epics4_version=`expr $epics4_version_req_major \* 1000000 \+  $epics4_version_req_minor \* 10000 \+ $epics4_version_req_sub_minor \* 100 \+ $epics4_version_req_patch`

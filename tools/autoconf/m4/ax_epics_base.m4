@@ -86,10 +86,10 @@ AC_DEFUN([AX_EPICS_BASE],
     fi
 
     # get epics version info
-    epics_version_major=`grep EPICS_VERSION $epics_version_h | head -1 | awk '{print $NF}'`
-    epics_version_minor=`grep EPICS_REVISION $epics_version_h | head -1 | awk '{print $NF}'`
-    epics_version_sub_minor=`grep EPICS_MODIFICATION $epics_version_h | head -1 | awk '{print $NF}'`
-    epics_version_patch=`grep EPICS_PATCH_LEVEL $epics_version_h | head -1 | awk '{print $NF}'`
+    epics_version_major=`grep EPICS_VERSION $epics_version_h | head -1 | awk '{print $NF}' | sed $'s/\r//'`
+    epics_version_minor=`grep EPICS_REVISION $epics_version_h | head -1 | awk '{print $NF}' | sed $'s/\r//'`
+    epics_version_sub_minor=`grep EPICS_MODIFICATION $epics_version_h | head -1 | awk '{print $NF}' | sed $'s/\r//'`
+    epics_version_patch=`grep EPICS_PATCH_LEVEL $epics_version_h | head -1 | awk '{print $NF}' | sed $'s/\r//'`
 
     # test version
     want_epics_version=`expr $epics_version_req_major \* 1000000 \+  $epics_version_req_minor \* 10000 \+ $epics_version_req_sub_minor \* 100 \+ $epics_version_req_patch`
