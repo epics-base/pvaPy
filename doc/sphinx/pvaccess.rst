@@ -100,6 +100,13 @@ PvString
     :show-inheritance: 
     :members: 
 
+PvScalarArray
+-------------
+
+.. autoclass:: pvaccess.PvScalarArray(scalarType)
+    :show-inheritance: 
+    :members: 
+
 Channel
 -------
 

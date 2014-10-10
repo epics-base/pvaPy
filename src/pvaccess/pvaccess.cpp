@@ -460,10 +460,10 @@ BOOST_PYTHON_MODULE(pvaccess)
     //
     // PV Scalar Array
     //
-    class_<PvScalarArray, bases<PvObject> >("PvScalarArray", init<PvType::ScalarType>())
-        .def("get", &PvScalarArray::get)
-        .def("set", &PvScalarArray::set)
-        .def("toList", &PvScalarArray::toList)
+    class_<PvScalarArray, bases<PvObject> >("PvScalarArray", "PvScalarArray represents PV scalar array.\n\n:Parameter: scalarType (PVTYPE) - scalar type of array elements\n\n- PVTYPE: scalar type, can be BOOLEAN, BYTE, UBYTE, SHORT, USHORT, INT, UINT, LONG, ULONG, FLOAT, DOUBLE, or STRING\n\n**Example:**\n::\n\n\tpv = PvScalarArray(INT)\n\n", init<PvType::ScalarType>())
+        .def("get", &PvScalarArray::get, "Retrieves PV value list.\n\n:Returns: list of scalar values\n\n**Example:**\n::\n\n    valueList = pv.get()\n\n")
+        .def("set", &PvScalarArray::set, arg("valueList"), "Sets PV value list.\n\n:Parameter: valueList (list) - list of scalar values\n\n**Example:**\n::\n\n    pv.set([1,2,3,4,5])\n\n")
+        .def("toList", &PvScalarArray::toList, "Converts PV to value list.\n\n:Returns: list of scalar values\n\n**Example:**\n::\n\n    valueList = pv.toList()\n\n")
         ;
 
     //
