@@ -107,6 +107,26 @@ PvScalarArray
     :show-inheritance: 
     :members: 
 
+PvTimeStamp
+-----------
+
+.. autoclass:: pvaccess.PvTimeStamp([[secondsPastEpoch, nanoSeconds, [userTag]])
+    :show-inheritance: 
+    :members: 
+
+PvAlarm
+-----------
+
+.. autoclass:: pvaccess.PvAlarm([severity, status, message])
+    :show-inheritance: 
+    :members: 
+
+NtType
+------
+
+.. autoclass:: pvaccess.NtType()
+    :show-inheritance: 
+
 Channel
 -------
 

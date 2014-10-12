@@ -469,34 +469,34 @@ BOOST_PYTHON_MODULE(pvaccess)
     //
     // PV TimeStamp
     //
-    class_<PvTimeStamp, bases<PvObject> >("PvTimeStamp", init<>())
+    class_<PvTimeStamp, bases<PvObject> >("PvTimeStamp", "PvTimeStamp represents PV time stamp structure.\n\n:Parameter: secondsPastEpoch (long) - seconds past epoch (default: 0)\n\n:Parameter: nanoSeconds (int) - nanoSeconds (default: 0)\n\n:Parameter: userTag (int) - user tag (default: -1)\n\n**Example:**\n::\n\n\ttimeStamp1 = PvTimeStamp()\n\n\ttimeStamp2 = PvTimeStamp(1234567890, 10000)\n\n\ttimeStamp3 = PvTimeStamp(1234567890, 10000, 1)\n\n", init<>())
         .def(init<long long, int>())
         .def(init<long long, int, int>())
-        .def("getSecondsPastEpoch", &PvTimeStamp::getSecondsPastEpoch)
-        .def("setSecondsPastEpoch", &PvTimeStamp::setSecondsPastEpoch)
-        .def("getNanoSeconds", &PvTimeStamp::getNanoSeconds)
-        .def("setNanoSeconds", &PvTimeStamp::setNanoSeconds)
-        .def("getUserTag", &PvTimeStamp::getUserTag)
-        .def("setUserTag", &PvTimeStamp::setUserTag)
+        .def("getSecondsPastEpoch", &PvTimeStamp::getSecondsPastEpoch, "Retrieves time stamp value for seconds past epoch.\n\n:Returns: seconds past epoch\n\n**Example:**\n::\n\n    secondsPastEpoch = timeStamp.getSecondsPastEpoch()\n\n")
+        .def("setSecondsPastEpoch", &PvTimeStamp::setSecondsPastEpoch, arg("secondsPastEpoch"), "Sets time stamp value for seconds past epoch.\n\n:Parameter: secondsPastEpoch (long) - seconds past epoch\n\n**Example:**\n::\n\n    timeStamp.setSecondsPastEpoch(1234567890)\n\n")
+        .def("getNanoSeconds", &PvTimeStamp::getNanoSeconds, "Retrieves time stamp value for nanoseconds.\n\n:Returns: nanoseconds\n\n**Example:**\n::\n\n    nanoSeconds = timeStamp.getNanoSeconds()\n\n")
+        .def("setNanoSeconds", &PvTimeStamp::setNanoSeconds, arg("nanoSeconds"), "Sets time stamp value for nanoseconds.\n\n:Parameter: nanoSeconds (int) - nanoseconds\n\n**Example:**\n::\n\n    timeStamp.setNanoSeconds(10000)\n\n")
+        .def("getUserTag", &PvTimeStamp::getUserTag, "Retrieves user tag.\n\n:Returns: user tag\n\n**Example:**\n::\n\n    userTag = timeStamp.getUserTag()\n\n")
+        .def("setUserTag", &PvTimeStamp::setUserTag, arg("userTag"), "Sets user tag.\n\n:Parameter: userTag (int) - user tag\n\n**Example:**\n::\n\n    timeStamp.setUserTag(1)\n\n")
         ;
 
     //
     // PV Alarm
     //
-    class_<PvAlarm, bases<PvObject> >("PvAlarm", init<>())
+    class_<PvAlarm, bases<PvObject> >("PvAlarm", "PvAlarm represents PV alarm structure.\n\n:Parameter: severity (int) - alarm severity (default: 0)\n\n:Parameter: status (int) - status code (default: 0)\n\n:Parameter: message (str) - alarm message (default: '')\n\n**Example:**\n::\n\n\talarm1 = PvAlarm()\n\n\talarm2 = PvAlarm(5, 1, 'alarm message')\n\n", init<>())
         .def(init<int, int, const std::string&>())
-        .def("getSeverity", &PvAlarm::getSeverity)
-        .def("setSeverity", &PvAlarm::setSeverity)
-        .def("getStatus", &PvAlarm::getStatus)
-        .def("setStatus", &PvAlarm::setStatus)
-        .def("getMessage", &PvAlarm::getMessage)
-        .def("setMessage", &PvAlarm::setMessage)
+        .def("getSeverity", &PvAlarm::getSeverity, "Retrieves alarm severity.\n\n:Returns: alarm severity\n\n**Example:**\n::\n\n    severity = alarm.getSeverity()\n\n")
+        .def("setSeverity", &PvAlarm::setSeverity, arg("severity"), "Sets alarm severity.\n\n:Parameter: severity (int) - alarm severity\n\n**Example:**\n::\n\n    alarm.setSeverity(1)\n\n")
+        .def("getStatus", &PvAlarm::getStatus, "Retrieves status code.\n\n:Returns: status code\n\n**Example:**\n::\n\n    status = alarm.getStatusCode()\n\n")
+        .def("setStatus", &PvAlarm::setStatus, arg("status"), "Sets status code.\n\n:Parameter: status (int) - status code\n\n**Example:**\n::\n\n    alarm.setStatus(1)\n\n")
+        .def("getMessage", &PvAlarm::getMessage, "Retrieves alarm message.\n\n:Returns: alarm message\n\n**Example:**\n::\n\n    message = alarm.getMessage()\n\n")
+        .def("setMessage", &PvAlarm::setMessage, arg("message"), "Sets alarm message.\n\n:Parameter: message (str) - alarm message\n\n**Example:**\n::\n\n    alarm.setmessage('alarm message')\n\n")
         ;
 
     //
     // NT Type
     //
-    class_<NtType, bases<PvObject> >("NtType", no_init)
+    class_<NtType, bases<PvObject> >("NtType", "NtType is a base class for all NT structures. It cannot be instantiated directly from python.\n\n", no_init)
         ;
 
     //
