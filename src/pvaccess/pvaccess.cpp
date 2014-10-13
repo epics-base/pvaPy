@@ -415,82 +415,82 @@ BOOST_PYTHON_MODULE(pvaccess)
     //
     // PV Long
     //
-    class_<PvLong, bases<PvScalar> >("PvLong", "PvLong represents PV long type.\n\n:Parameter: value (long) - long value (default: 0)\n\n**Example:**\n::\n\n\tpv = PvLong(-100000L)\n\n", init<>())
+    class_<PvLong, bases<PvScalar> >("PvLong", "PvLong represents PV long type.\n\n**PvLong([value=0])**\n\n\t:Parameter: value (long) - long value\n\n\t::\n\n\t\tpv = PvLong(-100000L)\n\n", init<>())
         .def(init<long long>())
-        .def("get", &PvLong::get, "Retrieves long PV value.\n\n:Returns: long value\n\n**Example:**\n::\n\n    value = pv.get()\n\n")
-        .def("set", &PvLong::set, "Sets long PV value.\n\n:Parameter: value (long) - long value\n\n**Example:**\n::\n\n    pv.set(-100000L)\n\n")
+        .def("get", &PvLong::get, "Retrieves long PV value.\n\n:Returns: long value\n\n::\n\n    value = pv.get()\n\n")
+        .def("set", &PvLong::set, "Sets long PV value.\n\n:Parameter: value (long) - long value\n\n::\n\n    pv.set(-100000L)\n\n")
         ;
 
     //
     // PV ULong
     //
-    class_<PvULong, bases<PvScalar> >("PvULong", "PvULong represents PV unsigned long type.\n\n:Parameter: value (long) - unsigned long value (default: 0)\n\n**Example:**\n::\n\n\tpv = PvULong(100000L)\n\n", init<>())
+    class_<PvULong, bases<PvScalar> >("PvULong", "PvULong represents PV unsigned long type.\n\n**PvULong([value=0])**\n\n\t:Parameter: value (long) - unsigned long value\n\n\t::\n\n\t\tpv = PvULong(100000L)\n\n", init<>())
         .def(init<unsigned long long>())
-        .def("get", &PvULong::get, "Retrieves unsigned long PV value.\n\n:Returns: unsigned long value\n\n**Example:**\n::\n\n    value = pv.get()\n\n")
-        .def("set", &PvULong::set, arg("value"), "Sets unsigned long PV value.\n\n:Parameter: value (long) - unsigned long value\n\n**Example:**\n::\n\n    pv.set(100000L)\n\n")
+        .def("get", &PvULong::get, "Retrieves unsigned long PV value.\n\n:Returns: unsigned long value\n\n::\n\n    value = pv.get()\n\n")
+        .def("set", &PvULong::set, arg("value"), "Sets unsigned long PV value.\n\n:Parameter: value (long) - unsigned long value\n\n::\n\n    pv.set(100000L)\n\n")
         ;
 
     //
     // PV Float
     //
-    class_<PvFloat, bases<PvScalar> >("PvFloat", "PvFloat represents PV float type.\n\n:Parameter: value (float) - float value (default: 0)\n\n**Example:**\n::\n\n\tpv = PvFloat(1.1)\n\n", init<>())
+    class_<PvFloat, bases<PvScalar> >("PvFloat", "PvFloat represents PV float type.\n\n**PvFloat([value=0])**\n\n\t:Parameter: value (float) - float value\n\n\t::\n\n\t\tpv = PvFloat(1.1)\n\n", init<>())
         .def(init<float>())
-        .def("get", &PvFloat::get, "Retrieves float PV value.\n\n:Returns: float value\n\n**Example:**\n::\n\n    value = pv.get()\n\n")
-        .def("set", &PvFloat::set, arg("value"), "Sets float PV value.\n\n:Parameter: value (float) - float value\n\n**Example:**\n::\n\n    pv.set(1.1)\n\n")
+        .def("get", &PvFloat::get, "Retrieves float PV value.\n\n:Returns: float value\n\n::\n\n    value = pv.get()\n\n")
+        .def("set", &PvFloat::set, arg("value"), "Sets float PV value.\n\n:Parameter: value (float) - float value\n\n::\n\n    pv.set(1.1)\n\n")
         ;
 
     //
     // PV Double
     //
-    class_<PvDouble, bases<PvScalar> >("PvDouble", "PvDouble represents PV double type.\n\n:Parameter: value (float) - double value (default: 0)\n\n**Example:**\n::\n\n\tpv = PvDouble(1.1)\n\n", init<>())
+    class_<PvDouble, bases<PvScalar> >("PvDouble", "PvDouble represents PV double type.\n\n**PvDouble([value=0])**\n\n\t:Parameter: value (float) - double value\n\n\t::\n\n\t\tpv = PvDouble(1.1)\n\n", init<>())
         .def(init<double>())
-        .def("get", &PvDouble::get, "Retrieves double PV value.\n\n:Returns: double value\n\n**Example:**\n::\n\n    value = pv.get()\n\n")
-        .def("set", &PvDouble::set, arg("value"), "Sets double PV value.\n\n:Parameter: value (float) - double value\n\n**Example:**\n::\n\n    pv.set(1.1)\n\n")
+        .def("get", &PvDouble::get, "Retrieves double PV value.\n\n:Returns: double value\n\n::\n\n    value = pv.get()\n\n")
+        .def("set", &PvDouble::set, arg("value"), "Sets double PV value.\n\n:Parameter: value (float) - double value\n\n::\n\n    pv.set(1.1)\n\n")
         ;
 
     //
     // PV String
     //
-    class_<PvString, bases<PvScalar> >("PvString", "PvString represents PV string type.\n\n:Parameter: value (str) - string value (default: '')\n\n**Example:**\n::\n\n\tpv = PvString('stringValue')\n\n", init<>())
+    class_<PvString, bases<PvScalar> >("PvString", "PvString represents PV string type.\n\n**PvString([value=''])**\n\n\t:Parameter: value (str) - string value\n\n\t::\n\n\t\tpv = PvString('stringValue')\n\n", init<>())
         .def(init<std::string>())
-        .def("get", &PvString::get, "Retrieves string PV value.\n\n:Returns: string value\n\n**Example:**\n::\n\n    value = pv.get()\n\n")
-        .def("set", &PvString::set, arg("value"), "Sets string PV value.\n\n:Parameter: value (str) - string value\n\n**Example:**\n::\n\n    pv.set('stringValue')\n\n")
+        .def("get", &PvString::get, "Retrieves string PV value.\n\n:Returns: string value\n\n::\n\n    value = pv.get()\n\n")
+        .def("set", &PvString::set, arg("value"), "Sets string PV value.\n\n:Parameter: value (str) - string value\n\n::\n\n    pv.set('stringValue')\n\n")
         ;
 
     //
     // PV Scalar Array
     //
-    class_<PvScalarArray, bases<PvObject> >("PvScalarArray", "PvScalarArray represents PV scalar array.\n\n:Parameter: scalarType (PVTYPE) - scalar type of array elements\n\n- PVTYPE: scalar type, can be BOOLEAN, BYTE, UBYTE, SHORT, USHORT, INT, UINT, LONG, ULONG, FLOAT, DOUBLE, or STRING\n\n**Example:**\n::\n\n\tpv = PvScalarArray(INT)\n\n", init<PvType::ScalarType>())
-        .def("get", &PvScalarArray::get, "Retrieves PV value list.\n\n:Returns: list of scalar values\n\n**Example:**\n::\n\n    valueList = pv.get()\n\n")
-        .def("set", &PvScalarArray::set, arg("valueList"), "Sets PV value list.\n\n:Parameter: valueList (list) - list of scalar values\n\n**Example:**\n::\n\n    pv.set([1,2,3,4,5])\n\n")
-        .def("toList", &PvScalarArray::toList, "Converts PV to value list.\n\n:Returns: list of scalar values\n\n**Example:**\n::\n\n    valueList = pv.toList()\n\n")
+    class_<PvScalarArray, bases<PvObject> >("PvScalarArray", "PvScalarArray represents PV scalar array.\n\n**PvScalarArray(scalarType)**\n\n\t:Parameter: scalarType (PVTYPE) - scalar type of array elements\n\n\t- PVTYPE: scalar type, can be BOOLEAN, BYTE, UBYTE, SHORT, USHORT, INT, UINT, LONG, ULONG, FLOAT, DOUBLE, or STRING\n\n\t::\n\n\t\tpv = PvScalarArray(INT)\n\n", init<PvType::ScalarType>())
+        .def("get", &PvScalarArray::get, "Retrieves PV value list.\n\n:Returns: list of scalar values\n\n::\n\n    valueList = pv.get()\n\n")
+        .def("set", &PvScalarArray::set, arg("valueList"), "Sets PV value list.\n\n:Parameter: valueList (list) - list of scalar values\n\n::\n\n    pv.set([1,2,3,4,5])\n\n")
+        .def("toList", &PvScalarArray::toList, "Converts PV to value list.\n\n:Returns: list of scalar values\n\n::\n\n    valueList = pv.toList()\n\n")
         ;
 
     //
     // PV TimeStamp
     //
-    class_<PvTimeStamp, bases<PvObject> >("PvTimeStamp", "PvTimeStamp represents PV time stamp structure.\n\n:Parameter: secondsPastEpoch (long) - seconds past epoch (default: 0)\n\n:Parameter: nanoSeconds (int) - nanoSeconds (default: 0)\n\n:Parameter: userTag (int) - user tag (default: -1)\n\n**Example:**\n::\n\n\ttimeStamp1 = PvTimeStamp()\n\n\ttimeStamp2 = PvTimeStamp(1234567890, 10000)\n\n\ttimeStamp3 = PvTimeStamp(1234567890, 10000, 1)\n\n", init<>())
+    class_<PvTimeStamp, bases<PvObject> >("PvTimeStamp", "PvTimeStamp represents PV time stamp structure.\n\n**PvTimeStamp()**\n\n\t::\n\n\t\ttimestamp1 = PvTimeStamp()\n\n**PvTimeStamp(secondsPastEpoch, nanoSeconds [, userTag=-1])**\n\n\t:Parameter: secondsPastEpoch (long) - seconds past epoch\n\n\t:Parameter: nanoSeconds (int) - nanoSeconds\n\n\t:Parameter: userTag (int) - user tag\n\n\t::\n\n\t\ttimeStamp2 = PvTimeStamp(1234567890, 10000)\n\n\t\ttimeStamp3 = PvTimeStamp(1234567890, 10000, 1)\n\n", init<>())
         .def(init<long long, int>())
         .def(init<long long, int, int>())
-        .def("getSecondsPastEpoch", &PvTimeStamp::getSecondsPastEpoch, "Retrieves time stamp value for seconds past epoch.\n\n:Returns: seconds past epoch\n\n**Example:**\n::\n\n    secondsPastEpoch = timeStamp.getSecondsPastEpoch()\n\n")
-        .def("setSecondsPastEpoch", &PvTimeStamp::setSecondsPastEpoch, arg("secondsPastEpoch"), "Sets time stamp value for seconds past epoch.\n\n:Parameter: secondsPastEpoch (long) - seconds past epoch\n\n**Example:**\n::\n\n    timeStamp.setSecondsPastEpoch(1234567890)\n\n")
-        .def("getNanoSeconds", &PvTimeStamp::getNanoSeconds, "Retrieves time stamp value for nanoseconds.\n\n:Returns: nanoseconds\n\n**Example:**\n::\n\n    nanoSeconds = timeStamp.getNanoSeconds()\n\n")
-        .def("setNanoSeconds", &PvTimeStamp::setNanoSeconds, arg("nanoSeconds"), "Sets time stamp value for nanoseconds.\n\n:Parameter: nanoSeconds (int) - nanoseconds\n\n**Example:**\n::\n\n    timeStamp.setNanoSeconds(10000)\n\n")
-        .def("getUserTag", &PvTimeStamp::getUserTag, "Retrieves user tag.\n\n:Returns: user tag\n\n**Example:**\n::\n\n    userTag = timeStamp.getUserTag()\n\n")
-        .def("setUserTag", &PvTimeStamp::setUserTag, arg("userTag"), "Sets user tag.\n\n:Parameter: userTag (int) - user tag\n\n**Example:**\n::\n\n    timeStamp.setUserTag(1)\n\n")
+        .def("getSecondsPastEpoch", &PvTimeStamp::getSecondsPastEpoch, "Retrieves time stamp value for seconds past epoch.\n\n:Returns: seconds past epoch\n\n::\n\n    secondsPastEpoch = timeStamp.getSecondsPastEpoch()\n\n")
+        .def("setSecondsPastEpoch", &PvTimeStamp::setSecondsPastEpoch, arg("secondsPastEpoch"), "Sets time stamp value for seconds past epoch.\n\n:Parameter: secondsPastEpoch (long) - seconds past epoch\n\n::\n\n    timeStamp.setSecondsPastEpoch(1234567890)\n\n")
+        .def("getNanoSeconds", &PvTimeStamp::getNanoSeconds, "Retrieves time stamp value for nanoseconds.\n\n:Returns: nanoseconds\n\n::\n\n    nanoSeconds = timeStamp.getNanoSeconds()\n\n")
+        .def("setNanoSeconds", &PvTimeStamp::setNanoSeconds, arg("nanoSeconds"), "Sets time stamp value for nanoseconds.\n\n:Parameter: nanoSeconds (int) - nanoseconds\n\n::\n\n    timeStamp.setNanoSeconds(10000)\n\n")
+        .def("getUserTag", &PvTimeStamp::getUserTag, "Retrieves user tag.\n\n:Returns: user tag\n\n::\n\n    userTag = timeStamp.getUserTag()\n\n")
+        .def("setUserTag", &PvTimeStamp::setUserTag, arg("userTag"), "Sets user tag.\n\n:Parameter: userTag (int) - user tag\n\n::\n\n    timeStamp.setUserTag(1)\n\n")
         ;
 
     //
     // PV Alarm
     //
-    class_<PvAlarm, bases<PvObject> >("PvAlarm", "PvAlarm represents PV alarm structure.\n\n:Parameter: severity (int) - alarm severity (default: 0)\n\n:Parameter: status (int) - status code (default: 0)\n\n:Parameter: message (str) - alarm message (default: '')\n\n**Example:**\n::\n\n\talarm1 = PvAlarm()\n\n\talarm2 = PvAlarm(5, 1, 'alarm message')\n\n", init<>())
+    class_<PvAlarm, bases<PvObject> >("PvAlarm", "PvAlarm represents PV alarm structure.\n\n**PvAlarm()**\n\n\t::\n\n\t\talarm1 = PvAlarm()\n\n**PvAlarm(severity, status, message)**\n\n\t:Parameter: severity (int) - alarm severity\n\n\t:Parameter: status (int) - status code\n\n\t:Parameter: message (str) - alarm message\n\n\t::\n\n\t\talarm2 = PvAlarm(5, 1, 'alarm message')\n\n", init<>())
         .def(init<int, int, const std::string&>())
-        .def("getSeverity", &PvAlarm::getSeverity, "Retrieves alarm severity.\n\n:Returns: alarm severity\n\n**Example:**\n::\n\n    severity = alarm.getSeverity()\n\n")
-        .def("setSeverity", &PvAlarm::setSeverity, arg("severity"), "Sets alarm severity.\n\n:Parameter: severity (int) - alarm severity\n\n**Example:**\n::\n\n    alarm.setSeverity(1)\n\n")
-        .def("getStatus", &PvAlarm::getStatus, "Retrieves status code.\n\n:Returns: status code\n\n**Example:**\n::\n\n    status = alarm.getStatusCode()\n\n")
-        .def("setStatus", &PvAlarm::setStatus, arg("status"), "Sets status code.\n\n:Parameter: status (int) - status code\n\n**Example:**\n::\n\n    alarm.setStatus(1)\n\n")
-        .def("getMessage", &PvAlarm::getMessage, "Retrieves alarm message.\n\n:Returns: alarm message\n\n**Example:**\n::\n\n    message = alarm.getMessage()\n\n")
-        .def("setMessage", &PvAlarm::setMessage, arg("message"), "Sets alarm message.\n\n:Parameter: message (str) - alarm message\n\n**Example:**\n::\n\n    alarm.setmessage('alarm message')\n\n")
+        .def("getSeverity", &PvAlarm::getSeverity, "Retrieves alarm severity.\n\n:Returns: alarm severity\n\n::\n\n    severity = alarm.getSeverity()\n\n")
+        .def("setSeverity", &PvAlarm::setSeverity, arg("severity"), "Sets alarm severity.\n\n:Parameter: severity (int) - alarm severity\n\n::\n\n    alarm.setSeverity(1)\n\n")
+        .def("getStatus", &PvAlarm::getStatus, "Retrieves status code.\n\n:Returns: status code\n\n::\n\n    status = alarm.getStatusCode()\n\n")
+        .def("setStatus", &PvAlarm::setStatus, arg("status"), "Sets status code.\n\n:Parameter: status (int) - status code\n\n::\n\n    alarm.setStatus(1)\n\n")
+        .def("getMessage", &PvAlarm::getMessage, "Retrieves alarm message.\n\n:Returns: alarm message\n\n::\n\n    message = alarm.getMessage()\n\n")
+        .def("setMessage", &PvAlarm::setMessage, arg("message"), "Sets alarm message.\n\n:Parameter: message (str) - alarm message\n\n::\n\n    alarm.setmessage('alarm message')\n\n")
         ;
 
     //

@@ -68,56 +68,56 @@ PvUInt
 PvLong
 ------
 
-.. autoclass:: pvaccess.PvLong([value])
+.. autoclass:: pvaccess.PvLong()
     :show-inheritance: 
     :members: 
 
 PvULong
 -------
 
-.. autoclass:: pvaccess.PvULong([value])
+.. autoclass:: pvaccess.PvULong()
     :show-inheritance: 
     :members: 
 
 PvFloat
 -------
 
-.. autoclass:: pvaccess.PvFloat([value])
+.. autoclass:: pvaccess.PvFloat()
     :show-inheritance: 
     :members: 
 
 PvDouble
 --------
 
-.. autoclass:: pvaccess.PvDouble([value])
+.. autoclass:: pvaccess.PvDouble()
     :show-inheritance: 
     :members: 
 
 PvString
 --------
 
-.. autoclass:: pvaccess.PvString([value])
+.. autoclass:: pvaccess.PvString()
     :show-inheritance: 
     :members: 
 
 PvScalarArray
 -------------
 
-.. autoclass:: pvaccess.PvScalarArray(scalarType)
+.. autoclass:: pvaccess.PvScalarArray()
     :show-inheritance: 
     :members: 
 
 PvTimeStamp
 -----------
 
-.. autoclass:: pvaccess.PvTimeStamp([[secondsPastEpoch, nanoSeconds, [userTag]])
+.. autoclass:: pvaccess.PvTimeStamp()
     :show-inheritance: 
     :members: 
 
 PvAlarm
 -----------
 
-.. autoclass:: pvaccess.PvAlarm([severity, status, message])
+.. autoclass:: pvaccess.PvAlarm()
     :show-inheritance: 
     :members: 
 
@@ -126,6 +126,13 @@ NtType
 
 .. autoclass:: pvaccess.NtType()
     :show-inheritance: 
+
+NtTable
+-------
+
+.. autoclass:: pvaccess.NtTable()
+    :show-inheritance: 
+    :members: 
 
 Channel
 -------
