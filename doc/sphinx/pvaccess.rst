@@ -5,7 +5,7 @@
 PvObject
 --------
 
-.. autoclass:: pvaccess.PvObject(structureDict)
+.. autoclass:: pvaccess.PvObject()
     :show-inheritance: 
     :members:
     :inherited-members:
@@ -19,49 +19,49 @@ PvScalar
 PvBoolean
 ---------
 
-.. autoclass:: pvaccess.PvBoolean([value])
+.. autoclass:: pvaccess.PvBoolean()
     :show-inheritance: 
     :members: 
 
 PvByte
 ------
 
-.. autoclass:: pvaccess.PvByte([value])
+.. autoclass:: pvaccess.PvByte()
     :show-inheritance: 
     :members: 
 
 PvUByte
 -------
 
-.. autoclass:: pvaccess.PvUByte([value])
+.. autoclass:: pvaccess.PvUByte()
     :show-inheritance: 
     :members: 
 
 PvShort
 -------
 
-.. autoclass:: pvaccess.PvShort([value])
+.. autoclass:: pvaccess.PvShort()
     :show-inheritance: 
     :members: 
 
 PvUShort
 --------
 
-.. autoclass:: pvaccess.PvUShort([value])
+.. autoclass:: pvaccess.PvUShort()
     :show-inheritance: 
     :members: 
 
 PvInt
 -----
 
-.. autoclass:: pvaccess.PvInt([value])
+.. autoclass:: pvaccess.PvInt()
     :show-inheritance: 
     :members: 
 
 PvUInt
 ------
 
-.. autoclass:: pvaccess.PvUInt([value])
+.. autoclass:: pvaccess.PvUInt()
     :show-inheritance: 
     :members: 
 
@@ -137,7 +137,23 @@ NtTable
 Channel
 -------
 
-.. autoclass:: pvaccess.Channel
+.. autoclass:: pvaccess.Channel()
+    :show-inheritance: 
+    :members:
+    :inherited-members:
+
+RpcServer
+---------
+
+.. autoclass:: pvaccess.RpcServer()
+    :show-inheritance: 
+    :members:
+    :inherited-members:
+
+RpcClient
+---------
+
+.. autoclass:: pvaccess.RpcClient()
     :show-inheritance: 
     :members:
     :inherited-members:

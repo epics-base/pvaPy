@@ -111,7 +111,7 @@ BOOST_PYTHON_MODULE(pvaccess)
     // PvObject
     //
     class_<PvObject>("PvObject", 
-            "PvObject represents a generic PV structure.\n\n:Parameter: structureDict (dict) - dictionary of key:value pairs describing the underlying PV structure in terms of field names and their types\n\nThe dictionary key is a string (PV field name), and value is one of:\n\n- PVTYPE: scalar type, can be BOOLEAN, BYTE, UBYTE, SHORT, USHORT, INT, UINT, LONG, ULONG, FLOAT, DOUBLE, or STRING\n- [PVTYPE]: single element list representing scalar array\n- {key:value,…}: structure\n- [{key:value,…}]: single element list representing structure array\n\n**Examples:**\n::\n\n\tpv1 = PvObject({'anInt' : INT})\n\n\tpv2 = PvObject({'aShort' : SHORT, 'anUInt' : UINT, 'aString' : STRING})\n\n\tpv3 = PvObject({'aStringArray' : [STRING], 'aStruct' : {'aString2' : STRING, 'aBoolArray' : [BOOLEAN], 'aStruct2' : {'aFloat' : FLOAT, 'aString3' : [STRING]}}})\n\n\tpv4 = PvObject({'aStructArray' : [{'anInt' : INT, 'anInt2' : INT, 'aDouble' : DOUBLE}]})\n\n", 
+            "PvObject represents a generic PV structure.\n\n**PvObject(structureDict)**\n\n\t:Parameter: structureDict (dict) - dictionary of key:value pairs describing the underlying PV structure in terms of field names and their types\n\n\tThe dictionary key is a string (PV field name), and value is one of:\n\n\t- PVTYPE: scalar type, can be BOOLEAN, BYTE, UBYTE, SHORT, USHORT, INT, UINT, LONG, ULONG, FLOAT, DOUBLE, or STRING\n\t- [PVTYPE]: single element list representing scalar array\n\t- {key:value,…}: structure\n\t- [{key:value,…}]: single element list representing structure array\n\n\t::\n\n\t\tpv1 = PvObject({'anInt' : INT})\n\n\t\tpv2 = PvObject({'aShort' : SHORT, 'anUInt' : UINT, 'aString' : STRING})\n\n\t\tpv3 = PvObject({'aStringArray' : [STRING], 'aStruct' : {'aString2' : STRING, 'aBoolArray' : [BOOLEAN], 'aStruct2' : {'aFloat' : FLOAT, 'aString3' : [STRING]}}})\n\n\t\tpv4 = PvObject({'aStructArray' : [{'anInt' : INT, 'anInt2' : INT, 'aDouble' : DOUBLE}]})\n\n", 
             init<boost::python::dict>(arg("structureDict")))
 
         .def(str(self))
@@ -352,64 +352,64 @@ BOOST_PYTHON_MODULE(pvaccess)
     //
     // PV Boolean
     //
-    class_<PvBoolean, bases<PvScalar> >("PvBoolean", "PvBoolean represents PV boolean type.\n\n:Parameter: value (bool) - boolean value (default: False)\n\n**Example:**\n::\n\n\tpv = PvBoolean(True)\n\n", init<>())
+    class_<PvBoolean, bases<PvScalar> >("PvBoolean", "PvBoolean represents PV boolean type.\n\n**PvBoolean([value=False])**\n\n\t:Parameter: value (bool) - boolean value\n\n\t::\n\n\t\tpv = PvBoolean(True)\n\n", init<>())
         .def(init<bool>())
-        .def("get", &PvBoolean::get, "Retrieves boolean PV value.\n\n:Returns: boolean value\n\n**Example:**\n::\n\n    value = pv.get()\n\n")
-        .def("set", &PvBoolean::set, arg("value"), "Sets boolean PV value.\n\n:Parameter: value (bool) - boolean value\n\n**Example:**\n::\n\n    pv.set(False)\n\n")
+        .def("get", &PvBoolean::get, "Retrieves boolean PV value.\n\n:Returns: boolean value\n\n::\n\n    value = pv.get()\n\n")
+        .def("set", &PvBoolean::set, arg("value"), "Sets boolean PV value.\n\n:Parameter: value (bool) - boolean value\n\n::\n\n    pv.set(False)\n\n")
         ;
 
     //
     // PV Byte
     //
-    class_<PvByte, bases<PvScalar> >("PvByte", "PvByte represents PV byte type.\n\n:Parameter: value (str) - byte value (default: '')\n\n**Example:**\n::\n\n\tpv = PvByte('a')\n\n", init<>())
+    class_<PvByte, bases<PvScalar> >("PvByte", "PvByte represents PV byte type.\n\n**PvByte([value=''])**\n\n\t:Parameter: value (str) - byte value\n\n\t::\n\n\t\tpv = PvByte('a')\n\n", init<>())
         .def(init<char>())
-        .def("get", &PvByte::get, "Retrieves byte PV value.\n\n:Returns: byte value\n\n**Example:**\n::\n\n    value = pv.get()\n\n")
-        .def("set", &PvByte::set, arg("value"), "Sets byte PV value.\n\n:Parameter: value (str) - byte value\n\n**Example:**\n::\n\n    pv.set('a')\n\n")
+        .def("get", &PvByte::get, "Retrieves byte PV value.\n\n:Returns: byte value\n\n::\n\n    value = pv.get()\n\n")
+        .def("set", &PvByte::set, arg("value"), "Sets byte PV value.\n\n:Parameter: value (str) - byte value\n\n::\n\n    pv.set('a')\n\n")
         ;
 
     //
     // PV UByte
     //
-    class_<PvUByte, bases<PvScalar> >("PvUByte", "PvUByte represents PV unsigned byte type.\n\n:Parameter: value (int) - unsigned byte value (default: 0)\n\n**Example:**\n::\n\n\tpv = PvUByte(10)\n\n", init<>())
+    class_<PvUByte, bases<PvScalar> >("PvUByte", "PvUByte represents PV unsigned byte type.\n\n**PvUByte([value=0])**\n\n\t:Parameter: value (int) - unsigned byte value\n\n\t::\n\n\t\tpv = PvUByte(10)\n\n", init<>())
         .def(init<unsigned char>())
-        .def("get", &PvUByte::get, "Retrieves unsigned byte PV value.\n\n:Returns: unsigned byte value\n\n**Example:**\n::\n\n    value = pv.get()\n\n")
-        .def("set", &PvUByte::set, arg("value"), "Sets unsigned byte PV value.\n\n:Parameter: value (int) - unsigned byte value\n\n**Example:**\n::\n\n    pv.set(10)\n\n")
+        .def("get", &PvUByte::get, "Retrieves unsigned byte PV value.\n\n:Returns: unsigned byte value\n\n::\n\n    value = pv.get()\n\n")
+        .def("set", &PvUByte::set, arg("value"), "Sets unsigned byte PV value.\n\n:Parameter: value (int) - unsigned byte value\n\n::\n\n    pv.set(10)\n\n")
         ;
 
     //
     // PV Short
     //
-    class_<PvShort, bases<PvScalar> >("PvShort", "PvShort represents PV short type.\n\n:Parameter: value (int) - short value (default: 0)\n\n**Example:**\n::\n\n\tpv = PvShort(-10)\n\n", init<>())
+    class_<PvShort, bases<PvScalar> >("PvShort", "PvShort represents PV short type.\n\n**PvShort([value=0])**\n\n\t:Parameter: value (int) - short value\n\n\t::\n\n\t\tpv = PvShort(-10)\n\n", init<>())
         .def(init<short>())
-        .def("get", &PvShort::get, "Retrieves short PV value.\n\n:Returns: short value\n\n**Example:**\n::\n\n    value = pv.get()\n\n")
-        .def("set", &PvShort::set, arg("value"), "Sets short PV value.\n\n:Parameter: value (int) - short value\n\n**Example:**\n::\n\n    pv.set(-10)\n\n")
+        .def("get", &PvShort::get, "Retrieves short PV value.\n\n:Returns: short value\n\n::\n\n    value = pv.get()\n\n")
+        .def("set", &PvShort::set, arg("value"), "Sets short PV value.\n\n:Parameter: value (int) - short value\n\n::\n\n    pv.set(-10)\n\n")
         ;
 
     //
     // PV UShort
     //
-    class_<PvUShort, bases<PvScalar> >("PvUShort", "PvUShort represents PV unsigned short type.\n\n:Parameter: value (int) - unsigned short value (default: 0)\n\n**Example:**\n::\n\n\tpv = PvUShort(10)\n\n", init<>())
+    class_<PvUShort, bases<PvScalar> >("PvUShort", "PvUShort represents PV unsigned short type.\n\n**PvUShort([value=0])**\n\n\t:Parameter: value (int) - unsigned short value\n\n\t::\n\n\t\tpv = PvUShort(10)\n\n", init<>())
         .def(init<unsigned short>())
-        .def("get", &PvUShort::get, "Retrieves unsigned short PV value.\n\n:Returns: unsigned short value\n\n**Example:**\n::\n\n    value = pv.get()\n\n")
-        .def("set", &PvUShort::set, arg("value"), "Sets unsigned short PV value.\n\n:Parameter: value (int) - unsigned short value\n\n**Example:**\n::\n\n    pv.set(10)\n\n")
+        .def("get", &PvUShort::get, "Retrieves unsigned short PV value.\n\n:Returns: unsigned short value\n\n::\n\n    value = pv.get()\n\n")
+        .def("set", &PvUShort::set, arg("value"), "Sets unsigned short PV value.\n\n:Parameter: value (int) - unsigned short value\n\n::\n\n    pv.set(10)\n\n")
         ;
 
     //
     // PV Int
     //
-    class_<PvInt, bases<PvScalar> >("PvInt", "PvInt represents PV integer type.\n\n:Parameter: value (int) - integer value (default: 0)\n\n**Example:**\n::\n\n\tpv = PvInt(-1000)\n\n", init<>())
+    class_<PvInt, bases<PvScalar> >("PvInt", "PvInt represents PV integer type.\n\n**PvInt([value=0])**\n\n\t:Parameter: value (int) - integer value\n\n\t::\n\n\t\tpv = PvInt(-1000)\n\n", init<>())
         .def(init<int>())
-        .def("get", &PvInt::get, "Retrieves integer PV value.\n\n:Returns: integer value\n\n**Example:**\n::\n\n    value = pv.get()\n\n")
-        .def("set", &PvInt::set, arg("value"), "Sets integer PV value.\n\n:Parameter: value (int) - integer value\n\n**Example:**\n::\n\n    pv.set(-1000)\n\n")
+        .def("get", &PvInt::get, "Retrieves integer PV value.\n\n:Returns: integer value\n\n::\n\n    value = pv.get()\n\n")
+        .def("set", &PvInt::set, arg("value"), "Sets integer PV value.\n\n:Parameter: value (int) - integer value\n\n::\n\n    pv.set(-1000)\n\n")
         ;
 
     //
     // PV UInt
     //
-    class_<PvUInt, bases<PvScalar> >("PvUInt", "PvUInt represents PV unsigned int type.\n\n:Parameter: value (int) - unsigned integer value (default: 0)\n\n**Example:**\n::\n\n\tpv = PvUInt(1000)\n\n", init<>())
+    class_<PvUInt, bases<PvScalar> >("PvUInt", "PvUInt represents PV unsigned int type.\n\n**PvUInt([value=0])**\n\n\t:Parameter: value (int) - unsigned integer value\n\n\t::\n\n\t\tpv = PvUInt(1000)\n\n", init<>())
         .def(init<unsigned int>())
-        .def("get", &PvUInt::get,  "Retrieves unsigned integer PV value.\n\n:Returns: unsigned integer value\n\n**Example:**\n::\n\n    value = pv.get()\n\n")
-        .def("set", &PvUInt::set, arg("value"), "Sets unsigned integer PV value.\n\n:Parameter: value (int) - unsigned integer value\n\n**Example:**\n::\n\n    pv.set(1000)\n\n")
+        .def("get", &PvUInt::get,  "Retrieves unsigned integer PV value.\n\n:Returns: unsigned integer value\n\n::\n\n    value = pv.get()\n\n")
+        .def("set", &PvUInt::set, arg("value"), "Sets unsigned integer PV value.\n\n:Parameter: value (int) - unsigned integer value\n\n::\n\n    pv.set(1000)\n\n")
         ;
 
     //
@@ -502,20 +502,20 @@ BOOST_PYTHON_MODULE(pvaccess)
     //
     // NT Table 
     //
-    class_<NtTable, bases<NtType> >("NtTable", init<int, PvType::ScalarType>())
+    class_<NtTable, bases<NtType> >("NtTable", "NtTable represents NT table structure.\n\n**NtTable(nColumns, scalarType)**\n\n\t:Parameter: nColumns (int) - number of table columns\n\n\t:Parameter: scalarType (PVTYPE) - scalar type (BOOLEAN, BYTE, UBYTE, SHORT, USHORT, INT, UINT, LONG, ULONG, FLOAT, DOUBLE, or STRING)\n\n\tThis example creates NT Table with 3 columns of DOUBLE values:\n\n\t::\n\n\t\ttable1 = NtTable(3, DOUBLE)\n\n\t**NtTable(scalarTypeList)**\n\n\t:Parameter: scalarTypeList ([PVTYPE]) - list of column scalar types (BOOLEAN, BYTE, UBYTE, SHORT, USHORT, INT, UINT, LONG, ULONG, FLOAT, DOUBLE, or STRING)\n\n\tThis example creates NT Table with STRING, INT and DOUBLE columns:\n\n\t::\n\n\t\ttable2 = NtTable([STRING, INT, DOUBLE])\n\n**NtTable(pvObject)**\n\n\t:Parameter: pvObject (PvObject) - PV object that has a structure containing required NT Table elements:\n\n\t- labels ([STRING]) - list of column labels\n\n\t- value (dict) - dictionary of column<index>:[PVTYPE] pairs, where <index> is an integer in range [0,N-1], with N being NT Table dimension\n\n\tThe following example creates NT Table with 3 DOUBLE columns:\n\n\t::\n\n\t\tpvObject = PvObject({'labels' : [STRING], 'value' : {'column0' : [DOUBLE], 'column1' : [DOUBLE], 'column2' : [DOUBLE]}})\n\n\t\tpvObject.setScalarArray('labels', ['x', 'y', 'z'])\n\n\t\tpvObject.setStructure('value', {'column0' : [0.1, 0.2, 0.3], 'column1' : [1.1, 1.2, 1.3], 'column2' : [2.1, 2.2, 2.3]})\n\n\t\ttable3 = NtTable(pvObject)", init<int, PvType::ScalarType>())
         .def(init<const boost::python::list&>())
         .def(init<const PvObject&>())
-        .def("getNColumns", &NtTable::getNColumns)
-        .def("getLabels", &NtTable::getLabels)
-        .def("setLabels", &NtTable::setLabels)
-        .def("getColumn", &NtTable::getColumn)
-        .def("setColumn", &NtTable::setColumn)
-        .def("getDescriptor", &NtTable::getDescriptor)
-        .def("setDescriptor", &NtTable::setDescriptor)
-        .def("getTimeStamp", &NtTable::getTimeStamp)
-        .def("setTimeStamp", &NtTable::setTimeStamp)
-        .def("getAlarm", &NtTable::getAlarm)
-        .def("setAlarm", &NtTable::setAlarm)
+        .def("getNColumns", &NtTable::getNColumns, "Retrieves number of columns.\n\n:Returns: number of table columns\n\n::\n\n    nColumns = table.getNColumns()\n\n")
+        .def("getLabels", &NtTable::getLabels, "Retrieves list of column labels.\n\n:Returns: list of column labels\n\n::\n\n    labelList = table.getLabels()\n\n")
+        .def("setLabels", &NtTable::setLabels, arg("labelList"), "Sets column labels.\n\n:Parameter: labelList ([str]) - list of strings containing column labels (the list length must match number of table columns)\n\n::\n\n    table.setLabels(['String', 'Int', 'Double'])\n\n")
+        .def("getColumn", &NtTable::getColumn, arg("index"), "Retrieves specified column.\n\n:Parameter: index (int) - column index (must be in range [0,N-1], where N is the number of table columns)\n\n:Returns: list of values stored in the specified table column\n\n::\n\n    valueList = table.getColumn(0)\n\n")
+        .def("setColumn", &NtTable::setColumn, args("index", "valueList"), "Sets column values.\n\n:Parameter: index (int)  - column index\n\n:Parameter: valueList (list) - list of column values\n\n::\n\n    table.setColumn(0, ['x', 'y', 'z'])\n\n")
+        .def("getDescriptor", &NtTable::getDescriptor, "Retrieves table descriptor.\n\n:Returns: table descriptor\n\n::\n\n    descriptor = table.getDescriptor()\n\n")
+        .def("setDescriptor", &NtTable::setDescriptor, arg("descriptor"), "Sets table descriptor.\n\n:Parameter: descriptor (str) - table descriptor\n\n::\n\n    table.setDescriptor('myTable')\n\n")
+        .def("getTimeStamp", &NtTable::getTimeStamp, "Retrieves table time stamp.\n\n:Returns: table time stamp object\n\n::\n\n    timeStamp = table.getTimeStamp()\n\n")
+        .def("setTimeStamp", &NtTable::setTimeStamp, arg("timeStamp"), "Sets table time stamp.\n\n:Parameter: timeStamp (PvTimeStamp)  - table time stamp object\n\n::\n\n    timeStamp = PvTimeStamp(1234567890, 10000, 1)\n\n    table.setTimeStamp(timeStamp)\n\n")
+        .def("getAlarm", &NtTable::getAlarm, "Retrieves table alarm.\n\n:Returns: table alarm object\n\n::\n\n    alarm = table.getAlarm()\n\n")
+        .def("setAlarm", &NtTable::setAlarm, arg("alarm"), "Sets table alarm.\n\n:Parameter: alarm (PvAlarm)  - table alarm object\n\n::\n\n    alarm = PvAlarm(11, 126, 'Server SegFault')\n\n    table.setAlarm(alarm)\n\n")
         ;
 
     // Channel
@@ -563,13 +563,12 @@ BOOST_PYTHON_MODULE(pvaccess)
         ;
 
     // RPC Client
-    class_<RpcClient>("RpcClient", init<std::string>())
-        .def("invoke", &RpcClient::invoke,
-            return_value_policy<manage_new_object>())
+    class_<RpcClient>("RpcClient", "RpcClient is a client class for PVA RPC services.\n\n**RpcClient(channelName)**\n\n\t:Parameter: channelName (str) - RPC service channel name\n\n\tThe following example creates RPC client for channel 'createNtTable':\n\n\t::\n\n\t\trpcClient = RpcClient('createNtTable')\n\n", init<std::string>())
+        .def("invoke", &RpcClient::invoke, return_value_policy<manage_new_object>(), arg("pvRequest"), "Invokes RPC call against service registered on the PV specified channel.\n\n:Parameter: pvRequest (PvObject)  - PV request object with a structure conforming to requirements of the RPC service registered on the given PV channel\n\n:Returns: PV response object\n\nThe following code works with the above RPC service example:\n\n::\n\n    pvRequest = PvObject({'nRows' : INT, 'nColumns' : INT})\n\n    pvRequest.set({'nRows' : 10, 'nColumns' : 10})\n\n    pvResponse = rpcClient(pvRequest)\n\n    ntTable = NtTable(pvRequest)\n\n")
         ;
     
     // RPC Service Impl
-    class_<RpcServiceImpl, boost::shared_ptr<RpcServiceImpl> >("RpcServiceImpl", init<boost::python::object>())
+    //class_<RpcServiceImpl, boost::shared_ptr<RpcServiceImpl> >("RpcServiceImpl", init<boost::python::object>())
         ;
 
     // RPC Server
