@@ -11,7 +11,7 @@ public:
     static const char* StructureId;
 
     static const char* SecondsPastEpochFieldKey;
-    static const char* NanoSecondsFieldKey;
+    static const char* NanosecondsFieldKey;
     static const char* UserTagFieldKey;
 
     static const int UnknownUserTag;
@@ -21,8 +21,8 @@ public:
 
     // Instance methods
     PvTimeStamp();
-    PvTimeStamp(long long secondsPastEpoch, int nanoSeconds);
-    PvTimeStamp(long long secondsPastEpoch, int nanoSeconds, int userTag);
+    PvTimeStamp(long long secondsPastEpoch, int nanoseconds);
+    PvTimeStamp(long long secondsPastEpoch, int nanoseconds, int userTag);
     PvTimeStamp(const boost::python::dict& pyDict, const std::string& structureId=StructureId);
     PvTimeStamp(const epics::pvData::PVStructurePtr& pvStructurePtr);
     PvTimeStamp(const PvTimeStamp& pvTimeStamp); 
@@ -30,8 +30,8 @@ public:
 
     virtual void setSecondsPastEpoch(long long secondsPastEpoch);
     virtual long long getSecondsPastEpoch() const;
-    virtual void setNanoSeconds(int nanoSeconds);
-    virtual int getNanoSeconds() const;
+    virtual void setNanoseconds(int nanoseconds);
+    virtual int getNanoseconds() const;
     virtual void setUserTag(int userTag);
     virtual int getUserTag() const;
 

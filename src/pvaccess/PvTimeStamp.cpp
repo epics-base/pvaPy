@@ -4,7 +4,7 @@
 const char* PvTimeStamp::StructureId("time_t");
 
 const char* PvTimeStamp::SecondsPastEpochFieldKey("secondsPastEpoch");
-const char* PvTimeStamp::NanoSecondsFieldKey("nanoSeconds");
+const char* PvTimeStamp::NanosecondsFieldKey("nanoseconds");
 const char* PvTimeStamp::UserTagFieldKey("userTag");
 
 const int PvTimeStamp::UnknownUserTag(-1);
@@ -14,7 +14,7 @@ boost::python::dict PvTimeStamp::createStructureDict()
     // StandardField implementation is using signed types for some reason.
     boost::python::dict pyDict;
     pyDict[SecondsPastEpochFieldKey] = PvType::Long;
-    pyDict[NanoSecondsFieldKey] = PvType::Int;
+    pyDict[NanosecondsFieldKey] = PvType::Int;
     pyDict[UserTagFieldKey] = PvType::Int;
     return pyDict;
 }
@@ -23,23 +23,23 @@ PvTimeStamp::PvTimeStamp()
     : PvObject(createStructureDict(), StructureId)
 {
     setSecondsPastEpoch(0);
-    setNanoSeconds(0);
+    setNanoseconds(0);
     setUserTag(UnknownUserTag);
 }
 
-PvTimeStamp::PvTimeStamp(long long secondsPastEpoch, int nanoSeconds)
+PvTimeStamp::PvTimeStamp(long long secondsPastEpoch, int nanoseconds)
     : PvObject(createStructureDict(), StructureId)
 {
     setSecondsPastEpoch(secondsPastEpoch);
-    setNanoSeconds(nanoSeconds);
+    setNanoseconds(nanoseconds);
     setUserTag(UnknownUserTag);
 }
 
-PvTimeStamp::PvTimeStamp(long long secondsPastEpoch, int nanoSeconds, int userTag)
+PvTimeStamp::PvTimeStamp(long long secondsPastEpoch, int nanoseconds, int userTag)
     : PvObject(createStructureDict(), StructureId)
 {
     setSecondsPastEpoch(secondsPastEpoch);
-    setNanoSeconds(nanoSeconds);
+    setNanoseconds(nanoseconds);
     setUserTag(userTag);
 }
 
@@ -72,14 +72,14 @@ long long PvTimeStamp::getSecondsPastEpoch() const
     return pvStructurePtr->getLongField(SecondsPastEpochFieldKey)->get();
 }
 
-void PvTimeStamp::setNanoSeconds(int nanoSeconds)
+void PvTimeStamp::setNanoseconds(int nanoseconds)
 {
-    pvStructurePtr->getIntField(NanoSecondsFieldKey)->put(nanoSeconds);
+    pvStructurePtr->getIntField(NanosecondsFieldKey)->put(nanoseconds);
 }
 
-int PvTimeStamp::getNanoSeconds() const
+int PvTimeStamp::getNanoseconds() const
 {
-    return pvStructurePtr->getIntField(NanoSecondsFieldKey)->get();
+    return pvStructurePtr->getIntField(NanosecondsFieldKey)->get();
 }
 
 void PvTimeStamp::setUserTag(int userTag)

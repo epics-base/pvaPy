@@ -469,13 +469,13 @@ BOOST_PYTHON_MODULE(pvaccess)
     //
     // PV TimeStamp
     //
-    class_<PvTimeStamp, bases<PvObject> >("PvTimeStamp", "PvTimeStamp represents PV time stamp structure.\n\n**PvTimeStamp()**\n\n\t::\n\n\t\ttimestamp1 = PvTimeStamp()\n\n**PvTimeStamp(secondsPastEpoch, nanoSeconds [, userTag=-1])**\n\n\t:Parameter: secondsPastEpoch (long) - seconds past epoch\n\n\t:Parameter: nanoSeconds (int) - nanoSeconds\n\n\t:Parameter: userTag (int) - user tag\n\n\t::\n\n\t\ttimeStamp2 = PvTimeStamp(1234567890, 10000)\n\n\t\ttimeStamp3 = PvTimeStamp(1234567890, 10000, 1)\n\n", init<>())
+    class_<PvTimeStamp, bases<PvObject> >("PvTimeStamp", "PvTimeStamp represents PV time stamp structure.\n\n**PvTimeStamp()**\n\n\t::\n\n\t\ttimestamp1 = PvTimeStamp()\n\n**PvTimeStamp(secondsPastEpoch, nanoseconds [, userTag=-1])**\n\n\t:Parameter: secondsPastEpoch (long) - seconds past epoch\n\n\t:Parameter: nanoseconds (int) - nanoseconds\n\n\t:Parameter: userTag (int) - user tag\n\n\t::\n\n\t\ttimeStamp2 = PvTimeStamp(1234567890, 10000)\n\n\t\ttimeStamp3 = PvTimeStamp(1234567890, 10000, 1)\n\n", init<>())
         .def(init<long long, int>())
         .def(init<long long, int, int>())
         .def("getSecondsPastEpoch", &PvTimeStamp::getSecondsPastEpoch, "Retrieves time stamp value for seconds past epoch.\n\n:Returns: seconds past epoch\n\n::\n\n    secondsPastEpoch = timeStamp.getSecondsPastEpoch()\n\n")
         .def("setSecondsPastEpoch", &PvTimeStamp::setSecondsPastEpoch, arg("secondsPastEpoch"), "Sets time stamp value for seconds past epoch.\n\n:Parameter: secondsPastEpoch (long) - seconds past epoch\n\n::\n\n    timeStamp.setSecondsPastEpoch(1234567890)\n\n")
-        .def("getNanoSeconds", &PvTimeStamp::getNanoSeconds, "Retrieves time stamp value for nanoseconds.\n\n:Returns: nanoseconds\n\n::\n\n    nanoSeconds = timeStamp.getNanoSeconds()\n\n")
-        .def("setNanoSeconds", &PvTimeStamp::setNanoSeconds, arg("nanoSeconds"), "Sets time stamp value for nanoseconds.\n\n:Parameter: nanoSeconds (int) - nanoseconds\n\n::\n\n    timeStamp.setNanoSeconds(10000)\n\n")
+        .def("getNanoseconds", &PvTimeStamp::getNanoseconds, "Retrieves time stamp value for nanoseconds.\n\n:Returns: nanoseconds\n\n::\n\n    nanoseconds = timeStamp.getNanoseconds()\n\n")
+        .def("setNanoseconds", &PvTimeStamp::setNanoseconds, arg("nanoseconds"), "Sets time stamp value for nanoseconds.\n\n:Parameter: nanoseconds (int) - nanoseconds\n\n::\n\n    timeStamp.setNanoseconds(10000)\n\n")
         .def("getUserTag", &PvTimeStamp::getUserTag, "Retrieves user tag.\n\n:Returns: user tag\n\n::\n\n    userTag = timeStamp.getUserTag()\n\n")
         .def("setUserTag", &PvTimeStamp::setUserTag, arg("userTag"), "Sets user tag.\n\n:Parameter: userTag (int) - user tag\n\n::\n\n    timeStamp.setUserTag(1)\n\n")
         ;
@@ -563,7 +563,7 @@ BOOST_PYTHON_MODULE(pvaccess)
         ;
 
     // RPC Client
-    class_<RpcClient>("RpcClient", "RpcClient is a client class for PVA RPC services.\n\n**RpcClient(channelName)**\n\n\t:Parameter: channelName (str) - RPC service channel name\n\n\tThe following example creates RPC client for channel 'createNtTable':\n\n\t::\n\n\t\trpcClient = RpcClient('createNtTable')\n\n", init<std::string>())
+    class_<RpcClient>("RpcClient", "RpcClient is a client class for PVA RPC services.\n\n**RpcClient(channelName)**\n\n\t:Parameter: channelName (str) - RPC service channel name\n\n\tThis example creates RPC client for channel 'createNtTable':\n\n\t::\n\n\t\trpcClient = RpcClient('createNtTable')\n\n", init<std::string>())
         .def("invoke", &RpcClient::invoke, return_value_policy<manage_new_object>(), arg("pvRequest"), "Invokes RPC call against service registered on the PV specified channel.\n\n:Parameter: pvRequest (PvObject)  - PV request object with a structure conforming to requirements of the RPC service registered on the given PV channel\n\n:Returns: PV response object\n\nThe following code works with the above RPC service example:\n\n::\n\n    pvRequest = PvObject({'nRows' : INT, 'nColumns' : INT})\n\n    pvRequest.set({'nRows' : 10, 'nColumns' : 10})\n\n    pvResponse = rpcClient(pvRequest)\n\n    ntTable = NtTable(pvRequest)\n\n")
         ;
     
@@ -572,15 +572,15 @@ BOOST_PYTHON_MODULE(pvaccess)
         ;
 
     // RPC Server
-    class_<RpcServer>("RpcServer", init<>())
-        .def("registerService", &RpcServer::registerService)
-        .def("unregisterService", &RpcServer::unregisterService)
-        .def("startListener", &RpcServer::startListener)
-        .def("stopListener", &RpcServer::stopListener)
-        .def("start", &RpcServer::start)
-        .def("stop", &RpcServer::start)
-        .def("listen", static_cast<void(RpcServer::*)(int)>(&RpcServer::listen), RpcServerListen())
-        .def("shutdown", &RpcServer::shutdown)
+    class_<RpcServer>("RpcServer", "RpcServer is class used for hosting PVA RPC services. One instance of RpcServer can host multiple RPC services.\n\n**RpcServer()**:\n\n\t::\n\n\t\trpcServer = RpcServer()\n\n", init<>())
+        .def("registerService", &RpcServer::registerService, args("serviceName", "serviceImpl"), "Registers service implementation with RPC server. Typically, all services are registered before RPC server starts listening for client requests.\n\n:Parameter: serviceName (str) - service name (name of the PV channel used for RPC client/server communication)\n\n:Parameter: serviceImpl (object) - reference to service implementation object (e.g., python function) that returns PV Object upon invocation\n\nThe following is an example of RPC service that creates NT Table according to client specifications:\n\n::\n\n    import pvaccess\n\n    import random\n\n    def createNtTable(pvRequest):\n\n        nRows = x.getInt('nRows')\n\n        nColumns = x.getInt('nColumns')\n\n        print 'Creating table with %d rows and %d columns' % (nRows, nColumns)\n\n        ntTable = pvaccess.NtTable(nColumns, pvaccess.DOUBLE)\n\n        labels = []\n\n        for j in range (0, nColumns):\n\n            labels.append('Column%s' % j)\n\n            column = []\n\n            for i in range (0, nRows):\n\n                column.append(random.uniform(0,1))\n\n            ntTable.setColumn(j, column)\n\n        ntTable.setLabels(labels)\n\n        ntTable.setDescriptor('Automatically created by pvaPy RPC Server')\n\n        return ntTable\n\n    \n\n    rpcServer = pvaccess.RpcServer()\n\n    rpcServer.registerService('createNtTable', createNtTable)\n\n    rpcServer.listen()\n\n")
+        .def("unregisterService", &RpcServer::unregisterService, args("serviceName"), "Unregisters given service from RPC server.\n\n:Parameter: serviceName (str) - service name (name of the PV channel used for RPC client/server communication)\n\n::\n\n    rpcServer.unregisterService('createNtTable')\n\n")
+        .def("startListener", &RpcServer::startListener, "Starts RPC listener in its own thread. This method is typically used for multi-threaded programs, or for testing and debugging in python interactive mode. It should be used in conjunction with *stopListener()* call.\n\n::\n\n    rpcServer.startListener()")
+        .def("stopListener", &RpcServer::stopListener, "Stops RPC listener thread. This method is used in conjunction with *startListener()* call.\n\n::\n\n    rpcServer.stopListener()\n\n")
+        .def("start", &RpcServer::start, "Start serving RPC requests. This method is equivalent to *listen()*, and blocks until either *stop()* or *shutdown()* methods are invoked.\n\n::\n\n    rpcServer.start()")
+        .def("stop", &RpcServer::stop, "Stop serving RPC requests. This method is equivalent to *shutdown()*.\n\n::\n\n    rpcServer.stop()")
+        .def("listen", static_cast<void(RpcServer::*)(int)>(&RpcServer::listen), RpcServerListen(args("seconds=0"), "Start serving RPC requests.\n\n:Parameter: seconds (int) - specifies the amount of time server should be listening for requests (0 indicates 'forever')\n\n::\n\n    rpcServer.listen(60)\n\n"))
+        .def("shutdown", &RpcServer::shutdown, "Stop serving RPC requests. This method is equivalent to *stop()*.\n\n::\n\n    rpcServer.shutdown()")
         ;
     
 }
