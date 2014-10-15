@@ -112,7 +112,7 @@ AC_DEFUN([AX_EPICS_BASE],
     # need to determine OS class first
     epics_host_arch_main=`echo $EPICS_HOST_ARCH | cut -f1 -d'-'`
     EPICS_OS_CLASS=`grep OS_CLASS $EPICS_BASE/configure/os/CONFIG.*Common.${epics_host_arch_main}* | head -1 | awk '{print $NF}'`
-    AC_MSG_CHECKING(for usable EPICS base libraries for $EPICS_OS_CLASS OS and host arhitecture $EPICS_HOST_ARCH)
+    AC_MSG_CHECKING(for usable EPICS base libraries for $EPICS_OS_CLASS OS and host architecture $EPICS_HOST_ARCH)
 
     succeeded=no
     CPPFLAGS_SAVED="$CPPFLAGS"

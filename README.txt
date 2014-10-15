@@ -103,7 +103,7 @@ $ python
 >>> print c.get()
 uri:ev4:nt/2012/pwd:NTScalar 
     int value 0
->>> c.put(7)
+>>> c.putInt(7)
 >>> print c.get()
 uri:ev4:nt/2012/pwd:NTScalar 
     int value 7

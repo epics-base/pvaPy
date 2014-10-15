@@ -5,7 +5,7 @@
 PvObject
 --------
 
-.. autoclass:: pvaccess.PvObject(structureDict)
+.. autoclass:: pvaccess.PvObject()
     :show-inheritance: 
     :members:
     :inherited-members:
@@ -19,91 +19,141 @@ PvScalar
 PvBoolean
 ---------
 
-.. autoclass:: pvaccess.PvBoolean([value])
+.. autoclass:: pvaccess.PvBoolean()
     :show-inheritance: 
     :members: 
 
 PvByte
 ------
 
-.. autoclass:: pvaccess.PvByte([value])
+.. autoclass:: pvaccess.PvByte()
     :show-inheritance: 
     :members: 
 
 PvUByte
 -------
 
-.. autoclass:: pvaccess.PvUByte([value])
+.. autoclass:: pvaccess.PvUByte()
     :show-inheritance: 
     :members: 
 
 PvShort
 -------
 
-.. autoclass:: pvaccess.PvShort([value])
+.. autoclass:: pvaccess.PvShort()
     :show-inheritance: 
     :members: 
 
 PvUShort
 --------
 
-.. autoclass:: pvaccess.PvUShort([value])
+.. autoclass:: pvaccess.PvUShort()
     :show-inheritance: 
     :members: 
 
 PvInt
 -----
 
-.. autoclass:: pvaccess.PvInt([value])
+.. autoclass:: pvaccess.PvInt()
     :show-inheritance: 
     :members: 
 
 PvUInt
 ------
 
-.. autoclass:: pvaccess.PvUInt([value])
+.. autoclass:: pvaccess.PvUInt()
     :show-inheritance: 
     :members: 
 
 PvLong
 ------
 
-.. autoclass:: pvaccess.PvLong([value])
+.. autoclass:: pvaccess.PvLong()
     :show-inheritance: 
     :members: 
 
 PvULong
 -------
 
-.. autoclass:: pvaccess.PvULong([value])
+.. autoclass:: pvaccess.PvULong()
     :show-inheritance: 
     :members: 
 
 PvFloat
 -------
 
-.. autoclass:: pvaccess.PvFloat([value])
+.. autoclass:: pvaccess.PvFloat()
     :show-inheritance: 
     :members: 
 
 PvDouble
 --------
 
-.. autoclass:: pvaccess.PvDouble([value])
+.. autoclass:: pvaccess.PvDouble()
     :show-inheritance: 
     :members: 
 
 PvString
 --------
 
-.. autoclass:: pvaccess.PvString([value])
+.. autoclass:: pvaccess.PvString()
+    :show-inheritance: 
+    :members: 
+
+PvScalarArray
+-------------
+
+.. autoclass:: pvaccess.PvScalarArray()
+    :show-inheritance: 
+    :members: 
+
+PvTimeStamp
+-----------
+
+.. autoclass:: pvaccess.PvTimeStamp()
+    :show-inheritance: 
+    :members: 
+
+PvAlarm
+-----------
+
+.. autoclass:: pvaccess.PvAlarm()
+    :show-inheritance: 
+    :members: 
+
+NtType
+------
+
+.. autoclass:: pvaccess.NtType()
+    :show-inheritance: 
+
+NtTable
+-------
+
+.. autoclass:: pvaccess.NtTable()
     :show-inheritance: 
     :members: 
 
 Channel
 -------
 
-.. autoclass:: pvaccess.Channel
+.. autoclass:: pvaccess.Channel()
+    :show-inheritance: 
+    :members:
+    :inherited-members:
+
+RpcServer
+---------
+
+.. autoclass:: pvaccess.RpcServer()
+    :show-inheritance: 
+    :members:
+    :inherited-members:
+
+RpcClient
+---------
+
+.. autoclass:: pvaccess.RpcClient()
     :show-inheritance: 
     :members:
     :inherited-members:

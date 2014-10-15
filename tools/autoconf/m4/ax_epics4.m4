@@ -101,7 +101,7 @@ AC_DEFUN([AX_EPICS4],
     AC_MSG_RESULT([yes])
 
     # test basic libraries
-    AC_MSG_CHECKING(for usable EPICS4 libraries for $EPICS_OS_CLASS OS and host arhitecture $EPICS_HOST_ARCH)
+    AC_MSG_CHECKING(for usable EPICS4 libraries for $EPICS_OS_CLASS OS and host architecture $EPICS_HOST_ARCH)
 
     pva_api_version=430
     pva_rpc_api_version=430
