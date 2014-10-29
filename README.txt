@@ -101,15 +101,15 @@ $ python
 ['BOOLEAN', 'BYTE', 'Channel', 'DOUBLE', 'FLOAT', 'INT', 'LONG', 'PvBoolean', 'PvByte', 'PvDouble', 'PvFloat', 'PvInt', 'PvLong', 'PvObject', 'PvScalar', 'PvScalarArray', 'PvShort', 'PvString', 'PvType', 'PvUByte', 'PvUInt', 'PvULong', 'PvUShort', 'RpcClient', 'RpcServer', 'RpcServiceImpl', 'SHORT', 'STRING', 'UBYTE', 'UINT', 'ULONG', 'USHORT', '__doc__', '__file__', '__name__', '__package__']
 >>> c = pvaccess.Channel('int01')
 >>> print c.get()
-uri:ev4:nt/2012/pwd:NTScalar 
+epics:nt/NTScalar:1.0
     int value 0
 >>> c.putInt(7)
 >>> print c.get()
-uri:ev4:nt/2012/pwd:NTScalar 
+epics:nt/NTScalar:1.0
     int value 7
 >>> c.put(pvaccess.PvInt(5))
 >>> print c.get()
-uri:ev4:nt/2012/pwd:NTScalar 
+epics:nt/NTScalar:1.0 
     int value 5
 
 In the above, note that in addition to PV object classes like PvInt, one
@@ -142,13 +142,13 @@ that processes PvObject instance):
 ... 
 >>> c.subscribe('echo', echo)
 >>> c.startMonitor()
->>> New PV value: uri:ev4:nt/2012/pwd:NTScalar 
+>>> New PV value: epics:nt/NTScalar:1.0 
     float value 11.1
 
-New PV value: uri:ev4:nt/2012/pwd:NTScalar 
+New PV value: epics:nt/NTScalar:1.0
     float value 11.2
 
-New PV value: uri:ev4:nt/2012/pwd:NTScalar 
+New PV value: epics:nt/NTScalar:1.0 
     float value 11.3
 
 >>> c.stopMonitor()
