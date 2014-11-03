@@ -3,7 +3,7 @@
 #include "PyPvDataUtility.h"
 #include "InvalidArgument.h"
 
-const char* NtTable::StructureId("uri:ev4:nt/2012/pwd:NTTable");
+const char* NtTable::StructureId("epics:nt/NTTable:1.0");
 const char* NtTable::LabelsFieldKey("labels");
 const char* NtTable::DescriptorFieldKey("descriptor");
 const char* NtTable::TimeStampFieldKey("timeStamp");
