@@ -1,5 +1,6 @@
 TOP = .
 RELEASE_LOCAL = $(TOP)/configure/RELEASE.local
+SETUP_SH = $(TOP)/setup.sh
 CONFIG_SITE_LOCAL = $(TOP)/configure/CONFIG_SITE.local
 DOC_DIR = doc
 
@@ -34,9 +35,12 @@ configure: tools/autoconf/configure
 bootstrap tools/autoconf/configure: tools/autoconf/configure.ac $(wildcard tools/autoconf/m4/*.m4)
 	cd tools/autoconf && autoreconf --install 
 
-.PHONY: doc
+.PHONY: doc docclean distclean tidy
 doc:
 	cd $(DOC_DIR) && make
+
+docclean:
+	cd $(DOC_DIR) && make clean
 
 distclean: 
 	rm -rf lib

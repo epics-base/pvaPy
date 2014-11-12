@@ -235,7 +235,7 @@ void Channel::put(bool value)
 
 void Channel::put(char value, const std::string& requestDescriptor)
 {
-    put(StringUtility::toString<char>(value), requestDescriptor);
+    put(StringUtility::toString<int>(static_cast<int>(value)), requestDescriptor);
 }
 
 void Channel::put(char value)
@@ -245,7 +245,7 @@ void Channel::put(char value)
 
 void Channel::put(unsigned char value, const std::string& requestDescriptor)
 {
-    put(StringUtility::toString<unsigned char>(value), requestDescriptor);
+    put(StringUtility::toString<int>(static_cast<int>(value)), requestDescriptor);
 }
 
 void Channel::put(unsigned char value)
