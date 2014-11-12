@@ -68,14 +68,14 @@ print 'Testing short'
 c = Channel('short01')
 oldValue = c.get().getShort()
 print 'Got old value: ', oldValue
-value = oldValue + 1
+value = oldValue - 1
 print 'Putting value via putShort(): ', value
 c.putShort(value) 
 newValue = c.get().getShort()
 print 'Got new value: ', newValue
 assert newValue == value
 
-value = oldValue + 2
+value = oldValue - 2
 print 'Putting value via put(): ', value
 c.put(value) 
 newValue = c.get().getShort()
