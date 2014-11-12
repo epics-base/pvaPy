@@ -34,12 +34,12 @@ newValue = ord(c.get().getByte())
 print 'Got new value: ', newValue
 assert newValue == value
 
-#value = oldValue + 5
-#print 'Putting value via put(): ', value
-#c.put(chr(value)) 
-#newValue = ord(c.get().getByte())
-#print 'Got new value: ', newValue
-#assert newValue == value
+value = oldValue + 5
+print 'Putting value via put(): ', value
+c.put(value) 
+newValue = ord(c.get().getByte())
+print 'Got new value: ', newValue
+assert newValue == value
 
 
 print
@@ -75,6 +75,7 @@ newValue = c.get().getShort()
 print 'Got new value: ', newValue
 assert newValue == value
 
+# undocumented put() for byte type should still work
 value = oldValue - 2
 print 'Putting value via put(): ', value
 c.put(value) 
@@ -153,14 +154,14 @@ print 'Putting value via putFloat(): ', value
 c.putFloat(value) 
 newValue = c.get().getFloat()
 print 'Got new value: ', newValue
-assert abs(newValue-value) < 0.001
+assert abs(newValue-value) < 0.00001
 
 value = oldValue + 1.1
 print 'Putting value via put(): ', value
 c.put(value) 
 newValue = c.get().getFloat()
 print 'Got new value: ', newValue
-assert abs(newValue-value) < 0.001
+assert abs(newValue-value) < 0.00001
 
 print
 print '****************************'
@@ -173,13 +174,13 @@ print 'Putting value via putDouble(): ', value
 c.putDouble(value) 
 newValue = c.get().getDouble()
 print 'Got new value: ', newValue
-assert abs(newValue-value) < 0.001
+assert abs(newValue-value) < 0.00001
 
 value = oldValue + 1.1
 print 'Putting value via put(): ', value
 c.put(value) 
 newValue = c.get().getDouble()
 print 'Got new value: ', newValue
-assert abs(newValue-value) < 0.001
+assert abs(newValue-value) < 0.00001
 
 

@@ -545,7 +545,8 @@ BOOST_PYTHON_MODULE(pvaccess)
         .def("put", static_cast<void(Channel::*)(bool)>(&Channel::put), args("value"), "Assigns boolean data to the channel PV using the default request descriptor 'field(value)'.\n\n:Parameter: *value* (bool) - boolean value that will be assigned to the channel PV\n\n::\n\n    channel = Channel('boolean01')\n\n    channel.put(True)\n\n")
 
         // Do not define simple put() for byte data type at the moment: byte is interpreted as string, and python cannot pickup
-        // correct method for strings, so that put('my string') would not work
+        // correct method for strings, so that put('my string') would not work 
+        // put() should still work even without explicit maping, but will not be documented
         .def("putByte", static_cast<void(Channel::*)(char, const std::string&)>(&Channel::put), args("value", "requestDescriptor"), "Assigns byte data to the channel PV.\n\n:Parameter: *value* (str) - byte value that will be assigned to channel data according to the specified request descriptor\n\n:Parameter: *requestDescriptor* (str) - PV request descriptor\n\n")
         //.def("put", static_cast<void(Channel::*)(char, const std::string&)>(&Channel::put), args("value", "requestDescriptor"), "Assigns byte data to the channel PV.\n\n:Parameter: *value* (str) - byte value that will be assigned to channel data according to the specified request descriptor\n\n:Parameter: *requestDescriptor* (str) - PV request descriptor\n\n")
         .def("putByte", static_cast<void(Channel::*)(char)>(&Channel::put), args("value"), "Assigns byte data to the channel using the default request descriptor 'field(value)'.\n\n:Parameter: *value* (str) - byte value that will be assigned to the channel PV\n\n::\n\n    channel = Channel('byte01')\n\n    channel.putByte('x')\n\n")
