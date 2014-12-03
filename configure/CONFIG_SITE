@@ -32,5 +32,5 @@ CHECK_RELEASE = NO
 #   take effect.
 #IOCS_APPL_TOP = </IOC/path/to/application/top>
 
--include $(TOP)/configure/CONFIG_SITE.local
 -include $(TOP)/../CONFIG_SITE.local
+-include $(TOP)/configure/CONFIG_SITE.local
