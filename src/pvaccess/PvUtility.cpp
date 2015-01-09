@@ -555,6 +555,40 @@ size_t fromString(const epics::pvData::PVStructureArrayPtr& pv, const epics::pvD
 
 size_t fromString(const epics::pvData::PVStructurePtr& pvStructure, const epics::pvData::StringArray& from, size_t fromStartIndex)
 {
+    // handle enum in a special way
+    if (pvStructure->getStructure()->getID() == "enum_t") {
+        epics::pvData::int32 index = -1;
+        epics::pvData::PVInt::shared_pointer pvIndex = pvStructure->getSubField<epics::pvData::PVInt>("index");
+        if (!pvIndex) {
+            throw PvaException("enum_t structure does not have 'int index' field");
+        }
+        epics::pvData::PVStringArray::shared_pointer pvChoices = pvStructure->getSubField<epics::pvData::PVStringArray>("choices");
+        if (!pvChoices) {
+            throw PvaException("enum_t structure does not have 'string choices[]' field");
+        }
+
+        epics::pvData::PVStringArray::const_svector choices(pvChoices->view());
+        // Assume "AutoEnum" mode
+        epics::pvData::shared_vector<std::string>::const_iterator it = std::find(choices.begin(), choices.end(), from[fromStartIndex]);
+        if (it != choices.end()) {
+            index = static_cast<epics::pvData::int32>(it - choices.begin());
+        }
+        
+        if (index == -1) {
+            std::istringstream iss(from[fromStartIndex]);
+            iss >> index;
+            // not fail and entire value is parsed (e.g. to detect 1.2 parsing to 1)
+            if (iss.fail() || !iss.eof()) {
+                throw PvaException("enum value '" + from[fromStartIndex] + "' invalid");
+            }
+        }
+        if (index < 0 || index >= static_cast<epics::pvData::int32>(choices.size())) {
+            throw PvaException("index '" + from[fromStartIndex] + "' out of bounds");
+        }
+        pvIndex->put(index);
+        return 1;
+    }
+
     size_t processed = 0;
     size_t fromValueCount = from.size();
 
