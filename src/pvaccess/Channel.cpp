@@ -37,10 +37,14 @@ Channel::Channel(const std::string& channelName, PvProvider::ProviderType provid
 #endif // if defined PVA_API_VERSION && PVA_API_VERSION == 430
     channel(provider->createChannel(channelName, requesterImpl)),
     monitorRequester(new ChannelMonitorRequesterImpl(channelName)),
+    monitor(),
     monitorThreadDone(true),
     pvObjectMonitorQueue(),
     subscriberMap(),
     subscriberMutex(),
+    monitorElementProcessingMutex(),
+    monitorThreadMutex(),
+    monitorThreadExitEvent(),
     timeout(DefaultTimeout)
 {
 }
@@ -53,6 +57,7 @@ Channel::Channel(const Channel& c) :
     pvObjectMonitorQueue(),
     subscriberMap(),
     subscriberMutex(),
+    monitorThreadExitEvent(),
     timeout(DefaultTimeout)
 {
 }
@@ -340,24 +345,25 @@ ChannelMonitorRequesterImpl* Channel::getMonitorRequester()
 
 void Channel::subscribe(const std::string& subscriberName, const boost::python::object& pySubscriber)
 {
-    epics::pvData::Lock lock(subscriberMutex);
+    //epics::pvData::Lock lock(subscriberMutex);
     subscriberMap[subscriberName] = pySubscriber;
 }
 
 void Channel::unsubscribe(const std::string& subscriberName)
 {
-    epics::pvData::Lock lock(subscriberMutex);
+    //epics::pvData::Lock lock(subscriberMutex);
     boost::python::object pySubscriber = subscriberMap[subscriberName];
     std::map<std::string,boost::python::object>::const_iterator iterator = subscriberMap.find(subscriberName);
     if (iterator == subscriberMap.end()) {
         throw ObjectNotFound("Subscriber " + subscriberName + " is not registered.");
     }
     subscriberMap.erase(subscriberName);
+    logger.trace("Unsubscribed monitor " + subscriberName);
 }
 
 void Channel::callSubscribers(PvObject& pvObject)
 {
-    epics::pvData::Lock lock(subscriberMutex);
+    //epics::pvData::Lock lock(subscriberMutex);
 
     std::map<std::string,boost::python::object>::iterator iter;
     for (iter = subscriberMap.begin(); iter != subscriberMap.end(); iter++) {
@@ -371,7 +377,7 @@ void Channel::callSubscribers(PvObject& pvObject)
         // most likely crash while invoking python from c++, or while
         // attempting to release GIL.
         // PyGILState_STATE gilState = PyGILState_Ensure();
-        logger.trace("Acquiring python GIL");
+        logger.trace("Acquiring python GIL for subscriber " + subscriberName);
         PyGilManager::gilStateEnsure();
 
         try {
@@ -379,7 +385,6 @@ void Channel::callSubscribers(PvObject& pvObject)
 
             // Call python code
             pySubscriber(pvObject);
-
         }
         catch(const boost::python::error_already_set&) {
             logger.error("Channel subscriber " + subscriberName + " error");
@@ -400,8 +405,12 @@ void Channel::startMonitor()
 
 void Channel::startMonitor(const std::string& requestDescriptor)
 {
+    epics::pvData::Lock lock(monitorThreadMutex);
     if (monitorThreadDone) {
         monitorThreadDone = false;
+        int maxQueueLength = getMonitorRequester()->getPvObjectQueueMaxLength(); 
+        monitorRequester = epics::pvData::MonitorRequester::shared_pointer(new ChannelMonitorRequesterImpl(getName()));
+        getMonitorRequester()->setPvObjectQueueMaxLength(maxQueueLength); 
 
         // One must call PyEval_InitThreads() in the main thread
         // to initialize thread state, which is needed for proper functioning
@@ -413,16 +422,27 @@ void Channel::startMonitor(const std::string& requestDescriptor)
 #else
         epics::pvData::PVStructure::shared_pointer pvRequest = epics::pvData::CreateRequest::create()->createRequest(requestDescriptor);
 #endif // if defined PVA_API_VERSION && PVA_API_VERSION == 430
-        channel->createMonitor(monitorRequester, pvRequest);
+        monitor = channel->createMonitor(monitorRequester, pvRequest);
         epicsThreadCreate("ChannelMonitorThread", epicsThreadPriorityLow, epicsThreadGetStackSize(epicsThreadStackSmall), (EPICSTHREADFUNC)monitorThread, this);
     }
 }
 
 void Channel::stopMonitor()
 {
+    epics::pvData::Lock lock(monitorThreadMutex);
+    if (monitorThreadDone) {
+        logger.debug("Monitor thread is not running");
+        return;
+    }
+    monitorThreadDone = true;
+    logger.debug("Stopping monitor");
+    monitor->stop();
+    logger.debug("Monitor stopped, waiting for thread exit");
     ChannelMonitorRequesterImpl* monitorRequester = getMonitorRequester();
     monitorRequester->cancelGetQueuedPvObject();
-    monitorThreadDone = true;
+    monitorThreadExitEvent.wait(getTimeout());
+    logger.debug("Clearing requester queue");
+    monitorRequester->clearPvObjectQueue();
 }
 
 bool Channel::isMonitorThreadDone() const
@@ -430,30 +450,38 @@ bool Channel::isMonitorThreadDone() const
     return monitorThreadDone;
 }
 
+bool Channel::processMonitorElement() 
+{
+    //epics::pvData::Lock lock(monitorElementProcessingMutex);
+    if (monitorThreadDone) {
+        return true;
+    }
+
+    // Handle possible exceptions while retrieving data from empty queue.
+    try {
+        PvObject pvObject = getMonitorRequester()->getQueuedPvObject(getTimeout());
+        callSubscribers(pvObject);
+    }
+    catch (const ChannelTimeout& ex) {
+        // Ignore, no changes received.
+    }
+    catch (const std::exception& ex) {
+        // Not good.
+        logger.error("Exception caught in monitor thread: %s", ex.what());
+    }
+    return false;
+}
+
 void Channel::monitorThread(Channel* channel)
 {
     logger.debug("Started monitor thread %s", epicsThreadGetNameSelf());
-    ChannelMonitorRequesterImpl* monitorRequester = channel->getMonitorRequester();
     while (true) {
-        if (channel->isMonitorThreadDone()) {
-            logger.debug("Monitor thread %s is done", epicsThreadGetNameSelf());
+        if (channel->processMonitorElement()) {
             break;
-        }
-        
-        // Handle possible exceptions while retrieving data from empty queue.
-        try {
-            PvObject pvObject = monitorRequester->getQueuedPvObject(channel->getTimeout());
-            channel->callSubscribers(pvObject);
-        }
-        catch (const ChannelTimeout& ex) {
-            // Ignore, no changes received.
-        }
-        catch (const std::exception& ex) {
-            // Not good.
-            logger.error("Exception caught in monitor thread %s: %s", epicsThreadGetNameSelf(), ex.what());
         }
     }
     logger.debug("Exiting monitor thread %s", epicsThreadGetNameSelf());
+    channel->notifyMonitorThreadExit();
 }
 
 

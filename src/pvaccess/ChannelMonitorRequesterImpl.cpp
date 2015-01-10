@@ -1,14 +1,16 @@
 #include "ChannelMonitorRequesterImpl.h"
 
+PvaPyLogger ChannelMonitorRequesterImpl::logger("ChannelMonitorRequesterImpl");
+
 ChannelMonitorRequesterImpl::ChannelMonitorRequesterImpl(const std::string& channelName_) : 
     channelName(channelName_),
-    pvObjectMonitorQueue()
+    pvObjectQueue()
 {
 }
 
 ChannelMonitorRequesterImpl::ChannelMonitorRequesterImpl(const ChannelMonitorRequesterImpl& channelMonitor) : 
     channelName(channelMonitor.channelName),
-    pvObjectMonitorQueue()
+    pvObjectQueue()
 {
 }
 
@@ -43,20 +45,22 @@ void ChannelMonitorRequesterImpl::monitorEvent(const epics::pvData::Monitor::sha
 {
     epics::pvData::MonitorElement::shared_pointer element;
     while (element = monitor->poll()) {
-        PvObject pvObject(element->pvStructurePtr);
-        pvObjectMonitorQueue.push(pvObject);
+        epics::pvData::PVStructurePtr pvStructurePtr = epics::pvData::getPVDataCreate()->createPVStructure(element->pvStructurePtr);
+        PvObject pvObject(pvStructurePtr); 
+        pvObjectQueue.push(pvObject);
         monitor->release(element);
     }
+    logger.debug("Pushed new monitor element into the queue: %d elements have not been processed.", pvObjectQueue.size());
 }
 
-void ChannelMonitorRequesterImpl::unlisten(const epics::pvData::Monitor::shared_pointer&)
+void ChannelMonitorRequesterImpl::unlisten(const epics::pvData::Monitor::shared_pointer& monitor)
 {
 }
 
 PvObject ChannelMonitorRequesterImpl::getQueuedPvObject(double timeout) throw(ChannelTimeout)
 {
     try {
-        return pvObjectMonitorQueue.frontAndPop(timeout);
+        return pvObjectQueue.frontAndPop(timeout);
     }
     catch (InvalidState& ex) {
         throw ChannelTimeout("No PV changes for channel %s received.", channelName.c_str());
@@ -65,6 +69,29 @@ PvObject ChannelMonitorRequesterImpl::getQueuedPvObject(double timeout) throw(Ch
 
 void ChannelMonitorRequesterImpl::cancelGetQueuedPvObject()
 {
-    pvObjectMonitorQueue.cancelWaitForItem();
+    pvObjectQueue.cancelWaitForItem();
+}
+
+void ChannelMonitorRequesterImpl::clearPvObjectQueue()
+{
+    logger.debug("Clearing pv object monitor queue: %d elements have not been processed.", pvObjectQueue.size());
+    try {
+        while (!pvObjectQueue.empty()) {
+            pvObjectQueue.frontAndPop();
+        }
+    }
+    catch (const InvalidState& ex) {
+        // OK, we are done.
+    }
+}
+
+void ChannelMonitorRequesterImpl::setPvObjectQueueMaxLength(int maxLength)
+{
+    pvObjectQueue.setMaxLength(maxLength);
+}
+
+int ChannelMonitorRequesterImpl::getPvObjectQueueMaxLength() 
+{
+    return pvObjectQueue.getMaxLength();
 }
 

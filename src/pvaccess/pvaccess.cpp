@@ -600,6 +600,8 @@ BOOST_PYTHON_MODULE(pvaccess)
         .def("stopMonitor", &Channel::stopMonitor, "Stops channel monitor for PV value changes.\n\n::\n\n    channel.stopMonitor()\n\n")
         .def("getTimeout", &Channel::getTimeout, "Retrieves channel timeout.\n\n:Returns: channel timeout in seconds\n\n::\n\n    timeout = channel.getTimeout()\n\n")
         .def("setTimeout", &Channel::setTimeout, args("timeout"), "Sets channel timeout.\n\n:Parameter: *timeout* (float) - channel timeout in seconds\n\n::\n\n    channel.setTimeout(10.0)\n\n")
+        .def("getMonitorMaxQueueLength", &Channel::getMonitorMaxQueueLength, "Retrieves maximum monitor queue length.\n\n:Returns: maximum monitor queue length\n\n::\n\n    maxQueueLength = channel.getMonitorMaxQueueLength()\n\n")
+        .def("setMonitorMaxQueueLength", &Channel::setMonitorMaxQueueLength, args("maxQueueLength"), "Sets maximum monitor queue length. In case subscribers cannot process incoming PV objects quickly enough, oldest PV object will be discarded after monitoring queue reaches maximum size. Default monitor queue length is unlimited.\n\n:Parameter: *maxQueueLength* (int) - maximum queue length\n\n::\n\n    channel.setMonitorMaxQueueLengthTimeout(10)\n\n")
         ;
 
     // RPC Client

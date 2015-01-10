@@ -13,17 +13,24 @@ def average(n):
 
 c = Channel('float03')
 def echo(x=125):
+    time.sleep(1.5)
     print 'Got value in python: ', x
 c.subscribe('echo', echo)
-c.startMonitor()
+c.setMonitorMaxQueueLength(3)
 
-# do something else
-time.sleep(1)
-print "Average(100000): ", average(100000)
+for i in range (0,3):
+    print 'Starting monitor: ', i
+    c.startMonitor()
 
-time.sleep(10)
-print "Average(100): ", average(100)
+    # do something else
+    print "Average(100000): ", average(100000)
+    time.sleep(10)
+    print "Average(100): ", average(100)
+    print 'Stopping monitor: ', i
+    c.stopMonitor()
+    print "Average(50): ", average(100)
+
+print 'Monitor loop Done, unsubscribing monitor'
 c.unsubscribe('echo')
-time.sleep(5)
-#c.stopMonitor()
-#print "Average(1000000): ", average(1000000)
+#time.sleep(5)
+print 'Exiting'

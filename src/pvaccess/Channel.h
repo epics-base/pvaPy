@@ -12,6 +12,7 @@
 #include "SynchronizedQueue.h"
 #include "PvaClient.h"
 #include "CaClient.h"
+#include "epicsEvent.h"
 #include "PvObject.h"
 #include "PvProvider.h"
 #include "PvaPyLogger.h"
@@ -71,6 +72,8 @@ public:
     virtual bool isMonitorThreadDone() const;
     virtual void setTimeout(double timeout);
     virtual double getTimeout() const;
+    virtual void setMonitorMaxQueueLength(int maxLength);
+    virtual int getMonitorMaxQueueLength();
 
 private:
     static const double ShutdownWaitTime;
@@ -81,6 +84,8 @@ private:
     static void monitorThread(Channel* channel);
 
     ChannelMonitorRequesterImpl* getMonitorRequester(); 
+    bool processMonitorElement();
+    void notifyMonitorThreadExit();
 
     epics::pvData::Requester::shared_pointer requester;
     std::tr1::shared_ptr<ChannelRequesterImpl> requesterImpl;
@@ -88,10 +93,14 @@ private:
     epics::pvAccess::ChannelProvider::shared_pointer provider;
     epics::pvAccess::Channel::shared_pointer channel;
     epics::pvData::MonitorRequester::shared_pointer monitorRequester;
+    epics::pvData::Monitor::shared_pointer monitor;
     bool monitorThreadDone;
     SynchronizedQueue<PvObject> pvObjectMonitorQueue;
     std::map<std::string, boost::python::object> subscriberMap;
     epics::pvData::Mutex subscriberMutex;
+    epics::pvData::Mutex monitorElementProcessingMutex;
+    epics::pvData::Mutex monitorThreadMutex;
+    epicsEvent monitorThreadExitEvent;
     double timeout;
 };
 
@@ -108,6 +117,23 @@ inline void Channel::setTimeout(double timeout)
 inline double Channel::getTimeout() const
 {
     return timeout;
+}
+
+inline void Channel::setMonitorMaxQueueLength(int maxLength) 
+{
+    ChannelMonitorRequesterImpl* monitorRequester = getMonitorRequester();
+    monitorRequester->setPvObjectQueueMaxLength(maxLength);
+}
+
+inline int Channel::getMonitorMaxQueueLength() 
+{
+    ChannelMonitorRequesterImpl* monitorRequester = getMonitorRequester();
+    return monitorRequester->getPvObjectQueueMaxLength();
+}
+
+inline void Channel::notifyMonitorThreadExit() 
+{
+    monitorThreadExitEvent.signal();
 }
 
 #endif

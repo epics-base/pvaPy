@@ -10,8 +10,11 @@ template <class T>
 class SynchronizedQueue : public std::queue<T>
 {
 public:
+    static const int Unlimited = -1;
     SynchronizedQueue();
     virtual ~SynchronizedQueue();
+    void setMaxLength(int maxLength);
+    int getMaxLength();
     T back() throw(InvalidState);
     T front() throw(InvalidState);
     T frontAndPop() throw(InvalidState);
@@ -20,19 +23,23 @@ public:
     void push(const T& t);
     void waitForItem(double timeout);
     void cancelWaitForItem();
+    void clear();
+
 private:
     void throwInvalidStateIfEmpty() throw(InvalidState);
     T frontAndPopUnsynchronized();
 
     epics::pvData::Mutex mutex;
     epicsEvent event;
+    int maxLength;
 };
 
 template <class T>
 SynchronizedQueue<T>::SynchronizedQueue() :
     std::queue<T>(),
     mutex(),
-    event()
+    event(),
+    maxLength(Unlimited)
 {
 }
 
@@ -40,6 +47,19 @@ template <class T>
 SynchronizedQueue<T>::~SynchronizedQueue()
 {
     event.signal();
+}
+
+template <class T>
+int SynchronizedQueue<T>::getMaxLength() 
+{
+    return maxLength; 
+}
+
+template <class T>
+void SynchronizedQueue<T>::setMaxLength(int maxLength)
+{
+    epics::pvData::Lock lock(mutex);
+    this->maxLength = maxLength; 
 }
 
 template <class T>
@@ -108,6 +128,12 @@ template <class T>
 void SynchronizedQueue<T>::push(const T& t)
 {
     epics::pvData::Lock lock(mutex);
+    if (maxLength > 0) {
+        int nPop = std::queue<T>::size()-maxLength+1;
+        for (int i = 0; i < nPop; i++) {
+            std::queue<T>::pop();
+        }
+    }
     std::queue<T>::push(t);
     event.signal();
 }
@@ -121,6 +147,16 @@ void SynchronizedQueue<T>::waitForItem(double timeout)
 template <class T>
 void SynchronizedQueue<T>::cancelWaitForItem() 
 {
+    event.signal();
+}
+
+template <class T>
+void SynchronizedQueue<T>::clear() 
+{
+    epics::pvData::Lock lock(mutex);
+    while (!std::queue<T>::empty()) {
+        std::queue<T>::pop();
+    }
     event.signal();
 }
 
