@@ -24,6 +24,8 @@
 #PVCOMMON=$(EPICS4_DIR)/pvCommonCPP
 PVDATA=$(EPICS4_DIR)/pvDataCPP
 PVACCESS=$(EPICS4_DIR)/pvAccessCPP
+EASYPVA=$(EPICS4_DIR)/easyPVACPP
+NORMATIVETYPES=$(EPICS4_DIR)/normativeTypesCPP
 
 # Set RULES here if you want to take build rules from somewhere
 # other than EPICS_BASE:

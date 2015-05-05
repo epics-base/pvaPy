@@ -75,6 +75,8 @@ pvaccess_SRCS += StringUtility.cpp
 
 pvaccess_LIBS += pvData
 pvaccess_LIBS += pvAccess
+pvaccess_LIBS += nt
+pvaccess_LIBS += easyPVA
 pvaccess_LIBS += Com
 USR_SYS_LIBS += $(BOOST_PYTHON_LIB)
 
@@ -90,4 +92,5 @@ include $(TOP)/configure/RULES
 #----------------------------------------
 #  ADD RULES AFTER THIS LINE
 
-
+Channel.h: Channel.440.h Channel.441.h
+Channel.cpp: Channel.440.cpp Channel.441.cpp

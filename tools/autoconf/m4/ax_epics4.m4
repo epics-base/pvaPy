@@ -112,7 +112,7 @@ AC_DEFUN([AX_EPICS4],
     LDFLAGS_SAVED="$LDFLAGS"
     LDFLAGS="$LDFLAGS $EPICS_LDFLAGS"
     #LDFLAGS="$LDFLAGS -L$EPICS_BASE/lib/$EPICS_HOST_ARCH -L$EPICS4_DIR/pvDataCPP/lib/$EPICS_HOST_ARCH -L$EPICS4_DIR/pvAccessCPP/lib/$EPICS_HOST_ARCH -lpvData -lpvAccess -lCom"
-    LDFLAGS="$LDFLAGS -L$EPICS_BASE/lib/$EPICS_HOST_ARCH -L$EPICS4_DIR/pvDataCPP/lib/$EPICS_HOST_ARCH -L$EPICS4_DIR/pvAccessCPP/lib/$EPICS_HOST_ARCH"
+    LDFLAGS="$LDFLAGS -L$EPICS_BASE/lib/$EPICS_HOST_ARCH -L$EPICS4_DIR/pvDataCPP/lib/$EPICS_HOST_ARCH -L$EPICS4_DIR/pvAccessCPP/lib/$EPICS_HOST_ARCH -L$EPICS4_DIR/normativeTypesCPP/lib/$EPICS_HOST_ARCH"
     export LDFLAGS
 
     LIBS="-lpvData -lpvAccess -lCom"
@@ -149,10 +149,32 @@ AC_DEFUN([AX_EPICS4],
         ],[pva_api_version=430],[pva_api_version=440])
     AC_LANG_POP([C++])
 
+    # Check for easyPVACPP
+    CPPFLAGS_NO_EASYPVACPP=$CPPFLAGS
+    CPPFLAGS="$CPPFLAGS -I$EPICS4_DIR/easyPVACPP/include -I$EPICS4_DIR/normativeTypesCPP/include"
+    LDFLAGS_NO_EASYPVACPP=$LDFLAGS
+    LDFLAGS="$LDFLAGS -L$EPICS4_DIR/easyPVACPP/lib/$EPICS_HOST_ARCH"
+    LIBS_NO_EASYPVACPP=$LIBS
+    LIBS="-lpvData -lpvAccess -lnt -leasyPVA -lCom"
+    AC_REQUIRE([AC_PROG_CXX])
+    AC_LANG_PUSH([C++])
+        AC_LINK_IFELSE([AC_LANG_PROGRAM(
+            [[
+            #include "pv/easyPVA.h"
+            ]],
+            [[
+            epics::easyPVA::EasyChannelPtr easyChannel;
+            ]])
+        ],[easy_pva_cpp=yes],[easy_pva_cpp=no])
+    AC_LANG_POP([C++])
+
     if test "$succeeded" != "yes" ; then
         AC_MSG_RESULT([no])
         AC_MSG_ERROR(could not compile and link EPICS4 test code: check your EPICS4 installation)
     else
+        if test "$easy_pva_cpp" == "yes" ; then
+            pva_api_version=441
+        fi
         AC_MSG_RESULT([yes (pva api version: $pva_api_version)])
         AC_DEFINE(HAVE_EPICS4,,[define if the EPICS4 libraries are available])
         AC_DEFINE(PVA_API_VERSION,$pva_api_version,[define PVA API version])
@@ -160,6 +182,9 @@ AC_DEFUN([AX_EPICS4],
         AC_SUBST(EPICS4_DIR)
     fi
 
+    CPPFLAGS=$CPPFLAGS_NO_EASYPVACPP
+    LDFLAGS=$LDFLAGS_NO_EASYPVACPP
+    LIBS=$LIBS_NO_EASYPVACPP
     AC_MSG_CHECKING(EPICS4 PVA RPC API version)
     succeeded=no
     AC_REQUIRE([AC_PROG_CXX])
