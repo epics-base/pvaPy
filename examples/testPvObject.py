@@ -70,4 +70,5 @@ print pyDict
 print 'Testing boolean functions: '
 pv = PvObject({'value' : BOOLEAN})
 pv.setBoolean(True)
+print pv
 
