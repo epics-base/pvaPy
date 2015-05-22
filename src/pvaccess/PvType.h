@@ -6,6 +6,17 @@
 namespace PvType
 {
 
+enum DataType {
+    Scalar = epics::pvData::scalar,
+    ScalarArray = epics::pvData::scalarArray,
+    Structure = epics::pvData::structure,
+    StructureArray = epics::pvData::structureArray,
+    Union = epics::pvData::union_,
+    UnionArray = epics::pvData::unionArray,
+    Variant,
+    VariantArray,
+};
+
 enum ScalarType {
     Boolean = epics::pvData::pvBoolean,
     Byte = epics::pvData::pvByte,
@@ -19,6 +30,13 @@ enum ScalarType {
     Float = epics::pvData::pvFloat,
     Double = epics::pvData::pvDouble,
     String = epics::pvData::pvString,
+    UNION,
+    VARIANT,
+};
+
+enum UnionType {
+    UNION_ = UNION,
+    VARIANT_ = VARIANT,
 };
 
 }

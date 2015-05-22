@@ -89,7 +89,7 @@ For simple testing, do the following:
 
 1) In a separate terminal, start testDbPv IOC:
 
-cd $EPICS4_DIR/pvaSrv/testApp/iocBoot/testDbPv
+cd $EPICS4_DIR/pvaSrv/testTop/iocBoot/testDbPv
 ../../bin/$EPICS_HOST_ARCH/testDbPv st.cmd
 
 2) Source setup file (or export PYTHONPATH=$PVAPY_DIR/lib/$EPICS_HOST_ARCH)
@@ -121,7 +121,7 @@ Basic Usage: PV monitor
 
 1) In a separate terminal, start testDbPv IOC:
 
-$ cd $EPICS4_DIR/pvaSrv/testApp/iocBoot/testDbPv
+$ cd $EPICS4_DIR/pvaSrv/testTop/iocBoot/testDbPv
 $ ../../bin/$EPICS_HOST_ARCH/testDbPv st.cmd
 
 2) In the IOC shell change PV values using the dbpf command, e.g:

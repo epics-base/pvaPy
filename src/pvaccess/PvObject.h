@@ -6,6 +6,8 @@
 #include "boost/python/dict.hpp"
 #include "boost/python/list.hpp"
 
+#include "PvType.h"
+
 class PvObject
 {
 public:
@@ -29,6 +31,7 @@ public:
     operator boost::python::dict() const;
     boost::python::dict toDict() const;
     boost::python::dict getStructureDict();
+    PvType::DataType getDataType();
     friend std::ostream& operator<<(std::ostream& out, const PvObject& pvObject);
     friend epics::pvData::PVStructurePtr& operator<<(epics::pvData::PVStructurePtr& pvStructurePtr, const PvObject& pvObject);
 
@@ -39,7 +42,8 @@ public:
     // Boolean fields
     void setBoolean(const std::string& key, bool value);
     void setBoolean(bool value);
-    bool getBoolean(const std::string& key=ValueFieldKey) const;
+    bool getBoolean(const std::string& key) const;
+    bool getBoolean() const;
 
     // Byte fields
     void setByte(const std::string& key, char value);
@@ -89,7 +93,8 @@ public:
     // Double fields
     void setDouble(const std::string& key, double value);
     void setDouble(double value);
-    double getDouble(const std::string& key=ValueFieldKey) const;
+    double getDouble(const std::string& key) const;
+    double getDouble() const;
 
     // String fields
     void setString(const std::string& key, const std::string& value);
@@ -111,16 +116,32 @@ public:
     void setStructureArray(const boost::python::list& pyList);
     boost::python::list getStructureArray(const std::string& key=ValueFieldKey) const;
 
+    // Union fields
+    bool isUnionVariant(const std::string& key=ValueFieldKey) const;
+    PvObject createUnionField(const std::string& fieldName, const std::string& key=ValueFieldKey) const;
+    boost::python::list getUnionFieldNames(const std::string& key=ValueFieldKey) const;
+    PvObject selectUnionField(const std::string& fieldName, const std::string& key=ValueFieldKey) const;
+    std::string getSelectedUnionFieldName(const std::string& key=ValueFieldKey) const;
+    PvObject getUnion(const std::string& key=ValueFieldKey) const;
+    void setUnion(const PvObject& value, const std::string& key=ValueFieldKey);
+
+    // UnionArray fields
+    bool isUnionArrayVariant(const std::string& key=ValueFieldKey) const;
+    PvObject createUnionArrayElementField(const std::string& fieldName, const std::string& key) const;
+    boost::python::list getUnionArrayFieldNames(const std::string& key=ValueFieldKey) const;
+    boost::python::list getUnionArray(const std::string& key=ValueFieldKey) const;
+    void setUnionArray(const boost::python::list& pyList, const std::string& key=ValueFieldKey);
+    
 protected:
     epics::pvData::PVStructurePtr pvStructurePtr;
+    PvType::DataType dataType;
 private:
 
     // Static helper methods
     static epics::pvData::StructureConstPtr createStructureFromDict(const boost::python::dict& pyDict, const std::string& structureId="");
-    static void addScalarField(const std::string& fieldName, epics::pvData::ScalarType scalarType, epics::pvData::FieldConstPtrArray& fields, epics::pvData::StringArray& names);
-    static void addScalarArrayField(const std::string& fieldName, epics::pvData::ScalarType scalarType, epics::pvData::FieldConstPtrArray& fields, epics::pvData::StringArray& names);
-    static void addStructureField(const std::string& fieldName, const boost::python::dict& pyDict, epics::pvData::FieldConstPtrArray& fields, epics::pvData::StringArray& names);
-    static void addStructureArrayField(const std::string& fieldName, const boost::python::dict& pyDict, epics::pvData::FieldConstPtrArray& fields, epics::pvData::StringArray& names);
+    static epics::pvData::UnionConstPtr createUnionFromDict(const boost::python::dict& pyDict, const std::string& structureId="");
+    static void updateFieldArrayFromDict(const boost::python::dict& pyDict, epics::pvData::FieldConstPtrArray& fields, epics::pvData::StringArray& names);
+    static void setUnionField(const epics::pvData::PVFieldPtr& pvFrom, epics::pvData::PVUnionPtr pvUnion);
 
 };
 

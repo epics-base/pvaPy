@@ -13,11 +13,13 @@ boost::python::dict PvScalarArray::createStructureDict(PvType::ScalarType scalar
 PvScalarArray::PvScalarArray(PvType::ScalarType scalarType)
     : PvObject(createStructureDict(scalarType))
 {
+    dataType = PvType::ScalarArray;
 }
 
 PvScalarArray::PvScalarArray(const PvScalarArray& pvScalarArray)
     : PvObject(pvScalarArray.pvStructurePtr)
 {
+    dataType = PvType::ScalarArray;
 }
 
 PvScalarArray::~PvScalarArray()

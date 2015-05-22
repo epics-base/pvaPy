@@ -9,6 +9,7 @@
 PvScalar::PvScalar(const boost::python::dict& pyDict)
     : PvObject(pyDict)
 {
+    dataType = PvType::Scalar;
 }
 
 PvScalar::PvScalar(const PvScalar& pvScalar)

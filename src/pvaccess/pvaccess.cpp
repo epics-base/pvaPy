@@ -31,6 +31,7 @@
 #include "PvDouble.h"
 #include "PvString.h"
 #include "PvScalarArray.h"
+#include "PvUnion.h"
 
 #include "PvTimeStamp.h"
 
@@ -95,6 +96,14 @@ BOOST_PYTHON_MODULE(pvaccess)
         .value("FLOAT", PvType::Float)
         .value("DOUBLE", PvType::Double)
         .value("STRING", PvType::String)
+        .value("UNION", PvType::UNION)
+        .value("VARIANT", PvType::VARIANT)
+        .export_values()
+        ;
+
+    enum_<PvType::UnionType>("PvType")
+        .value("UNION_", PvType::UNION_)
+        .value("VARIANT_", PvType::VARIANT_)
         .export_values()
         ;
 
@@ -328,6 +337,145 @@ BOOST_PYTHON_MODULE(pvaccess)
             static_cast<boost::python::list(PvObject::*)(const std::string&)const>(&PvObject::getStructureArray), 
             PvObjectGetStructureArray(args("name='value'"), "Retrieves structure array assigned to the given PV field.\n\n:Parameter: *name* (str) - field name\n\n:Returns: list of dictionaries (describing PV structures) stored in the given PV field\n\n::\n\n    dictList = pv.getStructureArray('aStructArray')\n\n"))
 
+        .def("isUnionVariant",&PvObject::isUnionVariant,
+            (arg("key") = "value"),
+            "Is a field a variant union?\n"
+            "arg\n"
+            "    name fieldName = \"value\"\n"
+            "return (True,False) if (is,is not)  a variant union\n"
+            "throws InvalidArgument if field is not a union.\n\n"
+            "example\n"
+            "    value = pv.isUnionVariant()\n\n")
+
+        .def("getUnionFieldNames",&PvObject::getUnionFieldNames,
+            (arg("key") = "value"),
+            "Get the field names for a regular union\n"
+            "arg\n"
+            "    name fieldName = \"value\"\n"
+            "return list of union fieldnames. If variant union then empty list\n"
+            "throws InvalidArgument if field is not a union.\n\n"
+            "example\n"
+            "    value = pv.getUnionFieldNames()\n\n")
+
+        .def("createUnionField",&PvObject::createUnionField,
+            (arg("key") = "value"),
+            "Create a union with selected field name\n"
+            "arg\n"
+            "    fieldName The union field name.\n"
+            "    name fieldName = \"value\"\n"
+            "Returns PvObject.\n"
+            "    The pvObject is a structure as follows:\n"
+            "    structure\n"
+            "        union value\n"
+            "throws InvalidArgument if field is not a union.\n"
+            "       ValueError if variant union or illegal union field name.\n\n"
+            "example\n"
+            "    value = pv.unionCreate(unionFieldName,fieldName)\n\n")
+
+        .def("selectUnionField",&PvObject::selectUnionField,
+            (arg("key") = "value"),
+            "Get a union with selected field name\n"
+            "arg\n"
+            "    fieldName The union field name.\n"
+            "    name fieldName = \"value\"\n"
+            "Returns PvObject.\n"
+            "    The pvObject is a structure as follows:\n"
+            "    structure\n"
+            "        union value\n"
+            "throws InvalidArgument if field is not a union.\n"
+            "       ValueError if variant union or illegal union field name.\n\n"
+            "example\n"
+            "    value = pv.selectUnionField(unionFieldName,fieldName)\n\n")
+
+        .def("getSelectedUnionFieldName",&PvObject::getSelectedUnionFieldName,
+            (arg("key") = "value"),
+            "Get a union with selected field name\n"
+            "Returns selected fiedl name.\n"
+            "    fieldName = pv.getSelectedUnionFieldName(key)\n\n")
+
+        .def("getUnion",&PvObject::getUnion,
+            (arg("key") = "value"),
+            "Get a union with selected field name\n"
+            "arg\n"
+            "    name fieldName = \"value\"\n"
+            "Returns PvObject.\n"
+            "    The pvObject is a structure as follows:\n"
+            "    structure\n"
+            "        union value\n"
+            "throws InvalidArgument if field is not a union.\n\n"
+            "example\n"
+            "    value = pv.getUnion(fieldName)\n\n")
+
+        .def("setUnion",&PvObject::setUnion,
+            (arg("key") = "value"),
+            "Set the value of a union field\n"
+            "arg\n"
+            "    value a PvObject which must be a structure as follows:\n"
+            "        structure\n"
+            "            union value\n"
+            "    name fieldName = \"value\"\n"
+            "throws InvalidArgument if field is not a union.\n\n"
+            "example\n"
+            "    value = pv.unionSet(PvObject,fieldName)\n\n")
+
+        .def("isUnionArrayVariant",&PvObject::isUnionArrayVariant,
+            (arg("key") = "value"),
+            "Is a field a variant union array?\n"
+            "arg\n"
+            "    name fieldName = \"value\"\n"
+            "return (True,False) if (is,is not)  a variant union array\n"
+            "throws InvalidArgument if field is not a union array.\n\n"
+            "example\n"
+            "    value = pv.unionArrayIsVariant()\n\n")
+
+        .def("getUnionArrayFieldNames",&PvObject::getUnionArrayFieldNames,
+            (arg("key") = "value"),
+            "Get the field names for a regular union array\n"
+            "arg\n"
+            "    name fieldName = \"value\"\n"
+            "return list of union fieldnames. If variant union then empty list\n"
+            "throws InvalidArgument if field is not a union array.\n\n"
+            "example\n"
+            "    value = pv.unionArrayGetFieldNames()\n\n")
+
+        .def("createUnionArrayElementField",&PvObject::createUnionArrayElementField,
+            (arg("fieldName") = "",arg("key") = "value"),
+            "Create a union with selected field name\n"
+            "arg\n"
+            "    fieldName The union field name.\n"
+            "    name fieldName = \"value\"\n"
+            "Returns PvObject.\n"
+            "    The pvObject is a structure as follows:\n"
+            "    structure\n"
+            "        union value\n"
+            "throws InvalidArgument if field is not a union.\n"
+            "       ValueError if variant union or illegal union field name.\n\n"
+            "example\n"
+            "    value = pv.unionArrayCreateElement(unionFieldName,fieldName)\n\n")
+
+        .def("setUnionArray", &PvObject::setUnionArray,
+            (arg("key") = "value"),
+            "Sets union array for the given PV field.\n"
+            "arg\n"
+            "    value a list of PvObjects. Each PvObject must be a structure as follows:\n"
+            "        structure\n"
+            "            union value\n"
+            "    name fieldName = \"value\"\n"
+            "throws InvalidArgument if field is not a union array.\n\n")
+
+        .def("getUnionArray", &PvObject::getUnionArray,
+            (arg("key") = "value"),
+            "Get a union array with selected field name\n"
+            "arg\n"
+            "    name fieldName = \"value\"\n"
+            "Returns a list of PvObjects.\n"
+            "    Each pvObject is a structure as follows:\n"
+            "    structure\n"
+            "        union value\n"
+            "throws InvalidArgument if field is not a union.\n\n"
+            "example\n"
+            "    value = pv.unionArrayGet(fieldName)\n\n")
+
         .def("toDict", 
             &PvObject::toDict,
             "Converts PV structure to python dictionary.\n\n:Returns: python key:value dictionary representing current PV structure in terms of field names and their values\n\n::\n\n    valueDict = pv.toDict()\n\n")
@@ -464,6 +612,17 @@ BOOST_PYTHON_MODULE(pvaccess)
         .def("get", &PvScalarArray::get, "Retrieves PV value list.\n\n:Returns: list of scalar values\n\n::\n\n    valueList = pv.get()\n\n")
         .def("set", &PvScalarArray::set, args("valueList"), "Sets PV value list.\n\n:Parameter: *valueList* (list) - list of scalar values\n\n::\n\n    pv.set([1,2,3,4,5])\n\n")
         .def("toList", &PvScalarArray::toList, "Converts PV to value list.\n\n:Returns: list of scalar values\n\n::\n\n    valueList = pv.toList()\n\n")
+        ;
+
+    //
+    // Union
+    // 
+    class_<PvUnion, bases<PvObject> >("PvUnion",
+        "PvUnion represents PV union type.\n\n"
+        "\n",
+        init<>())
+        .def(init<PvObject>(args("pvObject")))
+        .def(str(self))
         ;
 
     //

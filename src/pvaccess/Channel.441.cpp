@@ -10,6 +10,7 @@
 #include "RequesterImpl.h"
 #include "pv/clientFactory.h"
 #include "pv/logger.h"
+#include "pv/convert.h"
 #include "ChannelTimeout.h"
 #include "InvalidRequest.h"
 #include "InvalidArgument.h"
@@ -79,7 +80,6 @@ PvObject* Channel::get()
 PvObject* Channel::get(const std::string& requestDescriptor) 
 {
     try {
-        std::cout << "EASY" << std::endl;
         epics::easyPVA::EasyGetPtr easyGet = easyChannel->createGet(requestDescriptor);
         easyGet->get();
         epics::pvData::PVStructurePtr pvStructure = easyGet->getData()->getPVStructure();
@@ -133,9 +133,18 @@ void Channel::put(const std::string& value)
 
 void Channel::put(const std::string& value, const std::string& requestDescriptor) 
 {
-    std::vector<std::string> values;
-    values.push_back(value);
-    put(values, requestDescriptor);
+    //std::vector<std::string> values;
+    //values.push_back(value);
+    //put(values, requestDescriptor);
+    try {
+        epics::easyPVA::EasyPutPtr easyPut = easyChannel->put(requestDescriptor);
+        epics::pvData::PVScalarPtr pvScalar = easyPut->getData()->getScalarValue();
+        epics::pvData::getConvert()->fromString(pvScalar,value);
+        easyPut->put();
+    } 
+    catch (std::runtime_error e) {
+        throw PvaException(e.what());
+    }
 }
 
 void Channel::put(const boost::python::list& pyList, const std::string& requestDescriptor) 
