@@ -4,6 +4,7 @@
 #include "FieldNotFound.h"
 #include "InvalidDataType.h"
 #include "InvalidArgument.h"
+#include "PvObject.h"
 
 // Scalar array utilities
 namespace PyPvDataUtility
@@ -109,6 +110,28 @@ epics::pvData::PVUnionPtr getUnionField(const std::string& fieldName, const epic
         throw FieldNotFound("Object does not have union field " + fieldName);
     }
     return pvUnionPtr;
+}
+
+void setUnionField(const epics::pvData::PVFieldPtr& pvFrom, epics::pvData::PVUnionPtr pvUnionPtr)
+{
+    if (pvUnionPtr->getUnion()->isVariant()) {
+        pvUnionPtr->set(pvFrom);
+    }
+    else {
+        epics::pvData::FieldConstPtr field = pvFrom->getField();
+        int fieldIndex = -1;
+        epics::pvData::FieldConstPtrArray fields = pvUnionPtr->getUnion()->getFields();
+        for (size_t i = 0; i < fields.size(); ++i) {
+            if (fields[i]==field) {
+                fieldIndex = i;
+                break;
+            }
+        }
+        if (fieldIndex < 0) {
+            throw InvalidArgument("Illegal union value.");
+        }
+        pvUnionPtr->set(fieldIndex, pvFrom);
+    }
 }
 
 epics::pvData::PVUnionArrayPtr getUnionArrayField(const std::string& fieldName, const epics::pvData::PVStructurePtr& pvStructurePtr)
@@ -372,7 +395,14 @@ void pyObjectToStructureArrayField(const boost::python::object& pyObject, const 
 //
 void pyObjectToUnionField(const boost::python::object& pyObject, const std::string& fieldName, epics::pvData::PVStructurePtr& pvStructurePtr)
 {
-    boost::python::dict pyDict = PyUtility::extractValueFromPyObject<boost::python::dict>(pyObject);
+    // First dictionary within tuple, then dictionary
+    boost::python::object pyObject2 = pyObject;
+    boost::python::extract<boost::python::tuple> extractTuple(pyObject);
+    if (extractTuple.check()) {
+        boost::python::tuple pyTuple = extractTuple();
+        pyObject2 = pyTuple[0];
+    }    
+    boost::python::dict pyDict = PyUtility::extractValueFromPyObject<boost::python::dict>(pyObject2);
     pyDictToUnionField(pyDict, fieldName, pvStructurePtr);
 }
 
@@ -689,7 +719,19 @@ void pyListToStructureArrayField(const boost::python::list& pyList, const std::s
 void pyListToUnionArrayField(const boost::python::list& pyList, const std::string& fieldName, epics::pvData::PVStructurePtr& pvStructurePtr)
 {
     epics::pvData::PVUnionArrayPtr pvUnionArrayPtr = getUnionArrayField(fieldName, pvStructurePtr);
-    throw PvaException("pyListToUnionArrayField not implemented");
+
+    epics::pvData::UnionConstPtr unionPtr = pvUnionArrayPtr->getUnionArray()->getUnion();
+    int listSize = boost::python::len(pyList);
+    epics::pvData::PVUnionArray::svector data(listSize);
+    for(size_t i = 0; i < data.size(); ++i) {
+        PvObject pvObject = boost::python::extract<PvObject>(pyList[i]);
+        epics::pvData::PVStructurePtr pv = pvObject.getPvStructurePtr();
+        epics::pvData::PVUnionPtr pvUnion = epics::pvData::getPVDataCreate()->createPVUnion(unionPtr);
+        pvUnion->set(pv);
+        data[i] = pvUnion;
+    }
+    pvUnionArrayPtr->setCapacity(listSize);
+    pvUnionArrayPtr->replace(freeze(data));
 }
 
 //
@@ -951,64 +993,85 @@ void structureToPyDict(const epics::pvData::StructureConstPtr& structurePtr, boo
     for (unsigned int i = 0; i < fieldNames.size(); ++i) {
         std::string fieldName = fieldNames[i];
         epics::pvData::FieldConstPtr fieldPtr = structurePtr->getField(fieldName);
-        epics::pvData::Type type = fieldPtr->getType();
-        switch (type) {
-            case epics::pvData::scalar: {
-                epics::pvData::ScalarConstPtr scalarPtr = std::tr1::static_pointer_cast<const epics::pvData::Scalar>(fieldPtr);
-                epics::pvData::ScalarType scalarType = scalarPtr->getScalarType();
-                pyDict[fieldName] = static_cast<PvType::ScalarType>(scalarType);
-                break;
-            }
-            case epics::pvData::scalarArray: {
-                epics::pvData::ScalarArrayConstPtr scalarArrayPtr = std::tr1::static_pointer_cast<const epics::pvData::ScalarArray>(fieldPtr);
-                epics::pvData::ScalarType scalarType = scalarArrayPtr->getElementType();
-                boost::python::list pyList;
-                pyList.append(static_cast<PvType::ScalarType>(scalarType));
-                pyDict[fieldName] = pyList;
-                break;
-            }
-            case epics::pvData::structure: {
-                epics::pvData::StructureConstPtr structurePtr2 = std::tr1::static_pointer_cast<const epics::pvData::Structure>(fieldPtr);
-                boost::python::dict pyDict2;
-                structureToPyDict(structurePtr2, pyDict2);
-                pyDict[fieldName] = pyDict2;
-                break;
-            }
-            case epics::pvData::structureArray: {
-                epics::pvData::StructureArrayConstPtr structureArrayPtr = std::tr1::static_pointer_cast<const epics::pvData::StructureArray>(fieldPtr);
-                epics::pvData::StructureConstPtr structurePtr2 = structureArrayPtr->getStructure(); 
-                boost::python::dict pyDict2;
-                structureToPyDict(structurePtr2, pyDict2);
-                boost::python::list pyList;
-                pyList.append(pyDict2);
-                pyDict[fieldName] = pyList;
-                break;
-            }
-            case epics::pvData::union_: {
-                epics::pvData::UnionConstPtr unionPtr = std::tr1::static_pointer_cast<const epics::pvData::Union>(fieldPtr);
-                if (unionPtr->isVariant()) {
-                    pyDict[fieldName] = PvType::VARIANT;
-                }
-                else {
-                    pyDict[fieldName] = PvType::UNION;
-                }
-                break;
-            }
-            case epics::pvData::unionArray: {
-                epics::pvData::UnionArrayConstPtr unionArrayPtr = std::tr1::static_pointer_cast<const epics::pvData::UnionArray>(fieldPtr);
-                boost::python::list pyList;
-                if (unionArrayPtr->getUnion()->isVariant()) {
-                    pyList.append(PvType::VARIANT);
-                }
-                else {
-                    pyList.append(PvType::UNION);
-                }
-                pyDict[fieldName] = pyList;
-                break;
-            }
-            default: {
-                throw PvaException("Unrecognized field type: %d", type);
-            }
+        fieldToPyDict(fieldPtr, fieldName, pyDict);
+    }
+}
+
+//
+// Conversion Union => PY ()
+//
+boost::python::tuple unionToPyTuple(const epics::pvData::UnionConstPtr& unionPtr)
+{
+    // Variant union is represented as empty tuple
+    if (unionPtr->isVariant()) {
+        return boost::python::make_tuple();
+    }
+
+    // Restricted union is represented as dict inside tuple
+    epics::pvData::StringArray fieldNames = unionPtr->getFieldNames();
+    boost::python::dict pyDict;
+    for (unsigned int i = 0; i < fieldNames.size(); ++i) {
+        std::string fieldName = fieldNames[i];
+        epics::pvData::FieldConstPtr fieldPtr = unionPtr->getField(fieldName);
+        fieldToPyDict(fieldPtr, fieldName, pyDict);
+    }
+    boost::python::tuple pyTuple = boost::python::make_tuple(pyDict);
+    return pyTuple;
+}
+
+//
+// Conversion Field => PY {}
+//
+void fieldToPyDict(const epics::pvData::FieldConstPtr& fieldPtr, const std::string& fieldName, boost::python::dict& pyDict)
+{
+    epics::pvData::Type type = fieldPtr->getType();
+    switch (type) {
+        case epics::pvData::scalar: {
+            epics::pvData::ScalarConstPtr scalarPtr = std::tr1::static_pointer_cast<const epics::pvData::Scalar>(fieldPtr);
+            epics::pvData::ScalarType scalarType = scalarPtr->getScalarType();
+            pyDict[fieldName] = static_cast<PvType::ScalarType>(scalarType);
+            break;
+        }
+        case epics::pvData::scalarArray: {
+            epics::pvData::ScalarArrayConstPtr scalarArrayPtr = std::tr1::static_pointer_cast<const epics::pvData::ScalarArray>(fieldPtr);
+            epics::pvData::ScalarType scalarType = scalarArrayPtr->getElementType();
+            boost::python::list pyList;
+            pyList.append(static_cast<PvType::ScalarType>(scalarType));
+            pyDict[fieldName] = pyList;
+            break;
+        }
+        case epics::pvData::structure: {
+            epics::pvData::StructureConstPtr structurePtr2 = std::tr1::static_pointer_cast<const epics::pvData::Structure>(fieldPtr);
+            boost::python::dict pyDict2;
+            structureToPyDict(structurePtr2, pyDict2);
+            pyDict[fieldName] = pyDict2;
+            break;
+        }
+        case epics::pvData::structureArray: {
+            epics::pvData::StructureArrayConstPtr structureArrayPtr = std::tr1::static_pointer_cast<const epics::pvData::StructureArray>(fieldPtr);
+            epics::pvData::StructureConstPtr structurePtr2 = structureArrayPtr->getStructure(); 
+            boost::python::dict pyDict2;
+            structureToPyDict(structurePtr2, pyDict2);
+            boost::python::list pyList;
+            pyList.append(pyDict2);
+            pyDict[fieldName] = pyList;
+            break;
+        }
+        case epics::pvData::union_: {
+            epics::pvData::UnionConstPtr unionPtr = std::tr1::static_pointer_cast<const epics::pvData::Union>(fieldPtr);
+            pyDict[fieldName] = unionToPyTuple(unionPtr);
+            break;
+        }
+        case epics::pvData::unionArray: {
+            epics::pvData::UnionArrayConstPtr unionArrayPtr = std::tr1::static_pointer_cast<const epics::pvData::UnionArray>(fieldPtr);
+            epics::pvData::UnionConstPtr unionPtr = unionArrayPtr->getUnion();
+            boost::python::list pyList;
+            pyList.append(unionToPyTuple(unionPtr));
+            pyDict[fieldName] = pyList;
+            break;
+        }
+        default: {
+            throw PvaException("Unrecognized field type: %d", type);
         }
     }
 }
@@ -1385,27 +1448,11 @@ void updateFieldArrayFromDict(const boost::python::dict& pyDict, epics::pvData::
             throw InvalidArgument("Dictionary key is used as field name and must be a string");
         }
 
-        // Check for Scalar/Union
+        // Check for Scalar
         boost::python::object valueObject = pyDict[fieldNameObject];
-        boost::python::extract<int> scalarExtract(valueObject);
-        if (scalarExtract.check()) {
-            int scalarExtractValue = scalarExtract();
-            switch (scalarExtractValue) {
-                case PvType::UNION: {
-                    addUnionField(fieldName, pyDict, fields, names);
-                    break;
-                }
-                case PvType::VARIANT: {
-                    addVariantUnionField(fieldName, fields, names);
-                    break;
-                }
-                default: {
-                    epics::pvData::ScalarType scalarType = static_cast<epics::pvData::ScalarType>(scalarExtractValue);
-                    addScalarField(fieldName, scalarType, fields, names);
-                }
-            }
+        if (updateFieldArrayFromInt(valueObject, fieldName, fields, names)) {
             continue;
-        } 
+        }
 
         // Check for list: []
         // Type of the first element in the list will determine PV list type
@@ -1416,58 +1463,48 @@ void updateFieldArrayFromDict(const boost::python::dict& pyDict, epics::pvData::
             if (listSize != 1) {
                 throw InvalidArgument("PV type list provided for field name %s must have exactly one element.", fieldName.c_str());
             }
-            else {
-                // [Scalar]|[Union] => ScalarArray|UnionArray
-                boost::python::extract<int> arrayScalarExtract(pyList[0]);
-                if (arrayScalarExtract.check()) {
-                    int arrayScalarExtractValue = arrayScalarExtract();
-                    switch (arrayScalarExtractValue) {
-                        case PvType::UNION: {
-                            addUnionArrayField(fieldName, pyDict, fields, names);
-                            break;
-                        }
-                        case PvType::VARIANT: {
-                            addVariantUnionArrayField(fieldName, fields, names);
-                            break;
-                        }
-                        default: {
-                            epics::pvData::ScalarType scalarType = static_cast<epics::pvData::ScalarType>(arrayScalarExtractValue);
-                            addScalarArrayField(fieldName, scalarType, fields, names);
-                        }
-                    }
-                    continue;
-                }
 
-                // [{}] => StructureArray
-                boost::python::extract<boost::python::dict> dictExtract(pyList[0]);
-                if (dictExtract.check()) {
-                    boost::python::dict pyDict2 = dictExtract();
-                    int dictSize = boost::python::len(pyDict2);
-                    if (!dictSize) {
-                        throw InvalidArgument("PV type dict provided for field name %s must be non-empty.", fieldName.c_str());
-                    }
-                    addStructureArrayField(fieldName, pyDict2, fields, names);
-                    continue;
-                }
-                else {
-                    // Invalid request.
-                    throw InvalidArgument("Unrecognized list type for field name %s", fieldName.c_str());
-                }
+            // [Scalar] => ScalarArray
+            if (updateFieldArrayFromIntList(pyList[0], fieldName, fields, names)) {
+                continue;
+            }   
+            
+            // [{}] => StructureArray
+            if (updateFieldArrayFromDictList(pyList[0], fieldName, fields, names)) {
+                continue;
+            }   
+
+            // [()] => UnionArray
+            if (updateFieldArrayFromTupleList(pyList[0], fieldName, fields, names)) {
+                continue;
+            }   
+
+            // [PvObject] => StructureArray
+            if (updateFieldArrayFromPvObjectList(pyList[0], fieldName, fields, names)) {
+                continue;
             }
-            continue;
+
+            // Invalid request.
+            throw InvalidArgument("Unrecognized list type for field name %s", fieldName.c_str());
         } 
 
         // Check for dict: {} => Structure
-        boost::python::extract<boost::python::dict> dictExtract(valueObject);
-        if (dictExtract.check()) {
-            boost::python::dict pyDict2 = dictExtract();
-            int dictSize = boost::python::len(pyDict2);
-            if (!dictSize) {
-                throw InvalidArgument("PV type dict provided for field name %s must be non-empty.", fieldName.c_str());
-            }
-            addStructureField(fieldName, pyDict2, fields, names);
+        if (updateFieldArrayFromDict(valueObject, fieldName, fields, names)) {
             continue;
         }
+
+        // Check for tuple: () => Union
+        if (updateFieldArrayFromTuple(valueObject, fieldName, fields, names)) {
+            continue;
+        }
+
+        // Check for PvObject: PvObject => Structure
+        if (updateFieldArrayFromPvObject(valueObject, fieldName, fields, names)) {
+            continue;
+        }
+
+        // Invalid request.
+        throw InvalidArgument("Unrecognized structure type for field name %s", fieldName.c_str());
     }
 }
 
@@ -1546,6 +1583,193 @@ void addVariantUnionArrayField(const std::string& fieldName, epics::pvData::Fiel
     names.push_back(fieldName);
 }
 
+bool updateFieldArrayFromInt(const boost::python::object& pyObject, const std::string& fieldName, epics::pvData::FieldConstPtrArray& fields, epics::pvData::StringArray& names)
+{
+    boost::python::extract<int> scalarExtract(pyObject);
+    if (!scalarExtract.check()) {
+        return false;
+    }
+
+    int scalarExtractValue = scalarExtract();
+    epics::pvData::ScalarType scalarType = static_cast<epics::pvData::ScalarType>(scalarExtractValue);
+    addScalarField(fieldName, scalarType, fields, names);
+    return true;
+}
+
+bool updateFieldArrayFromIntList(const boost::python::object& pyObject, const std::string& fieldName, epics::pvData::FieldConstPtrArray& fields, epics::pvData::StringArray& names)
+{
+    boost::python::extract<int> arrayScalarExtract(pyObject);
+    if (!arrayScalarExtract.check()) {
+        return false;
+    }
+
+    int arrayScalarExtractValue = arrayScalarExtract();
+    epics::pvData::ScalarType scalarType = static_cast<epics::pvData::ScalarType>(arrayScalarExtractValue);
+    addScalarArrayField(fieldName, scalarType, fields, names);
+    return true;
+}
+
+bool updateFieldArrayFromDict(const boost::python::object& pyObject, const std::string& fieldName, epics::pvData::FieldConstPtrArray& fields, epics::pvData::StringArray& names)
+{
+    boost::python::extract<boost::python::dict> dictExtract(pyObject);
+    if (!dictExtract.check()) {
+        return false;
+    }
+
+    boost::python::dict pyDict2 = dictExtract();
+    int dictSize = boost::python::len(pyDict2);
+    if (!dictSize) {
+        throw InvalidArgument("PV type dict provided for field name %s must be non-empty.", fieldName.c_str());
+    }
+    addStructureField(fieldName, pyDict2, fields, names);
+    return true;
+}
+
+bool updateFieldArrayFromDictList(const boost::python::object& pyObject, const std::string& fieldName, epics::pvData::FieldConstPtrArray& fields, epics::pvData::StringArray& names)
+{
+    boost::python::extract<boost::python::dict> dictExtract(pyObject);
+    if (!dictExtract.check()) {
+        return false;
+    }
+
+    boost::python::dict pyDict2 = dictExtract();
+    int dictSize = boost::python::len(pyDict2);
+    if (!dictSize) {
+        throw InvalidArgument("PV type dict provided for field name %s must be non-empty.", fieldName.c_str());
+    }
+    addStructureArrayField(fieldName, pyDict2, fields, names);
+    return true;
+}
+
+bool updateFieldArrayFromTuple(const boost::python::object& pyObject, const std::string& fieldName, epics::pvData::FieldConstPtrArray& fields, epics::pvData::StringArray& names)
+{
+    boost::python::extract<boost::python::tuple> tupleExtract(pyObject);
+    if (!tupleExtract.check()) {
+        return false;
+    }
+
+    boost::python::tuple pyTuple = tupleExtract();
+    int tupleSize = boost::python::len(pyTuple);
+    switch (tupleSize) {
+        case (0): {
+            addVariantUnionField(fieldName, fields, names);
+            break;
+        }
+        case (1): {
+            boost::python::extract<boost::python::dict> dictExtract(pyTuple[0]);
+            if (dictExtract.check()) {
+                boost::python::dict pyDict2 = dictExtract();
+                int dictSize = boost::python::len(pyDict2);
+                if (!dictSize) {
+                    addVariantUnionField(fieldName, fields, names);
+                }
+                else {
+                    addUnionField(fieldName, pyDict2, fields, names);
+                }
+            }
+            break;
+        }
+        default: {
+            throw InvalidArgument("PV union tuple provided for field name %s must have zero or one element.", fieldName.c_str());
+        }
+    }
+    return true;
+}
+
+bool updateFieldArrayFromTupleList(const boost::python::object& pyObject, const std::string& fieldName, epics::pvData::FieldConstPtrArray& fields, epics::pvData::StringArray& names)
+{
+    boost::python::extract<boost::python::tuple> tupleExtract(pyObject);
+    if (!tupleExtract.check()) {
+        return false;
+    }
+
+    boost::python::tuple pyTuple = tupleExtract();
+    int tupleSize = boost::python::len(pyTuple);
+    switch (tupleSize) {
+        case (0): {
+            addVariantUnionArrayField(fieldName, fields, names);
+            break;
+        }
+        case (1): {
+            boost::python::extract<boost::python::dict> dictExtract(pyTuple[0]);
+            if (dictExtract.check()) {
+                boost::python::dict pyDict2 = dictExtract();
+                int dictSize = boost::python::len(pyDict2);
+                if (!dictSize) {
+                    addVariantUnionArrayField(fieldName, fields, names);
+                }
+                else {
+                    addUnionArrayField(fieldName, pyDict2, fields, names);
+                }
+            }
+            break;
+        }
+        default: {
+            throw InvalidArgument("PV union tuple provided for field name %s must have zero or one element.", fieldName.c_str());
+        }
+    }
+    return true;
+}
+
+bool updateFieldArrayFromPvObject(const boost::python::object& pyObject, const std::string& fieldName, epics::pvData::FieldConstPtrArray& fields, epics::pvData::StringArray& names)
+{
+    boost::python::extract<PvObject> pvObjectExtract(pyObject);
+    if (!pvObjectExtract.check()) {
+        return false;
+    }
+
+    PvObject pvObject = pvObjectExtract();
+    boost::python::dict pyDict2 = pvObject.getStructureDict();
+    int dictSize = boost::python::len(pyDict2);
+    if (!dictSize) {
+        throw InvalidArgument("PV object dict provided for field name %s must be non-empty.", fieldName.c_str());
+    }
+    PvType::DataType dataType = pvObject.getDataType();
+    switch (dataType) {
+        case PvType::Union: {
+            addUnionField(fieldName, pyDict2, fields, names);
+            break;
+        }
+        case PvType::Variant: {
+            addVariantUnionField(fieldName, fields, names);
+            break;
+        }
+        default: {
+            addStructureField(fieldName, pyDict2, fields, names);
+        }
+    }
+    return true;
+}
+
+bool updateFieldArrayFromPvObjectList(const boost::python::object& pyObject, const std::string& fieldName, epics::pvData::FieldConstPtrArray& fields, epics::pvData::StringArray& names)
+{
+    boost::python::extract<PvObject> pvObjectExtract(pyObject);
+    if (!pvObjectExtract.check()) {
+        return false;
+    }
+
+    PvObject pvObject = pvObjectExtract();
+    boost::python::dict pyDict2 = pvObject.getStructureDict();
+    int dictSize = boost::python::len(pyDict2);
+    if (!dictSize) {
+        throw InvalidArgument("PV object dict provided for field name %s must be non-empty.", fieldName.c_str());
+    }
+    PvType::DataType dataType = pvObject.getDataType();
+    switch (dataType) {
+        case PvType::Union: {
+            addUnionArrayField(fieldName, pyDict2, fields, names);
+            break;
+        }
+        case PvType::Variant: {
+            addVariantUnionArrayField(fieldName, fields, names);
+            break;
+        }
+        default: {
+            addStructureArrayField(fieldName, pyDict2, fields, names);
+        }
+    }
+    return true;
+}
 
 } // namespace PyPvDataUtility
 

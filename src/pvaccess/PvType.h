@@ -30,13 +30,6 @@ enum ScalarType {
     Float = epics::pvData::pvFloat,
     Double = epics::pvData::pvDouble,
     String = epics::pvData::pvString,
-    UNION,
-    VARIANT,
-};
-
-enum UnionType {
-    UNION_ = UNION,
-    VARIANT_ = VARIANT,
 };
 
 }

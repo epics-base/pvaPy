@@ -96,14 +96,6 @@ BOOST_PYTHON_MODULE(pvaccess)
         .value("FLOAT", PvType::Float)
         .value("DOUBLE", PvType::Double)
         .value("STRING", PvType::String)
-        .value("UNION", PvType::UNION)
-        .value("VARIANT", PvType::VARIANT)
-        .export_values()
-        ;
-
-    enum_<PvType::UnionType>("PvType")
-        .value("UNION_", PvType::UNION_)
-        .value("VARIANT_", PvType::VARIANT_)
         .export_values()
         ;
 

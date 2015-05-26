@@ -1,14 +1,14 @@
 #include "PvUnion.h"
 
-boost::python::dict PvUnion::createStructureDict(PvType::UnionType unionType)
+boost::python::dict PvUnion::createVariantUnionStructureDict()
 {
     boost::python::dict pyDict;
-    pyDict[ValueFieldKey] = unionType;
+    pyDict[ValueFieldKey] = boost::python::make_tuple();
     return pyDict;
 }
 
 PvUnion::PvUnion()
-    : PvObject(createStructureDict(PvType::VARIANT_)),
+    : PvObject(createVariantUnionStructureDict()),
     unionPtr(epics::pvData::getFieldCreate()->createVariantUnion())
 {
     dataType = PvType::Variant;

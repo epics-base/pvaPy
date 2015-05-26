@@ -41,10 +41,32 @@ pv.setUnion(value)
 print 'after setScalarArray',pv
 print 'dictionary',pv.get()
 
+print '\ntest variant union constructed via tuple'
+pv = PvObject({ 'value' : ()})
+
+print 'pv',pv
+print 'dictionary',pv.get()
+print 'introspection',pv.getStructureDict()
+
+isVariant = pv.isUnionVariant()
+if isVariant==False :
+    print channelName,'is not a variant union'
+    exit
+
+value = PvObject({ 'value' : STRING })
+newval = 'ccccccc'
+value.setString(newval)
+pv.setUnion(value)
+print 'after setString',pv
+print 'dictionary',pv.get()
+value = PvObject({ 'value' : [STRING] })
+newval = ['aaaa','bbbbb']
+value.setScalarArray(newval)
+pv.setUnion(value)
+print 'after setScalarArray',pv
+print 'dictionary',pv.get()
 
 print '\ntest regular union'
-#d = { 'double' : DOUBLE, 'doubleArr' : [DOUBLE]}
-#union = PvUnion(d)
 pvtemp = PvObject({ 'double' : DOUBLE, 'doubleArr' : [DOUBLE]})
 print "pvtemp structure: "
 print pvtemp.getStructureDict()

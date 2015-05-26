@@ -8,7 +8,7 @@
 
 #include "PvType.h"
 
-class PvObject
+class PvObject 
 {
 public:
 
@@ -136,13 +136,7 @@ protected:
     epics::pvData::PVStructurePtr pvStructurePtr;
     PvType::DataType dataType;
 private:
-
-    // Static helper methods
-    static epics::pvData::StructureConstPtr createStructureFromDict(const boost::python::dict& pyDict, const std::string& structureId="");
-    static epics::pvData::UnionConstPtr createUnionFromDict(const boost::python::dict& pyDict, const std::string& structureId="");
-    static void updateFieldArrayFromDict(const boost::python::dict& pyDict, epics::pvData::FieldConstPtrArray& fields, epics::pvData::StringArray& names);
-    static void setUnionField(const epics::pvData::PVFieldPtr& pvFrom, epics::pvData::PVUnionPtr pvUnion);
-
+ 
 };
 
 #endif
