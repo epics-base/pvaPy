@@ -114,7 +114,7 @@ void PvObject::setBoolean(const std::string& key, bool value)
 
 void PvObject::setBoolean(bool value)
 {
-    std::string key = PyPvDataUtility::getValueOrSelectedUnionFieldName(pvStructurePtr);
+    std::string key = PyPvDataUtility::getValueOrFirstFieldName(pvStructurePtr);
     PyPvDataUtility::getBooleanField(key, pvStructurePtr)->put(value);
 }
 
@@ -124,7 +124,7 @@ bool PvObject::getBoolean(const std::string& key) const
 }
 bool PvObject::getBoolean() const
 {
-    std::string key = PyPvDataUtility::getValueOrSelectedUnionFieldName(pvStructurePtr);
+    std::string key = PyPvDataUtility::getValueOrFirstFieldName(pvStructurePtr);
     return PyPvDataUtility::getBooleanField(key, pvStructurePtr)->get();
 }
 
@@ -136,11 +136,18 @@ void PvObject::setByte(const std::string& key, char value)
 
 void PvObject::setByte(char value)
 {
-    PyPvDataUtility::getByteField(ValueFieldKey, pvStructurePtr)->put(value);
+    std::string key = PyPvDataUtility::getValueOrFirstFieldName(pvStructurePtr);
+    PyPvDataUtility::getByteField(key, pvStructurePtr)->put(value);
 }
 
 char PvObject::getByte(const std::string& key) const
 {
+    return PyPvDataUtility::getByteField(key, pvStructurePtr)->get();
+}
+
+char PvObject::getByte() const
+{
+    std::string key = PyPvDataUtility::getValueOrFirstFieldName(pvStructurePtr);
     return PyPvDataUtility::getByteField(key, pvStructurePtr)->get();
 }
 
@@ -152,11 +159,18 @@ void PvObject::setUByte(const std::string& key, unsigned char value)
 
 void PvObject::setUByte(unsigned char value)
 {
-    PyPvDataUtility::getUByteField(ValueFieldKey, pvStructurePtr)->put(value);
+    std::string key = PyPvDataUtility::getValueOrFirstFieldName(pvStructurePtr);
+    PyPvDataUtility::getUByteField(key, pvStructurePtr)->put(value);
 }
 
 unsigned char PvObject::getUByte(const std::string& key) const
 {
+    return PyPvDataUtility::getUByteField(key, pvStructurePtr)->get();
+}
+
+unsigned char PvObject::getUByte() const
+{
+    std::string key = PyPvDataUtility::getValueOrFirstFieldName(pvStructurePtr);
     return PyPvDataUtility::getUByteField(key, pvStructurePtr)->get();
 }
 
@@ -168,11 +182,18 @@ void PvObject::setShort(const std::string& key, short value)
 
 void PvObject::setShort(short value)
 {
-    PyPvDataUtility::getShortField(ValueFieldKey, pvStructurePtr)->put(value);
+    std::string key = PyPvDataUtility::getValueOrFirstFieldName(pvStructurePtr);
+    PyPvDataUtility::getShortField(key, pvStructurePtr)->put(value);
 }
 
 short PvObject::getShort(const std::string& key) const
 {
+    return PyPvDataUtility::getShortField(key, pvStructurePtr)->get();
+}
+
+short PvObject::getShort() const
+{
+    std::string key = PyPvDataUtility::getValueOrFirstFieldName(pvStructurePtr);
     return PyPvDataUtility::getShortField(key, pvStructurePtr)->get();
 }
 
@@ -184,11 +205,18 @@ void PvObject::setUShort(const std::string& key, unsigned short value)
 
 void PvObject::setUShort(unsigned short value)
 {
-    PyPvDataUtility::getUShortField(ValueFieldKey, pvStructurePtr)->put(value);
+    std::string key = PyPvDataUtility::getValueOrFirstFieldName(pvStructurePtr);
+    PyPvDataUtility::getUShortField(key, pvStructurePtr)->put(value);
 }
 
 unsigned short PvObject::getUShort(const std::string& key) const
 {
+    return PyPvDataUtility::getUShortField(key, pvStructurePtr)->get();
+}
+
+unsigned short PvObject::getUShort() const
+{
+    std::string key = PyPvDataUtility::getValueOrFirstFieldName(pvStructurePtr);
     return PyPvDataUtility::getUShortField(key, pvStructurePtr)->get();
 }
 
@@ -200,11 +228,18 @@ void PvObject::setInt(const std::string& key, int value)
 
 void PvObject::setInt(int value)
 {
-    PyPvDataUtility::getIntField(ValueFieldKey, pvStructurePtr)->put(value);
+    std::string key = PyPvDataUtility::getValueOrFirstFieldName(pvStructurePtr);
+    PyPvDataUtility::getIntField(key, pvStructurePtr)->put(value);
 }
 
 int PvObject::getInt(const std::string& key) const
 {
+    return PyPvDataUtility::getIntField(key, pvStructurePtr)->get();
+}
+
+int PvObject::getInt() const
+{
+    std::string key = PyPvDataUtility::getValueOrFirstFieldName(pvStructurePtr);
     return PyPvDataUtility::getIntField(key, pvStructurePtr)->get();
 }
 
@@ -216,11 +251,18 @@ void PvObject::setUInt(const std::string& key, unsigned int value)
 
 void PvObject::setUInt(unsigned int value)
 {
-    PyPvDataUtility::getUIntField(ValueFieldKey, pvStructurePtr)->put(value);
+    std::string key = PyPvDataUtility::getValueOrFirstFieldName(pvStructurePtr);
+    PyPvDataUtility::getUIntField(key, pvStructurePtr)->put(value);
 }
 
 unsigned int PvObject::getUInt(const std::string& key) const
 {
+    return PyPvDataUtility::getUIntField(key, pvStructurePtr)->get();
+}
+
+unsigned int PvObject::getUInt() const
+{
+    std::string key = PyPvDataUtility::getValueOrFirstFieldName(pvStructurePtr);
     return PyPvDataUtility::getUIntField(key, pvStructurePtr)->get();
 }
 
@@ -232,11 +274,18 @@ void PvObject::setLong(const std::string& key, long long value)
 
 void PvObject::setLong(long long value)
 {
-    PyPvDataUtility::getLongField(ValueFieldKey, pvStructurePtr)->put(value);
+    std::string key = PyPvDataUtility::getValueOrFirstFieldName(pvStructurePtr);
+    PyPvDataUtility::getLongField(key, pvStructurePtr)->put(value);
 }
 
 long long PvObject::getLong(const std::string& key) const
 {
+    return PyPvDataUtility::getLongField(key, pvStructurePtr)->get();
+}
+
+long long PvObject::getLong() const
+{
+    std::string key = PyPvDataUtility::getValueOrFirstFieldName(pvStructurePtr);
     return PyPvDataUtility::getLongField(key, pvStructurePtr)->get();
 }
 
@@ -248,11 +297,18 @@ void PvObject::setULong(const std::string& key, unsigned long long value)
 
 void PvObject::setULong(unsigned long long value)
 {
-    PyPvDataUtility::getULongField(ValueFieldKey, pvStructurePtr)->put(value);
+    std::string key = PyPvDataUtility::getValueOrFirstFieldName(pvStructurePtr);
+    PyPvDataUtility::getULongField(key, pvStructurePtr)->put(value);
 }
 
 unsigned long long PvObject::getULong(const std::string& key) const
 {
+    return PyPvDataUtility::getULongField(key, pvStructurePtr)->get();
+}
+
+unsigned long long PvObject::getULong() const
+{
+    std::string key = PyPvDataUtility::getValueOrFirstFieldName(pvStructurePtr);
     return PyPvDataUtility::getULongField(key, pvStructurePtr)->get();
 }
 
@@ -264,11 +320,18 @@ void PvObject::setFloat(const std::string& key, float value)
 
 void PvObject::setFloat(float value)
 {
-    PyPvDataUtility::getFloatField(ValueFieldKey, pvStructurePtr)->put(value);
+    std::string key = PyPvDataUtility::getValueOrFirstFieldName(pvStructurePtr);
+    PyPvDataUtility::getFloatField(key, pvStructurePtr)->put(value);
 }
 
 float PvObject::getFloat(const std::string& key) const
 {
+    return PyPvDataUtility::getFloatField(key, pvStructurePtr)->get();
+}
+
+float PvObject::getFloat() const
+{
+    std::string key = PyPvDataUtility::getValueOrFirstFieldName(pvStructurePtr);
     return PyPvDataUtility::getFloatField(key, pvStructurePtr)->get();
 }
 
@@ -280,7 +343,7 @@ void PvObject::setDouble(const std::string& key, double value)
 
 void PvObject::setDouble(double value)
 {
-    std::string key = PyPvDataUtility::getValueOrSelectedUnionFieldName(pvStructurePtr);
+    std::string key = PyPvDataUtility::getValueOrFirstFieldName(pvStructurePtr);
     PyPvDataUtility::getDoubleField(key, pvStructurePtr)->put(value);
 }
 
@@ -291,7 +354,7 @@ double PvObject::getDouble(const std::string& key) const
 
 double PvObject::getDouble() const
 {
-    std::string key = PyPvDataUtility::getValueOrSelectedUnionFieldName(pvStructurePtr);
+    std::string key = PyPvDataUtility::getValueOrFirstFieldName(pvStructurePtr);
     return PyPvDataUtility::getDoubleField(key, pvStructurePtr)->get();
 }
 
@@ -303,11 +366,18 @@ void PvObject::setString(const std::string& key, const std::string& value)
 
 void PvObject::setString(const std::string& value)
 {
-    PyPvDataUtility::getStringField(ValueFieldKey, pvStructurePtr)->put(value);
+    std::string key = PyPvDataUtility::getValueOrFirstFieldName(pvStructurePtr);
+    PyPvDataUtility::getStringField(key, pvStructurePtr)->put(value);
 }
 
 std::string PvObject::getString(const std::string& key) const
 {
+    return PyPvDataUtility::getStringField(key, pvStructurePtr)->get();
+}
+
+std::string PvObject::getString() const
+{
+    std::string key = PyPvDataUtility::getValueOrFirstFieldName(pvStructurePtr);
     return PyPvDataUtility::getStringField(key, pvStructurePtr)->get();
 }
 
@@ -319,11 +389,20 @@ void PvObject::setScalarArray(const std::string& key, const boost::python::list&
 
 void PvObject::setScalarArray(const boost::python::list& pyList)
 {
-    setScalarArray(ValueFieldKey, pyList);
+    std::string key = PyPvDataUtility::getValueOrFirstFieldName(pvStructurePtr);
+    setScalarArray(key, pyList);
 }
 
 boost::python::list PvObject::getScalarArray(const std::string& key) const
 {
+    boost::python::list pyList;
+    PyPvDataUtility::scalarArrayFieldToPyList(key, pvStructurePtr, pyList);
+    return pyList;
+}
+
+boost::python::list PvObject::getScalarArray() const
+{
+    std::string key = PyPvDataUtility::getValueOrFirstFieldName(pvStructurePtr);
     boost::python::list pyList;
     PyPvDataUtility::scalarArrayFieldToPyList(key, pvStructurePtr, pyList);
     return pyList;
@@ -337,11 +416,20 @@ void PvObject::setStructure(const std::string& key, const boost::python::dict& p
 
 void PvObject::setStructure(const boost::python::dict& pyDict)
 {
-    setStructure(ValueFieldKey, pyDict);
+    std::string key = PyPvDataUtility::getValueOrFirstFieldName(pvStructurePtr);
+    setStructure(key, pyDict);
 }
 
 boost::python::dict PvObject::getStructure(const std::string& key) const
 {
+    boost::python::dict pyDict;
+    PyPvDataUtility::structureFieldToPyDict(key, pvStructurePtr, pyDict);
+    return pyDict;
+}
+
+boost::python::dict PvObject::getStructure() const
+{
+    std::string key = PyPvDataUtility::getValueOrFirstFieldName(pvStructurePtr);
     boost::python::dict pyDict;
     PyPvDataUtility::structureFieldToPyDict(key, pvStructurePtr, pyDict);
     return pyDict;
@@ -355,11 +443,20 @@ void PvObject::setStructureArray(const std::string& key, const boost::python::li
 
 void PvObject::setStructureArray(const boost::python::list& pyList)
 {
-    setStructureArray(ValueFieldKey, pyList);
+    std::string key = PyPvDataUtility::getValueOrFirstFieldName(pvStructurePtr);
+    setStructureArray(key, pyList);
 }
 
 boost::python::list PvObject::getStructureArray(const std::string& key) const
 {
+    boost::python::list pyList;
+    PyPvDataUtility::structureArrayFieldToPyList(key, pvStructurePtr, pyList);
+    return pyList;
+}
+
+boost::python::list PvObject::getStructureArray() const
+{
+    std::string key = PyPvDataUtility::getValueOrFirstFieldName(pvStructurePtr);
     boost::python::list pyList;
     PyPvDataUtility::structureArrayFieldToPyList(key, pvStructurePtr, pyList);
     return pyList;

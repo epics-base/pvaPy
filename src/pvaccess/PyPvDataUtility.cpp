@@ -24,6 +24,21 @@ void checkFieldExists(const std::string& fieldName, const epics::pvData::PVStruc
 //
 // Field retrieval
 //
+std::string getValueOrFirstFieldName(const epics::pvData::PVStructurePtr& pvStructurePtr)
+{
+    // If structure has value field key, return it.
+    // Otherwise, return the first field on the list.
+    epics::pvData::StructureConstPtr structurePtr = pvStructurePtr->getStructure();
+    epics::pvData::StringArray fieldNames = structurePtr->getFieldNames();
+    for (unsigned int i = 0; i < fieldNames.size(); i++) {
+        std::string fieldName = fieldNames[i];
+        if (fieldName == PvaConstants::ValueFieldKey) {
+            return PvaConstants::ValueFieldKey;
+        }
+    }
+    return fieldNames[0];
+}
+
 std::string getValueOrSelectedUnionFieldName(const epics::pvData::PVStructurePtr& pvStructurePtr)
 {
     std::string fieldName = PvaConstants::ValueFieldKey;
@@ -1536,6 +1551,12 @@ epics::pvData::PVStructurePtr createUnionPvStructure(const epics::pvData::PVUnio
     epics::pvData::StringArray names(1);
     epics::pvData::PVFieldPtrArray pvfields(1);
     names[0] = PvaConstants::ValueFieldKey;
+    if (!pvUnionPtr->getUnion()->isVariant()) {
+        std::string unionFieldName = pvUnionPtr->getSelectedFieldName();
+        if (unionFieldName != "") {
+            names[0] = unionFieldName;
+        }
+    }
     pvfields[0] = pvField;
     epics::pvData::PVStructurePtr pv = epics::pvData::getPVDataCreate()->createPVStructure(names, pvfields);
     return pv;
@@ -1547,7 +1568,7 @@ epics::pvData::PVStructurePtr createUnionFieldPvStructure(epics::pvData::UnionCo
     epics::pvData::PVFieldPtrArray pvfields(1);
     names[0] = PvaConstants::ValueFieldKey;
     epics::pvData::FieldConstPtr field;
-    if(unionPtr->isVariant()) {
+    if (unionPtr->isVariant()) {
         field = epics::pvData::getFieldCreate()->createVariantUnion();
     } 
     else {

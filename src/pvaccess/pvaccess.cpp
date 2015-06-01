@@ -112,7 +112,19 @@ BOOST_PYTHON_MODULE(pvaccess)
     // PvObject
     //
     class_<PvObject>("PvObject", 
-            "PvObject represents a generic PV structure.\n\n**PvObject(structureDict)**\n\n\t:Parameter: *structureDict* (dict) - dictionary of key:value pairs describing the underlying PV structure in terms of field names and their types\n\n\tThe dictionary key is a string (PV field name), and value is one of:\n\n\t- PVTYPE: scalar type, can be BOOLEAN, BYTE, UBYTE, SHORT, USHORT, INT, UINT, LONG, ULONG, FLOAT, DOUBLE, or STRING\n\t- [PVTYPE]: single element list representing scalar array\n\t- {key:value,…}: structure\n\t- [{key:value,…}]: single element list representing structure array\n\n\t::\n\n\t\tpv1 = PvObject({'anInt' : INT})\n\n\t\tpv2 = PvObject({'aShort' : SHORT, 'anUInt' : UINT, 'aString' : STRING})\n\n\t\tpv3 = PvObject({'aStringArray' : [STRING], 'aStruct' : {'aString2' : STRING, 'aBoolArray' : [BOOLEAN], 'aStruct2' : {'aFloat' : FLOAT, 'aString3' : [STRING]}}})\n\n\t\tpv4 = PvObject({'aStructArray' : [{'anInt' : INT, 'anInt2' : INT, 'aDouble' : DOUBLE}]})\n\n", 
+            "PvObject represents a generic PV structure.\n\n"
+            "**PvObject(structureDict)**\n\n"
+            "\t:Parameter: *structureDict* (dict) - dictionary of key:value pairs describing the underlying PV structure in terms of field names and their types\n\n"
+            "\tThe dictionary key is a string (PV field name), and value is one of:\n\n"
+            "\t- PVTYPE: scalar type, can be BOOLEAN, BYTE, UBYTE, SHORT, USHORT, INT, UINT, LONG, ULONG, FLOAT, DOUBLE, or STRING\n"
+            "\t- [PVTYPE]: single element list representing scalar array\n"
+            "\t- {key:value,…}: structure\n"
+            "\t- [{key:value,…}]: single element list representing structure array\n\n"
+            "\t::\n\n"
+            "\t\tpv1 = PvObject({'anInt' : INT})\n\n"
+            "\t\tpv2 = PvObject({'aShort' : SHORT, 'anUInt' : UINT, 'aString' : STRING})\n\n"
+            "\t\tpv3 = PvObject({'aStringArray' : [STRING], 'aStruct' : {'aString2' : STRING, 'aBoolArray' : [BOOLEAN], 'aStruct2' : {'aFloat' : FLOAT, 'aString3' : [STRING]}}})\n\n"
+            "\t\tpv4 = PvObject({'aStructArray' : [{'anInt' : INT, 'anInt2' : INT, 'aDouble' : DOUBLE}]})\n\n", 
             init<boost::python::dict>(args("structureDict")))
 
         .def(str(self))

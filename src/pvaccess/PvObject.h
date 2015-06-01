@@ -48,47 +48,56 @@ public:
     // Byte fields
     void setByte(const std::string& key, char value);
     void setByte(char value);
-    char getByte(const std::string& key=ValueFieldKey) const;
+    char getByte(const std::string& key) const;
+    char getByte() const;
 
     // UByte fields
     void setUByte(const std::string& key, unsigned char value);
     void setUByte(unsigned char value);
-    unsigned char getUByte(const std::string& key=ValueFieldKey) const;
+    unsigned char getUByte(const std::string& key) const;
+    unsigned char getUByte() const;
 
     // Short fields
     void setShort(const std::string& key, short value);
     void setShort(short value);
-    short getShort(const std::string& key=ValueFieldKey) const;
+    short getShort(const std::string& key) const;
+    short getShort() const;
 
     // UShort fields
     void setUShort(const std::string& key, unsigned short value);
     void setUShort(unsigned short value);
-    unsigned short getUShort(const std::string& key=ValueFieldKey) const;
+    unsigned short getUShort(const std::string& key) const;
+    unsigned short getUShort() const;
 
     // Int fields
     void setInt(const std::string& key, int value);
     void setInt(int value);
-    int getInt(const std::string& key=ValueFieldKey) const;
+    int getInt(const std::string& key) const;
+    int getInt() const;
 
     // UInt fields
     void setUInt(const std::string& key, unsigned int value);
     void setUInt(unsigned int value);
-    unsigned int getUInt(const std::string& key=ValueFieldKey) const;
+    unsigned int getUInt(const std::string& key) const;
+    unsigned int getUInt() const;
 
     // Long fields
     void setLong(const std::string& key, long long value);
     void setLong(long long value);
-    long long getLong(const std::string& key=ValueFieldKey) const;
+    long long getLong(const std::string& key) const;
+    long long getLong() const;
 
     // ULong fields
     void setULong(const std::string& key, unsigned long long value);
     void setULong(unsigned long long value);
-    unsigned long long getULong(const std::string& key=ValueFieldKey) const;
+    unsigned long long getULong(const std::string& key) const;
+    unsigned long long getULong() const;
 
     // Float fields
     void setFloat(const std::string& key, float value);
     void setFloat(float value);
-    float getFloat(const std::string& key=ValueFieldKey) const;
+    float getFloat(const std::string& key) const;
+    float getFloat() const;
 
     // Double fields
     void setDouble(const std::string& key, double value);
@@ -99,22 +108,26 @@ public:
     // String fields
     void setString(const std::string& key, const std::string& value);
     void setString(const std::string& value);
-    std::string getString(const std::string& key=ValueFieldKey) const;
+    std::string getString(const std::string& key) const;
+    std::string getString() const;
 
     // Scalar array fields
     void setScalarArray(const std::string& key, const boost::python::list& pyList);
     void setScalarArray(const boost::python::list& pyList);
-    boost::python::list getScalarArray(const std::string& key=ValueFieldKey) const;
+    boost::python::list getScalarArray(const std::string& key) const;
+    boost::python::list getScalarArray() const;
 
     // Structure fields
     void setStructure(const std::string& key, const boost::python::dict& pyDict);
     void setStructure(const boost::python::dict& pyDict);
-    boost::python::dict getStructure(const std::string& key=ValueFieldKey) const;
+    boost::python::dict getStructure(const std::string& key) const;
+    boost::python::dict getStructure() const;
 
     // Structure array fields
     void setStructureArray(const std::string& key, const boost::python::list& pyList);
     void setStructureArray(const boost::python::list& pyList);
-    boost::python::list getStructureArray(const std::string& key=ValueFieldKey) const;
+    boost::python::list getStructureArray(const std::string& key) const;
+    boost::python::list getStructureArray() const;
 
     // Union fields
     bool isUnionVariant(const std::string& key=ValueFieldKey) const;
