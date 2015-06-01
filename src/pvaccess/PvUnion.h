@@ -12,18 +12,21 @@ class PvUnion : public PvObject
 {
 public:
     PvUnion();
-    PvUnion(const PvObject&);
+    PvUnion(const boost::python::dict& structureDict);
+    PvUnion(const PvObject& pvObject);
     virtual ~PvUnion();
-    epics::pvData::UnionConstPtr getUnionPtr() const;
+    //epics::pvData::UnionConstPtr getUnionPtr() const;
 private:
     epics::pvData::UnionConstPtr unionPtr;
     static boost::python::dict createVariantUnionStructureDict();
-    //static boost::python::dict createUnionStructureDict();
+    static boost::python::dict createUnionStructureDict(const boost::python::dict& pyDict);
 };
 
+/**
 inline epics::pvData::UnionConstPtr PvUnion::getUnionPtr() const 
 {
     return unionPtr;
 }
+*/
 
 #endif

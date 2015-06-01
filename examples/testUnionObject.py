@@ -66,6 +66,7 @@ pv.setUnion(value)
 print 'after setScalarArray',pv
 print 'dictionary',pv.get()
 
+print '\n*************************'
 print '\ntest regular union'
 pvtemp = PvObject({ 'double' : DOUBLE, 'doubleArr' : [DOUBLE]})
 print "pvtemp structure: "
@@ -73,7 +74,11 @@ print pvtemp.getStructureDict()
 
 union = PvUnion(pvtemp)
 print 'Union(pvtemp)\n',union
-pv = PvObject({ 'value' : union})
+print 'introspection\n',union.getStructureDict()
+print 'dictionary\n',union.toDict()
+
+#pv = PvObject({ 'value' : union})
+pv = union
 print 'pv',pv
 print 'dictionary',pv.get()
 print 'introspection',pv.getStructureDict()
@@ -93,12 +98,13 @@ value.setScalarArray([1.0,2.0,3.0,4.0])
 print 'after setScalarArray',pv
 print 'dictionary',pv.get()
 
+print '\n*************************'
 print '\ntest variant union array'
 union = PvUnion()
 pv = PvObject({ 'value' : [union]})
-print 'pv',pv
-print 'dictionary',pv.get()
-print 'introspection',pv.getStructureDict()
+print 'pv\n',pv
+print 'dictionary\n',pv.get()
+print 'introspection\n',pv.getStructureDict()
 isVariant = pv.isUnionArrayVariant()
 if isVariant==False :
     print channelName,'is not a variant union'
@@ -113,22 +119,28 @@ newval = ['aaaa','bbbbb']
 value.setScalarArray(newval)
 values.append(value)
 pv.setUnionArray(values)
-print 'after unionArraySet',pv
-print 'dictionary',pv.get()
+print 'after unionArraySet\n',pv
+print 'structure\n',pv.getStructureDict()
+print 'dictionary\n',pv.toDict()
 
+print '\n*************************'
 print '\ntest regular union array'
 pvtemp = PvObject({ 'double' : DOUBLE, 'doubleArr' : [DOUBLE]})
 union = PvUnion(pvtemp)
+print 'union',union
+print 'dictionary\n',union.get()
+print 'introspection\n',union.getStructureDict()
+
 pv = PvObject({ 'value' : [union]})
-print 'pv',pv
-print 'dictionary',pv.get()
-print 'introspection',pv.getStructureDict()
+print 'pv\n',pv
+print 'introspection\n',pv.getStructureDict()
+print 'dictionary\n',pv.get()
 isVariant = pv.isUnionArrayVariant()
 if isVariant==True :
     print channelName,'is a variant array'
     exit
 names = pv.getUnionArrayFieldNames()
-print 'unionArray fieldNames',names
+print 'unionArray fieldNames: ',names
 unionArray = []
 value = pv.createUnionArrayElementField(names[0])
 value.setDouble(10.0)

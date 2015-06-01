@@ -945,21 +945,32 @@ void addStructureArrayFieldToDict(const std::string& fieldName, const epics::pvD
 void addUnionFieldToDict(const std::string& fieldName, const epics::pvData::PVStructurePtr& pvStructurePtr, boost::python::dict& pyDict)
 {
     epics::pvData::PVUnionPtr pvUnionPtr = pvStructurePtr->getSubField<epics::pvData::PVUnion>(fieldName);
-    epics::pvData::PVStructurePtr pvTop;
-    epics::pvData::PVFieldPtr pvField = pvUnionPtr->get();
-    if(pvField) {
-        epics::pvData::StructureConstPtr top = epics::pvData::getFieldCreate()->createFieldBuilder()->
-            add(PvaConstants::ValueFieldKey, pvField->getField())->createStructure();
-        pvTop = epics::pvData::getPVDataCreate()->createPVStructure(top);
-        pvTop->getSubField(PvaConstants::ValueFieldKey)->copy(*pvField);
-    } 
+    std::string unionFieldName = PvaConstants::ValueFieldKey;
+    epics::pvData::PVFieldPtr pvField;
+    if (!pvUnionPtr->getUnion()->isVariant()) {
+        unionFieldName = pvUnionPtr->getSelectedFieldName();
+        if (unionFieldName != "") {
+            pvField = pvUnionPtr->select(unionFieldName);
+        }
+    }
     else {
-        pvTop = epics::pvData::getPVDataCreate()->createPVStructure(
+        pvField = pvUnionPtr->get();
+    }
+    epics::pvData::PVStructurePtr unionPvStructurePtr;
+    if(pvField) {
+        epics::pvData::StructureConstPtr unionStructurePtr = epics::pvData::getFieldCreate()->createFieldBuilder()->add(unionFieldName, pvField->getField())->createStructure();
+        unionPvStructurePtr = epics::pvData::getPVDataCreate()->createPVStructure(unionStructurePtr);
+        unionPvStructurePtr->getSubField(unionFieldName)->copy(*pvField);
+    }
+    else {
+        unionPvStructurePtr = epics::pvData::getPVDataCreate()->createPVStructure(
             epics::pvData::getFieldCreate()->createStructure());
     }
+
     boost::python::dict pyDict2;
-    structureToPyDict(pvTop, pyDict2);
-    pyDict[fieldName] = pyDict2;
+    structureToPyDict(unionPvStructurePtr, pyDict2);
+    boost::python::tuple pyTuple = boost::python::make_tuple(pyDict2);
+    pyDict[fieldName] = pyTuple;
 }
 
 //
@@ -968,18 +979,29 @@ void addUnionFieldToDict(const std::string& fieldName, const epics::pvData::PVSt
 void addUnionArrayFieldToDict(const std::string& fieldName, const epics::pvData::PVStructurePtr& pvStructurePtr, boost::python::dict& pyDict)
 {
     epics::pvData::PVUnionArrayPtr pvUnionArrayPtr = pvStructurePtr->getSubField<epics::pvData::PVUnionArray>(fieldName);
-    epics::pvData::shared_vector<const epics::pvData::PVUnionPtr> sharedValues = pvUnionArrayPtr->view();
+    epics::pvData::shared_vector<const epics::pvData::PVUnionPtr> pvUnions = pvUnionArrayPtr->view();
     boost::python::list pyList;
-    for(size_t i = 0 ; i < sharedValues.size(); ++i) {
-        epics::pvData::PVFieldPtr pvField = sharedValues[i]->get();
-        epics::pvData::PVStructurePtr pvs = epics::pvData::getPVDataCreate()->
-            createPVStructure(
-                epics::pvData::getFieldCreate()->createFieldBuilder()->
-                add(PvaConstants::ValueFieldKey, pvField->getField())->createStructure());
-        pvs->getSubField(PvaConstants::ValueFieldKey)->copy(*pvField);
-        boost::python::dict pyDict;
-        structureToPyDict(pvs, pyDict);
-        pyList.append(pyDict);
+    for(size_t i = 0 ; i < pvUnions.size(); ++i) {
+        epics::pvData::PVUnionPtr pvUnionPtr = pvUnions[i];
+        std::string fieldName = PvaConstants::ValueFieldKey;
+        epics::pvData::PVFieldPtr pvField;
+        if (!pvUnionPtr->getUnion()->isVariant()) {
+            fieldName = pvUnionPtr->getSelectedFieldName();
+            pvField = pvUnionPtr->select(fieldName);
+        }
+        else {
+            pvField = pvUnionPtr->get();
+        }
+
+        epics::pvData::PVStructurePtr unionPvStructurePtr;
+        epics::pvData::StructureConstPtr unionStructurePtr = epics::pvData::getFieldCreate()->createFieldBuilder()->add(fieldName, pvField->getField())->createStructure();
+        unionPvStructurePtr = epics::pvData::getPVDataCreate()->createPVStructure(unionStructurePtr);
+        unionPvStructurePtr->getSubField(fieldName)->copy(*pvField);
+
+        boost::python::dict pyDict2;
+        structureToPyDict(unionPvStructurePtr, pyDict2);
+        boost::python::tuple pyTuple = boost::python::make_tuple(pyDict2);
+        pyList.append(pyTuple);
     }
     pyDict[fieldName] = pyList;
 }
@@ -1469,13 +1491,13 @@ void updateFieldArrayFromDict(const boost::python::dict& pyDict, epics::pvData::
                 continue;
             }   
             
-            // [{}] => StructureArray
-            if (updateFieldArrayFromDictList(pyList[0], fieldName, fields, names)) {
+            // [()] => UnionArray
+            if (updateFieldArrayFromTupleList(pyList[0], fieldName, fields, names)) {
                 continue;
             }   
 
-            // [()] => UnionArray
-            if (updateFieldArrayFromTupleList(pyList[0], fieldName, fields, names)) {
+            // [{}] => StructureArray
+            if (updateFieldArrayFromDictList(pyList[0], fieldName, fields, names)) {
                 continue;
             }   
 
@@ -1488,13 +1510,13 @@ void updateFieldArrayFromDict(const boost::python::dict& pyDict, epics::pvData::
             throw InvalidArgument("Unrecognized list type for field name %s", fieldName.c_str());
         } 
 
-        // Check for dict: {} => Structure
-        if (updateFieldArrayFromDict(valueObject, fieldName, fields, names)) {
+        // Check for tuple: () => Union
+        if (updateFieldArrayFromTuple(valueObject, fieldName, fields, names)) {
             continue;
         }
 
-        // Check for tuple: () => Union
-        if (updateFieldArrayFromTuple(valueObject, fieldName, fields, names)) {
+        // Check for dict: {} => Structure
+        if (updateFieldArrayFromDict(valueObject, fieldName, fields, names)) {
             continue;
         }
 
@@ -1727,7 +1749,7 @@ bool updateFieldArrayFromPvObject(const boost::python::object& pyObject, const s
     PvType::DataType dataType = pvObject.getDataType();
     switch (dataType) {
         case PvType::Union: {
-            addUnionField(fieldName, pyDict2, fields, names);
+            addUnionField(fieldName, extractUnionStructureDict(pyDict2), fields, names);
             break;
         }
         case PvType::Variant: {
@@ -1757,7 +1779,7 @@ bool updateFieldArrayFromPvObjectList(const boost::python::object& pyObject, con
     PvType::DataType dataType = pvObject.getDataType();
     switch (dataType) {
         case PvType::Union: {
-            addUnionArrayField(fieldName, pyDict2, fields, names);
+            addUnionArrayField(fieldName, extractUnionStructureDict(pyDict2), fields, names);
             break;
         }
         case PvType::Variant: {
@@ -1771,6 +1793,40 @@ bool updateFieldArrayFromPvObjectList(const boost::python::object& pyObject, con
     return true;
 }
 
+//
+// Extract union structure dict 
+//
+boost::python::dict extractUnionStructureDict(const boost::python::dict& pyDict)
+{
+    // Do not duplicate value key, if one is provided, if it is a single
+    // dictionary key, and if it holds dictionary or tuple holding dictionary
+    boost::python::dict pyDict2;
+    if (pyDict.has_key(PvaConstants::ValueFieldKey) && boost::python::len(pyDict) == 1) {
+        boost::python::object pyObject = pyDict[PvaConstants::ValueFieldKey];
+        boost::python::extract<boost::python::tuple> tupleExtract(pyObject);
+
+        // Look for dict inside tuple
+        if (tupleExtract.check()) {
+            boost::python::tuple pyTuple = tupleExtract();
+            if (boost::python::len(pyTuple) == 1) {
+                boost::python::extract<boost::python::dict> dictExtract(pyTuple[0]);
+                if (dictExtract.check()) {
+                    return dictExtract();
+                }
+            }
+        }
+        
+        // Look for dict
+        boost::python::extract<boost::python::dict> dictExtract(pyObject);
+        if (dictExtract.check()) {
+            return dictExtract();
+        }
+    }
+
+    // We could not find union in the structure, simply use provided dict
+    return pyDict;
+}
+        
 } // namespace PyPvDataUtility
 
 
