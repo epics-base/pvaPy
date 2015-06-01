@@ -132,16 +132,25 @@ BOOST_PYTHON_MODULE(pvaccess)
         .def("set", 
             static_cast<void(PvObject::*)(const boost::python::dict&)>(&PvObject::set),
             args("valueDict"),
-            "Populates PV structure fields from python dictionary.\n\n:Parameter: *valueDict* (dict) - dictionary of key:value pairs that correspond to PV structure field names and their values\n\n::\n\n    pv.set({'anUInt' : 1, 'aString' : 'my string example'})\n\n")
+            "Populates PV structure fields from python dictionary.\n\n"
+            ":Parameter: *valueDict* (dict) - dictionary of key:value pairs that correspond to PV structure field names and their values\n\n"
+            "::\n\n"
+            "    pv.set({'anUInt' : 1, 'aString' : 'my string example'})\n\n")
 
         .def("get", 
             static_cast<boost::python::dict(PvObject::*)()const>(&PvObject::get), 
-            "Retrieves PV structure as python dictionary.\n\n:Returns: python key:value dictionary representing current PV structure in terms of field names and their values\n\n::\n\n    valueDict = pv.get()\n\n")
+            "Retrieves PV structure as python dictionary.\n\n"
+            ":Returns: python key:value dictionary representing current PV structure in terms of field names and their values\n\n"
+            "::\n\n"
+            "    valueDict = pv.get()\n\n")
 
         .def("setBoolean", 
             static_cast<void(PvObject::*)(bool)>(&PvObject::setBoolean),
             args("value"),
-            "Sets boolean value for the PV field named 'value'.\n\n:Parameter: *value* (bool) - boolean value that will be assigned to the field named 'value'\n\n::\n\n    pv.setBoolean(True)\n\n")
+            "Sets boolean value for the PV field named 'value'.\n\n"
+            ":Parameter: *value* (bool) - boolean value that will be assigned to the field named 'value'\n\n"
+            "::\n\n"
+            "    pv.setBoolean(True)\n\n")
 
         .def("setBoolean", 
             static_cast<void(PvObject::*)(const std::string&,bool)>(&PvObject::setBoolean),
