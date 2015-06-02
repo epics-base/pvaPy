@@ -46,7 +46,6 @@
 #include "PvaExceptionTranslator.h"
 
 // Overload macros
-BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(PvObjectGetBoolean, PvObject::getBoolean, 0, 1)
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(PvObjectGetByte, PvObject::getByte, 0, 1)
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(PvObjectGetUByte, PvObject::getUByte, 0, 1)
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(PvObjectGetShort, PvObject::getShort, 0, 1)
@@ -147,33 +146,76 @@ BOOST_PYTHON_MODULE(pvaccess)
         .def("setBoolean", 
             static_cast<void(PvObject::*)(bool)>(&PvObject::setBoolean),
             args("value"),
-            "Sets boolean value for the PV field named 'value'.\n\n"
-            ":Parameter: *value* (bool) - boolean value that will be assigned to the field named 'value'\n\n"
+            "Sets boolean value for the PV field named 'value', or for the first structure field if 'value' field does not exist.\n\n"
+            ":Parameter: *value* (bool) - boolean value\n\n"
             "::\n\n"
+            "    pv = PvObject({'aBoolean' : BOOLEAN})\n\n"
             "    pv.setBoolean(True)\n\n")
 
         .def("setBoolean", 
             static_cast<void(PvObject::*)(const std::string&,bool)>(&PvObject::setBoolean),
             args("name", "value"),
-            "Sets boolean value for the given PV field.\n\n:Parameter: *name* (str) - field name\n\n:Parameter: *value* (bool) - boolean value that will be assigned to the given field\n\n::\n\n    pv.setBoolean('aBoolean', True)\n\n")
+            "Sets boolean value for the given PV field.\n\n"
+            ":Parameter: *name* (str) - field name\n\n"
+            ":Parameter: *value* (bool) - boolean value\n\n"
+            "::\n\n"
+            "    pv = PvObject({'aBoolean' : BOOLEAN})\n\n"
+            "    pv.setBoolean('aBoolean', True)\n\n")
 
         .def("getBoolean", 
             static_cast<bool(PvObject::*)(const std::string&)const>(&PvObject::getBoolean),
-            PvObjectGetBoolean(args("name='value'"), "Retrieves boolean value assigned to the given PV field.\n\n:Parameter: *name* (str) - field name\n\n:Returns: boolean stored in the given PV field\n\n::\n\n    value = pv.getBoolean('aBoolean')\n\n"))
+            args("name"), 
+            "Retrieves boolean value assigned to the given PV field.\n\n"
+            ":Parameter: *name* (str) - field name\n\n"
+            ":Returns: stored boolean value\n\n"
+            "::\n\n"
+            "    pv = PvObject({'aBoolean' : BOOLEAN})\n\n"
+            "    value = pv.getBoolean('aBoolean')\n\n")
+
+        .def("getBoolean", 
+            static_cast<bool(PvObject::*)()const>(&PvObject::getBoolean),
+            "Retrieves boolean value assigned to the PV field named 'value', or to the first structure field if 'value' field does not exist.\n\n"
+            ":Returns: stored boolean value\n\n"
+            "::\n\n"
+            "    pv = PvObject({'aBoolean' : BOOLEAN})\n\n"
+            "    value = pv.getBoolean()\n\n")
  
         .def("setByte", 
             static_cast<void(PvObject::*)(char)>(&PvObject::setByte),
             args("value"),
-            "Sets byte (character) value for the PV field named 'value'.\n\n:Parameter: *value* (str) - byte value that will be assigned to the field named 'value'\n\n::\n\n    pv.setByte('a')\n\n")
+            "Sets byte (character) value for the PV field named 'value', or for the first structure field if 'value' field does not exist.\n\n"
+            ":Parameter: *value* (str) - byte value\n\n"
+            "::\n\n"
+            "    pv = PvObject({'aByte' : BYTE})\n\n"
+            "    pv.setByte('a')\n\n")
 
         .def("setByte", static_cast<void(PvObject::*)(const std::string&,char)>(&PvObject::setByte),
             args("name", "value"),
-            "Sets byte (character) value for the given PV field.\n\n:Parameter: *name* (str) - field name\n\n:Parameter: *value* (str) - byte value that will be assigned to the given field\n\n::\n\n    pv.setByte('aByte', 'a')\n\n")
+            "Sets byte (character) value for the given PV field.\n\n"
+            ":Parameter: *name* (str) - field name\n\n"
+            ":Parameter: *value* (str) - byte value\n\n"
+            "::\n\n"
+            "    pv = PvObject({'aByte' : BYTE})\n\n"
+            "    pv.setByte('aByte', 'a')\n\n")
 
         .def("getByte", 
             static_cast<char(PvObject::*)(const std::string&)const>(&PvObject::getByte), 
-            PvObjectGetByte(args("name='value'"), "Retrieves byte (character) value assigned to the given PV field.\n\n:Parameter: *name* (str) - field name\n\n:Returns: byte stored in the given PV field\n\n::\n\n    value = pv.getByte('aByte')\n\n"))
+            args("name"), 
+            "Retrieves byte (character) value assigned to the given PV field.\n\n"
+            ":Parameter: *name* (str) - field name\n\n"
+            ":Returns: stored byte value\n\n"
+            "::\n\n"
+            "    pv = PvObject({'aByte' : BYTE})\n\n"
+            "    value = pv.getByte('aByte')\n\n")
 
+        .def("getByte", 
+            static_cast<char(PvObject::*)()const>(&PvObject::getByte), 
+            "Retrieves byte (character) value assigned to the PV field named 'value', or to the first structure field if 'value' field does not exist.\n\n"
+            ":Returns: stored byte value\n\n"
+            "::\n\n"
+            "    pv = PvObject({'aByte' : BYTE})\n\n"
+            "    value = pv.getByte('aByte')\n\n")
+        
         .def("setUByte", 
             static_cast<void(PvObject::*)(unsigned char)>(&PvObject::setUByte),
             args("value"),
