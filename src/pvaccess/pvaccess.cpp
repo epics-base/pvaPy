@@ -46,15 +46,6 @@
 #include "PvaExceptionTranslator.h"
 
 // Overload macros
-BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(PvObjectGetByte, PvObject::getByte, 0, 1)
-BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(PvObjectGetUByte, PvObject::getUByte, 0, 1)
-BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(PvObjectGetShort, PvObject::getShort, 0, 1)
-BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(PvObjectGetUShort, PvObject::getUShort, 0, 1)
-BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(PvObjectGetInt, PvObject::getInt, 0, 1)
-BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(PvObjectGetUInt, PvObject::getUInt, 0, 1)
-BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(PvObjectGetLong, PvObject::getLong, 0, 1)
-BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(PvObjectGetULong, PvObject::getULong, 0, 1)
-BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(PvObjectGetFloat, PvObject::getFloat, 0, 1)
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(PvObjectGetDouble, PvObject::getDouble, 0, 1)
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(PvObjectGetString, PvObject::getString, 0, 1)
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(PvObjectGetScalarArray, PvObject::getScalarArray, 0, 1)
@@ -146,7 +137,7 @@ BOOST_PYTHON_MODULE(pvaccess)
         .def("setBoolean", 
             static_cast<void(PvObject::*)(bool)>(&PvObject::setBoolean),
             args("value"),
-            "Sets boolean value for the PV field named 'value', or for the first structure field if 'value' field does not exist.\n\n"
+            "Sets boolean value for the PV field named 'value', or for the first structure field if the 'value' field does not exist.\n\n"
             ":Parameter: *value* (bool) - boolean value\n\n"
             "::\n\n"
             "    pv = PvObject({'aBoolean' : BOOLEAN})\n\n"
@@ -163,6 +154,14 @@ BOOST_PYTHON_MODULE(pvaccess)
             "    pv.setBoolean('aBoolean', True)\n\n")
 
         .def("getBoolean", 
+            static_cast<bool(PvObject::*)()const>(&PvObject::getBoolean),
+            "Retrieves boolean value assigned to the PV field named 'value', or to the first structure field if the 'value' field does not exist.\n\n"
+            ":Returns: stored boolean value\n\n"
+            "::\n\n"
+            "    pv = PvObject({'aBoolean' : BOOLEAN})\n\n"
+            "    value = pv.getBoolean()\n\n")
+ 
+        .def("getBoolean", 
             static_cast<bool(PvObject::*)(const std::string&)const>(&PvObject::getBoolean),
             args("name"), 
             "Retrieves boolean value assigned to the given PV field.\n\n"
@@ -172,18 +171,10 @@ BOOST_PYTHON_MODULE(pvaccess)
             "    pv = PvObject({'aBoolean' : BOOLEAN})\n\n"
             "    value = pv.getBoolean('aBoolean')\n\n")
 
-        .def("getBoolean", 
-            static_cast<bool(PvObject::*)()const>(&PvObject::getBoolean),
-            "Retrieves boolean value assigned to the PV field named 'value', or to the first structure field if 'value' field does not exist.\n\n"
-            ":Returns: stored boolean value\n\n"
-            "::\n\n"
-            "    pv = PvObject({'aBoolean' : BOOLEAN})\n\n"
-            "    value = pv.getBoolean()\n\n")
- 
         .def("setByte", 
             static_cast<void(PvObject::*)(char)>(&PvObject::setByte),
             args("value"),
-            "Sets byte (character) value for the PV field named 'value', or for the first structure field if 'value' field does not exist.\n\n"
+            "Sets byte (character) value for the PV field named 'value', or for the first structure field if the 'value' field does not exist.\n\n"
             ":Parameter: *value* (str) - byte value\n\n"
             "::\n\n"
             "    pv = PvObject({'aByte' : BYTE})\n\n"
@@ -199,6 +190,14 @@ BOOST_PYTHON_MODULE(pvaccess)
             "    pv.setByte('aByte', 'a')\n\n")
 
         .def("getByte", 
+            static_cast<char(PvObject::*)()const>(&PvObject::getByte), 
+            "Retrieves byte (character) value assigned to the PV field named 'value', or to the first structure field if the 'value' field does not exist.\n\n"
+            ":Returns: stored byte value\n\n"
+            "::\n\n"
+            "    pv = PvObject({'aByte' : BYTE})\n\n"
+            "    value = pv.getByte()\n\n")
+        
+        .def("getByte", 
             static_cast<char(PvObject::*)(const std::string&)const>(&PvObject::getByte), 
             args("name"), 
             "Retrieves byte (character) value assigned to the given PV field.\n\n"
@@ -208,122 +207,297 @@ BOOST_PYTHON_MODULE(pvaccess)
             "    pv = PvObject({'aByte' : BYTE})\n\n"
             "    value = pv.getByte('aByte')\n\n")
 
-        .def("getByte", 
-            static_cast<char(PvObject::*)()const>(&PvObject::getByte), 
-            "Retrieves byte (character) value assigned to the PV field named 'value', or to the first structure field if 'value' field does not exist.\n\n"
-            ":Returns: stored byte value\n\n"
-            "::\n\n"
-            "    pv = PvObject({'aByte' : BYTE})\n\n"
-            "    value = pv.getByte('aByte')\n\n")
-        
         .def("setUByte", 
             static_cast<void(PvObject::*)(unsigned char)>(&PvObject::setUByte),
             args("value"),
-            "Sets unsigned byte (character) value for the PV field named 'value'.\n\n:Parameter: *value* (str) - unsigned byte that will be assigned to the field named 'value'\n\n::\n\n    pv.setUByte('a')\n\n")
+            "Sets unsigned byte (character) value for the PV field named 'value', or for the first structure field if the 'value' field does not exist.\n\n"
+            ":Parameter: *value* (str) - unsigned byte value\n\n"
+            "::\n\n"
+            "    pv = PvObject({'anUByte' : UBYTE})\n\n"
+            "    pv.setUByte('a')\n\n")
 
         .def("setUByte", 
             static_cast<void(PvObject::*)(const std::string&,unsigned char)>(&PvObject::setUByte),
             args("name", "value"),
-            "Sets unsigned byte (character) value for the given PV field.\n\n:Parameter: *name* (str) - field name\n\n:Parameter: *value* (str) - unsigned byte value that will be assigned to the given field\n\n::\n\n    pv.setByte('anUByte', 'a')\n\n")
+            "Sets unsigned byte (character) value for the given PV field.\n\n"
+            ":Parameter: *name* (str) - field name\n\n"
+            ":Parameter: *value* (str) - unsigned byte value\n\n"
+            "::\n\n"
+            "    pv = PvObject({'anUByte' : UBYTE})\n\n"
+            "    pv.setUByte('anUByte', 'a')\n\n")
+
+        .def("getUByte", static_cast<unsigned char(PvObject::*)()const>(&PvObject::getUByte), 
+            "Retrieves unsigned byte (character) value assigned to the PV field named 'value', or to the first structure field if the 'value' field does not exist.\n\n"
+            ":Parameter: *name* (str) - field name\n\n"
+            ":Returns: stored unsigned byte value\n\n"
+            "::\n\n"
+            "    pv = PvObject({'anUByte' : UBYTE})\n\n"
+            "    value = pv.getUByte()\n\n")
 
         .def("getUByte", static_cast<unsigned char(PvObject::*)(const std::string&)const>(&PvObject::getUByte), 
-            PvObjectGetUByte(args("name='value'"), "Retrieves unsigned byte (character) value assigned to the given PV field.\n\n:Parameter: *name* (str) - field name\n\n:Returns: unsigned byte stored in the given PV field\n\n::\n\n    value = pv.getUByte('anUByte')\n\n"))
+            args("name"), 
+            "Retrieves unsigned byte (character) value assigned to the given PV field.\n\n"
+            ":Parameter: *name* (str) - field name\n\n"
+            ":Returns: stored unsigned byte value\n\n"
+            "::\n\n"
+            "    pv = PvObject({'anUByte' : UBYTE})\n\n"
+            "    value = pv.getUByte('anUByte')\n\n")
 
         .def("setShort", 
             static_cast<void(PvObject::*)(short)>(&PvObject::setShort),
             args("value"),
-            "Sets short value for the PV field named 'value'.\n\n:Parameter: *value* (int) - short value that will be assigned to the field named 'value'\n\n::\n\n    pv.setShort(10)\n\n")
+            "Sets short value for the PV field named 'value', or for the first structure field if the 'value' field does not exist.\n\n"
+            ":Parameter: *value* (int) - short value'\n\n"
+            "::\n\n"
+            "    pv = PvObject({'aShort' : SHORT})\n\n"
+            "    pv.setShort(10)\n\n")
 
         .def("setShort", 
             static_cast<void(PvObject::*)(const std::string&,short)>(&PvObject::setShort),
             args("name", "value"),
-            "Sets short value for the given PV field.\n\n:Parameter: *name* (str) - field name\n\n:Parameter: *value* (int) - short value that will be assigned to the given field\n\n::\n\n    pv.setShort('aShort', 10)\n\n")
+            "Sets short value for the given PV field.\n\n"
+            ":Parameter: *name* (str) - field name\n\n"
+            ":Parameter: *value* (int) - short value\n\n"
+            "::\n\n"
+            "    pv = PvObject({'aShort' : SHORT})\n\n"
+            "    pv.setShort('aShort', 10)\n\n")
+
+        .def("getShort", static_cast<short(PvObject::*)()const>(&PvObject::getShort), 
+            "Retrieves short value assigned to the PV field named 'value', or to the first structure field if the 'value' field does not exist.\n\n"
+            ":Returns: stored short value\n\n"
+            "::\n\n"
+            "    pv = PvObject({'aShort' : SHORT})\n\n"
+            "    value = pv.getShort()\n\n")
 
         .def("getShort", static_cast<short(PvObject::*)(const std::string&)const>(&PvObject::getShort), 
-            PvObjectGetShort(args("name='value'"), "Retrieves short value assigned to the given PV field.\n\n:Parameter: *name* (str) - field name\n\n:Returns: short stored in the given PV field\n\n::\n\n    value = pv.getShort('aShort')\n\n"))
+            args("name"), 
+            "Retrieves short value assigned to the given PV field.\n\n"
+            ":Parameter: *name* (str) - field name\n\n"
+            ":Returns: stored short value\n\n"
+            "::\n\n"
+            "    pv = PvObject({'aShort' : SHORT})\n\n"
+            "    value = pv.getShort('aShort')\n\n")
 
         .def("setUShort", 
             static_cast<void(PvObject::*)(unsigned short)>(&PvObject::setUShort),
             args("value"),
-            "Sets unsigned short value for the PV field named 'value'.\n\n:Parameter: *value* (int) - unsigned short value that will be assigned to the field named 'value'\n\n::\n\n    pv.setUShort(10)\n\n")
+            "Sets unsigned short value for the PV field named 'value', or for the first structure field if the 'value' field does not exist.\n\n"
+            ":Parameter: *value* (int) - unsigned short value'\n\n"
+            "::\n\n"
+            "    pv = PvObject({'anUShort' : USHORT})\n\n"
+            "    pv.setUShort(10)\n\n")
 
         .def("setUShort", 
             static_cast<void(PvObject::*)(const std::string&,unsigned short)>(&PvObject::setUShort),
             args("name", "value"),
-            "Sets unsigned short value for the given PV field.\n\n:Parameter: *name* (str) - field name\n\n:Parameter: *value* (int) - unsigned short value that will be assigned to the given field\n\n::\n\n    pv.setUShort('anUShort', 10)\n\n")
+            "Sets unsigned short value for the given PV field.\n\n"
+            ":Parameter: *name* (str) - field name\n\n"
+            ":Parameter: *value* (int) - unsigned short value\n\n"
+            "::\n\n"
+            "    pv = PvObject({'anUShort' : USHORT})\n\n"
+            "    pv.setUShort('anUShort', 10)\n\n")
+
+        .def("getUShort", static_cast<unsigned short(PvObject::*)()const>(&PvObject::getUShort),
+            "Retrieves unsigned short value assigned to the PV field named 'value', or to the first structure field if the 'value' field does not exist.\n\n"
+            ":Returns: stored unsigned short value\n\n"
+            "::\n\n"
+            "    pv = PvObject({'anUShort' : USHORT})\n\n"
+            "    value = pv.getUShort()\n\n")
 
         .def("getUShort", static_cast<unsigned short(PvObject::*)(const std::string&)const>(&PvObject::getUShort),
-            PvObjectGetUShort(args("name='value'"), "Retrieves unsigned short value assigned to the given PV field.\n\n:Parameter: *name* (str) - field name\n\n:Returns: unsigned short stored in the given PV field\n\n::\n\n    value = pv.getUShort('anUShort')\n\n"))
+            args("name"), 
+            "Retrieves unsigned short value assigned to the given PV field.\n\n"
+            ":Parameter: *name* (str) - field name\n\n"
+            ":Returns: stored unsigned short value\n\n"
+            "::\n\n"
+            "    pv = PvObject({'anUShort' : USHORT})\n\n"
+            "    value = pv.getUShort('anUShort')\n\n")
 
         .def("setInt", 
             static_cast<void(PvObject::*)(int)>(&PvObject::setInt),
             args("value"),
-            "Sets integer value for the PV field named 'value'.\n\n:Parameter: *value* (int) - integer value that will be assigned to the field named 'value'\n\n::\n\n    pv.setInt(10)\n\n")
+            "Sets integer value for the PV field named 'value', or for the first structure field if the 'value' field does not exist.\n\n"
+            ":Parameter: *value* (int) - integer value\n\n"
+            "::\n\n"
+            "    pv = PvObject({'anInt' : INT})\n\n"
+            "    pv.setInt(10)\n\n")
 
         .def("setInt", 
             static_cast<void(PvObject::*)(const std::string&,int)>(&PvObject::setInt),
             args("name", "value"),
-            "Sets integer value for the given PV field.\n\n:Parameter: *name* (str) - field name\n\n:Parameter: *value* (int) - integer value that will be assigned to the given field\n\n::\n\n    pv.setInt('anInt', 10)\n\n")
+            "Sets integer value for the given PV field.\n\n"
+            ":Parameter: *name* (str) - field name\n\n"
+            ":Parameter: *value* (int) - integer value\n\n"
+            "::\n\n"
+            "    pv = PvObject({'anInt' : INT})\n\n"
+            "    pv.setInt('anInt', 10)\n\n")
+
+        .def("getInt", 
+            static_cast<int(PvObject::*)()const>(&PvObject::getInt), 
+            "Retrieves integer value assigned to the PV field named 'value', or to the first structure field if the 'value' field does not exist.\n\n"
+            ":Returns: stored integer value\n\n"
+            "::\n\n"
+            "    pv = PvObject({'anInt' : INT})\n\n"
+            "    value = pv.getInt()\n\n")
 
         .def("getInt", 
             static_cast<int(PvObject::*)(const std::string&)const>(&PvObject::getInt), 
-            PvObjectGetInt(args("name='value'"), "Retrieves integer value assigned to the given PV field.\n\n:Parameter: *name* (str) - field name\n\n:Returns: integer stored in the given PV field\n\n::\n\n    value = pv.getInt('anInt')\n\n"))
+            args("name"), 
+            "Retrieves integer value assigned to the given PV field.\n\n"
+            ":Parameter: *name* (str) - field name\n\n"
+            ":Returns: stored integer value\n\n"
+            "::\n\n"
+            "    pv = PvObject({'anInt' : INT})\n\n"
+            "    value = pv.getInt('anInt')\n\n")
 
         .def("setUInt", 
             static_cast<void(PvObject::*)(unsigned int)>(&PvObject::setUInt),
             args("value"),
-            "Sets unsigned integer value for the PV field named 'value'.\n\n:Parameter: *value* (int) - unsigned integer value that will be assigned to the field named 'value'\n\n::\n\n    pv.setUInt(10)\n\n")
+            "Sets unsigned integer value for the PV field named 'value', or for the first structure field if the 'value' field does not exist.\n\n"
+            ":Parameter: *value* (int) - unsigned integer value\n\n"
+            "::\n\n"
+            "    pv = PvObject({'anUInt' : UINT})\n\n"
+            "    pv.setUInt(10)\n\n")
 
         .def("setUInt", 
             static_cast<void(PvObject::*)(const std::string&,unsigned int)>(&PvObject::setUInt),
             args("name", "value"),
-            "Sets unsigned integer value for the given PV field.\n\n:Parameter: *name* (str) - field name\n\n:Parameter: *value* (int) - unsigned integer value that will be assigned to the given field\n\n::\n\n    pv.setUInt('anInt', 10)\n\n")
+            "Sets unsigned integer value for the given PV field.\n\n"
+            ":Parameter: *name* (str) - field name\n\n"
+            ":Parameter: *value* (int) - unsigned integer value\n\n"
+            "::\n\n"
+            "    pv = PvObject({'anUInt' : UINT})\n\n"
+            "    pv.setUInt('anInt', 10)\n\n")
+
+        .def("getUInt", 
+            static_cast<unsigned int(PvObject::*)()const>(&PvObject::getUInt),
+            args("name"), 
+            "Retrieves unsigned integer value assigned to the PV field named 'value', or to the first structure field if the 'value' field does not exist.\n\n"
+            ":Returns: stored unsigned integer value\n\n"
+            "::\n\n"
+            "    pv = PvObject({'anUInt' : UINT})\n\n"
+            "    value = pv.getUInt()\n\n")
 
         .def("getUInt", 
             static_cast<unsigned int(PvObject::*)(const std::string&)const>(&PvObject::getUInt),
-            PvObjectGetUInt(args("name='value'"), "Retrieves unsigned integer value assigned to the given PV field.\n\n:Parameter: *name* (str) - field name\n\n:Returns: unsigned integer stored in the given PV field\n\n::\n\n    value = pv.getUInt('anUInt')\n\n"))
+            args("name"), 
+            "Retrieves unsigned integer value assigned to the given PV field.\n\n"
+            ":Parameter: *name* (str) - field name\n\n"
+            ":Returns: stored unsigned integer value\n\n"
+            "::\n\n"
+            "    pv = PvObject({'anUInt' : UINT})\n\n"
+            "    value = pv.getUInt('anUInt')\n\n")
 
         .def("setLong", 
             static_cast<void(PvObject::*)(long long)>(&PvObject::setLong),
             args("value"),
-            "Sets long value for the PV field named 'value'.\n\n:Parameter: *value* (long) - long value that will be assigned to the field named 'value'\n\n::\n\n    pv.setLong(10L)\n\n")
+            "Sets long value for the PV field named 'value', or for the first structure field if the 'value' field does not exist.\n\n"
+            ":Parameter: *value* (long) - long value\n\n"
+            "::\n\n"
+            "    pv = PvObject({'aLong' : LONG})\n\n"
+            "    pv.setLong(10L)\n\n")
 
         .def("setLong", 
             static_cast<void(PvObject::*)(const std::string&,long long)>(&PvObject::setLong),
             args("name", "value"),
-            "Sets long value for the given PV field.\n\n:Parameter: *name* (str) - field name\n\n:Parameter: *value* (long) - long value that will be assigned to the given field\n\n::\n\n    pv.setLong('aLong', 10L)\n\n")
+            "Sets long value for the given PV field.\n\n"
+            ":Parameter: *name* (str) - field name\n\n"
+            ":Parameter: *value* (long) - long value\n\n"
+            "::\n\n"
+            "    pv = PvObject({'aLong' : LONG})\n\n"
+            "    pv.setLong('aLong', 10L)\n\n")
+
+        .def("getLong", 
+            static_cast<long long(PvObject::*)()const>(&PvObject::getLong),
+            "Retrieves long value assigned to the PV field named 'value', or to the first structure field if the 'value' field does not exist.\n\n"
+            ":Returns: stored long value\n\n"
+            "::\n\n"
+            "    pv = PvObject({'aLong' : LONG})\n\n"
+            "    value = pv.getLong()\n\n")
 
         .def("getLong", 
             static_cast<long long(PvObject::*)(const std::string&)const>(&PvObject::getLong),
-            PvObjectGetLong(args("name='value'"), "Retrieves long value assigned to the given PV field.\n\n:Parameter: *name* (str) - field name\n\n:Returns: long stored in the given PV field\n\n::\n\n    value = pv.getLong('aLong')\n\n"))
+            args("name"), 
+            "Retrieves long value assigned to the given PV field.\n\n"
+            ":Parameter: *name* (str) - field name\n\n"
+            ":Returns: stored long value\n\n"
+            "::\n\n"
+            "    pv = PvObject({'aLong' : LONG})\n\n"
+            "    value = pv.getLong('aLong')\n\n")
 
         .def("setULong", 
             static_cast<void(PvObject::*)(unsigned long long)>(&PvObject::setULong),
             args("value"),
-            "Sets unsigned long value for the PV field named 'value'.\n\n:Parameter: *value* (long) - unsigned long value that will be assigned to the field named 'value'\n\n::\n\n    pv.setULong(10L)\n\n")
+            "Sets unsigned long value for the PV field named 'value', or for the first structure field if the 'value' field does not exist.\n\n"
+            ":Parameter: *value* (long) - unsigned long value\n\n"
+            "::\n\n"
+            "    pv = PvObject({'anULong' : ULONG})\n\n"
+            "    pv.setULong(10L)\n\n")
 
         .def("setULong", 
             static_cast<void(PvObject::*)(const std::string&,unsigned long long)>(&PvObject::setULong),
             args("name", "value"),
-            "Sets unsigned long value for the given PV field.\n\n:Parameter: *name* (str) - field name\n\n:Parameter: *value* (long) - unsigned long value that will be assigned to the given field\n\n::\n\n    pv.setULong('aLong', 10L)\n\n")
+            "Sets unsigned long value for the given PV field.\n\n"
+            ":Parameter: *name* (str) - field name\n\n"
+            ":Parameter: *value* (long) - unsigned long value\n\n"
+            "::\n\n"
+            "    pv = PvObject({'anULong' : ULONG})\n\n"
+            "    pv.setULong('anULong', 10L)\n\n")
+
+        .def("getULong", 
+            static_cast<unsigned long long(PvObject::*)()const>(&PvObject::getULong), 
+            "Retrieves unsigned long value assigned to the PV field named 'value', or to the first structure field if the 'value' field does not exist.\n\n"
+            ":Returns: stored unsigned long value\n\n"
+            "::\n\n"
+            "    pv = PvObject({'anULong' : ULONG})\n\n"
+            "    value = pv.getULong()\n\n")
 
         .def("getULong", 
             static_cast<unsigned long long(PvObject::*)(const std::string&)const>(&PvObject::getULong), 
-            PvObjectGetULong(args("name='value'"), "Retrieves unsigned long value assigned to the given PV field.\n\n:Parameter: *name* (str) - field name\n\n:Returns: unsigned long stored in the given PV field\n\n::\n\n    value = pv.getULong('anULong')\n\n"))
+            args("name"), 
+            "Retrieves unsigned long value assigned to the given PV field.\n\n"
+            ":Parameter: *name* (str) - field name\n\n"
+            ":Returns: stored unsigned long value\n\n"
+            "::\n\n"
+            "    pv = PvObject({'anULong' : ULONG})\n\n"
+            "    value = pv.getULong('anULong')\n\n")
 
         .def("setFloat", 
             static_cast<void(PvObject::*)(float)>(&PvObject::setFloat),
             args("value"),
-            "Sets float value for the PV field named 'value'.\n\n:Parameter: *value* (float) - float value that will be assigned to the field named 'value'\n\n::\n\n    pv.setFloat(10.0)\n\n")
+            "Sets float value for the PV field named 'value', or for the first structure field if the 'value' field does not exist.\n\n"
+            ":Parameter: *value* (float) - float value\n\n"
+            "::\n\n"
+            "    pv = PvObject({'aFloat' : FLOAT})\n\n"
+            "    pv.setFloat(10.0)\n\n")
 
         .def("setFloat", 
             static_cast<void(PvObject::*)(const std::string&,float)>(&PvObject::setFloat),
             args("name", "value"),
-            "Sets float value for the given PV field.\n\n:Parameter: *name* (str) - field name\n\n:Parameter: *value* (float) - float value that will be assigned to the given field\n\n::\n\n    pv.setFloat('aFloat', 10.0)\n\n")
+            "Sets float value for the given PV field.\n\n"
+            ":Parameter: *name* (str) - field name\n\n"
+            ":Parameter: *value* (float) - float value\n\n"
+            "::\n\n"
+            "    pv = PvObject({'aFloat' : FLOAT})\n\n"
+            "    pv.setFloat('aFloat', 10.0)\n\n")
+
+        .def("getFloat", 
+            static_cast<float(PvObject::*)()const>(&PvObject::getFloat), 
+            "Retrieves float value assigned to the PV field named 'value', or to the first structure field if the 'value' field does not exist.\n\n"
+            ":Returns: stored float value\n\n"
+            "::\n\n"
+            "    pv = PvObject({'aFloat' : FLOAT})\n\n"
+            "    value = pv.getFloat()\n\n")
 
         .def("getFloat", 
             static_cast<float(PvObject::*)(const std::string&)const>(&PvObject::getFloat), 
-            PvObjectGetFloat(args("name='value'"), "Retrieves float value assigned to the given PV field.\n\n:Parameter: *name* (str) - field name\n\n:Returns: float stored in the given PV field\n\n::\n\n    value = pv.getFloat('aFloat')\n\n"))
+            args("name"), 
+            "Retrieves float value assigned to the given PV field.\n\n"
+            ":Parameter: *name* (str) - field name\n\n"
+            ":Returns: stored float value\n\n"
+            "::\n\n"
+            "    pv = PvObject({'aFloat' : FLOAT})\n\n"
+            "    value = pv.getFloat('aFloat')\n\n")
 
         .def("setDouble", static_cast<void(PvObject::*)(double)>(&PvObject::setDouble),
             args("value"),
