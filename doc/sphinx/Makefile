@@ -19,15 +19,17 @@ default: $(DOC_TARGETS)
 
 # Override sphinx targets where needed
 help clean:
-	make -f $(SPHINX_MAKEFILE) $@
+	$(MAKE) -f $(SPHINX_MAKEFILE) $@
 html dirhtml pickle json htmlhelp qthelp latex changes linkcheck doctest: dirs
-	make -f $(SPHINX_MAKEFILE) $@
+	$(MAKE) -f $(SPHINX_MAKEFILE) $@
 
 # Other targets
-distclean: tidy
+configure:
 
-tidy:
+distclean: 
 	rm -rf $(BUILD_DIR) $(STATIC_DIR) $(TEMPLATES_DIR) 
+
+tidy: distclean
 
 dirs: $(BUILD_DIR) $(STATIC_DIR) $(TEMPLATES_DIR) 
 

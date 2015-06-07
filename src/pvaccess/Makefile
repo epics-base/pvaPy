@@ -77,8 +77,10 @@ pvaccess_SRCS += StringUtility.cpp
 
 pvaccess_LIBS += pvData
 pvaccess_LIBS += pvAccess
+ifeq ($(shell test $(PVA_API_VERSION) -ge 441; echo $$?),0)
 pvaccess_LIBS += nt
 pvaccess_LIBS += easyPVA
+endif
 pvaccess_LIBS += Com
 USR_SYS_LIBS += $(BOOST_PYTHON_LIB)
 

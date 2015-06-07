@@ -37,10 +37,10 @@ bootstrap tools/autoconf/configure: tools/autoconf/configure.ac $(wildcard tools
 
 .PHONY: doc docclean distclean tidy
 doc:
-	cd $(DOC_DIR) && make
+	$(MAKE) -C $(DOC_DIR)
 
 docclean:
-	cd $(DOC_DIR) && make clean
+	$(MAKE) -C $(DOC_DIR) clean
 
 distclean: 
 	rm -rf lib
@@ -48,13 +48,13 @@ distclean:
 	rm -f configure/RELEASE.local
 	rm -f configure/CONFIG_SITE.local
 	cd tools/autoconf && rm -rf autom4te.cache aclocal.m4 config.log config.status missing Makefile Makefile.in 
-	cd $(DOC_DIR) && make distclean
+	$(MAKE) -C $(DOC_DIR) distclean
 
 tidy: distclean
 	rm -f setup.sh
 	rm -f setup.csh
 	cd tools/autoconf && rm -f configure install-sh
-	cd $(DOC_DIR) && make tidy
+	$(MAKE) -C $(DOC_DIR) tidy
 
 .PHONY: configure 
 
