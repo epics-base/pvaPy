@@ -10,7 +10,7 @@ ifeq ($(filter $(MAKECMDGOALS),configure distclean),)
 # Make sure RELEASE.local has been created
 ifeq ($(wildcard $(RELEASE_LOCAL)),)
 
-all %:
+%:
 		@echo "File $(RELEASE_LOCAL) does not exist. Please create both $(RELEASE_LOCAL) and $(CONFIG_SITE_LOCAL) manually, or by running:"
 		@echo ""
 		@echo "  EPICS_BASE=<path> EPICS4_DIR=<path> make configure"
