@@ -46,12 +46,6 @@
 #include "PvaExceptionTranslator.h"
 
 // Overload macros
-BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(PvObjectGetDouble, PvObject::getDouble, 0, 1)
-BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(PvObjectGetString, PvObject::getString, 0, 1)
-BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(PvObjectGetScalarArray, PvObject::getScalarArray, 0, 1)
-BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(PvObjectGetStructure, PvObject::getStructure, 0, 1)
-BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(PvObjectGetStructureArray, PvObject::getStructureArray, 0, 1)
-
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(ChannelGet, Channel::get, 0, 1)
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(ChannelPut, Channel::put, 1, 2)
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(ChannelStartMonitor, Channel::startMonitor, 0, 1)
@@ -501,70 +495,183 @@ BOOST_PYTHON_MODULE(pvaccess)
 
         .def("setDouble", static_cast<void(PvObject::*)(double)>(&PvObject::setDouble),
             args("value"),
-            "Sets double value for the PV field named 'value'.\n\n:Parameter: *value* (float) - double value that will be assigned to the field named 'value'\n\n::\n\n    pv.setDouble(10.0)\n\n")
+            "Sets double value for the PV field named 'value', or for the first structure field if the 'value' field does not exist.\n\n"
+            ":Parameter: *value* (float) - double value\n\n"
+            "::\n\n"
+            "    pv = PvObject({'aDouble' : DOUBLE})\n\n"
+            "    pv.setDouble(10.0)\n\n")
 
         .def("setDouble", static_cast<void(PvObject::*)(const std::string&,double)>(&PvObject::setDouble),
             args("name", "value"),
-            "Sets double value for the given PV field.\n\n:Parameter: *name* (str) - field name\n\n:Parameter: *value* (float) - double value that will be assigned to the given field\n\n::\n\n    pv.setDouble('aDouble', 10.0)\n\n")
+            "Sets double value for the given PV field.\n\n"
+            ":Parameter: *name* (str) - field name\n\n"
+            ":Parameter: *value* (float) - double value\n\n"
+            "::\n\n"
+            "    pv = PvObject({'aDouble' : DOUBLE})\n\n"
+            "    pv.setDouble('aDouble', 10.0)\n\n")
+
+        .def("getDouble", 
+            static_cast<double(PvObject::*)()const>(&PvObject::getDouble), 
+            "Retrieves double value assigned to the PV field named 'value', or to the first structure field if the 'value' field does not exist.\n\n"
+            ":Returns: stored double value\n\n"
+            "::\n\n"
+            "    pv = PvObject({'aDouble' : DOUBLE})\n\n"
+            "    value = pv.getDouble()\n\n")
 
         .def("getDouble", 
             static_cast<double(PvObject::*)(const std::string&)const>(&PvObject::getDouble), 
-            PvObjectGetDouble(args("name='value'"), "Retrieves double value assigned to the given PV field.\n\n:Parameter: *name* (str) - field name\n\n:Returns: double stored in the given PV field\n\n::\n\n    value = pv.getDouble('aDouble')\n\n"))
+            args("name"), 
+            "Retrieves double value assigned to the given PV field.\n\n"
+            ":Parameter: *name* (str) - field name\n\n"
+            ":Returns: stored double value\n\n"
+            "::\n\n"
+            "    pv = PvObject({'aDouble' : DOUBLE})\n\n"
+            "    value = pv.getDouble('aDouble')\n\n")
 
         .def("setString", 
             static_cast<void(PvObject::*)(const std::string&)>(&PvObject::setString),
             args("value"),
-            "Sets string value for the PV field named 'value'.\n\n:Parameter: *value* (str) - string value that will be assigned to the field named 'value'\n\n::\n\n    pv.setString('string value')\n\n")
+            "Sets string value for the PV field named 'value', or for the first structure field if the 'value' field does not exist.\n\n"
+            ":Parameter: *value* (str) - string value\n\n"
+            "::\n\n"
+            "    pv = PvObject({'aString' : STRING})\n\n"
+            "    pv.setString('string value')\n\n")
 
         .def("setString", 
             static_cast<void(PvObject::*)(const std::string&,const std::string&)>(&PvObject::setString),
             args("name", "value"),
-            "Sets string value for the given PV field.\n\n:Parameter: *name* (str) - field name\n\n:Parameter: *value* (str) - string value that will be assigned to the given field\n\n::\n\n    pv.setString('aString', 'string value')\n\n")
+            "Sets string value for the given PV field.\n\n"
+            ":Parameter: *name* (str) - field name\n\n"
+            ":Parameter: *value* (str) - string value\n\n"
+            "::\n\n"
+            "    pv = PvObject({'aString' : STRING})\n\n"
+            "    pv.setString('aString', 'string value')\n\n")
         
+        .def("getString", static_cast<std::string(PvObject::*)()const>(&PvObject::getString),
+            "Retrieves string value assigned to the PV field named 'value', or to the first structure field if the 'value' field does not exist.\n\n"
+            ":Returns: stored string value\n\n"
+            "::\n\n"
+            "    pv = PvObject({'aString' : STRING})\n\n"
+            "    value = pv.getString()\n\n")
+
         .def("getString", static_cast<std::string(PvObject::*)(const std::string&)const>(&PvObject::getString),
-            PvObjectGetString(args("name='value'"), "Retrieves string value assigned to the given PV field.\n\n:Parameter: *name* (str) - field name\n\n:Returns: string stored in the given PV field\n\n::\n\n    value = pv.getString('aString')\n\n"))
+            args("name"), 
+            "Retrieves string value assigned to the given PV field.\n\n"
+            ":Parameter: *name* (str) - field name\n\n"
+            ":Returns: stored string value\n\n"
+            "::\n\n"
+            "    pv = PvObject({'aString' : STRING})\n\n"
+            "    value = pv.getString('aString')\n\n")
 
         .def("setScalarArray", 
             static_cast<void(PvObject::*)(const boost::python::list&)>(&PvObject::setScalarArray),
             args("valueList"),
-            "Sets scalar array for the PV field named 'value'.\n\n:Parameter: *valueList* (list) - list of scalar values that will be assigned to the field named 'value'\n\n::\n\n    pv.setScalarArray([0,1,2,3,4])\n\n")
+            "Sets scalar array for the PV field named 'value', or for the first structure field if the 'value' field does not exist.\n\n"
+            ":Parameter: *valueList* (list) - list of scalar values\n\n"
+            "::\n\n"
+            "    pv = PvObject({'aScalarArray' : [INT]})\n\n"
+            "    pv.setScalarArray([0,1,2,3,4])\n\n")
 
         .def("setScalarArray", 
             static_cast<void(PvObject::*)(const std::string&,const boost::python::list&)>(&PvObject::setScalarArray),
             args("name", "valueList"),
-            "Sets scalar array for the given PV field.\n\n:Parameter: *name* (str) - field name\n\n:Parameter: *valueList* (list) - list of scalar values that will be assigned to the given field\n\n::\n\n    pv.setScalarArray('aScalarArray', [0,1,2,3,4])\n\n")
+            "Sets scalar array for the given PV field.\n\n"
+            ":Parameter: *name* (str) - field name\n\n"
+            ":Parameter: *valueList* (list) - list of scalar values\n\n"
+            "::\n\n"
+            "    pv = PvObject({'aScalarArray' : [INT]})\n\n"
+            "    pv.setScalarArray('aScalarArray', [0,1,2,3,4])\n\n")
+
+        .def("getScalarArray", 
+            static_cast<boost::python::list(PvObject::*)()const>(&PvObject::getScalarArray), 
+            "Retrieves scalar array assigned to the PV field named 'value', or to the first structure field if the 'value' field does not exist.\n\n"
+            ":Returns: stored list of scalar values\n\n"
+            "::\n\n"
+            "    pv = PvObject({'aScalarArray' : [INT]})\n\n"
+            "    valueList = pv.getScalarArray()\n\n")
 
         .def("getScalarArray", 
             static_cast<boost::python::list(PvObject::*)(const std::string&)const>(&PvObject::getScalarArray), 
-            PvObjectGetScalarArray(args("name='value'"), "Retrieves scalar array assigned to the given PV field.\n\n:Parameter: *name* (str) - field name\n\n:Returns: list of scalar values stored in the given PV field\n\n::\n\n    valueList = pv.getScalarArray('aScalarArray')\n\n"))
+            args("name"), 
+            "Retrieves scalar array assigned to the given PV field.\n\n"
+            ":Parameter: *name* (str) - field name\n\n"
+            ":Returns: stored list of scalar values\n\n"
+            "::\n\n"
+            "    pv = PvObject({'aScalarArray' : [INT]})\n\n"
+            "    valueList = pv.getScalarArray('aScalarArray')\n\n")
 
         .def("setStructure", 
             static_cast<void(PvObject::*)(const boost::python::dict&)>(&PvObject::setStructure),
             args("valueDict"),
-            "Sets structure for the PV field named 'value'.\n\n:Parameter: *valueDict* (dict) - dictionary of key:value pairs for PV structure that will be assigned to the field named 'value'\n\n::\n\n    pv.setStructure({'aString' : 'string value', 'anInt' : 1, 'aFloat' : 1.1})\n\n")
+            "Sets structure for the PV field named 'value', or for the first structure field if the 'value' field does not exist.\n\n"
+            ":Parameter: *valueDict* (dict) - dictionary of structure key:value pairs\n\n"
+            "::\n\n"
+            "    pv = PvObject({'aStruct' : {'anInt':INT, 'aDouble':DOUBLE}})\n\n"
+            "    pv.setStructure({'anInt' : 1, 'aDouble' : 1.1})\n\n")
 
         .def("setStructure", 
             static_cast<void(PvObject::*)(const std::string&,const boost::python::dict&)>(&PvObject::setStructure),
             args("name", "valueDict"),
-            "Sets structure for the given PV field.\n\n:Parameter: *name* (str) - field name\n\n:Parameter: *valueDict* (dict) - dictionary of key:value pairs for PV structure that will be assigned to the given field\n\n::\n\n    pv.setStructure('aStruct', {'aString' : 'string value', 'anInt' : 1, 'aFloat' : 1.1})\n\n")
+            "Sets structure for the given PV field.\n\n"
+            ":Parameter: *name* (str) - field name\n\n"
+            ":Parameter: *valueDict* (dict) - dictionary of structure key:value pairs\n\n"
+            "::\n\n"
+            "    pv = PvObject({'aStruct' : {'anInt':INT, 'aDouble':DOUBLE}})\n\n"
+            "    pv.setStructure('aStruct', {'anInt' : 1, 'aDouble' : 1.1})\n\n")
+
+        .def("getStructure", 
+            static_cast<boost::python::dict(PvObject::*)()const>(&PvObject::getStructure), 
+            "Retrieves structure assigned to the PV field named 'value', or to the first structure field if the 'value' field does not exist.\n\n"
+            ":Returns: stored dictionary of structure key:value pairs\n\n"
+            "::\n\n"
+            "    pv = PvObject({'aStruct' : {'anInt':INT, 'aDouble':DOUBLE}})\n\n"
+            "    valueDict = pv.getStructure()\n\n")
 
         .def("getStructure", 
             static_cast<boost::python::dict(PvObject::*)(const std::string&)const>(&PvObject::getStructure), 
-            PvObjectGetStructure(args("name='value'"), "Retrieves structure assigned to the given PV field.\n\n:Parameter: *name* (str) - field name\n\n:Returns: dictionary of key:value pairs for PV structure stored in the given PV field\n\n::\n\n    valueDict = pv.getStructure('aStruct')\n\n"))
+            args("name"), 
+            "Retrieves structure assigned to the given PV field.\n\n"
+            ":Parameter: *name* (str) - field name\n\n"
+            ":Returns: stored dictionary of structure key:value pairs\n\n"
+            "::\n\n"
+            "    pv = PvObject({'aStruct' : {'anInt':INT, 'aDouble':DOUBLE}})\n\n"
+            "    valueDict = pv.getStructure('aStruct')\n\n")
 
         .def("setStructureArray", 
             static_cast<void(PvObject::*)(const boost::python::list&)>(&PvObject::setStructureArray),
             args("dictList"),
-            "Sets structure array for the PV field named 'value'.\n\n:Parameter: *dictList* (list) - list of dictionaries (describing PV structures) that will be assigned to the field named 'value'\n\n::\n\n    pv.setStructureArray([{'anInt' : 1, 'aFloat' : 1.1},{'anInt' : 2, 'aFloat' : 2.2},{'anInt' : 3, 'aFloat' : 3.3}])\n\n")
+            "Sets structure array for the PV field named 'value', or for the first structure field if the 'value' field does not exist.\n\n"
+            ":Parameter: *dictList* (list) - list of dictionaries\n\n"
+            "::\n\n"
+            "    pv = PvObject({'aStructArray' : [{'anInt' : INT, {'aFloat' : FLOAT}]})\n\n"
+            "    pv.setStructureArray([{'anInt' : 1, 'aFloat' : 1.1},{'anInt' : 2, 'aFloat' : 2.2},{'anInt' : 3, 'aFloat' : 3.3}])\n\n")
 
         .def("setStructureArray", 
             static_cast<void(PvObject::*)(const std::string&,const boost::python::list&)>(&PvObject::setStructureArray),
             args("name", "dictList"),
-            "Sets structure array for the given PV field.\n\n:Parameter: *name* (str) - field name\n\n:Parameter: *dictList* (list) - list of dictionaries (describing PV structures) that will be assigned to the given field\n\n::\n\n    pv.setStructureArray('aStructArray', [{'anInt' : 1, 'aFloat' : 1.1},{'anInt' : 2, 'aFloat' : 2.2},{'anInt' : 3, 'aFloat' : 3.3}])\n\n")
+            "Sets structure array for the given PV field.\n\n"
+            ":Parameter: *name* (str) - field name\n\n"
+            ":Parameter: *dictList* (list) - list of dictionaries\n\n"
+            "::\n\n"
+            "    pv = PvObject({'aStructArray' : [{'anInt' : INT, {'aFloat' : FLOAT}]})\n\n"
+            "    pv.setStructureArray('aStructArray', [{'anInt' : 1, 'aFloat' : 1.1},{'anInt' : 2, 'aFloat' : 2.2},{'anInt' : 3, 'aFloat' : 3.3}])\n\n")
+
+        .def("getStructureArray", 
+            static_cast<boost::python::list(PvObject::*)()const>(&PvObject::getStructureArray), 
+            "Retrieves structure array assigned to the PV field named 'value', or to the first structure field if the 'value' field does not exist.\n\n"
+            ":Returns: stored list of dictionaries\n\n"
+            "::\n\n"
+            "    pv = PvObject({'aStructArray' : [{'anInt' : INT, {'aFloat' : FLOAT}]})\n\n"
+            "    dictList = pv.getStructureArray()\n\n")
 
         .def("getStructureArray", 
             static_cast<boost::python::list(PvObject::*)(const std::string&)const>(&PvObject::getStructureArray), 
-            PvObjectGetStructureArray(args("name='value'"), "Retrieves structure array assigned to the given PV field.\n\n:Parameter: *name* (str) - field name\n\n:Returns: list of dictionaries (describing PV structures) stored in the given PV field\n\n::\n\n    dictList = pv.getStructureArray('aStructArray')\n\n"))
+            args("name"), 
+            "Retrieves structure array assigned to the given PV field.\n\n"
+            ":Parameter: *name* (str) - field name\n\n"
+            ":Returns: stored list of dictionaries\n\n"
+            "::\n\n"
+            "    dictList = pv.getStructureArray('aStructArray')\n\n")
 
         .def("isUnionVariant",&PvObject::isUnionVariant,
             (arg("key") = "value"),
