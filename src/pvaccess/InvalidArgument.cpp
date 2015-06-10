@@ -1,6 +1,8 @@
 #include "epicsStdio.h"
 #include "InvalidArgument.h"
 
+const char* InvalidArgument::PyExceptionClassName = "InvalidArgument";
+
 InvalidArgument::InvalidArgument(const std::string& message) :
     PvaException(message)
 {

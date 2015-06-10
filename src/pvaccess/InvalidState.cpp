@@ -1,6 +1,8 @@
 #include "epicsStdio.h"
 #include "InvalidState.h"
 
+const char* InvalidState::PyExceptionClassName = "InvalidState";
+
 InvalidState::InvalidState(const std::string& message) :
     PvaException(message)
 {

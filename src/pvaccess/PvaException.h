@@ -14,6 +14,7 @@ class PvaException : public std::exception
 public:
     static const int MaxMessageLength;
     static const int GenericErrorCode;
+    static const char* PyExceptionClassName;
 
     PvaException(int errorCode, const std::string& message=""); 
     PvaException(const std::string& message=""); 
@@ -25,6 +26,7 @@ public:
     virtual const char* what() const throw();
     virtual int getErrorCode() const;
     virtual void setErrorCode(int errorCode);
+    virtual const char* getPyExceptionClassName() const;
     friend std::ostream& operator<<(std::ostream& out, const PvaException& ex);
 
 private:
@@ -56,5 +58,11 @@ inline void PvaException::setErrorCode(int errorCode)
 {
     this->errorCode = errorCode;
 }
+
+inline const char* PvaException::getPyExceptionClassName() const 
+{
+    return PvaException::PyExceptionClassName;
+}
+
 
 #endif 

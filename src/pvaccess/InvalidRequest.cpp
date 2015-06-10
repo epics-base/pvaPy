@@ -1,6 +1,8 @@
 #include "epicsStdio.h"
 #include "InvalidRequest.h"
 
+const char* InvalidRequest::PyExceptionClassName = "InvalidRequest";
+
 InvalidRequest::InvalidRequest(const std::string& message) :
     PvaException(message)
 {

@@ -5,6 +5,7 @@
 // Constants.
 const int PvaException::MaxMessageLength(1024);
 const int PvaException::GenericErrorCode(1);
+const char* PvaException::PyExceptionClassName = "PvaException";
 
 PvaException::PvaException(int errorCode_, const std::string& message) :
     std::exception(),

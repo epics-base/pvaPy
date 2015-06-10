@@ -1,6 +1,8 @@
 #include "epicsStdio.h"
 #include "InvalidDataType.h"
 
+const char* InvalidDataType::PyExceptionClassName = "InvalidDataType";
+
 InvalidDataType::InvalidDataType(const std::string& message) :
     PvaException(message)
 {

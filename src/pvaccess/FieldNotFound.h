@@ -10,8 +10,16 @@
 class FieldNotFound : public PvaException
 {
 public:
+    static const char* PyExceptionClassName;
+
     FieldNotFound(const std::string& message=""); 
     FieldNotFound(const char* message, ...);
+    virtual const char* getPyExceptionClassName() const;
 };
+
+inline const char* FieldNotFound::getPyExceptionClassName() const
+{
+        return FieldNotFound::PyExceptionClassName;
+}
 
 #endif 

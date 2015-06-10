@@ -10,8 +10,16 @@
 class InvalidArgument : public PvaException
 {
 public:
+    static const char* PyExceptionClassName;
+
     InvalidArgument(const std::string& message=""); 
     InvalidArgument(const char* message, ...);
+    virtual const char* getPyExceptionClassName() const;
 };
+
+inline const char* InvalidArgument::getPyExceptionClassName() const
+{
+    return InvalidArgument::PyExceptionClassName;
+}
 
 #endif 

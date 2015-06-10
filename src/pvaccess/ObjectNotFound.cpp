@@ -1,6 +1,8 @@
 #include "epicsStdio.h"
 #include "ObjectNotFound.h"
 
+const char* ObjectNotFound::PyExceptionClassName = "ObjectNotFound";
+
 ObjectNotFound::ObjectNotFound(const std::string& message) :
     PvaException(message)
 {

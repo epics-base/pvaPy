@@ -12,6 +12,12 @@ class ChannelNotFound : public ChannelAccessError
 public:
     ChannelNotFound(const std::string& message=""); 
     ChannelNotFound(const char* message, ...);
+    virtual const char* getPyExceptionClassName() const;
 };
+
+inline const char* ChannelNotFound::getPyExceptionClassName() const
+{
+        return ChannelNotFound::PyExceptionClassName;
+}
 
 #endif 

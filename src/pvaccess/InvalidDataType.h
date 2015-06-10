@@ -5,13 +5,21 @@
 #include "PvaException.h"
 
 /**
- * Invalid request error.
+ * Invalid data type error.
  */
 class InvalidDataType : public PvaException
 {
 public:
+    static const char* PyExceptionClassName;
+
     InvalidDataType(const std::string& message=""); 
     InvalidDataType(const char* message, ...);
+    virtual const char* getPyExceptionClassName() const;
 };
+
+inline const char* InvalidDataType::getPyExceptionClassName() const
+{
+    return InvalidDataType::PyExceptionClassName;
+}
 
 #endif 

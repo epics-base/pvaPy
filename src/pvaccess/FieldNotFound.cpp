@@ -1,6 +1,8 @@
 #include "epicsStdio.h"
 #include "FieldNotFound.h"
 
+const char* FieldNotFound::PyExceptionClassName = "FieldNotFound";
+
 FieldNotFound::FieldNotFound(const std::string& message) :
     PvaException(message)
 {

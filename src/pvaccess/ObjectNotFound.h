@@ -10,8 +10,16 @@
 class ObjectNotFound : public PvaException
 {
 public:
+    static const char* PyExceptionClassName;
+
     ObjectNotFound(const std::string& message=""); 
     ObjectNotFound(const char* message, ...);
+    virtual const char* getPyExceptionClassName() const;
 };
+
+inline const char* ObjectNotFound::getPyExceptionClassName() const
+{
+    return ObjectNotFound::PyExceptionClassName;
+}
 
 #endif 
