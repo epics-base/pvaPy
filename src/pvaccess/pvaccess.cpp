@@ -14,6 +14,11 @@
 #include "boost/shared_ptr.hpp"
 #include "boost/operators.hpp"
 
+#include "PvaException.h"
+#include "FieldNotFound.h"
+#include "InvalidArgument.h"
+#include "InvalidRequest.h"
+
 #include "PvObject.h"
 #include "PvProvider.h"
 #include "PvScalar.h"
@@ -52,6 +57,11 @@ BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(ChannelStartMonitor, Channel::startMonito
 //BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(RpcClientRequest, RpcClient::request, 1, 2)
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(RpcServerListen, RpcServer::listen, 0, 1)
 
+PyObject* pvaException = NULL;
+PyObject* fieldNotFoundException = NULL;
+PyObject* invalidArgumentException = NULL;
+PyObject* invalidRequestException = NULL;
+
 BOOST_PYTHON_MODULE(pvaccess)
 {
     using namespace boost::python;
@@ -63,6 +73,10 @@ BOOST_PYTHON_MODULE(pvaccess)
     //
     register_exception_translator<PvaException>(PvaExceptionTranslator::translator)
         ;
+    pvaException = PvaExceptionTranslator::createExceptionClass(PvaException::PyExceptionClassName);
+    fieldNotFoundException = PvaExceptionTranslator::createExceptionClass(FieldNotFound::PyExceptionClassName);
+    invalidArgumentException = PvaExceptionTranslator::createExceptionClass(InvalidArgument::PyExceptionClassName);
+    invalidRequestException = PvaExceptionTranslator::createExceptionClass(InvalidRequest::PyExceptionClassName);
 
     //
     // PvType
@@ -103,12 +117,18 @@ BOOST_PYTHON_MODULE(pvaccess)
             "\t- PVTYPE: scalar type, can be BOOLEAN, BYTE, UBYTE, SHORT, USHORT, INT, UINT, LONG, ULONG, FLOAT, DOUBLE, or STRING\n"
             "\t- [PVTYPE]: single element list representing scalar array\n"
             "\t- {key:value,…}: structure\n"
-            "\t- [{key:value,…}]: single element list representing structure array\n\n"
+            "\t- [{key:value,…}]: single element list representing structure array\n"
+            "\t- (): variant union\n"
+            "\t- [()]: single element list representing variant union array\n"
+            "\t- ({key:value,…},): restricted union\n"
+            "\t- [({key:value,…},)]: single element list representing restricted union array\n"
             "\t::\n\n"
             "\t\tpv1 = PvObject({'anInt' : INT})\n\n"
             "\t\tpv2 = PvObject({'aShort' : SHORT, 'anUInt' : UINT, 'aString' : STRING})\n\n"
             "\t\tpv3 = PvObject({'aStringArray' : [STRING], 'aStruct' : {'aString2' : STRING, 'aBoolArray' : [BOOLEAN], 'aStruct2' : {'aFloat' : FLOAT, 'aString3' : [STRING]}}})\n\n"
-            "\t\tpv4 = PvObject({'aStructArray' : [{'anInt' : INT, 'anInt2' : INT, 'aDouble' : DOUBLE}]})\n\n", 
+            "\t\tpv4 = PvObject({'aStructArray' : [{'anInt' : INT, 'anInt2' : INT, 'aDouble' : DOUBLE}]})\n\n" 
+            "\t\tpv5 = PvObject({'anUnion' : ({'anInt' : INT, 'aDouble' : DOUBLE},)})\n\n" 
+            "\t\tpv6 = PvObject({'aVariant' : ()})\n\n", 
             init<boost::python::dict>(args("structureDict")))
 
         .def(str(self))
@@ -131,8 +151,9 @@ BOOST_PYTHON_MODULE(pvaccess)
         .def("setBoolean", 
             static_cast<void(PvObject::*)(bool)>(&PvObject::setBoolean),
             args("value"),
-            "Sets boolean value for the PV field named 'value', or for the first structure field if the 'value' field does not exist.\n\n"
+            "Sets boolean value for structure with only one field, or for structure that has field named 'value'. In case structure has multiple fields, but no 'value' field, exception will be thrown.\n\n"
             ":Parameter: *value* (bool) - boolean value\n\n"
+            ":Raises: *InvalidRequest* - in case structure has multiple fields, but no 'value' field\n\n"
             "::\n\n"
             "    pv = PvObject({'aBoolean' : BOOLEAN})\n\n"
             "    pv.setBoolean(True)\n\n")
@@ -671,10 +692,122 @@ BOOST_PYTHON_MODULE(pvaccess)
             ":Parameter: *name* (str) - field name\n\n"
             ":Returns: stored list of dictionaries\n\n"
             "::\n\n"
+            "    pv = PvObject({'aStructArray' : [{'anInt' : INT, {'aFloat' : FLOAT}]})\n\n"
             "    dictList = pv.getStructureArray('aStructArray')\n\n")
 
-        .def("isUnionVariant",&PvObject::isUnionVariant,
-            (arg("key") = "value"),
+        .def("setUnion", static_cast<void(PvObject::*)(const std::string&,const PvObject&)>(&PvObject::setUnion),
+            args("name", "valueObject"),
+            "Sets union for the given PV field.\n\n"
+            ":Parameter: *name* (str) - field name\n\n"
+            ":Parameter: *valueObject* (PvObject) - union value\n\n"
+            "::\n\n"
+            "    pv = PvObject({'anUnion' : ({'anInt' : INT, 'aFloat' : FLOAT},)})\n\n"
+            "    pv.setUnion('anUnion', ({'anInt' : 1},))\n\n")
+
+        .def("setUnion", static_cast<void(PvObject::*)(const std::string&,const boost::python::tuple&)>(&PvObject::setUnion),
+            args("name", "valueObject"),
+            "Sets union for the given PV field.\n\n"
+            ":Parameter: *name* (str) - field name\n\n"
+            ":Parameter: *valueObject* (PvObject) - union value\n\n"
+            "::\n\n"
+            "    pv = PvObject({'anUnion' : ({'anInt' : INT, 'aFloat' : FLOAT},)})\n\n"
+            "    pv.setUnion('anUnion', ({'anInt' : 1},))\n\n")
+
+        .def("setUnion", static_cast<void(PvObject::*)(const PvObject&)>(&PvObject::setUnion),
+            args("valueObject"),
+            "Sets union for the given PV field.\n\n"
+            ":Parameter: *valueObject* (PvObject) - union value\n\n"
+            "::\n\n"
+            "    pv = PvObject({'anUnion' : ({'anInt' : INT, 'aFloat' : FLOAT},)})\n\n"
+            "    pv.setUnion('anUnion', ({'anInt' : 1},))\n\n")
+
+        .def("getUnion",
+            static_cast<PvObject(PvObject::*)(const std::string&)const>(&PvObject::getUnion),
+            args("name"),
+            "Retrieves union assigned to the given PV field.\n"
+            ":Parameter: *name* (str) - field name\n\n"
+            ":Returns: stored PV object\n\n"
+            "::\n\n"
+            "    pv = PvObject({'anUnion' : ({'anInt' : INT, 'aFloat' : FLOAT},)})\n\n"
+            "    value = pv.getUnion('anUnion')\n\n")
+
+        .def("getUnion",
+            static_cast<PvObject(PvObject::*)()const>(&PvObject::getUnion),
+            "Retrieves union assigned to the PV field named 'value', or to the first structure field if the 'value' field does not exist.\n"
+            ":Returns: stored PV object\n\n"
+            "::\n\n"
+            "    pv = PvObject({'anUnion' : ({'anInt' : INT, 'aFloat' : FLOAT},)})\n\n"
+            "    value = pv.getUnion()\n\n")
+
+        .def("getUnionFieldNames",
+            static_cast<boost::python::list(PvObject::*)(const std::string&)const>(&PvObject::getUnionFieldNames),
+            args("name"),
+            "Get the field names for a regular union\n"
+            "arg\n"
+            "    name fieldName = \"value\"\n"
+            "return list of union fieldnames. If variant union then empty list\n"
+            "throws InvalidArgument if field is not a union.\n\n"
+            "example\n"
+            "    value = pv.getUnionFieldNames()\n\n")
+
+        .def("getUnionFieldNames",
+            static_cast<boost::python::list(PvObject::*)()const>(&PvObject::getUnionFieldNames),
+            "Get the field names for a regular union\n"
+            "arg\n"
+            "    name fieldName = \"value\"\n"
+            "return list of union fieldnames. If variant union then empty list\n"
+            "throws InvalidArgument if field is not a union.\n\n"
+            "example\n"
+            "    value = pv.getUnionFieldNames()\n\n")
+
+        .def("getSelectedUnionFieldName",
+            static_cast<std::string(PvObject::*)(const std::string&)const>(&PvObject::getSelectedUnionFieldName),
+            args("name"),
+            "Get a union with selected field name\n"
+            "Returns selected fiedl name.\n"
+            "    fieldName = pv.getSelectedUnionFieldName(key)\n\n")
+
+        .def("getSelectedUnionFieldName",
+            static_cast<std::string(PvObject::*)()const>(&PvObject::getSelectedUnionFieldName),
+            "Get a union with selected field name\n"
+            "Returns selected fiedl name.\n"
+            "    fieldName = pv.getSelectedUnionFieldName(key)\n\n")
+
+        .def("selectUnionField",
+            static_cast<PvObject(PvObject::*)(const std::string&, const std::string&)const>(&PvObject::selectUnionField),
+            args("name", "unionFieldName"),
+            "Get a union with selected field name\n"
+            "arg\n"
+            "    fieldName The union field name.\n"
+            "    name fieldName = \"value\"\n"
+            "Returns PvObject.\n"
+            "    The pvObject is a structure as follows:\n"
+            "    structure\n"
+            "        union value\n"
+            "throws InvalidArgument if field is not a union.\n"
+            "       ValueError if variant union or illegal union field name.\n\n"
+            "example\n"
+            "    value = pv.selectUnionField(unionFieldName,fieldName)\n\n")
+
+        .def("selectUnionField",
+            static_cast<PvObject(PvObject::*)(const std::string&)const>(&PvObject::selectUnionField),
+            args("unionFieldName"),
+            "Get a union with selected field name\n"
+            "arg\n"
+            "    fieldName The union field name.\n"
+            "    name fieldName = \"value\"\n"
+            "Returns PvObject.\n"
+            "    The pvObject is a structure as follows:\n"
+            "    structure\n"
+            "        union value\n"
+            "throws InvalidArgument if field is not a union.\n"
+            "       ValueError if variant union or illegal union field name.\n\n"
+            "example\n"
+            "    value = pv.selectUnionField(unionFieldName,fieldName)\n\n")
+
+        .def("isUnionVariant",
+            static_cast<bool(PvObject::*)(const std::string&)const>(&PvObject::isUnionVariant),
+            args("fieldName"),
             "Is a field a variant union?\n"
             "arg\n"
             "    name fieldName = \"value\"\n"
@@ -683,15 +816,15 @@ BOOST_PYTHON_MODULE(pvaccess)
             "example\n"
             "    value = pv.isUnionVariant()\n\n")
 
-        .def("getUnionFieldNames",&PvObject::getUnionFieldNames,
-            (arg("key") = "value"),
-            "Get the field names for a regular union\n"
+        .def("isUnionVariant",
+            static_cast<bool(PvObject::*)()const>(&PvObject::isUnionVariant),
+            "Is a field a variant union?\n"
             "arg\n"
             "    name fieldName = \"value\"\n"
-            "return list of union fieldnames. If variant union then empty list\n"
+            "return (True,False) if (is,is not)  a variant union\n"
             "throws InvalidArgument if field is not a union.\n\n"
             "example\n"
-            "    value = pv.getUnionFieldNames()\n\n")
+            "    value = pv.isUnionVariant()\n\n")
 
         .def("createUnionField",&PvObject::createUnionField,
             (arg("key") = "value"),
@@ -707,52 +840,6 @@ BOOST_PYTHON_MODULE(pvaccess)
             "       ValueError if variant union or illegal union field name.\n\n"
             "example\n"
             "    value = pv.unionCreate(unionFieldName,fieldName)\n\n")
-
-        .def("selectUnionField",&PvObject::selectUnionField,
-            (arg("key") = "value"),
-            "Get a union with selected field name\n"
-            "arg\n"
-            "    fieldName The union field name.\n"
-            "    name fieldName = \"value\"\n"
-            "Returns PvObject.\n"
-            "    The pvObject is a structure as follows:\n"
-            "    structure\n"
-            "        union value\n"
-            "throws InvalidArgument if field is not a union.\n"
-            "       ValueError if variant union or illegal union field name.\n\n"
-            "example\n"
-            "    value = pv.selectUnionField(unionFieldName,fieldName)\n\n")
-
-        .def("getSelectedUnionFieldName",&PvObject::getSelectedUnionFieldName,
-            (arg("key") = "value"),
-            "Get a union with selected field name\n"
-            "Returns selected fiedl name.\n"
-            "    fieldName = pv.getSelectedUnionFieldName(key)\n\n")
-
-        .def("getUnion",&PvObject::getUnion,
-            (arg("key") = "value"),
-            "Get a union with selected field name\n"
-            "arg\n"
-            "    name fieldName = \"value\"\n"
-            "Returns PvObject.\n"
-            "    The pvObject is a structure as follows:\n"
-            "    structure\n"
-            "        union value\n"
-            "throws InvalidArgument if field is not a union.\n\n"
-            "example\n"
-            "    value = pv.getUnion(fieldName)\n\n")
-
-        .def("setUnion",&PvObject::setUnion,
-            (arg("key") = "value"),
-            "Set the value of a union field\n"
-            "arg\n"
-            "    value a PvObject which must be a structure as follows:\n"
-            "        structure\n"
-            "            union value\n"
-            "    name fieldName = \"value\"\n"
-            "throws InvalidArgument if field is not a union.\n\n"
-            "example\n"
-            "    value = pv.unionSet(PvObject,fieldName)\n\n")
 
         .def("isUnionArrayVariant",&PvObject::isUnionArrayVariant,
             (arg("key") = "value"),

@@ -24,7 +24,7 @@ void checkFieldExists(const std::string& fieldName, const epics::pvData::PVStruc
 //
 // Field retrieval
 //
-std::string getValueOrFirstFieldName(const epics::pvData::PVStructurePtr& pvStructurePtr);
+std::string getValueOrSingleFieldName(const epics::pvData::PVStructurePtr& pvStructurePtr);
 std::string getValueOrSelectedUnionFieldName(const epics::pvData::PVStructurePtr& pvStructurePtr);
 
 epics::pvData::PVFieldPtr getSubField(const std::string& fieldName, const epics::pvData::PVStructurePtr& pvStructurePtr);

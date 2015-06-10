@@ -130,13 +130,22 @@ public:
     boost::python::list getStructureArray() const;
 
     // Union fields
-    bool isUnionVariant(const std::string& key=ValueFieldKey) const;
+    void setUnion(const std::string& key, const PvObject& value);
+    void setUnion(const std::string& key, const boost::python::tuple& pyTuple);
+    void setUnion(const PvObject& value);
+    PvObject getUnion(const std::string& key) const;
+    PvObject getUnion() const;
+
+    boost::python::list getUnionFieldNames(const std::string& key) const;
+    boost::python::list getUnionFieldNames() const;
+    std::string getSelectedUnionFieldName(const std::string& key) const;
+    std::string getSelectedUnionFieldName() const;
+    PvObject selectUnionField(const std::string& key, const std::string& fieldName) const;
+    PvObject selectUnionField(const std::string& fieldName) const;
+    bool isUnionVariant(const std::string& key) const;
+    bool isUnionVariant() const;
+
     PvObject createUnionField(const std::string& fieldName, const std::string& key=ValueFieldKey) const;
-    boost::python::list getUnionFieldNames(const std::string& key=ValueFieldKey) const;
-    PvObject selectUnionField(const std::string& fieldName, const std::string& key=ValueFieldKey) const;
-    std::string getSelectedUnionFieldName(const std::string& key=ValueFieldKey) const;
-    PvObject getUnion(const std::string& key=ValueFieldKey) const;
-    void setUnion(const PvObject& value, const std::string& key=ValueFieldKey);
 
     // UnionArray fields
     bool isUnionArrayVariant(const std::string& key=ValueFieldKey) const;

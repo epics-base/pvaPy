@@ -4,6 +4,7 @@
 #include "FieldNotFound.h"
 #include "InvalidDataType.h"
 #include "InvalidArgument.h"
+#include "InvalidRequest.h"
 #include "PvObject.h"
 
 // Scalar array utilities
@@ -24,7 +25,7 @@ void checkFieldExists(const std::string& fieldName, const epics::pvData::PVStruc
 //
 // Field retrieval
 //
-std::string getValueOrFirstFieldName(const epics::pvData::PVStructurePtr& pvStructurePtr)
+std::string getValueOrSingleFieldName(const epics::pvData::PVStructurePtr& pvStructurePtr)
 {
     // If structure has value field key, return it.
     // Otherwise, return the first field on the list.
@@ -35,6 +36,9 @@ std::string getValueOrFirstFieldName(const epics::pvData::PVStructurePtr& pvStru
         if (fieldName == PvaConstants::ValueFieldKey) {
             return PvaConstants::ValueFieldKey;
         }
+    }
+    if (fieldNames.size() > 1) {
+        throw InvalidRequest("Ambiguous request: object has multiple fields, but no %s field.", PvaConstants::ValueFieldKey);
     }
     return fieldNames[0];
 }
@@ -134,16 +138,22 @@ void setUnionField(const epics::pvData::PVFieldPtr& pvFrom, epics::pvData::PVUni
     }
     else {
         epics::pvData::FieldConstPtr field = pvFrom->getField();
+        std::string fieldName = pvFrom->getFieldName();
         int fieldIndex = -1;
         epics::pvData::FieldConstPtrArray fields = pvUnionPtr->getUnion()->getFields();
+        epics::pvData::StringArray fieldNames = pvUnionPtr->getUnion()->getFieldNames();
         for (size_t i = 0; i < fields.size(); ++i) {
+            epics::pvData::FieldConstPtr unionField = fields[i];
             if (fields[i]==field) {
+                if (fieldNames[i] != fieldName) {
+                    throw InvalidArgument("PV field name %s does not match union field name %s.", fieldName.c_str(), fieldNames[i].c_str());
+                }
                 fieldIndex = i;
                 break;
             }
         }
         if (fieldIndex < 0) {
-            throw InvalidArgument("Illegal union value.");
+            throw InvalidArgument("PV field type does not match any of union fields.");
         }
         pvUnionPtr->set(fieldIndex, pvFrom);
     }
