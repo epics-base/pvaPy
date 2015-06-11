@@ -26,11 +26,11 @@ const double Channel::ShutdownWaitTime(0.1);
 PvaPyLogger Channel::logger("Channel");
 PvaClient Channel::pvaClient;
 CaClient Channel::caClient;
-epics::easyPVA::EasyPVAPtr Channel::easyPVA(epics::easyPVA::EasyPVA::create());
+epics::pva::PvaPtr Channel::pva(epics::pva::Pva::create());
 
 
 Channel::Channel(const std::string& channelName, PvProvider::ProviderType providerType) :
-    easyChannel(easyPVA->createChannel(channelName,PvProvider::getProviderName(providerType))),
+    pvaChannel(pva->createChannel(channelName,PvProvider::getProviderName(providerType))),
     pvObjectMonitorQueue(),
     monitorThreadDone(true),
     subscriberMap(),
@@ -44,7 +44,7 @@ Channel::Channel(const std::string& channelName, PvProvider::ProviderType provid
 }
     
 Channel::Channel(const Channel& c) :
-    easyChannel(c.easyChannel),
+    pvaChannel(c.pvaChannel),
     pvObjectMonitorQueue(),
     monitorThreadDone(true),
     subscriberMap(),
@@ -59,16 +59,16 @@ Channel::~Channel()
 {
     stopMonitor();
     epicsThreadSleep(ShutdownWaitTime);
-    easyChannel.reset();
+    pvaChannel.reset();
 }
 
 void Channel::connect() 
 {
     try {
-        easyChannel->connect(timeout);
+        pvaChannel->connect(timeout);
     } 
     catch (std::runtime_error e) {
-        throw ChannelTimeout("Channel %s get request timed out", easyChannel->getChannelName().c_str());
+        throw ChannelTimeout("Channel %s get request timed out", pvaChannel->getChannelName().c_str());
     }
 }
 
@@ -80,9 +80,9 @@ PvObject* Channel::get()
 PvObject* Channel::get(const std::string& requestDescriptor) 
 {
     try {
-        epics::easyPVA::EasyGetPtr easyGet = easyChannel->createGet(requestDescriptor);
-        easyGet->get();
-        epics::pvData::PVStructurePtr pvStructure = easyGet->getData()->getPVStructure();
+        epics::pva::PvaGetPtr pvaGet = pvaChannel->createGet(requestDescriptor);
+        pvaGet->get();
+        epics::pvData::PVStructurePtr pvStructure = pvaGet->getData()->getPVStructure();
         return new PvObject(pvStructure);
     }
     catch (std::runtime_error e) {
@@ -98,10 +98,10 @@ void Channel::put(const PvObject& pvObject)
 void Channel::put(const PvObject& pvObject, const std::string& requestDescriptor) 
 {
     try {
-        epics::easyPVA::EasyPutPtr easyPut = easyChannel->put(requestDescriptor);
-        epics::pvData::PVStructurePtr pvSend = easyPut->getData()->getPVStructure();
+        epics::pva::PvaPutPtr pvaPut = pvaChannel->put(requestDescriptor);
+        epics::pvData::PVStructurePtr pvSend = pvaPut->getData()->getPVStructure();
         pvSend << pvObject;
-        easyPut->put();
+        pvaPut->put();
     } 
     catch (std::runtime_error e) {
         throw PvaException(e.what());
@@ -116,10 +116,10 @@ void Channel::put(const std::vector<std::string>& values)
 void Channel::put(const std::vector<std::string>& values, const std::string& requestDescriptor) 
 {
     try {
-        epics::easyPVA::EasyPutPtr easyPut = easyChannel->put(requestDescriptor);
-        epics::easyPVA::EasyPutDataPtr easyData = easyPut->getData();
-        easyData->putStringArray(values);
-        easyPut->put();
+        epics::pva::PvaPutPtr pvaPut = pvaChannel->put(requestDescriptor);
+        epics::pva::PvaPutDataPtr pvaData = pvaPut->getData();
+        pvaData->putStringArray(values);
+        pvaPut->put();
     } 
     catch (std::runtime_error e) {
         throw PvaException(e.what());
@@ -137,10 +137,10 @@ void Channel::put(const std::string& value, const std::string& requestDescriptor
     //values.push_back(value);
     //put(values, requestDescriptor);
     try {
-        epics::easyPVA::EasyPutPtr easyPut = easyChannel->put(requestDescriptor);
-        epics::pvData::PVScalarPtr pvScalar = easyPut->getData()->getScalarValue();
+        epics::pva::PvaPutPtr pvaPut = pvaChannel->put(requestDescriptor);
+        epics::pvData::PVScalarPtr pvScalar = pvaPut->getData()->getScalarValue();
         epics::pvData::getConvert()->fromString(pvScalar,value);
-        easyPut->put();
+        pvaPut->put();
     } 
     catch (std::runtime_error e) {
         throw PvaException(e.what());
@@ -344,9 +344,9 @@ void Channel::startMonitor(const std::string& requestDescriptor)
         // PyEval_InitThreads();
         PyGilManager::evalInitThreads();
         try {
-            easyMonitor = easyChannel->createMonitor(requestDescriptor);
-            easyMonitor->connect();
-            easyMonitor->start();
+            pvaMonitor = pvaChannel->createMonitor(requestDescriptor);
+            pvaMonitor->connect();
+            pvaMonitor->start();
         } 
         catch (std::runtime_error e) {
             throw PvaException(e.what());
@@ -365,7 +365,7 @@ void Channel::stopMonitor()
     monitorThreadDone = true;
     logger.debug("Stopping monitor");
     try {
-        easyMonitor->stop();
+        pvaMonitor->stop();
     } 
     catch (std::runtime_error e) {
         throw PvaException(e.what());
@@ -409,11 +409,11 @@ bool Channel::processMonitorElement()
 void Channel::monitorThread(Channel* channel)
 {
     logger.debug("Started monitor thread %s", epicsThreadGetNameSelf());
-    epics::easyPVA::EasyMonitorPtr monitor = channel->getMonitor();
-    epics::easyPVA::EasyMonitorDataPtr easyData = monitor->getData();
+    epics::pva::PvaMonitorPtr monitor = channel->getMonitor();
+    epics::pva::PvaMonitorDataPtr pvaData = monitor->getData();
     while (true) {
         monitor->waitEvent();
-        PvObject pvObject(easyData->getPVStructure());
+        PvObject pvObject(pvaData->getPVStructure());
         channel->queueMonitorData(pvObject);
         monitor->releaseEvent();
         if (channel->processMonitorElement()) {
@@ -424,9 +424,9 @@ void Channel::monitorThread(Channel* channel)
     channel->notifyMonitorThreadExit();
 }
 
-epics::easyPVA::EasyMonitorPtr Channel::getMonitor() 
+epics::pva::PvaMonitorPtr Channel::getMonitor() 
 {
-    return easyChannel->monitor("");
+    return pvaChannel->monitor("");
 }
 
 void Channel::queueMonitorData(PvObject& pvObject) 
