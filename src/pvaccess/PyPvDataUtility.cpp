@@ -38,7 +38,7 @@ std::string getValueOrSingleFieldName(const epics::pvData::PVStructurePtr& pvStr
         }
     }
     if (fieldNames.size() > 1) {
-        throw InvalidRequest("Ambiguous request: object has multiple fields, but no %s field.", PvaConstants::ValueFieldKey);
+        throw InvalidRequest("Ambiguous request: object has multiple fields, but no %s field", PvaConstants::ValueFieldKey);
     }
     return fieldNames[0];
 }
@@ -50,7 +50,7 @@ std::string getValueOrSelectedUnionFieldName(const epics::pvData::PVStructurePtr
     if (!pvFieldPtr) {
         epics::pvData::PVUnionPtr pvUnionPtr = pvStructurePtr->getUnionField(fieldName);
         if (!pvUnionPtr) {
-            throw FieldNotFound("Object does not have field " + fieldName);
+            throw InvalidRequest("Field " + fieldName + " is not a union");
         }
         fieldName = pvUnionPtr->getSelectedFieldName();
     }
@@ -80,16 +80,17 @@ epics::pvData::ScalarConstPtr getScalarField(const std::string& fieldName, const
     epics::pvData::FieldConstPtr fieldPtr = getField(fieldName, pvStructurePtr);
     epics::pvData::ScalarConstPtr scalarPtr = std::tr1::static_pointer_cast<const epics::pvData::Scalar>(fieldPtr);
     if (!scalarPtr) {
-        throw InvalidDataType("Field " + fieldName + " is not a scalar");
+        throw InvalidRequest("Field " + fieldName + " is not a scalar");
     }
     return scalarPtr;
 }
 
 epics::pvData::PVScalarArrayPtr getScalarArrayField(const std::string& fieldName, epics::pvData::ScalarType scalarType, const epics::pvData::PVStructurePtr& pvStructurePtr)
 {
+    checkFieldExists(fieldName, pvStructurePtr);
     epics::pvData::PVScalarArrayPtr pvScalarArrayPtr = pvStructurePtr->getScalarArrayField(fieldName, scalarType);
     if (!pvScalarArrayPtr) {
-        throw FieldNotFound("Object does not have scalar array field %s of type %d", fieldName.c_str(), scalarType);
+        throw InvalidRequest("Field %s is not a scalar array of type %d", fieldName.c_str(), scalarType);
     }
     return pvScalarArrayPtr; 
 }
@@ -99,34 +100,37 @@ epics::pvData::StructureConstPtr getStructure(const std::string& fieldName, cons
     epics::pvData::FieldConstPtr fieldPtr = getField(fieldName, pvStructurePtr);
     epics::pvData::StructureConstPtr structurePtr = std::tr1::static_pointer_cast<const epics::pvData::Structure>(fieldPtr);
     if (!structurePtr) {
-        throw InvalidDataType("Field " + fieldName + " is not a structure");
+        throw InvalidRequest("Field " + fieldName + " is not a structure");
     }
     return structurePtr;
 }
 
 epics::pvData::PVStructurePtr getStructureField(const std::string& fieldName, const epics::pvData::PVStructurePtr& pvStructurePtr)
 {
+    checkFieldExists(fieldName, pvStructurePtr);
     epics::pvData::PVStructurePtr pvStructurePtr2 = pvStructurePtr->getStructureField(fieldName);
     if (!pvStructurePtr2) {
-        throw FieldNotFound("Object does not have structure field " + fieldName);
+        throw InvalidRequest("Field " + fieldName + " is not a structure");
     }
     return pvStructurePtr2;
 }
 
 epics::pvData::PVStructureArrayPtr getStructureArrayField(const std::string& fieldName, const epics::pvData::PVStructurePtr& pvStructurePtr)
 {
+    checkFieldExists(fieldName, pvStructurePtr);
     epics::pvData::PVStructureArrayPtr pvStructureArrayPtr = pvStructurePtr->getStructureArrayField(fieldName);
     if (!pvStructureArrayPtr) {
-        throw FieldNotFound("Object does not have structure array field " + fieldName);
+        throw InvalidRequest("Field " + fieldName + " is not a structure array");
     }
     return pvStructureArrayPtr;
 }
 
 epics::pvData::PVUnionPtr getUnionField(const std::string& fieldName, const epics::pvData::PVStructurePtr& pvStructurePtr)
 {
+    checkFieldExists(fieldName, pvStructurePtr);
     epics::pvData::PVUnionPtr pvUnionPtr = pvStructurePtr->getUnionField(fieldName);
     if (!pvUnionPtr) {
-        throw FieldNotFound("Object does not have union field " + fieldName);
+        throw InvalidRequest("Field " + fieldName + " is not an union");
     }
     return pvUnionPtr;
 }
@@ -161,117 +165,130 @@ void setUnionField(const epics::pvData::PVFieldPtr& pvFrom, epics::pvData::PVUni
 
 epics::pvData::PVUnionArrayPtr getUnionArrayField(const std::string& fieldName, const epics::pvData::PVStructurePtr& pvStructurePtr)
 {
+    checkFieldExists(fieldName, pvStructurePtr);
     epics::pvData::PVUnionArrayPtr pvUnionArrayPtr = pvStructurePtr->getUnionArrayField(fieldName);
     if (!pvUnionArrayPtr) {
-        throw FieldNotFound("Object does not have union array field " + fieldName);
+        throw InvalidRequest("Field " + fieldName + " is not an union array");
     }
     return pvUnionArrayPtr;
 }
 
 epics::pvData::PVBooleanPtr getBooleanField(const std::string& fieldName, const epics::pvData::PVStructurePtr& pvStructurePtr) 
 {
+    checkFieldExists(fieldName, pvStructurePtr);
     epics::pvData::PVBooleanPtr fieldPtr = pvStructurePtr->getBooleanField(fieldName);
     if (!fieldPtr) {
-        throw FieldNotFound("Object does not have boolean field " + fieldName);
+        throw InvalidRequest("Field " + fieldName + " is not a boolean");
     }
     return fieldPtr;
 }
 
 epics::pvData::PVBytePtr getByteField(const std::string& fieldName, const epics::pvData::PVStructurePtr& pvStructurePtr) 
 {
+    checkFieldExists(fieldName, pvStructurePtr);
     epics::pvData::PVBytePtr fieldPtr = pvStructurePtr->getByteField(fieldName);
     if (!fieldPtr) {
-        throw FieldNotFound("Object does not have byte field " + fieldName);
+        throw InvalidRequest("Field " + fieldName + " is not a byte");
     }
     return fieldPtr;
 }
 
 epics::pvData::PVUBytePtr getUByteField(const std::string& fieldName, const epics::pvData::PVStructurePtr& pvStructurePtr) 
 {
+    checkFieldExists(fieldName, pvStructurePtr);
     epics::pvData::PVUBytePtr fieldPtr = pvStructurePtr->getUByteField(fieldName);
     if (!fieldPtr) {
-        throw FieldNotFound("Object does not have unsigned byte field " + fieldName);
+        throw InvalidRequest("Field " + fieldName + " is not an unsigned byte");
     }
     return fieldPtr;
 }
 
 epics::pvData::PVShortPtr getShortField(const std::string& fieldName, const epics::pvData::PVStructurePtr& pvStructurePtr) 
 {
+    checkFieldExists(fieldName, pvStructurePtr);
     epics::pvData::PVShortPtr fieldPtr = pvStructurePtr->getShortField(fieldName);
     if (!fieldPtr) {
-        throw FieldNotFound("Object does not have short field " + fieldName);
+        throw InvalidRequest("Field " + fieldName + " is not a short");
     }
     return fieldPtr;
 }
 
 epics::pvData::PVUShortPtr getUShortField(const std::string& fieldName, const epics::pvData::PVStructurePtr& pvStructurePtr) 
 {
+    checkFieldExists(fieldName, pvStructurePtr);
     epics::pvData::PVUShortPtr fieldPtr = pvStructurePtr->getUShortField(fieldName);
     if (!fieldPtr) {
-        throw FieldNotFound("Object does not have unsigned short field " + fieldName);
+        throw InvalidRequest("Field " + fieldName + " is not an unsigned short");
     }
     return fieldPtr;
 }
 
 epics::pvData::PVIntPtr getIntField(const std::string& fieldName, const epics::pvData::PVStructurePtr& pvStructurePtr) 
 {
+    checkFieldExists(fieldName, pvStructurePtr);
     epics::pvData::PVIntPtr fieldPtr = pvStructurePtr->getIntField(fieldName);
     if (!fieldPtr) {
-        throw FieldNotFound("Object does not have int field " + fieldName);
+        throw InvalidRequest("Field " + fieldName + " is not an int");
     }
     return fieldPtr;
 }
 
 epics::pvData::PVUIntPtr getUIntField(const std::string& fieldName, const epics::pvData::PVStructurePtr& pvStructurePtr) 
 {
+    checkFieldExists(fieldName, pvStructurePtr);
     epics::pvData::PVUIntPtr fieldPtr = pvStructurePtr->getUIntField(fieldName);
     if (!fieldPtr) {
-        throw FieldNotFound("Object does not have unsigned int field " + fieldName);
+        throw InvalidRequest("Field " + fieldName + " is not an unsigned int");
     }
     return fieldPtr;
 }
 
 epics::pvData::PVLongPtr getLongField(const std::string& fieldName, const epics::pvData::PVStructurePtr& pvStructurePtr) 
 {
+    checkFieldExists(fieldName, pvStructurePtr);
     epics::pvData::PVLongPtr fieldPtr = pvStructurePtr->getLongField(fieldName);
     if (!fieldPtr) {
-        throw FieldNotFound("Object does not have long field " + fieldName);
+        throw InvalidRequest("Field " + fieldName + " is not a long");
     }
     return fieldPtr;
 }
 
 epics::pvData::PVULongPtr getULongField(const std::string& fieldName, const epics::pvData::PVStructurePtr& pvStructurePtr) 
 {
+    checkFieldExists(fieldName, pvStructurePtr);
     epics::pvData::PVULongPtr fieldPtr = pvStructurePtr->getULongField(fieldName);
     if (!fieldPtr) {
-        throw FieldNotFound("Object does not have unsigned long field " + fieldName);
+        throw InvalidRequest("Field " + fieldName + " is not an unsigned long");
     }
     return fieldPtr;
 }
 
 epics::pvData::PVFloatPtr getFloatField(const std::string& fieldName, const epics::pvData::PVStructurePtr& pvStructurePtr) 
 {
+    checkFieldExists(fieldName, pvStructurePtr);
     epics::pvData::PVFloatPtr fieldPtr = pvStructurePtr->getFloatField(fieldName);
     if (!fieldPtr) {
-        throw FieldNotFound("Object does not have float field " + fieldName);
+        throw InvalidRequest("Field " + fieldName + " is not a float");
     }
     return fieldPtr;
 }
 
 epics::pvData::PVDoublePtr getDoubleField(const std::string& fieldName, const epics::pvData::PVStructurePtr& pvStructurePtr) 
 {
+    checkFieldExists(fieldName, pvStructurePtr);
     epics::pvData::PVDoublePtr fieldPtr = pvStructurePtr->getDoubleField(fieldName);
     if (!fieldPtr) {
-        throw FieldNotFound("Object does not have double field " + fieldName);
+        throw InvalidRequest("Field " + fieldName + " is not a double");
     }
     return fieldPtr;
 }
 
 epics::pvData::PVStringPtr getStringField(const std::string& fieldName, const epics::pvData::PVStructurePtr& pvStructurePtr) 
 {
+    checkFieldExists(fieldName, pvStructurePtr);
     epics::pvData::PVStringPtr fieldPtr = pvStructurePtr->getStringField(fieldName);
     if (!fieldPtr) {
-        throw FieldNotFound("Object does not have string field " + fieldName);
+        throw InvalidRequest("Field " + fieldName + " is not a string");
     }
     return fieldPtr;
 }
@@ -296,7 +313,7 @@ epics::pvData::ScalarType getScalarArrayType(const std::string& fieldName, const
     epics::pvData::FieldConstPtr fieldPtr = getField(fieldName, pvStructurePtr);
     epics::pvData::Type type = fieldPtr->getType();
     if (type != epics::pvData::scalarArray) {
-        throw InvalidDataType("Object does not have scalar array field " + fieldName);
+        throw InvalidRequest("Object does not have scalar array field " + fieldName);
     }
     epics::pvData::ScalarArrayConstPtr scalarArrayPtr = std::tr1::static_pointer_cast<const epics::pvData::ScalarArray>(fieldPtr);
     epics::pvData::ScalarType scalarType = scalarArrayPtr->getElementType();

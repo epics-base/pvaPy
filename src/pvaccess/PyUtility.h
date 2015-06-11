@@ -22,7 +22,7 @@ PyType extractValueFromPyObject(const boost::python::object& pyObject)
         return extractValue();
     }
     std::string objectString = boost::python::extract<std::string>(pyObject);
-    throw InvalidDataType("Invalid data type for object " + objectString);
+    throw InvalidDataType("Invalid data type for '" + objectString + "'");
 }
 
 template<typename PyType>

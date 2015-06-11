@@ -17,6 +17,7 @@
 #include "PvaException.h"
 #include "FieldNotFound.h"
 #include "InvalidArgument.h"
+#include "InvalidDataType.h"
 #include "InvalidRequest.h"
 
 #include "PvObject.h"
@@ -60,6 +61,7 @@ BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(RpcServerListen, RpcServer::listen, 0, 1)
 PyObject* pvaException = NULL;
 PyObject* fieldNotFoundException = NULL;
 PyObject* invalidArgumentException = NULL;
+PyObject* invalidDataTypeException = NULL;
 PyObject* invalidRequestException = NULL;
 
 BOOST_PYTHON_MODULE(pvaccess)
@@ -76,6 +78,7 @@ BOOST_PYTHON_MODULE(pvaccess)
     pvaException = PvaExceptionTranslator::createExceptionClass(PvaException::PyExceptionClassName);
     fieldNotFoundException = PvaExceptionTranslator::createExceptionClass(FieldNotFound::PyExceptionClassName);
     invalidArgumentException = PvaExceptionTranslator::createExceptionClass(InvalidArgument::PyExceptionClassName);
+    invalidDataTypeException = PvaExceptionTranslator::createExceptionClass(InvalidDataType::PyExceptionClassName);
     invalidRequestException = PvaExceptionTranslator::createExceptionClass(InvalidRequest::PyExceptionClassName);
 
     //
@@ -121,7 +124,8 @@ BOOST_PYTHON_MODULE(pvaccess)
             "\t- (): variant union\n"
             "\t- [()]: single element list representing variant union array\n"
             "\t- ({key:value,…},): restricted union\n"
-            "\t- [({key:value,…},)]: single element list representing restricted union array\n"
+            "\t- [({key:value,…},)]: single element list representing restricted union array\n\n"
+            "\t:Raises: *InvalidArgument* - in case structure dictionary cannot be parsed\n\n"
             "\t::\n\n"
             "\t\tpv1 = PvObject({'anInt' : INT})\n\n"
             "\t\tpv2 = PvObject({'aShort' : SHORT, 'anUInt' : UINT, 'aString' : STRING})\n\n"
@@ -138,7 +142,10 @@ BOOST_PYTHON_MODULE(pvaccess)
             args("valueDict"),
             "Populates PV structure fields from python dictionary.\n\n"
             ":Parameter: *valueDict* (dict) - dictionary of key:value pairs that correspond to PV structure field names and their values\n\n"
+            ":Raises: *FieldNotFound* - in case PV structure does not have one of the dictionary keys\n"
+            ":Raises: *InvalidDataType* - in case PV structure field type does not match type of the corresponding dictionary value\n\n"
             "::\n\n"
+            "    pv = PvObject({'anUInt' : UINT, 'aString' : STRING})\n\n"
             "    pv.set({'anUInt' : 1, 'aString' : 'my string example'})\n\n")
 
         .def("get", 
@@ -146,14 +153,16 @@ BOOST_PYTHON_MODULE(pvaccess)
             "Retrieves PV structure as python dictionary.\n\n"
             ":Returns: python key:value dictionary representing current PV structure in terms of field names and their values\n\n"
             "::\n\n"
+            "    pv = PvObject({'anInt' : INT, 'aString' : STRING})\n\n"
+            "    pv.set({'anInt' : 1})\n\n"
             "    valueDict = pv.get()\n\n")
 
         .def("setBoolean", 
             static_cast<void(PvObject::*)(bool)>(&PvObject::setBoolean),
             args("value"),
-            "Sets boolean value for structure with only one field, or for structure that has field named 'value'. In case structure has multiple fields, but no 'value' field, exception will be thrown.\n\n"
+            "Sets boolean value for single-field structure, or for structure that has boolean field named 'value'.\n\n"
             ":Parameter: *value* (bool) - boolean value\n\n"
-            ":Raises: *InvalidRequest* - in case structure has multiple fields, but no 'value' field\n\n"
+            ":Raises: *InvalidRequest* - if single-field structure has no boolean field or multiple-field structure has no boolean 'value' field\n\n"
             "::\n\n"
             "    pv = PvObject({'aBoolean' : BOOLEAN})\n\n"
             "    pv.setBoolean(True)\n\n")
@@ -164,14 +173,17 @@ BOOST_PYTHON_MODULE(pvaccess)
             "Sets boolean value for the given PV field.\n\n"
             ":Parameter: *name* (str) - field name\n\n"
             ":Parameter: *value* (bool) - boolean value\n\n"
+            ":Raises: *FieldNotFound* - if PV structure does not have specified field\n\n"
+            ":Raises: *InvalidRequest* - if specified field is not a boolean\n\n"
             "::\n\n"
             "    pv = PvObject({'aBoolean' : BOOLEAN})\n\n"
             "    pv.setBoolean('aBoolean', True)\n\n")
 
         .def("getBoolean", 
             static_cast<bool(PvObject::*)()const>(&PvObject::getBoolean),
-            "Retrieves boolean value assigned to the PV field named 'value', or to the first structure field if the 'value' field does not exist.\n\n"
-            ":Returns: stored boolean value\n\n"
+            "Retrieves boolean value from single-field structure, or from structure that has boolean field named 'value'.\n\n"
+            ":Returns: boolean value\n\n"
+            ":Raises: *InvalidRequest* - if single-field structure has no boolean field or multiple-field structure has no boolean 'value' field\n\n"
             "::\n\n"
             "    pv = PvObject({'aBoolean' : BOOLEAN})\n\n"
             "    value = pv.getBoolean()\n\n")
@@ -181,7 +193,9 @@ BOOST_PYTHON_MODULE(pvaccess)
             args("name"), 
             "Retrieves boolean value assigned to the given PV field.\n\n"
             ":Parameter: *name* (str) - field name\n\n"
-            ":Returns: stored boolean value\n\n"
+            ":Returns: boolean value\n\n"
+            ":Raises: *FieldNotFound* - if PV structure does not have specified field\n\n"
+            ":Raises: *InvalidRequest* - if specified field is not a boolean\n\n"
             "::\n\n"
             "    pv = PvObject({'aBoolean' : BOOLEAN})\n\n"
             "    value = pv.getBoolean('aBoolean')\n\n")
@@ -189,8 +203,9 @@ BOOST_PYTHON_MODULE(pvaccess)
         .def("setByte", 
             static_cast<void(PvObject::*)(char)>(&PvObject::setByte),
             args("value"),
-            "Sets byte (character) value for the PV field named 'value', or for the first structure field if the 'value' field does not exist.\n\n"
+            "Sets byte (character) value for single-field structure, or for structure that has byte field named 'value'.\n\n"
             ":Parameter: *value* (str) - byte value\n\n"
+            ":Raises: *InvalidRequest* - if single-field structure has no byte field or multiple-field structure has no byte 'value' field\n\n"
             "::\n\n"
             "    pv = PvObject({'aByte' : BYTE})\n\n"
             "    pv.setByte('a')\n\n")
@@ -200,14 +215,17 @@ BOOST_PYTHON_MODULE(pvaccess)
             "Sets byte (character) value for the given PV field.\n\n"
             ":Parameter: *name* (str) - field name\n\n"
             ":Parameter: *value* (str) - byte value\n\n"
+            ":Raises: *FieldNotFound* - if PV structure does not have specified field\n\n"
+            ":Raises: *InvalidRequest* - if specified field is not a byte\n\n"
             "::\n\n"
             "    pv = PvObject({'aByte' : BYTE})\n\n"
             "    pv.setByte('aByte', 'a')\n\n")
 
         .def("getByte", 
             static_cast<char(PvObject::*)()const>(&PvObject::getByte), 
-            "Retrieves byte (character) value assigned to the PV field named 'value', or to the first structure field if the 'value' field does not exist.\n\n"
-            ":Returns: stored byte value\n\n"
+            "Retrieves byte (character) value from single-field structure, or from structure that has byte field named 'value'.\n\n"
+            ":Returns: byte value\n\n"
+            ":Raises: *InvalidRequest* - if single-field structure has no byte field or multiple-field structure has no byte 'value' field\n\n"
             "::\n\n"
             "    pv = PvObject({'aByte' : BYTE})\n\n"
             "    value = pv.getByte()\n\n")
@@ -217,7 +235,9 @@ BOOST_PYTHON_MODULE(pvaccess)
             args("name"), 
             "Retrieves byte (character) value assigned to the given PV field.\n\n"
             ":Parameter: *name* (str) - field name\n\n"
-            ":Returns: stored byte value\n\n"
+            ":Returns: byte value\n\n"
+            ":Raises: *FieldNotFound* - if PV structure does not have specified field\n\n"
+            ":Raises: *InvalidRequest* - if specified field is not a byte\n\n"
             "::\n\n"
             "    pv = PvObject({'aByte' : BYTE})\n\n"
             "    value = pv.getByte('aByte')\n\n")
