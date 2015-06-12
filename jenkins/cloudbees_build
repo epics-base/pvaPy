@@ -1,0 +1,63 @@
+# pvaPy
+# Jenkins @ Cloudbees build script
+#
+# Jenkins invokes scripts with the "-ex" option. So the build is considered a failure
+# if any of the commands exits with a non-zero exit code.
+#
+# Author: Ralph Lange <ralph.lange@gmx.de>
+# Copyright (C) 2013 Helmholtz-Zentrum Berlin für Materialien und Energie GmbH
+# Copyright (C) 2014-2015 ITER Organization.
+# All rights reserved. Use is subject to license terms.
+
+###########################################
+# Determine EPICS Base version
+
+DEFAULT_BASE=3.14.12.5
+
+BASE=${1:-${DEFAULT_BASE}}
+if [ "${1}" = "${DEFAULT_BASE}" -o -z "${1}" ]; then
+    BUILD_DOCS=YES
+fi
+
+###########################################
+# Fetch and unpack dependencies
+
+export STUFF=/tmp/stuff
+
+rm -fr ${STUFF}
+mkdir -p ${STUFF}
+cd ${STUFF}
+
+wget -nv https://openepics.ci.cloudbees.com/job/Base-${BASE}_Build/lastSuccessfulBuild/artifact/base-${BASE}.CB-dist.tar.gz
+wget -nv https://openepics.ci.cloudbees.com/job/pvCommonCPP_Build/BASE=${BASE}/lastSuccessfulBuild/artifact/pvCommon.CB-dist.tar.gz
+wget -nv https://openepics.ci.cloudbees.com/job/pvDataCPP_Build/BASE=${BASE}/lastSuccessfulBuild/artifact/pvData.CB-dist.tar.gz
+wget -nv https://openepics.ci.cloudbees.com/job/pvAccessCPP_Build/BASE=${BASE}/lastSuccessfulBuild/artifact/pvAccess.CB-dist.tar.gz
+tar -xzf base-${BASE}.CB-dist.tar.gz
+tar -xzf pvCommon.CB-dist.tar.gz
+tar -xzf pvData.CB-dist.tar.gz
+tar -xzf pvAccess.CB-dist.tar.gz
+
+###########################################
+# Build
+
+cd ${WORKSPACE}
+
+export EPICS_BASE=${STUFF}
+export EPICS4_DIR=${STUFF}
+export EPICS_HOST_ARCH=$(${EPICS_BASE}/startup/EpicsHostArch)
+export LD_LIBRARY_PATH=${EPICS_BASE}/lib/${EPICS_HOST_ARCH}
+export PATH=${STUFF}/bin:${PATH}
+
+make configure
+make
+
+if [ "${BUILD_DOCS}" ]; then
+    make doc
+fi
+
+###########################################
+# Publish documentation
+
+if [ "${BUILD_DOCS}" ]; then
+    #rsync -aqP --delete -e ssh documentation epics-jenkins@web.sourceforge.net:/home/project-web/epics-pvdata/htdocs/docbuild/pvAccessCPP/tip
+fi

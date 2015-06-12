@@ -1,7 +1,8 @@
-export EPICS_OS_CLASS=Linux 
-export EPICS_HOST_ARCH=linux-x86_64 
-export EPICS_BASE=/home/sveseli/Work/CTLSDAQ/support/epics/base 
-export EPICS4_DIR=/home/sveseli/Work/epics4 
+EPICS_HOST_ARCH=${EPICS_HOST_ARCH:-linux-x86_64}
+EPICS_OS_CLASS=${EPICS_OS_CLASS:-Linux}
+EPICS_BASE=${EPICS_BASE:-/home/sveseli/Work/CTLSDAQ/support/epics/base}
+EPICS4_DIR=${EPICS4_DIR:-/home/sveseli/Work/epics4}
+export EPICS_OS_CLASS EPICS_HOST_ARCH EPICS_BASE EPICS4_DIR
 
 inputFile=$1
 
