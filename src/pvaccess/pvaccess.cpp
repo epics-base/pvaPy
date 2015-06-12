@@ -160,9 +160,9 @@ BOOST_PYTHON_MODULE(pvaccess)
         .def("setBoolean", 
             static_cast<void(PvObject::*)(bool)>(&PvObject::setBoolean),
             args("value"),
-            "Sets boolean value for single-field structure, or for structure that has boolean field named 'value'.\n\n"
+            "Sets boolean value for a single-field structure, or for a structure that has boolean field named 'value'.\n\n"
             ":Parameter: *value* (bool) - boolean value\n\n"
-            ":Raises: *InvalidRequest* - if single-field structure has no boolean field or multiple-field structure has no boolean 'value' field\n\n"
+            ":Raises: *InvalidRequest* - when single-field structure has no boolean field or multiple-field structure has no boolean 'value' field\n\n"
             "::\n\n"
             "    pv = PvObject({'aBoolean' : BOOLEAN})\n\n"
             "    pv.setBoolean(True)\n\n")
@@ -173,17 +173,17 @@ BOOST_PYTHON_MODULE(pvaccess)
             "Sets boolean value for the given PV field.\n\n"
             ":Parameter: *name* (str) - field name\n\n"
             ":Parameter: *value* (bool) - boolean value\n\n"
-            ":Raises: *FieldNotFound* - if PV structure does not have specified field\n\n"
-            ":Raises: *InvalidRequest* - if specified field is not a boolean\n\n"
+            ":Raises: *FieldNotFound* - when PV structure does not have specified field\n\n"
+            ":Raises: *InvalidRequest* - when specified field is not a boolean\n\n"
             "::\n\n"
             "    pv = PvObject({'aBoolean' : BOOLEAN})\n\n"
             "    pv.setBoolean('aBoolean', True)\n\n")
 
         .def("getBoolean", 
             static_cast<bool(PvObject::*)()const>(&PvObject::getBoolean),
-            "Retrieves boolean value from single-field structure, or from structure that has boolean field named 'value'.\n\n"
+            "Retrieves boolean value from a single-field structure, or from a structure that has boolean field named 'value'.\n\n"
             ":Returns: boolean value\n\n"
-            ":Raises: *InvalidRequest* - if single-field structure has no boolean field or multiple-field structure has no boolean 'value' field\n\n"
+            ":Raises: *InvalidRequest* - when single-field structure has no boolean field or multiple-field structure has no boolean 'value' field\n\n"
             "::\n\n"
             "    pv = PvObject({'aBoolean' : BOOLEAN})\n\n"
             "    value = pv.getBoolean()\n\n")
@@ -194,8 +194,8 @@ BOOST_PYTHON_MODULE(pvaccess)
             "Retrieves boolean value assigned to the given PV field.\n\n"
             ":Parameter: *name* (str) - field name\n\n"
             ":Returns: boolean value\n\n"
-            ":Raises: *FieldNotFound* - if PV structure does not have specified field\n\n"
-            ":Raises: *InvalidRequest* - if specified field is not a boolean\n\n"
+            ":Raises: *FieldNotFound* - when PV structure does not have specified field\n\n"
+            ":Raises: *InvalidRequest* - when specified field is not a boolean\n\n"
             "::\n\n"
             "    pv = PvObject({'aBoolean' : BOOLEAN})\n\n"
             "    value = pv.getBoolean('aBoolean')\n\n")
@@ -203,9 +203,9 @@ BOOST_PYTHON_MODULE(pvaccess)
         .def("setByte", 
             static_cast<void(PvObject::*)(char)>(&PvObject::setByte),
             args("value"),
-            "Sets byte (character) value for single-field structure, or for structure that has byte field named 'value'.\n\n"
+            "Sets byte (character) value for a single-field structure, or for a structure that has byte field named 'value'.\n\n"
             ":Parameter: *value* (str) - byte value\n\n"
-            ":Raises: *InvalidRequest* - if single-field structure has no byte field or multiple-field structure has no byte 'value' field\n\n"
+            ":Raises: *InvalidRequest* - when single-field structure has no byte field or multiple-field structure has no byte 'value' field\n\n"
             "::\n\n"
             "    pv = PvObject({'aByte' : BYTE})\n\n"
             "    pv.setByte('a')\n\n")
@@ -215,17 +215,17 @@ BOOST_PYTHON_MODULE(pvaccess)
             "Sets byte (character) value for the given PV field.\n\n"
             ":Parameter: *name* (str) - field name\n\n"
             ":Parameter: *value* (str) - byte value\n\n"
-            ":Raises: *FieldNotFound* - if PV structure does not have specified field\n\n"
-            ":Raises: *InvalidRequest* - if specified field is not a byte\n\n"
+            ":Raises: *FieldNotFound* - when PV structure does not have specified field\n\n"
+            ":Raises: *InvalidRequest* - when specified field is not a byte\n\n"
             "::\n\n"
             "    pv = PvObject({'aByte' : BYTE})\n\n"
             "    pv.setByte('aByte', 'a')\n\n")
 
         .def("getByte", 
             static_cast<char(PvObject::*)()const>(&PvObject::getByte), 
-            "Retrieves byte (character) value from single-field structure, or from structure that has byte field named 'value'.\n\n"
+            "Retrieves byte (character) value from a single-field structure, or from a structure that has byte field named 'value'.\n\n"
             ":Returns: byte value\n\n"
-            ":Raises: *InvalidRequest* - if single-field structure has no byte field or multiple-field structure has no byte 'value' field\n\n"
+            ":Raises: *InvalidRequest* - when single-field structure has no byte field or multiple-field structure has no byte 'value' field\n\n"
             "::\n\n"
             "    pv = PvObject({'aByte' : BYTE})\n\n"
             "    value = pv.getByte()\n\n")
@@ -236,8 +236,8 @@ BOOST_PYTHON_MODULE(pvaccess)
             "Retrieves byte (character) value assigned to the given PV field.\n\n"
             ":Parameter: *name* (str) - field name\n\n"
             ":Returns: byte value\n\n"
-            ":Raises: *FieldNotFound* - if PV structure does not have specified field\n\n"
-            ":Raises: *InvalidRequest* - if specified field is not a byte\n\n"
+            ":Raises: *FieldNotFound* - when PV structure does not have specified field\n\n"
+            ":Raises: *InvalidRequest* - when specified field is not a byte\n\n"
             "::\n\n"
             "    pv = PvObject({'aByte' : BYTE})\n\n"
             "    value = pv.getByte('aByte')\n\n")
@@ -245,8 +245,9 @@ BOOST_PYTHON_MODULE(pvaccess)
         .def("setUByte", 
             static_cast<void(PvObject::*)(unsigned char)>(&PvObject::setUByte),
             args("value"),
-            "Sets unsigned byte (character) value for the PV field named 'value', or for the first structure field if the 'value' field does not exist.\n\n"
+            "Sets unsigned byte (character) value for a single-field structure, or for a structure that has unsigned byte field named 'value'.\n\n"
             ":Parameter: *value* (str) - unsigned byte value\n\n"
+            ":Raises: *InvalidRequest* - when single-field structure has no unsigned byte field or multiple-field structure has no unsigned byte 'value' field\n\n"
             "::\n\n"
             "    pv = PvObject({'anUByte' : UBYTE})\n\n"
             "    pv.setUByte('a')\n\n")
@@ -257,14 +258,16 @@ BOOST_PYTHON_MODULE(pvaccess)
             "Sets unsigned byte (character) value for the given PV field.\n\n"
             ":Parameter: *name* (str) - field name\n\n"
             ":Parameter: *value* (str) - unsigned byte value\n\n"
+            ":Raises: *FieldNotFound* - when PV structure does not have specified field\n\n"
+            ":Raises: *InvalidRequest* - when specified field is not an unsigned byte\n\n"
             "::\n\n"
             "    pv = PvObject({'anUByte' : UBYTE})\n\n"
             "    pv.setUByte('anUByte', 'a')\n\n")
 
         .def("getUByte", static_cast<unsigned char(PvObject::*)()const>(&PvObject::getUByte), 
-            "Retrieves unsigned byte (character) value assigned to the PV field named 'value', or to the first structure field if the 'value' field does not exist.\n\n"
-            ":Parameter: *name* (str) - field name\n\n"
-            ":Returns: stored unsigned byte value\n\n"
+            "Retrieves unsigned byte (character) value from a single-field structure, or from a structure that has unsigned byte field named 'value'.\n\n"
+            ":Returns: unsigned byte value\n\n"
+            ":Raises: *InvalidRequest* - when single-field structure has no unsigned byte field or multiple-field structure has no unsigned byte 'value' field\n\n"
             "::\n\n"
             "    pv = PvObject({'anUByte' : UBYTE})\n\n"
             "    value = pv.getUByte()\n\n")
@@ -273,7 +276,9 @@ BOOST_PYTHON_MODULE(pvaccess)
             args("name"), 
             "Retrieves unsigned byte (character) value assigned to the given PV field.\n\n"
             ":Parameter: *name* (str) - field name\n\n"
-            ":Returns: stored unsigned byte value\n\n"
+            ":Returns: unsigned byte value\n\n"
+            ":Raises: *FieldNotFound* - when PV structure does not have specified field\n\n"
+            ":Raises: *InvalidRequest* - when specified field is not an unsigned byte\n\n"
             "::\n\n"
             "    pv = PvObject({'anUByte' : UBYTE})\n\n"
             "    value = pv.getUByte('anUByte')\n\n")
@@ -281,8 +286,9 @@ BOOST_PYTHON_MODULE(pvaccess)
         .def("setShort", 
             static_cast<void(PvObject::*)(short)>(&PvObject::setShort),
             args("value"),
-            "Sets short value for the PV field named 'value', or for the first structure field if the 'value' field does not exist.\n\n"
+            "Sets short value for a single-field structure, or for a structure that has short field named 'value'.\n\n"
             ":Parameter: *value* (int) - short value'\n\n"
+            ":Raises: *InvalidRequest* - when single-field structure has no short field or multiple-field structure has no short 'value' field\n\n"
             "::\n\n"
             "    pv = PvObject({'aShort' : SHORT})\n\n"
             "    pv.setShort(10)\n\n")
@@ -293,13 +299,16 @@ BOOST_PYTHON_MODULE(pvaccess)
             "Sets short value for the given PV field.\n\n"
             ":Parameter: *name* (str) - field name\n\n"
             ":Parameter: *value* (int) - short value\n\n"
+            ":Raises: *FieldNotFound* - when PV structure does not have specified field\n\n"
+            ":Raises: *InvalidRequest* - when specified field is not a short\n\n"
             "::\n\n"
             "    pv = PvObject({'aShort' : SHORT})\n\n"
             "    pv.setShort('aShort', 10)\n\n")
 
         .def("getShort", static_cast<short(PvObject::*)()const>(&PvObject::getShort), 
-            "Retrieves short value assigned to the PV field named 'value', or to the first structure field if the 'value' field does not exist.\n\n"
-            ":Returns: stored short value\n\n"
+            "Retrieves short value from a single-field structure, or from a structure that has short field named 'value'.\n\n"
+            ":Returns: short value\n\n"
+            ":Raises: *InvalidRequest* - when single-field structure has no short field or multiple-field structure has no short 'value' field\n\n"
             "::\n\n"
             "    pv = PvObject({'aShort' : SHORT})\n\n"
             "    value = pv.getShort()\n\n")
@@ -308,7 +317,9 @@ BOOST_PYTHON_MODULE(pvaccess)
             args("name"), 
             "Retrieves short value assigned to the given PV field.\n\n"
             ":Parameter: *name* (str) - field name\n\n"
-            ":Returns: stored short value\n\n"
+            ":Returns: short value\n\n"
+            ":Raises: *FieldNotFound* - when PV structure does not have specified field\n\n"
+            ":Raises: *InvalidRequest* - when specified field is not a short\n\n"
             "::\n\n"
             "    pv = PvObject({'aShort' : SHORT})\n\n"
             "    value = pv.getShort('aShort')\n\n")
@@ -316,8 +327,9 @@ BOOST_PYTHON_MODULE(pvaccess)
         .def("setUShort", 
             static_cast<void(PvObject::*)(unsigned short)>(&PvObject::setUShort),
             args("value"),
-            "Sets unsigned short value for the PV field named 'value', or for the first structure field if the 'value' field does not exist.\n\n"
-            ":Parameter: *value* (int) - unsigned short value'\n\n"
+            "Sets unsigned short value for a single-field structure, or for a structure that has unsigned short field named 'value'.\n\n"
+            ":Parameter: *value* (int) - unsigned short value\n\n"
+            ":Raises: *InvalidRequest* - when single-field structure has no unsigned short field or multiple-field structure has no unsigned short 'value' field\n\n"
             "::\n\n"
             "    pv = PvObject({'anUShort' : USHORT})\n\n"
             "    pv.setUShort(10)\n\n")
@@ -328,13 +340,16 @@ BOOST_PYTHON_MODULE(pvaccess)
             "Sets unsigned short value for the given PV field.\n\n"
             ":Parameter: *name* (str) - field name\n\n"
             ":Parameter: *value* (int) - unsigned short value\n\n"
+            ":Raises: *FieldNotFound* - when PV structure does not have specified field\n\n"
+            ":Raises: *InvalidRequest* - when specified field is not an unsigned short\n\n"
             "::\n\n"
             "    pv = PvObject({'anUShort' : USHORT})\n\n"
             "    pv.setUShort('anUShort', 10)\n\n")
 
         .def("getUShort", static_cast<unsigned short(PvObject::*)()const>(&PvObject::getUShort),
-            "Retrieves unsigned short value assigned to the PV field named 'value', or to the first structure field if the 'value' field does not exist.\n\n"
-            ":Returns: stored unsigned short value\n\n"
+            "Retrieves unsigned short value from a single-field structure, or from a structure that has unsigned short field named 'value'.\n\n"
+            ":Returns: unsigned short value\n\n"
+            ":Raises: *InvalidRequest* - when single-field structure has no unsigned short field or multiple-field structure has no unsigned short 'value' field\n\n"
             "::\n\n"
             "    pv = PvObject({'anUShort' : USHORT})\n\n"
             "    value = pv.getUShort()\n\n")
@@ -343,7 +358,9 @@ BOOST_PYTHON_MODULE(pvaccess)
             args("name"), 
             "Retrieves unsigned short value assigned to the given PV field.\n\n"
             ":Parameter: *name* (str) - field name\n\n"
-            ":Returns: stored unsigned short value\n\n"
+            ":Returns: unsigned short value\n\n"
+            ":Raises: *FieldNotFound* - when PV structure does not have specified field\n\n"
+            ":Raises: *InvalidRequest* - when specified field is not an unsigned short\n\n"
             "::\n\n"
             "    pv = PvObject({'anUShort' : USHORT})\n\n"
             "    value = pv.getUShort('anUShort')\n\n")
@@ -351,8 +368,9 @@ BOOST_PYTHON_MODULE(pvaccess)
         .def("setInt", 
             static_cast<void(PvObject::*)(int)>(&PvObject::setInt),
             args("value"),
-            "Sets integer value for the PV field named 'value', or for the first structure field if the 'value' field does not exist.\n\n"
+            "Sets int value for a single-field structure, or for a structure that has int field named 'value'.\n\n"
             ":Parameter: *value* (int) - integer value\n\n"
+            ":Raises: *InvalidRequest* - when single-field structure has no int field or multiple-field structure has no int 'value' field\n\n"
             "::\n\n"
             "    pv = PvObject({'anInt' : INT})\n\n"
             "    pv.setInt(10)\n\n")
@@ -360,17 +378,20 @@ BOOST_PYTHON_MODULE(pvaccess)
         .def("setInt", 
             static_cast<void(PvObject::*)(const std::string&,int)>(&PvObject::setInt),
             args("name", "value"),
-            "Sets integer value for the given PV field.\n\n"
+            "Sets int value for the given PV field.\n\n"
             ":Parameter: *name* (str) - field name\n\n"
             ":Parameter: *value* (int) - integer value\n\n"
+            ":Raises: *FieldNotFound* - when PV structure does not have specified field\n\n"
+            ":Raises: *InvalidRequest* - when specified field is not an int\n\n"
             "::\n\n"
             "    pv = PvObject({'anInt' : INT})\n\n"
             "    pv.setInt('anInt', 10)\n\n")
 
         .def("getInt", 
             static_cast<int(PvObject::*)()const>(&PvObject::getInt), 
-            "Retrieves integer value assigned to the PV field named 'value', or to the first structure field if the 'value' field does not exist.\n\n"
-            ":Returns: stored integer value\n\n"
+            "Retrieves int value from a single-field structure, or from a structure that has int field named 'value'.\n\n"
+            ":Returns: int value\n\n"
+            ":Raises: *InvalidRequest* - when single-field structure has no int field or multiple-field structure has no int 'value' field\n\n"
             "::\n\n"
             "    pv = PvObject({'anInt' : INT})\n\n"
             "    value = pv.getInt()\n\n")
@@ -378,9 +399,11 @@ BOOST_PYTHON_MODULE(pvaccess)
         .def("getInt", 
             static_cast<int(PvObject::*)(const std::string&)const>(&PvObject::getInt), 
             args("name"), 
-            "Retrieves integer value assigned to the given PV field.\n\n"
+            "Retrieves int value assigned to the given PV field.\n\n"
             ":Parameter: *name* (str) - field name\n\n"
-            ":Returns: stored integer value\n\n"
+            ":Returns: int value\n\n"
+            ":Raises: *FieldNotFound* - when PV structure does not have specified field\n\n"
+            ":Raises: *InvalidRequest* - when specified field is not an int\n\n"
             "::\n\n"
             "    pv = PvObject({'anInt' : INT})\n\n"
             "    value = pv.getInt('anInt')\n\n")
@@ -388,8 +411,9 @@ BOOST_PYTHON_MODULE(pvaccess)
         .def("setUInt", 
             static_cast<void(PvObject::*)(unsigned int)>(&PvObject::setUInt),
             args("value"),
-            "Sets unsigned integer value for the PV field named 'value', or for the first structure field if the 'value' field does not exist.\n\n"
+            "Sets unsigned int value for a single-field structure, or for a structure that has unsigned int field named 'value'.\n\n"
             ":Parameter: *value* (int) - unsigned integer value\n\n"
+            ":Raises: *InvalidRequest* - when single-field structure has no unsigned int field or multiple-field structure has no unsigned int 'value' field\n\n"
             "::\n\n"
             "    pv = PvObject({'anUInt' : UINT})\n\n"
             "    pv.setUInt(10)\n\n")
@@ -397,9 +421,11 @@ BOOST_PYTHON_MODULE(pvaccess)
         .def("setUInt", 
             static_cast<void(PvObject::*)(const std::string&,unsigned int)>(&PvObject::setUInt),
             args("name", "value"),
-            "Sets unsigned integer value for the given PV field.\n\n"
+            "Sets unsigned int value for the given PV field.\n\n"
             ":Parameter: *name* (str) - field name\n\n"
             ":Parameter: *value* (int) - unsigned integer value\n\n"
+            ":Raises: *FieldNotFound* - when PV structure does not have specified field\n\n"
+            ":Raises: *InvalidRequest* - when specified field is not an unsigned int\n\n"
             "::\n\n"
             "    pv = PvObject({'anUInt' : UINT})\n\n"
             "    pv.setUInt('anInt', 10)\n\n")
@@ -407,8 +433,9 @@ BOOST_PYTHON_MODULE(pvaccess)
         .def("getUInt", 
             static_cast<unsigned int(PvObject::*)()const>(&PvObject::getUInt),
             args("name"), 
-            "Retrieves unsigned integer value assigned to the PV field named 'value', or to the first structure field if the 'value' field does not exist.\n\n"
-            ":Returns: stored unsigned integer value\n\n"
+            "Retrieves unsigned int value from a single-field structure, or from a structure that has unsigned int field named 'value'.\n\n"
+            ":Returns: unsigned integer value\n\n"
+            ":Raises: *InvalidRequest* - when single-field structure has no unsigned int field or multiple-field structure has no unsigned int 'value' field\n\n"
             "::\n\n"
             "    pv = PvObject({'anUInt' : UINT})\n\n"
             "    value = pv.getUInt()\n\n")
@@ -416,9 +443,11 @@ BOOST_PYTHON_MODULE(pvaccess)
         .def("getUInt", 
             static_cast<unsigned int(PvObject::*)(const std::string&)const>(&PvObject::getUInt),
             args("name"), 
-            "Retrieves unsigned integer value assigned to the given PV field.\n\n"
+            "Retrieves unsigned int value assigned to the given PV field.\n\n"
             ":Parameter: *name* (str) - field name\n\n"
-            ":Returns: stored unsigned integer value\n\n"
+            ":Returns: unsigned integer value\n\n"
+            ":Raises: *FieldNotFound* - when PV structure does not have specified field\n\n"
+            ":Raises: *InvalidRequest* - when specified field is not an unsigned int\n\n"
             "::\n\n"
             "    pv = PvObject({'anUInt' : UINT})\n\n"
             "    value = pv.getUInt('anUInt')\n\n")
@@ -426,8 +455,9 @@ BOOST_PYTHON_MODULE(pvaccess)
         .def("setLong", 
             static_cast<void(PvObject::*)(long long)>(&PvObject::setLong),
             args("value"),
-            "Sets long value for the PV field named 'value', or for the first structure field if the 'value' field does not exist.\n\n"
+            "Sets long value for a single-field structure, or for a structure that has long field named 'value'.\n\n"
             ":Parameter: *value* (long) - long value\n\n"
+            ":Raises: *InvalidRequest* - when single-field structure has no long field or multiple-field structure has no long 'value' field\n\n"
             "::\n\n"
             "    pv = PvObject({'aLong' : LONG})\n\n"
             "    pv.setLong(10L)\n\n")
@@ -438,14 +468,17 @@ BOOST_PYTHON_MODULE(pvaccess)
             "Sets long value for the given PV field.\n\n"
             ":Parameter: *name* (str) - field name\n\n"
             ":Parameter: *value* (long) - long value\n\n"
+            ":Raises: *FieldNotFound* - when PV structure does not have specified field\n\n"
+            ":Raises: *InvalidRequest* - when specified field is not a long\n\n"
             "::\n\n"
             "    pv = PvObject({'aLong' : LONG})\n\n"
             "    pv.setLong('aLong', 10L)\n\n")
 
         .def("getLong", 
             static_cast<long long(PvObject::*)()const>(&PvObject::getLong),
-            "Retrieves long value assigned to the PV field named 'value', or to the first structure field if the 'value' field does not exist.\n\n"
-            ":Returns: stored long value\n\n"
+            "Retrieves long value from a single-field structure, or from a structure that has long field named 'value'.\n\n"
+            ":Returns: long value\n\n"
+            ":Raises: *InvalidRequest* - when single-field structure has no long field or multiple-field structure has no long 'value' field\n\n"
             "::\n\n"
             "    pv = PvObject({'aLong' : LONG})\n\n"
             "    value = pv.getLong()\n\n")
@@ -453,9 +486,11 @@ BOOST_PYTHON_MODULE(pvaccess)
         .def("getLong", 
             static_cast<long long(PvObject::*)(const std::string&)const>(&PvObject::getLong),
             args("name"), 
-            "Retrieves long value assigned to the given PV field.\n\n"
+            "Retrieves short value assigned to the given PV field.\n\n"
             ":Parameter: *name* (str) - field name\n\n"
-            ":Returns: stored long value\n\n"
+            ":Returns: long value\n\n"
+            ":Raises: *FieldNotFound* - when PV structure does not have specified field\n\n"
+            ":Raises: *InvalidRequest* - when specified field is not a long\n\n"
             "::\n\n"
             "    pv = PvObject({'aLong' : LONG})\n\n"
             "    value = pv.getLong('aLong')\n\n")
@@ -463,8 +498,9 @@ BOOST_PYTHON_MODULE(pvaccess)
         .def("setULong", 
             static_cast<void(PvObject::*)(unsigned long long)>(&PvObject::setULong),
             args("value"),
-            "Sets unsigned long value for the PV field named 'value', or for the first structure field if the 'value' field does not exist.\n\n"
+            "Sets unsigned long value for a single-field structure, or for a structure that has unsigned long field named 'value'.\n\n"
             ":Parameter: *value* (long) - unsigned long value\n\n"
+            ":Raises: *InvalidRequest* - when single-field structure has no unsigned long field or multiple-field structure has no unsigned long 'value' field\n\n"
             "::\n\n"
             "    pv = PvObject({'anULong' : ULONG})\n\n"
             "    pv.setULong(10L)\n\n")
@@ -475,14 +511,17 @@ BOOST_PYTHON_MODULE(pvaccess)
             "Sets unsigned long value for the given PV field.\n\n"
             ":Parameter: *name* (str) - field name\n\n"
             ":Parameter: *value* (long) - unsigned long value\n\n"
+            ":Raises: *FieldNotFound* - when PV structure does not have specified field\n\n"
+            ":Raises: *InvalidRequest* - when specified field is not an unsigned long\n\n"
             "::\n\n"
             "    pv = PvObject({'anULong' : ULONG})\n\n"
             "    pv.setULong('anULong', 10L)\n\n")
 
         .def("getULong", 
             static_cast<unsigned long long(PvObject::*)()const>(&PvObject::getULong), 
-            "Retrieves unsigned long value assigned to the PV field named 'value', or to the first structure field if the 'value' field does not exist.\n\n"
-            ":Returns: stored unsigned long value\n\n"
+            "Retrieves unsigned long value from a single-field structure, or from a structure that has unsigned long field named 'value'.\n\n"
+            ":Returns: unsigned long value\n\n"
+            ":Raises: *InvalidRequest* - when single-field structure has no unsigned long field or multiple-field structure has no unsigned long 'value' field\n\n"
             "::\n\n"
             "    pv = PvObject({'anULong' : ULONG})\n\n"
             "    value = pv.getULong()\n\n")
@@ -492,7 +531,9 @@ BOOST_PYTHON_MODULE(pvaccess)
             args("name"), 
             "Retrieves unsigned long value assigned to the given PV field.\n\n"
             ":Parameter: *name* (str) - field name\n\n"
-            ":Returns: stored unsigned long value\n\n"
+            ":Returns: unsigned long value\n\n"
+            ":Raises: *FieldNotFound* - when PV structure does not have specified field\n\n"
+            ":Raises: *InvalidRequest* - when specified field is not an unsigned long\n\n"
             "::\n\n"
             "    pv = PvObject({'anULong' : ULONG})\n\n"
             "    value = pv.getULong('anULong')\n\n")
@@ -500,8 +541,9 @@ BOOST_PYTHON_MODULE(pvaccess)
         .def("setFloat", 
             static_cast<void(PvObject::*)(float)>(&PvObject::setFloat),
             args("value"),
-            "Sets float value for the PV field named 'value', or for the first structure field if the 'value' field does not exist.\n\n"
+            "Sets float value for a single-field structure, or for a structure that has float field named 'value'.\n\n"
             ":Parameter: *value* (float) - float value\n\n"
+            ":Raises: *InvalidRequest* - when single-field structure has no float field or multiple-field structure has no float 'value' field\n\n"
             "::\n\n"
             "    pv = PvObject({'aFloat' : FLOAT})\n\n"
             "    pv.setFloat(10.0)\n\n")
@@ -509,17 +551,20 @@ BOOST_PYTHON_MODULE(pvaccess)
         .def("setFloat", 
             static_cast<void(PvObject::*)(const std::string&,float)>(&PvObject::setFloat),
             args("name", "value"),
-            "Sets float value for the given PV field.\n\n"
+            "Sets short value for the given PV field.\n\n"
             ":Parameter: *name* (str) - field name\n\n"
             ":Parameter: *value* (float) - float value\n\n"
+            ":Raises: *FieldNotFound* - when PV structure does not have specified field\n\n"
+            ":Raises: *InvalidRequest* - when specified field is not a short\n\n"
             "::\n\n"
             "    pv = PvObject({'aFloat' : FLOAT})\n\n"
             "    pv.setFloat('aFloat', 10.0)\n\n")
 
         .def("getFloat", 
             static_cast<float(PvObject::*)()const>(&PvObject::getFloat), 
-            "Retrieves float value assigned to the PV field named 'value', or to the first structure field if the 'value' field does not exist.\n\n"
-            ":Returns: stored float value\n\n"
+            "Retrieves float value from a single-field structure, or from a structure that has float field named 'value'.\n\n"
+            ":Returns: float value\n\n"
+            ":Raises: *InvalidRequest* - when single-field structure has no float field or multiple-field structure has no float 'value' field\n\n"
             "::\n\n"
             "    pv = PvObject({'aFloat' : FLOAT})\n\n"
             "    value = pv.getFloat()\n\n")
@@ -529,32 +574,38 @@ BOOST_PYTHON_MODULE(pvaccess)
             args("name"), 
             "Retrieves float value assigned to the given PV field.\n\n"
             ":Parameter: *name* (str) - field name\n\n"
-            ":Returns: stored float value\n\n"
+            ":Returns: float value\n\n"
+            ":Raises: *FieldNotFound* - when PV structure does not have specified field\n\n"
+            ":Raises: *InvalidRequest* - when specified field is not a float\n\n"
             "::\n\n"
             "    pv = PvObject({'aFloat' : FLOAT})\n\n"
             "    value = pv.getFloat('aFloat')\n\n")
 
         .def("setDouble", static_cast<void(PvObject::*)(double)>(&PvObject::setDouble),
             args("value"),
-            "Sets double value for the PV field named 'value', or for the first structure field if the 'value' field does not exist.\n\n"
+            "Sets double value for a single-field structure, or for a structure that has double field named 'value'.\n\n"
             ":Parameter: *value* (float) - double value\n\n"
+            ":Raises: *InvalidRequest* - when single-field structure has no double field or multiple-field structure has no double 'value' field\n\n"
             "::\n\n"
             "    pv = PvObject({'aDouble' : DOUBLE})\n\n"
             "    pv.setDouble(10.0)\n\n")
 
         .def("setDouble", static_cast<void(PvObject::*)(const std::string&,double)>(&PvObject::setDouble),
             args("name", "value"),
-            "Sets double value for the given PV field.\n\n"
+            "Sets short value for the given PV field.\n\n"
             ":Parameter: *name* (str) - field name\n\n"
             ":Parameter: *value* (float) - double value\n\n"
+            ":Raises: *FieldNotFound* - when PV structure does not have specified field\n\n"
+            ":Raises: *InvalidRequest* - when specified field is not a double\n\n"
             "::\n\n"
             "    pv = PvObject({'aDouble' : DOUBLE})\n\n"
             "    pv.setDouble('aDouble', 10.0)\n\n")
 
         .def("getDouble", 
             static_cast<double(PvObject::*)()const>(&PvObject::getDouble), 
-            "Retrieves double value assigned to the PV field named 'value', or to the first structure field if the 'value' field does not exist.\n\n"
-            ":Returns: stored double value\n\n"
+            "Retrieves double value from a single-field structure, or from a structure that has double field named 'value'.\n\n"
+            ":Returns: double value\n\n"
+            ":Raises: *InvalidRequest* - when single-field structure has no double field or multiple-field structure has no double 'value' field\n\n"
             "::\n\n"
             "    pv = PvObject({'aDouble' : DOUBLE})\n\n"
             "    value = pv.getDouble()\n\n")
@@ -564,7 +615,9 @@ BOOST_PYTHON_MODULE(pvaccess)
             args("name"), 
             "Retrieves double value assigned to the given PV field.\n\n"
             ":Parameter: *name* (str) - field name\n\n"
-            ":Returns: stored double value\n\n"
+            ":Returns: double value\n\n"
+            ":Raises: *FieldNotFound* - when PV structure does not have specified field\n\n"
+            ":Raises: *InvalidRequest* - when specified field is not a double\n\n"
             "::\n\n"
             "    pv = PvObject({'aDouble' : DOUBLE})\n\n"
             "    value = pv.getDouble('aDouble')\n\n")
@@ -572,8 +625,9 @@ BOOST_PYTHON_MODULE(pvaccess)
         .def("setString", 
             static_cast<void(PvObject::*)(const std::string&)>(&PvObject::setString),
             args("value"),
-            "Sets string value for the PV field named 'value', or for the first structure field if the 'value' field does not exist.\n\n"
+            "Sets string value for a single-field structure, or for a structure that has string field named 'value'.\n\n"
             ":Parameter: *value* (str) - string value\n\n"
+            ":Raises: *InvalidRequest* - when single-field structure has no string field or multiple-field structure has no string 'value' field\n\n"
             "::\n\n"
             "    pv = PvObject({'aString' : STRING})\n\n"
             "    pv.setString('string value')\n\n")
@@ -584,13 +638,16 @@ BOOST_PYTHON_MODULE(pvaccess)
             "Sets string value for the given PV field.\n\n"
             ":Parameter: *name* (str) - field name\n\n"
             ":Parameter: *value* (str) - string value\n\n"
+            ":Raises: *FieldNotFound* - when PV structure does not have specified field\n\n"
+            ":Raises: *InvalidRequest* - when specified field is not a string\n\n"
             "::\n\n"
             "    pv = PvObject({'aString' : STRING})\n\n"
             "    pv.setString('aString', 'string value')\n\n")
         
         .def("getString", static_cast<std::string(PvObject::*)()const>(&PvObject::getString),
-            "Retrieves string value assigned to the PV field named 'value', or to the first structure field if the 'value' field does not exist.\n\n"
-            ":Returns: stored string value\n\n"
+            "Retrieves string value from a single-field structure, or from a structure that has string field named 'value'.\n\n"
+            ":Returns: string value\n\n"
+            ":Raises: *InvalidRequest* - when single-field structure has no string field or multiple-field structure has no string 'value' field\n\n"
             "::\n\n"
             "    pv = PvObject({'aString' : STRING})\n\n"
             "    value = pv.getString()\n\n")
@@ -599,7 +656,9 @@ BOOST_PYTHON_MODULE(pvaccess)
             args("name"), 
             "Retrieves string value assigned to the given PV field.\n\n"
             ":Parameter: *name* (str) - field name\n\n"
-            ":Returns: stored string value\n\n"
+            ":Returns: string value\n\n"
+            ":Raises: *FieldNotFound* - when PV structure does not have specified field\n\n"
+            ":Raises: *InvalidRequest* - when specified field is not a string\n\n"
             "::\n\n"
             "    pv = PvObject({'aString' : STRING})\n\n"
             "    value = pv.getString('aString')\n\n")
@@ -607,8 +666,9 @@ BOOST_PYTHON_MODULE(pvaccess)
         .def("setScalarArray", 
             static_cast<void(PvObject::*)(const boost::python::list&)>(&PvObject::setScalarArray),
             args("valueList"),
-            "Sets scalar array for the PV field named 'value', or for the first structure field if the 'value' field does not exist.\n\n"
+            "Sets scalar array value for a single-field structure, or for a structure that has scalar array field named 'value'.\n\n"
             ":Parameter: *valueList* (list) - list of scalar values\n\n"
+            ":Raises: *InvalidRequest* - when single-field structure has no scalar array field or multiple-field structure has no scalar array 'value' field\n\n"
             "::\n\n"
             "    pv = PvObject({'aScalarArray' : [INT]})\n\n"
             "    pv.setScalarArray([0,1,2,3,4])\n\n")
@@ -616,17 +676,20 @@ BOOST_PYTHON_MODULE(pvaccess)
         .def("setScalarArray", 
             static_cast<void(PvObject::*)(const std::string&,const boost::python::list&)>(&PvObject::setScalarArray),
             args("name", "valueList"),
-            "Sets scalar array for the given PV field.\n\n"
+            "Sets scalar array value for the given PV field.\n\n"
             ":Parameter: *name* (str) - field name\n\n"
             ":Parameter: *valueList* (list) - list of scalar values\n\n"
+            ":Raises: *FieldNotFound* - when PV structure does not have specified field\n\n"
+            ":Raises: *InvalidRequest* - when specified field is not a scalar array\n\n"
             "::\n\n"
             "    pv = PvObject({'aScalarArray' : [INT]})\n\n"
             "    pv.setScalarArray('aScalarArray', [0,1,2,3,4])\n\n")
 
         .def("getScalarArray", 
             static_cast<boost::python::list(PvObject::*)()const>(&PvObject::getScalarArray), 
-            "Retrieves scalar array assigned to the PV field named 'value', or to the first structure field if the 'value' field does not exist.\n\n"
-            ":Returns: stored list of scalar values\n\n"
+            "Retrieves scalar array value from a single-field structure, or from a structure that has scalar array field named 'value'.\n\n"
+            ":Returns: list of scalar values\n\n"
+            ":Raises: *InvalidRequest* - when single-field structure has no scalar array field or multiple-field structure has no scalar array 'value' field\n\n"
             "::\n\n"
             "    pv = PvObject({'aScalarArray' : [INT]})\n\n"
             "    valueList = pv.getScalarArray()\n\n")
@@ -634,9 +697,12 @@ BOOST_PYTHON_MODULE(pvaccess)
         .def("getScalarArray", 
             static_cast<boost::python::list(PvObject::*)(const std::string&)const>(&PvObject::getScalarArray), 
             args("name"), 
-            "Retrieves scalar array assigned to the given PV field.\n\n"
+            "Retrieves scalar array value assigned to the given PV field.\n\n"
             ":Parameter: *name* (str) - field name\n\n"
-            ":Returns: stored list of scalar values\n\n"
+            ":Returns: list of scalar values\n\n"
+            ":Raises: *FieldNotFound* - when PV structure does not have specified field\n\n"
+            ":Raises: *InvalidRequest* - when specified field is not a scalar array\n\n"
+            "Retrieves scalar array assigned to the given PV field.\n\n"
             "::\n\n"
             "    pv = PvObject({'aScalarArray' : [INT]})\n\n"
             "    valueList = pv.getScalarArray('aScalarArray')\n\n")
@@ -644,8 +710,9 @@ BOOST_PYTHON_MODULE(pvaccess)
         .def("setStructure", 
             static_cast<void(PvObject::*)(const boost::python::dict&)>(&PvObject::setStructure),
             args("valueDict"),
-            "Sets structure for the PV field named 'value', or for the first structure field if the 'value' field does not exist.\n\n"
+            "Sets structure value for a single-field structure, or for a structure that has structure field named 'value'.\n\n"
             ":Parameter: *valueDict* (dict) - dictionary of structure key:value pairs\n\n"
+            ":Raises: *InvalidRequest* - when single-field structure has no structure field or multiple-field structure has no structure 'value' field\n\n"
             "::\n\n"
             "    pv = PvObject({'aStruct' : {'anInt':INT, 'aDouble':DOUBLE}})\n\n"
             "    pv.setStructure({'anInt' : 1, 'aDouble' : 1.1})\n\n")
@@ -653,17 +720,20 @@ BOOST_PYTHON_MODULE(pvaccess)
         .def("setStructure", 
             static_cast<void(PvObject::*)(const std::string&,const boost::python::dict&)>(&PvObject::setStructure),
             args("name", "valueDict"),
-            "Sets structure for the given PV field.\n\n"
+            "Sets structure value for the given PV field.\n\n"
             ":Parameter: *name* (str) - field name\n\n"
             ":Parameter: *valueDict* (dict) - dictionary of structure key:value pairs\n\n"
+            ":Raises: *FieldNotFound* - when PV structure does not have specified field\n\n"
+            ":Raises: *InvalidRequest* - when specified field is not a structure\n\n"
             "::\n\n"
             "    pv = PvObject({'aStruct' : {'anInt':INT, 'aDouble':DOUBLE}})\n\n"
             "    pv.setStructure('aStruct', {'anInt' : 1, 'aDouble' : 1.1})\n\n")
 
         .def("getStructure", 
             static_cast<boost::python::dict(PvObject::*)()const>(&PvObject::getStructure), 
-            "Retrieves structure assigned to the PV field named 'value', or to the first structure field if the 'value' field does not exist.\n\n"
-            ":Returns: stored dictionary of structure key:value pairs\n\n"
+            "Retrieves structure value from a single-field structure, or from a structure that has structure field named 'value'.\n\n"
+            ":Returns: dictionary of structure key:value pairs\n\n"
+            ":Raises: *InvalidRequest* - when single-field structure has no structure field or multiple-field structure has no structure 'value' field\n\n"
             "::\n\n"
             "    pv = PvObject({'aStruct' : {'anInt':INT, 'aDouble':DOUBLE}})\n\n"
             "    valueDict = pv.getStructure()\n\n")
@@ -671,9 +741,11 @@ BOOST_PYTHON_MODULE(pvaccess)
         .def("getStructure", 
             static_cast<boost::python::dict(PvObject::*)(const std::string&)const>(&PvObject::getStructure), 
             args("name"), 
-            "Retrieves structure assigned to the given PV field.\n\n"
+            "Retrieves structure value assigned to the given PV field.\n\n"
             ":Parameter: *name* (str) - field name\n\n"
-            ":Returns: stored dictionary of structure key:value pairs\n\n"
+            ":Returns: dictionary of structure key:value pairs\n\n"
+            ":Raises: *FieldNotFound* - when PV structure does not have specified field\n\n"
+            ":Raises: *InvalidRequest* - when specified field is not a structure\n\n"
             "::\n\n"
             "    pv = PvObject({'aStruct' : {'anInt':INT, 'aDouble':DOUBLE}})\n\n"
             "    valueDict = pv.getStructure('aStruct')\n\n")
@@ -681,8 +753,9 @@ BOOST_PYTHON_MODULE(pvaccess)
         .def("setStructureArray", 
             static_cast<void(PvObject::*)(const boost::python::list&)>(&PvObject::setStructureArray),
             args("dictList"),
-            "Sets structure array for the PV field named 'value', or for the first structure field if the 'value' field does not exist.\n\n"
+            "Sets structure array value for a single-field structure, or for a structure that has structure array field named 'value'.\n\n"
             ":Parameter: *dictList* (list) - list of dictionaries\n\n"
+            ":Raises: *InvalidRequest* - when single-field structure has no structure array field or multiple-field structure has no structure array 'value' field\n\n"
             "::\n\n"
             "    pv = PvObject({'aStructArray' : [{'anInt' : INT, {'aFloat' : FLOAT}]})\n\n"
             "    pv.setStructureArray([{'anInt' : 1, 'aFloat' : 1.1},{'anInt' : 2, 'aFloat' : 2.2},{'anInt' : 3, 'aFloat' : 3.3}])\n\n")
@@ -690,17 +763,20 @@ BOOST_PYTHON_MODULE(pvaccess)
         .def("setStructureArray", 
             static_cast<void(PvObject::*)(const std::string&,const boost::python::list&)>(&PvObject::setStructureArray),
             args("name", "dictList"),
-            "Sets structure array for the given PV field.\n\n"
+            "Sets structure array value for the given PV field.\n\n"
             ":Parameter: *name* (str) - field name\n\n"
             ":Parameter: *dictList* (list) - list of dictionaries\n\n"
+            ":Raises: *FieldNotFound* - when PV structure does not have specified field\n\n"
+            ":Raises: *InvalidRequest* - when specified field is not a structure array\n\n"
             "::\n\n"
             "    pv = PvObject({'aStructArray' : [{'anInt' : INT, {'aFloat' : FLOAT}]})\n\n"
             "    pv.setStructureArray('aStructArray', [{'anInt' : 1, 'aFloat' : 1.1},{'anInt' : 2, 'aFloat' : 2.2},{'anInt' : 3, 'aFloat' : 3.3}])\n\n")
 
         .def("getStructureArray", 
             static_cast<boost::python::list(PvObject::*)()const>(&PvObject::getStructureArray), 
-            "Retrieves structure array assigned to the PV field named 'value', or to the first structure field if the 'value' field does not exist.\n\n"
-            ":Returns: stored list of dictionaries\n\n"
+            "Retrieves structure array value from a single-field structure, or from a structure that has structure array field named 'value'.\n\n"
+            ":Returns: list of dictionaries\n\n"
+            ":Raises: *InvalidRequest* - when single-field structure has no structure array field or multiple-field structure has no structure array 'value' field\n\n"
             "::\n\n"
             "    pv = PvObject({'aStructArray' : [{'anInt' : INT, {'aFloat' : FLOAT}]})\n\n"
             "    dictList = pv.getStructureArray()\n\n")
@@ -708,9 +784,11 @@ BOOST_PYTHON_MODULE(pvaccess)
         .def("getStructureArray", 
             static_cast<boost::python::list(PvObject::*)(const std::string&)const>(&PvObject::getStructureArray), 
             args("name"), 
-            "Retrieves structure array assigned to the given PV field.\n\n"
+            "Retrieves structure array value assigned to the given PV field.\n\n"
             ":Parameter: *name* (str) - field name\n\n"
-            ":Returns: stored list of dictionaries\n\n"
+            ":Returns: list of dictionaries\n\n"
+            ":Raises: *FieldNotFound* - when PV structure does not have specified field\n\n"
+            ":Raises: *InvalidRequest* - when specified field is not a structure array\n\n"
             "::\n\n"
             "    pv = PvObject({'aStructArray' : [{'anInt' : INT, {'aFloat' : FLOAT}]})\n\n"
             "    dictList = pv.getStructureArray('aStructArray')\n\n")
@@ -753,7 +831,7 @@ BOOST_PYTHON_MODULE(pvaccess)
 
         .def("getUnion",
             static_cast<PvObject(PvObject::*)()const>(&PvObject::getUnion),
-            "Retrieves union assigned to the PV field named 'value', or to the first structure field if the 'value' field does not exist.\n"
+            "Retrieves union assigned to the PV field named 'value', or to the first structure field when the 'value' field does not exist.\n"
             ":Returns: stored PV object\n\n"
             "::\n\n"
             "    pv = PvObject({'anUnion' : ({'anInt' : INT, 'aFloat' : FLOAT},)})\n\n"
@@ -766,7 +844,7 @@ BOOST_PYTHON_MODULE(pvaccess)
             "arg\n"
             "    name fieldName = \"value\"\n"
             "return list of union fieldnames. If variant union then empty list\n"
-            "throws InvalidArgument if field is not a union.\n\n"
+            "throws InvalidArgument when field is not a union.\n\n"
             "example\n"
             "    value = pv.getUnionFieldNames()\n\n")
 
@@ -776,7 +854,7 @@ BOOST_PYTHON_MODULE(pvaccess)
             "arg\n"
             "    name fieldName = \"value\"\n"
             "return list of union fieldnames. If variant union then empty list\n"
-            "throws InvalidArgument if field is not a union.\n\n"
+            "throws InvalidArgument when field is not a union.\n\n"
             "example\n"
             "    value = pv.getUnionFieldNames()\n\n")
 
@@ -804,8 +882,8 @@ BOOST_PYTHON_MODULE(pvaccess)
             "    The pvObject is a structure as follows:\n"
             "    structure\n"
             "        union value\n"
-            "throws InvalidArgument if field is not a union.\n"
-            "       ValueError if variant union or illegal union field name.\n\n"
+            "throws InvalidArgument when field is not a union.\n"
+            "       ValueError when variant union or illegal union field name.\n\n"
             "example\n"
             "    value = pv.selectUnionField(unionFieldName,fieldName)\n\n")
 
@@ -820,8 +898,8 @@ BOOST_PYTHON_MODULE(pvaccess)
             "    The pvObject is a structure as follows:\n"
             "    structure\n"
             "        union value\n"
-            "throws InvalidArgument if field is not a union.\n"
-            "       ValueError if variant union or illegal union field name.\n\n"
+            "throws InvalidArgument when field is not a union.\n"
+            "       ValueError when variant union or illegal union field name.\n\n"
             "example\n"
             "    value = pv.selectUnionField(unionFieldName,fieldName)\n\n")
 
@@ -831,8 +909,8 @@ BOOST_PYTHON_MODULE(pvaccess)
             "Is a field a variant union?\n"
             "arg\n"
             "    name fieldName = \"value\"\n"
-            "return (True,False) if (is,is not)  a variant union\n"
-            "throws InvalidArgument if field is not a union.\n\n"
+            "return (True,False) when (is,is not)  a variant union\n"
+            "throws InvalidArgument when field is not a union.\n\n"
             "example\n"
             "    value = pv.isUnionVariant()\n\n")
 
@@ -841,8 +919,8 @@ BOOST_PYTHON_MODULE(pvaccess)
             "Is a field a variant union?\n"
             "arg\n"
             "    name fieldName = \"value\"\n"
-            "return (True,False) if (is,is not)  a variant union\n"
-            "throws InvalidArgument if field is not a union.\n\n"
+            "return (True,False) when (is,is not)  a variant union\n"
+            "throws InvalidArgument when field is not a union.\n\n"
             "example\n"
             "    value = pv.isUnionVariant()\n\n")
 
@@ -856,8 +934,8 @@ BOOST_PYTHON_MODULE(pvaccess)
             "    The pvObject is a structure as follows:\n"
             "    structure\n"
             "        union value\n"
-            "throws InvalidArgument if field is not a union.\n"
-            "       ValueError if variant union or illegal union field name.\n\n"
+            "throws InvalidArgument when field is not a union.\n"
+            "       ValueError when variant union or illegal union field name.\n\n"
             "example\n"
             "    value = pv.unionCreate(unionFieldName,fieldName)\n\n")
 
@@ -866,8 +944,8 @@ BOOST_PYTHON_MODULE(pvaccess)
             "Is a field a variant union array?\n"
             "arg\n"
             "    name fieldName = \"value\"\n"
-            "return (True,False) if (is,is not)  a variant union array\n"
-            "throws InvalidArgument if field is not a union array.\n\n"
+            "return (True,False) when (is,is not)  a variant union array\n"
+            "throws InvalidArgument when field is not a union array.\n\n"
             "example\n"
             "    value = pv.unionArrayIsVariant()\n\n")
 
@@ -877,7 +955,7 @@ BOOST_PYTHON_MODULE(pvaccess)
             "arg\n"
             "    name fieldName = \"value\"\n"
             "return list of union fieldnames. If variant union then empty list\n"
-            "throws InvalidArgument if field is not a union array.\n\n"
+            "throws InvalidArgument when field is not a union array.\n\n"
             "example\n"
             "    value = pv.unionArrayGetFieldNames()\n\n")
 
@@ -891,8 +969,8 @@ BOOST_PYTHON_MODULE(pvaccess)
             "    The pvObject is a structure as follows:\n"
             "    structure\n"
             "        union value\n"
-            "throws InvalidArgument if field is not a union.\n"
-            "       ValueError if variant union or illegal union field name.\n\n"
+            "throws InvalidArgument when field is not a union.\n"
+            "       ValueError when variant union or illegal union field name.\n\n"
             "example\n"
             "    value = pv.unionArrayCreateElement(unionFieldName,fieldName)\n\n")
 
@@ -904,7 +982,7 @@ BOOST_PYTHON_MODULE(pvaccess)
             "        structure\n"
             "            union value\n"
             "    name fieldName = \"value\"\n"
-            "throws InvalidArgument if field is not a union array.\n\n")
+            "throws InvalidArgument when field is not a union array.\n\n")
 
         .def("getUnionArray", &PvObject::getUnionArray,
             (arg("key") = "value"),
@@ -915,7 +993,7 @@ BOOST_PYTHON_MODULE(pvaccess)
             "    Each pvObject is a structure as follows:\n"
             "    structure\n"
             "        union value\n"
-            "throws InvalidArgument if field is not a union.\n\n"
+            "throws InvalidArgument when field is not a union.\n\n"
             "example\n"
             "    value = pv.unionArrayGet(fieldName)\n\n")
 
