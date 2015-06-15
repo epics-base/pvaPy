@@ -131,8 +131,11 @@ public:
 
     // Union fields
     void setUnion(const std::string& key, const PvObject& value);
-    void setUnion(const std::string& key, const boost::python::tuple& pyTuple);
     void setUnion(const PvObject& value);
+    void setUnion(const std::string& key, const boost::python::dict& pyDict);
+    void setUnion(const boost::python::dict& pyDict);
+    void setUnion(const std::string& key, const boost::python::tuple& pyTuple);
+    void setUnion(const boost::python::tuple& pyTuple);
     PvObject getUnion(const std::string& key) const;
     PvObject getUnion() const;
 
@@ -144,8 +147,8 @@ public:
     PvObject selectUnionField(const std::string& fieldName) const;
     bool isUnionVariant(const std::string& key) const;
     bool isUnionVariant() const;
-
-    PvObject createUnionField(const std::string& fieldName, const std::string& key=ValueFieldKey) const;
+    PvObject createUnionField(const std::string& key, const std::string& fieldName) const;
+    PvObject createUnionField(const std::string& fieldName) const;
 
     // UnionArray fields
     bool isUnionArrayVariant(const std::string& key=ValueFieldKey) const;

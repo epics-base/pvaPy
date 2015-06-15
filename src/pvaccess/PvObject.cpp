@@ -5,8 +5,6 @@
 #include "PyPvDataUtility.h"
 #include "StringUtility.h"
 #include "InvalidRequest.h"
-#include "InvalidDataType.h"
-#include "InvalidArgument.h"
 #include "FieldNotFound.h"
 #include "boost/python/object.hpp"
 #include "boost/python/tuple.hpp"
@@ -465,21 +463,41 @@ void PvObject::setUnion(const std::string& key, const PvObject& value)
     PyPvDataUtility::setUnionField(pvFrom, pvUnionPtr);
 }
 
-void PvObject::setUnion(const std::string& key, const boost::python::tuple& pyTuple)
-{
-    PyPvDataUtility::pyObjectToUnionField(pyTuple, key, pvStructurePtr);
-}
-
 void PvObject::setUnion(const PvObject& value)
 {
     std::string key = PyPvDataUtility::getValueOrSingleFieldName(pvStructurePtr);
     setUnion(key, value);
 }
 
+void PvObject::setUnion(const std::string& key, const boost::python::dict& pyDict)
+{
+    PyPvDataUtility::pyDictToUnionField(pyDict, key, pvStructurePtr);
+}
+
+void PvObject::setUnion(const boost::python::dict& pyDict)
+{
+    std::string key = PyPvDataUtility::getValueOrSingleFieldName(pvStructurePtr);
+    setUnion(key, pyDict);
+}
+
+void PvObject::setUnion(const std::string& key, const boost::python::tuple& pyTuple)
+{
+    PyPvDataUtility::pyTupleToUnionField(pyTuple, key, pvStructurePtr);
+}
+
+void PvObject::setUnion(const boost::python::tuple& pyTuple)
+{
+    std::string key = PyPvDataUtility::getValueOrSingleFieldName(pvStructurePtr);
+    setUnion(key, pyTuple);
+}
+
 PvObject PvObject::getUnion(const std::string& key) const
 {
     epics::pvData::PVUnionPtr pvUnionPtr = PyPvDataUtility::getUnionField(key, pvStructurePtr);
     std::string fieldName = pvUnionPtr->getSelectedFieldName();
+    if (!fieldName.size()) {
+        throw InvalidRequest("No field has been selected for union %s.", key.c_str());
+    }
     return PvObject(PyPvDataUtility::createUnionPvStructure(pvUnionPtr, fieldName));
 }
 
@@ -546,10 +564,16 @@ bool PvObject::isUnionVariant() const
     return isUnionVariant(key);
 }
 
-PvObject PvObject::createUnionField(const std::string& fieldName, const std::string& key) const
+PvObject PvObject::createUnionField(const std::string& key, const std::string& fieldName) const
 {
     epics::pvData::PVUnionPtr pvUnionPtr = PyPvDataUtility::getUnionField(key, pvStructurePtr);
     return PvObject(PyPvDataUtility::createUnionFieldPvStructure(pvUnionPtr->getUnion(), fieldName));
+}
+
+PvObject PvObject::createUnionField(const std::string& fieldName) const
+{
+    std::string key = PyPvDataUtility::getValueOrSingleFieldName(pvStructurePtr);
+    return createUnionField(key, fieldName);
 }
 
 PvObject PvObject::createUnionArrayElementField(const std::string& fieldName, const std::string& key) const

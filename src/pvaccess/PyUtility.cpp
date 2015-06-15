@@ -1,4 +1,5 @@
 #include "PyUtility.h"
+#include "InvalidArgument.h"
 
 namespace PyUtility
 {
@@ -67,7 +68,7 @@ std::string extractStringFromPyObject(const boost::python::object& pyObject)
         return StringUtility::toString<bool>(extractBoolValue());
     }
 
-    throw InvalidDataType("Unable to convert object to string.");
+    throw InvalidArgument("Unable to convert object to string.");
 }
 
 

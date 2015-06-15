@@ -703,9 +703,65 @@ void pyDictToStructureField(const boost::python::dict& pyDict, const std::string
 //
 void pyDictToUnion(const boost::python::dict& pyDict, epics::pvData::PVUnionPtr& pvUnionPtr)
 {
-    epics::pvData::PVStructurePtr pvStructurePtr = epics::pvData::getPVDataCreate()->createPVStructure(createStructureFromDict(pyDict));
-    pyDictToStructure(pyDict, pvStructurePtr);
-    pvUnionPtr->set(pvStructurePtr);
+    epics::pvData::PVFieldPtr pvField;
+    std::string unionFieldName;
+    int dictSize = boost::python::len(pyDict);
+    if (dictSize != 1) {
+        throw InvalidArgument("Dictionary representing union value must have exactly one element.");
+    }
+    boost::python::list keys = pyDict.keys();
+    boost::python::object keyObject = keys[0];
+    boost::python::extract<std::string> keyExtract(keyObject);
+    if (keyExtract.check()) {
+        unionFieldName = keyExtract();
+    }
+    else {
+        throw InvalidArgument("Dictionary representing union value must have string key.");
+    }
+    int fieldIndex = -1;
+    if (!pvUnionPtr->getUnion()->isVariant()) {
+        try {
+            pvField = pvUnionPtr->select(unionFieldName);
+            fieldIndex = pvUnionPtr->getSelectedIndex();
+        }
+        catch (std::invalid_argument& ex) {
+            throw InvalidArgument("Union does not have field " + unionFieldName);
+        }
+    }
+    else {
+        pvField = pvUnionPtr->get();
+    }
+
+    epics::pvData::PVStructurePtr unionPvStructurePtr;
+    if(pvField) {
+        epics::pvData::StructureConstPtr unionStructurePtr = epics::pvData::getFieldCreate()->createFieldBuilder()->add(unionFieldName, pvField->getField())->createStructure();
+        unionPvStructurePtr = epics::pvData::getPVDataCreate()->createPVStructure(unionStructurePtr);
+    }
+    else {
+        unionPvStructurePtr = epics::pvData::getPVDataCreate()->createPVStructure(epics::pvData::getFieldCreate()->createStructure());
+    }
+
+    pyDictToStructure(pyDict, unionPvStructurePtr);
+    if (fieldIndex >= 0) {
+        pvUnionPtr->set(fieldIndex, unionPvStructurePtr->getSubField(unionFieldName));
+    }
+    else {
+        pvUnionPtr->set(unionPvStructurePtr->getSubField(unionFieldName));
+    }
+}
+
+//
+// Conversion PY () => PV Union Field
+//
+void pyTupleToUnionField(const boost::python::tuple& pyTuple, const std::string& fieldName, epics::pvData::PVStructurePtr& pvStructurePtr)
+{
+    // Extract dictionary within tuple
+    if (boost::python::len(pyTuple) != 1) {
+        throw InvalidArgument("PV union tuple provided for field name %s must have exactly one element.", fieldName.c_str());
+    }
+    boost::python::object pyObject = pyTuple[0];
+    boost::python::dict pyDict = PyUtility::extractValueFromPyObject<boost::python::dict>(pyObject);
+    pyDictToUnionField(pyDict, fieldName, pvStructurePtr);
 }
 
 //

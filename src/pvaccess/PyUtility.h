@@ -8,11 +8,13 @@
 #include "boost/python/dict.hpp"
 
 #include "StringUtility.h"
-#include "InvalidDataType.h"
+#include "InvalidArgument.h"
 #include "FieldNotFound.h"
 
 namespace PyUtility
 {
+
+std::string extractStringFromPyObject(const boost::python::object& pyObject);
 
 template<typename PyType>
 PyType extractValueFromPyObject(const boost::python::object& pyObject)
@@ -21,8 +23,8 @@ PyType extractValueFromPyObject(const boost::python::object& pyObject)
     if (extractValue.check()) {
         return extractValue();
     }
-    std::string objectString = boost::python::extract<std::string>(pyObject);
-    throw InvalidDataType("Invalid data type for '" + objectString + "'");
+    std::string objectString = extractStringFromPyObject(pyObject);
+    throw InvalidArgument("Invalid data type for '" + objectString + "'");
 }
 
 template<typename PyType>
@@ -34,8 +36,6 @@ PyType extractKeyValueFromPyDict(const std::string& key, const boost::python::di
     }
     return extractValueFromPyObject<PyType>(pyObject);
 }
-
-std::string extractStringFromPyObject(const boost::python::object& pyObject);
 
 } // namespace PyUtility
 
