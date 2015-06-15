@@ -138,8 +138,12 @@ void pyDictToStructureField(const boost::python::dict& pyDict, const std::string
 void pyTupleToUnionField(const boost::python::tuple& pyTuple, const std::string& fieldName, epics::pvData::PVStructurePtr& pvStructurePtr);
 
 //
-//
 // Conversion PY {} => PV Union
+//
+void pyDictToUnion(const boost::python::dict& pyDict, epics::pvData::PVUnionPtr& pvUnionPtr);
+
+//
+// Conversion PY {} => PV Union Field
 //
 void pyDictToUnionField(const boost::python::dict& pyDict, const std::string& fieldName, epics::pvData::PVStructurePtr& pvStructurePtr);
 

@@ -4,6 +4,7 @@
 #include "PvaException.h"
 #include "PyPvDataUtility.h"
 #include "StringUtility.h"
+#include "InvalidArgument.h"
 #include "InvalidRequest.h"
 #include "FieldNotFound.h"
 #include "boost/python/object.hpp"
@@ -576,26 +577,58 @@ PvObject PvObject::createUnionField(const std::string& fieldName) const
     return createUnionField(key, fieldName);
 }
 
-PvObject PvObject::createUnionArrayElementField(const std::string& fieldName, const std::string& key) const
-{
-    epics::pvData::PVUnionArrayPtr pvUnionArrayPtr = PyPvDataUtility::getUnionArrayField(key, pvStructurePtr);
-    return PvObject(PyPvDataUtility::createUnionFieldPvStructure(pvUnionArrayPtr->getUnionArray()->getUnion(), fieldName));
-}
-
 // UnionArray fields
-bool PvObject::isUnionArrayVariant(const std::string& key) const
+void PvObject::setUnionArray(const std::string& key, const boost::python::list& pyList)
 {
     epics::pvData::PVUnionArrayPtr pvUnionArrayPtr = PyPvDataUtility::getUnionArrayField(key, pvStructurePtr);
-    return pvUnionArrayPtr->getUnionArray()->getUnion()->isVariant();
+    epics::pvData::UnionConstPtr unionPtr = pvUnionArrayPtr->getUnionArray()->getUnion();
+    int listSize = boost::python::len(pyList);
+    epics::pvData::PVUnionArray::svector data(listSize);
+    for(size_t i = 0; i < data.size(); ++i) {
+        epics::pvData::PVUnionPtr pvUnionPtr = epics::pvData::getPVDataCreate()->createPVUnion(unionPtr);
+        boost::python::object pyObject = pyList[i];
+        boost::python::extract<boost::python::tuple> extractTuple(pyObject);
+        if (extractTuple.check()) {
+            boost::python::tuple pyTuple = extractTuple();
+            // Extract dictionary within tuple
+            if (boost::python::len(pyTuple) != 1) {
+                throw InvalidArgument("PV union tuple must have exactly one element.");
+            }
+            boost::python::object pyObject = pyTuple[0];
+            boost::python::dict pyDict = PyUtility::extractValueFromPyObject<boost::python::dict>(pyObject);
+            PyPvDataUtility::pyDictToUnion(pyDict, pvUnionPtr);
+            data[i] = pvUnionPtr;
+            continue;
+        } 
+
+        boost::python::extract<boost::python::dict> extractDict(pyObject);
+        if (extractDict.check()) {
+            boost::python::dict pyDict = extractDict();
+            PyPvDataUtility::pyDictToUnion(pyDict, pvUnionPtr);
+            data[i] = pvUnionPtr;
+            continue;
+        } 
+
+        boost::python::extract<PvObject> extractPvObject(pyObject);
+        if (extractPvObject.check()) {
+            PvObject pvObject = extractPvObject();
+            std::string keyFrom = PyPvDataUtility::getValueOrSingleFieldName(pvObject.getPvStructurePtr());
+            epics::pvData::PVFieldPtr pvFrom = PyPvDataUtility::getSubField(keyFrom, pvObject.getPvStructurePtr());
+            PyPvDataUtility::setUnionField(pvFrom, pvUnionPtr);
+            data[i] = pvUnionPtr;
+            continue;
+        }
+
+        throw InvalidArgument("Python object representing an union must be PvObject, tuple containing dictionary, or dictionary."); 
+    } 
+
+    pvUnionArrayPtr->replace(freeze(data));
 }
 
-boost::python::list PvObject::getUnionArrayFieldNames(const std::string& key) const
+void PvObject::setUnionArray(const boost::python::list& pyList)
 {
-    epics::pvData::PVUnionArrayPtr pvUnionArrayPtr = PyPvDataUtility::getUnionArrayField(key, pvStructurePtr);
-    epics::pvData::StringArray names = pvUnionArrayPtr->getUnionArray()->getUnion()->getFieldNames();
-    boost::python::list pyList;
-    PyPvDataUtility::stringArrayToPyList(names, pyList);
-    return pyList;
+    std::string key = PyPvDataUtility::getValueOrSingleFieldName(pvStructurePtr);
+    setUnionArray(key, pyList);
 }
 
 boost::python::list PvObject::getUnionArray(const std::string& key) const
@@ -610,20 +643,49 @@ boost::python::list PvObject::getUnionArray(const std::string& key) const
     return pyList;
 }
 
-void PvObject::setUnionArray(const boost::python::list& pyList, const std::string& key)
+boost::python::list PvObject::getUnionArray() const
+{
+    std::string key = PyPvDataUtility::getValueOrSingleFieldName(pvStructurePtr);
+    return getUnionArray(key);
+}
+
+bool PvObject::isUnionArrayVariant(const std::string& key) const
 {
     epics::pvData::PVUnionArrayPtr pvUnionArrayPtr = PyPvDataUtility::getUnionArrayField(key, pvStructurePtr);
-    epics::pvData::UnionConstPtr unionPtr = pvUnionArrayPtr->getUnionArray()->getUnion();
-    int listSize = boost::python::len(pyList);
-    epics::pvData::PVUnionArray::svector data(listSize);
-    for(size_t i = 0; i < data.size(); ++i) {
-        PvObject pvObject = boost::python::extract<PvObject>(pyList[i]);
-        epics::pvData::PVStructurePtr pv = pvObject.getPvStructurePtr();
-        epics::pvData::PVFieldPtr pvFrom = pv->getSubField(key);
-        epics::pvData::PVUnionPtr pvUnion = epics::pvData::getPVDataCreate()->createPVUnion(unionPtr);
-        PyPvDataUtility::setUnionField(pvFrom, pvUnion);
-        data[i] = pvUnion;
-    }
-    pvUnionArrayPtr->replace(freeze(data));
+    return pvUnionArrayPtr->getUnionArray()->getUnion()->isVariant();
 }
+
+bool PvObject::isUnionArrayVariant() const
+{
+    std::string key = PyPvDataUtility::getValueOrSingleFieldName(pvStructurePtr);
+    return isUnionArrayVariant(key);
+}
+
+boost::python::list PvObject::getUnionArrayFieldNames(const std::string& key) const
+{
+    epics::pvData::PVUnionArrayPtr pvUnionArrayPtr = PyPvDataUtility::getUnionArrayField(key, pvStructurePtr);
+    epics::pvData::StringArray names = pvUnionArrayPtr->getUnionArray()->getUnion()->getFieldNames();
+    boost::python::list pyList;
+    PyPvDataUtility::stringArrayToPyList(names, pyList);
+    return pyList;
+}
+
+boost::python::list PvObject::getUnionArrayFieldNames() const
+{
+    std::string key = PyPvDataUtility::getValueOrSingleFieldName(pvStructurePtr);
+    return getUnionArrayFieldNames(key);
+}
+
+PvObject PvObject::createUnionArrayElementField(const std::string& key, const std::string& fieldName) const
+{
+    epics::pvData::PVUnionArrayPtr pvUnionArrayPtr = PyPvDataUtility::getUnionArrayField(key, pvStructurePtr);
+    return PvObject(PyPvDataUtility::createUnionFieldPvStructure(pvUnionArrayPtr->getUnionArray()->getUnion(), fieldName));
+}
+
+PvObject PvObject::createUnionArrayElementField(const std::string& fieldName) const
+{
+    std::string key = PyPvDataUtility::getValueOrSingleFieldName(pvStructurePtr);
+    return createUnionArrayElementField(key, fieldName);
+}
+
 

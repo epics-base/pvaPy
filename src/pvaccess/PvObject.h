@@ -151,12 +151,18 @@ public:
     PvObject createUnionField(const std::string& fieldName) const;
 
     // UnionArray fields
-    bool isUnionArrayVariant(const std::string& key=ValueFieldKey) const;
-    PvObject createUnionArrayElementField(const std::string& fieldName, const std::string& key) const;
-    boost::python::list getUnionArrayFieldNames(const std::string& key=ValueFieldKey) const;
-    boost::python::list getUnionArray(const std::string& key=ValueFieldKey) const;
-    void setUnionArray(const boost::python::list& pyList, const std::string& key=ValueFieldKey);
-    
+    void setUnionArray(const std::string& key, const boost::python::list& pyList);
+    void setUnionArray(const boost::python::list& pyList);
+    boost::python::list getUnionArray(const std::string& key) const;
+    boost::python::list getUnionArray() const;
+
+    boost::python::list getUnionArrayFieldNames(const std::string& key) const;
+    boost::python::list getUnionArrayFieldNames() const;
+    bool isUnionArrayVariant(const std::string& key) const;
+    bool isUnionArrayVariant() const;
+    PvObject createUnionArrayElementField(const std::string& key, const std::string& fieldName) const;
+    PvObject createUnionArrayElementField(const std::string& fieldName) const;
+
 protected:
     epics::pvData::PVStructurePtr pvStructurePtr;
     PvType::DataType dataType;

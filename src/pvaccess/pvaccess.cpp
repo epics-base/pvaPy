@@ -757,7 +757,7 @@ BOOST_PYTHON_MODULE(pvaccess)
             ":Parameter: *dictList* (list) - list of dictionaries\n\n"
             ":Raises: *InvalidRequest* - when single-field structure has no structure array field or multiple-field structure has no structure array 'value' field\n\n"
             "::\n\n"
-            "    pv = PvObject({'aStructArray' : [{'anInt' : INT, {'aFloat' : FLOAT}]})\n\n"
+            "    pv = PvObject({'aStructArray' : [{'anInt' : INT, 'aFloat' : FLOAT}]})\n\n"
             "    pv.setStructureArray([{'anInt' : 1, 'aFloat' : 1.1},{'anInt' : 2, 'aFloat' : 2.2},{'anInt' : 3, 'aFloat' : 3.3}])\n\n")
 
         .def("setStructureArray", 
@@ -769,7 +769,7 @@ BOOST_PYTHON_MODULE(pvaccess)
             ":Raises: *FieldNotFound* - when PV structure does not have specified field\n\n"
             ":Raises: *InvalidRequest* - when specified field is not a structure array\n\n"
             "::\n\n"
-            "    pv = PvObject({'aStructArray' : [{'anInt' : INT, {'aFloat' : FLOAT}], 'aString' : STRING})\n\n"
+            "    pv = PvObject({'aStructArray' : [{'anInt' : INT, 'aFloat' : FLOAT}], 'aString' : STRING})\n\n"
             "    pv.setStructureArray('aStructArray', [{'anInt' : 1, 'aFloat' : 1.1},{'anInt' : 2, 'aFloat' : 2.2},{'anInt' : 3, 'aFloat' : 3.3}])\n\n")
 
         .def("getStructureArray", 
@@ -778,7 +778,7 @@ BOOST_PYTHON_MODULE(pvaccess)
             ":Returns: list of dictionaries\n\n"
             ":Raises: *InvalidRequest* - when single-field structure has no structure array field or multiple-field structure has no structure array 'value' field\n\n"
             "::\n\n"
-            "    pv = PvObject({'aStructArray' : [{'anInt' : INT, {'aFloat' : FLOAT}]})\n\n"
+            "    pv = PvObject({'aStructArray' : [{'anInt' : INT, 'aFloat' : FLOAT}]})\n\n"
             "    dictList = pv.getStructureArray()\n\n")
 
         .def("getStructureArray", 
@@ -790,7 +790,7 @@ BOOST_PYTHON_MODULE(pvaccess)
             ":Raises: *FieldNotFound* - when PV structure does not have specified field\n\n"
             ":Raises: *InvalidRequest* - when specified field is not a structure array\n\n"
             "::\n\n"
-            "    pv = PvObject({'aStructArray' : [{'anInt' : INT, {'aFloat' : FLOAT}], 'aString' : STRING})\n\n"
+            "    pv = PvObject({'aStructArray' : [{'anInt' : INT, 'aFloat' : FLOAT}], 'aString' : STRING})\n\n"
             "    dictList = pv.getStructureArray('aStructArray')\n\n")
 
         .def("setUnion", static_cast<void(PvObject::*)(const PvObject&)>(&PvObject::setUnion),
@@ -975,10 +975,10 @@ BOOST_PYTHON_MODULE(pvaccess)
         .def("createUnionField",
             static_cast<PvObject(PvObject::*)(const std::string&, const std::string&)const>(&PvObject::createUnionField),
             args("fieldName", "unionFieldName"),
-            "Creates union field for an union assigned to a given field name.\n"
+            "Creates union field object for an union assigned to a given field name.\n"
             ":Parameter: *fieldName* (str) - field name\n\n"
             ":Parameter: *unionFieldName* (str) - union field name to be created\n\n"
-            ":Returns: PV object with created union field\n\n"
+            ":Returns: PV object for new union field\n\n"
             ":Raises: *FieldNotFound* - when PV structure does not have specified field\n\n"
             ":Raises: *InvalidRequest* - when specified field is not an union\n\n"
             "::\n\n"
@@ -988,71 +988,124 @@ BOOST_PYTHON_MODULE(pvaccess)
         .def("createUnionField",
             static_cast<PvObject(PvObject::*)(const std::string&)const>(&PvObject::createUnionField),
             args("unionFieldName"),
-            "Created union field for an union from a single-field structure, or from a structure that has union field named 'value'.\n\n"
+            "Creates union field object for an union from a single-field structure, or from a structure that has union field named 'value'.\n\n"
             ":Parameter: *unionFieldName* (str) - union field name to be created\n\n"
-            ":Returns: PV object with created union field\n\n"
+            ":Returns: PV object for new union field\n\n"
             ":Raises: *InvalidRequest* - when single-field structure has no union field or multiple-field structure has no union 'value' field\n\n"
             "::\n\n"
             "    pv = PvObject({'anUnion' : ({'anInt' : INT, 'aFloat' : FLOAT},)})\n\n"
             "    createdPv = pv.createUnionField('anInt')\n\n")
 
-        .def("isUnionArrayVariant",&PvObject::isUnionArrayVariant,
-            (arg("key") = "value"),
-            "Is a field a variant union array?\n"
-            "arg\n"
-            "    name fieldName = \"value\"\n"
-            "return (True,False) when (is,is not)  a variant union array\n"
-            "throws InvalidArgument when field is not a union array.\n\n"
-            "example\n"
-            "    value = pv.unionArrayIsVariant()\n\n")
+        .def("setUnionArray", 
+            static_cast<void(PvObject::*)(const boost::python::list&)>(&PvObject::setUnionArray),
+            args("objectList"),
+            "Sets union array value for a single-field structure, or for a structure that has union array field named 'value'.\n\n"
+            ":Parameter: *objectList* (list) - list of PV objects, dictionaries, or tuples representing unions\n\n"
+            ":Raises: *InvalidArgument* - when dictionary's field name/type do not match any of the union's fields\n\n"
+            ":Raises: *InvalidRequest* - when single-field structure has no union array field or multiple-field structure has no union array 'value' field\n\n"
+            "::\n\n"
+            "    pv = PvObject({'anUnionArray' : [({'anInt' : INT, 'aFloat' : FLOAT},)]})\n\n"
+            "    pv.setUnionArray([{'anInt' : 10}, {'aFloat' : 11.1}])\n\n")
 
-        .def("getUnionArrayFieldNames",&PvObject::getUnionArrayFieldNames,
-            (arg("key") = "value"),
-            "Get the field names for a regular union array\n"
-            "arg\n"
-            "    name fieldName = \"value\"\n"
-            "return list of union fieldnames. If variant union then empty list\n"
-            "throws InvalidArgument when field is not a union array.\n\n"
-            "example\n"
-            "    value = pv.unionArrayGetFieldNames()\n\n")
+        .def("setUnionArray", 
+            static_cast<void(PvObject::*)(const std::string&,const boost::python::list&)>(&PvObject::setUnionArray),
+            args("fieldName", "objectList"),
+            "Sets union array value for the given PV field.\n\n"
+            ":Parameter: *fieldName* (str) - field name\n\n"
+            ":Parameter: *objectList* (list) - list of PV objects, dictionaries, or tuples representing unions\n\n"
+            ":Raises: *FieldNotFound* - when PV structure does not have specified field\n\n"
+            ":Raises: *InvalidArgument* - when dictionary's field name/type do not match any of the union's fields\n\n"
+            ":Raises: *InvalidRequest* - when specified field is not an union array\n\n"
+            "::\n\n"
+            "    pv = PvObject({'anUnionArray' : [({'anInt' : INT, 'aFloat' : FLOAT},)], 'aString' : STRING})\n\n"
+            "    pv.setUnionArray('anUnionArray', [{'anInt' : 10}, {'aFloat' : 11.1}])\n\n")
 
-        .def("createUnionArrayElementField",&PvObject::createUnionArrayElementField,
-            (arg("fieldName") = "",arg("key") = "value"),
-            "Create a union with selected field name\n"
-            "arg\n"
-            "    fieldName The union field name.\n"
-            "    name fieldName = \"value\"\n"
-            "Returns PvObject.\n"
-            "    The pvObject is a structure as follows:\n"
-            "    structure\n"
-            "        union value\n"
-            "throws InvalidArgument when field is not a union.\n"
-            "       ValueError when variant union or illegal union field name.\n\n"
-            "example\n"
-            "    value = pv.unionArrayCreateElement(unionFieldName,fieldName)\n\n")
+        .def("getUnionArray", 
+            static_cast<boost::python::list(PvObject::*)()const>(&PvObject::getUnionArray), 
+            "Retrieves union array value from a single-field structure, or from a structure that has union array field named 'value'.\n\n"
+            ":Returns: list of union PV objects\n\n"
+            ":Raises: *InvalidRequest* - when single-field structure has no union array field or multiple-field structure has no union array 'value' field\n\n"
+            "::\n\n"
+            "    pv = PvObject({'anUnionArray' : [({'anInt' : INT, 'aFloat' : FLOAT},)]})\n\n"
+            "    unionPvList = pv.getUnionArray()\n\n")
 
-        .def("setUnionArray", &PvObject::setUnionArray,
-            (arg("key") = "value"),
-            "Sets union array for the given PV field.\n"
-            "arg\n"
-            "    value a list of PvObjects. Each PvObject must be a structure as follows:\n"
-            "        structure\n"
-            "            union value\n"
-            "    name fieldName = \"value\"\n"
-            "throws InvalidArgument when field is not a union array.\n\n")
+        .def("getUnionArray", 
+            static_cast<boost::python::list(PvObject::*)(const std::string&)const>(&PvObject::getUnionArray), 
+            args("fieldName"), 
+            "Retrieves union array value assigned to the given PV field.\n\n"
+            ":Parameter: *fieldName* (str) - field name\n\n"
+            ":Returns: list of union PV objects\n\n"
+            ":Raises: *FieldNotFound* - when PV structure does not have specified field\n\n"
+            ":Raises: *InvalidRequest* - when specified field is not an union array\n\n"
+            "::\n\n"
+            "    pv = PvObject({'anUnionArray' : [({'anInt' : INT, 'aFloat' : FLOAT},)], 'aString' : STRING})\n\n"
+            "    unionPvList = pv.getUnionArray('anUnionArray')\n\n")
 
-        .def("getUnionArray", &PvObject::getUnionArray,
-            (arg("key") = "value"),
-            "Get a union array with selected field name\n"
-            "arg\n"
-            "    name fieldName = \"value\"\n"
-            "Returns a list of PvObjects.\n"
-            "    Each pvObject is a structure as follows:\n"
-            "    structure\n"
-            "        union value\n"
-            "throws InvalidArgument when field is not a union.\n\n"
-            "example\n"
-            "    value = pv.unionArrayGet(fieldName)\n\n")
+        .def("getUnionArrayFieldNames",
+            static_cast<boost::python::list(PvObject::*)(const std::string&)const>(&PvObject::getUnionArrayFieldNames),
+            args("fieldName"),
+            "Retrieves list of field names for an union array.\n"
+            ":Parameter: *fieldName* (str) - field name\n\n"
+            ":Returns: list of union array field names\n\n"
+            ":Raises: *FieldNotFound* - when PV structure does not have specified field\n\n"
+            ":Raises: *InvalidRequest* - when specified field is not an union array\n\n"
+            "::\n\n"
+            "    pv = PvObject({'anUnionArray' : [({'anInt' : INT, 'aFloat' : FLOAT},)], 'aString' : STRING})\n\n"
+            "    fieldNameList = pv.getUnionArrayFieldNames('anUnionArray')\n\n")
+
+        .def("getUnionArrayFieldNames",
+            static_cast<boost::python::list(PvObject::*)()const>(&PvObject::getUnionArrayFieldNames),
+            "Retrieves list of union array field names from a single-field structure, or from a structure that has union array field named 'value'.\n\n"
+            ":Returns: list of union array field names\n\n"
+            ":Raises: *InvalidRequest* - when single-field structure has no union array field or multiple-field structure has no union array 'value' field\n\n"
+            "::\n\n"
+            "    pv = PvObject({'anUnionArray' : [({'anInt' : INT, 'aFloat' : FLOAT},)]})\n\n"
+            "    fieldNameList = pv.getUnionArrayFieldNames()\n\n")
+
+        .def("isUnionArrayVariant",
+            static_cast<bool(PvObject::*)(const std::string&)const>(&PvObject::isUnionArrayVariant),
+            args("fieldName"),
+            "Checks if an union array assigned to a given field name is variant.\n"
+            ":Parameter: *fieldName* (str) - field name\n\n"
+            ":Returns: true if union array is variant, false otherwise\n\n"
+            ":Raises: *FieldNotFound* - when PV structure does not have specified field\n\n"
+            ":Raises: *InvalidRequest* - when specified field is not an union array\n\n"
+            "::\n\n"
+            "    pv = PvObject({'anUnionArray' : [({'anInt' : INT, 'aFloat' : FLOAT},)], 'aString' : STRING})\n\n"
+            "    isVariant = pv.isUnionArrayVariant('anUnionArray')\n\n")
+
+        .def("isUnionArrayVariant",
+            static_cast<bool(PvObject::*)()const>(&PvObject::isUnionArrayVariant),
+            "Checks if an union array from a single-field structure, or from a structure that has union array field named 'value', is variant.\n\n"
+            ":Returns: true if union array is variant, false otherwise\n\n"
+            ":Raises: *InvalidRequest* - when single-field structure has no union array field or multiple-field structure has no union array 'value' field\n\n"
+            "::\n\n"
+            "    pv = PvObject({'anUnionArray' : [({'anInt' : INT, 'aFloat' : FLOAT},)]})\n\n"
+            "    isVariant = pv.isUnionArrayVariant()\n\n")
+
+        .def("createUnionArrayElementField",
+            static_cast<PvObject(PvObject::*)(const std::string&, const std::string&)const>(&PvObject::createUnionArrayElementField),
+            args("fieldName", "unionFieldName"),
+            "Creates union field object for an union array assigned to a given field name.\n"
+            ":Parameter: *fieldName* (str) - field name\n\n"
+            ":Parameter: *unionFieldName* (str) - union field name to be created\n\n"
+            ":Returns: PV object for new union field\n\n"
+            ":Raises: *FieldNotFound* - when PV structure does not have specified field\n\n"
+            ":Raises: *InvalidRequest* - when specified field is not an union array\n\n"
+            "::\n\n"
+            "    pv = PvObject({'anUnionArray' : [({'anInt' : INT, 'aFloat' : FLOAT},)], 'aString' : STRING})\n\n"
+            "    unionPv = pv.createUnionArrayElementField('anUnionArray', 'anInt')\n\n")
+
+        .def("createUnionArrayElementField",
+            static_cast<PvObject(PvObject::*)(const std::string&)const>(&PvObject::createUnionArrayElementField),
+            args("unionFieldName"),
+            "Creates union field object for an union array from a single-field structure, or from a structure that has union array field named 'value'.\n\n"
+            ":Parameter: *unionFieldName* (str) - union field name to be created\n\n"
+            ":Returns: PV object for new union field\n\n"
+            ":Raises: *InvalidRequest* - when single-field structure has no union array field or multiple-field structure has no union array 'value' field\n\n"
+            "::\n\n"
+            "    pv = PvObject({'anUnionArray' : [({'anInt' : INT, 'aFloat' : FLOAT},)]})\n\n"
+            "    unionPv = pv.createUnionArrayElementField('anInt')\n\n")
 
         .def("toDict", 
             &PvObject::toDict,
