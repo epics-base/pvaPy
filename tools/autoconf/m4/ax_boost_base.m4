@@ -243,11 +243,12 @@ if test "x$want_boost" = "xyes"; then
         AC_LANG_POP([C++])
     fi
 
+    BOOST_VERSION=`cat $BOOST_DIR/include/boost/version.hpp  | grep BOOST_VERSION | grep \#define | grep -v HPP | awk '{print $NF}'`
     if test "$succeeded" != "yes" ; then
         if test "$_version" = "0" ; then
             AC_MSG_NOTICE([[We could not detect the boost libraries (version $boost_lib_version_req_shorten or higher). If you have a staged boost library (still not installed) please specify \$BOOST_ROOT in your environment and do not give a PATH to --with-boost option.  If you are sure you have boost installed, then check your version number looking in <boost/version.hpp>. See http://randspringer.de/boost for more documentation.]])
         else
-            AC_MSG_NOTICE([Your boost libraries seems to old (version $_version).])
+            AC_MSG_NOTICE([Your boost libraries seem too old (version $BOOST_VERSION).])
         fi
         # execute ACTION-IF-NOT-FOUND (if present):
         ifelse([$3], , :, [$3])
@@ -258,6 +259,7 @@ if test "x$want_boost" = "xyes"; then
         AC_DEFINE(BOOST_DIR, $BOOST_DIR, [define Boost directory path])
         AC_DEFINE(BOOST_CPPFLAGS, $BOOST_CPPFLAGS, [define Boost CPPFLAGS])
         AC_DEFINE(BOOST_LDFLAGS, $BOOST_LDFLAGS, [define Boost LDFLAGS])
+        AC_MSG_NOTICE([Using boost version $BOOST_VERSION])
         # execute ACTION-IF-FOUND (if present):
         ifelse([$2], , :, [$2])
     fi
