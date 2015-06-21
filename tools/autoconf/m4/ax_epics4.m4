@@ -184,6 +184,8 @@ AC_DEFUN([AX_EPICS4],
         AC_MSG_RESULT([no])
         AC_MSG_ERROR(could not compile and link EPICS4 test code: check your EPICS4 installation)
     else
+        AC_SUBST(NORMATIVETYPESCPP_DIR, "")
+        AC_SUBST(PVACLIENTCPP_DIR, "")
         if test "$pva_client_cpp" == "yes" ; then
             pva_api_version=441
             AC_SUBST(NORMATIVETYPESCPP_DIR, $normativetypescpp_dir)

@@ -99,12 +99,8 @@ AC_DEFUN([AX_PVA_PY],
     echo "EPICS4_DIR=$EPICS4_DIR" >> $release_local
     echo "PVDATACPP_DIR=$PVDATACPP_DIR" >> $release_local
     echo "PVACCESSCPP_DIR=$PVACCESSCPP_DIR" >> $release_local
-    if ! test -z "$NORMATIVETYPESCPP_DIR"; then
-        echo "NORMATIVETYPESCPP_DIR=$NORMATIVETYPESCPP_DIR" >> $release_local
-    fi
-    if ! test -z "$PVACLIENTCPP_DIR"; then
-        echo "PVACLIENTCPP_DIR=$PVACLIENTCPP_DIR" >> $release_local
-    fi
+    echo "NORMATIVETYPESCPP_DIR=$NORMATIVETYPESCPP_DIR" >> $release_local
+    echo "PVACLIENTCPP_DIR=$PVACLIENTCPP_DIR" >> $release_local
     AC_MSG_NOTICE([created $release_local file])
 
     # create CONFIG_SITE.local

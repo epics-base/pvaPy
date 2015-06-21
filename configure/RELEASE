@@ -24,12 +24,8 @@
 #PVCOMMON=$(EPICS4_DIR)/pvCommonCPP
 PVDATA=$(PVDATACPP_DIR)
 PVACCESS=$(PVACCESSCPP_DIR)
-ifeq ($(NORMATIVETYPESCPP_DIR),"")
 NORMATIVETYPES=$(NORMATIVETYPESCPP_DIR)
-endif
-ifeq ($(PVACLIENTCPP_DIR),"")
 PVACLIENT=$(PVACLIENTCPP_DIR)
-endif
 
 # Set RULES here if you want to take build rules from somewhere
 # other than EPICS_BASE:
