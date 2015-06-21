@@ -186,12 +186,16 @@ AC_DEFUN([AX_EPICS4],
     else
         if test "$pva_client_cpp" == "yes" ; then
             pva_api_version=441
+            AC_SUBST(NORMATIVETYPESCPP_DIR, $normativetypescpp_dir)
+            AC_SUBST(PVACLIENTCPP_DIR, $pvaclientcpp_dir)
         fi
         AC_MSG_RESULT([yes (pva api version: $pva_api_version)])
         AC_DEFINE(HAVE_EPICS4,,[define if the EPICS4 libraries are available])
         AC_DEFINE(PVA_API_VERSION,$pva_api_version,[define PVA API version])
         AC_SUBST(PVA_API_VERSION, $pva_api_version)
         AC_SUBST(EPICS4_DIR)
+        AC_SUBST(PVDATACPP_DIR, $pvdatacpp_dir)
+        AC_SUBST(PVACCESSCPP_DIR, $pvaccesscpp_dir)
     fi
 
     CPPFLAGS=$CPPFLAGS_NO_PVACLIENTCPP

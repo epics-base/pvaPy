@@ -5,7 +5,7 @@
 #include <vector>
 
 #include "boost/python/list.hpp"
-#include "pv/pva.h"
+#include "pv/pvaClient.h"
 
 #include "ChannelGetRequesterImpl.h"
 #include "ChannelMonitorRequesterImpl.h"
@@ -85,15 +85,15 @@ private:
     static void monitorThread(Channel* channel);
 
     void connect();
-    epics::pva::PvaMonitorPtr getMonitor();
+    epics::pvaClient::PvaClientMonitorPtr getMonitor();
     void queueMonitorData(PvObject& pvObject);
 
     bool processMonitorElement();
     void notifyMonitorThreadExit();
 
-    static epics::pva::PvaPtr pva;
-    epics::pva::PvaChannelPtr  pvaChannel;
-    epics::pva::PvaMonitorPtr pvaMonitor;
+    static epics::pvaClient::PvaClientPtr pvaClientPtr;
+    epics::pvaClient::PvaClientChannelPtr  pvaClientChannelPtr;
+    epics::pvaClient::PvaClientMonitorPtr pvaClientMonitorPtr;
     SynchronizedQueue<PvObject> pvObjectMonitorQueue;
 
     bool monitorThreadDone;
@@ -107,7 +107,7 @@ private:
 
 inline std::string Channel::getName() const
 {
-    return pvaChannel->getChannelName();
+    return pvaClientChannelPtr->getChannelName();
 }
 
 inline void Channel::setTimeout(double timeout) 
