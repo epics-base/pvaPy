@@ -83,6 +83,7 @@ private:
     static PvaClient pvaClient;
     static CaClient caClient;
     static void monitorThread(Channel* channel);
+    static void processingThread(Channel* channel);
 
     void connect();
     epics::pvaClient::PvaClientMonitorPtr getMonitor();
