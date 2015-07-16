@@ -27,12 +27,12 @@ PvLong::~PvLong()
 
 void PvLong::set(long long ll) 
 {
-    pvStructurePtr->getLongField(ValueFieldKey)->put(ll);
+    pvStructurePtr->getSubField<epics::pvData::PVLong>(ValueFieldKey)->put(ll);
 }
 
 long long PvLong::get() const 
 {
-    return pvStructurePtr->getLongField(ValueFieldKey)->get();
+    return pvStructurePtr->getSubField<epics::pvData::PVLong>(ValueFieldKey)->get();
 }
 
 

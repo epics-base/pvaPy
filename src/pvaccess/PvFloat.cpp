@@ -27,12 +27,12 @@ PvFloat::~PvFloat()
 
 void PvFloat::set(float f) 
 {
-    pvStructurePtr->getFloatField(ValueFieldKey)->put(f);
+    pvStructurePtr->getSubField<epics::pvData::PVFloat>(ValueFieldKey)->put(f);
 }
 
 float PvFloat::get() const 
 {
-    return pvStructurePtr->getFloatField(ValueFieldKey)->get();
+    return pvStructurePtr->getSubField<epics::pvData::PVFloat>(ValueFieldKey)->get();
 }
 
 

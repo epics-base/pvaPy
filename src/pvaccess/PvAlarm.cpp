@@ -54,31 +54,31 @@ PvAlarm::~PvAlarm()
 
 void PvAlarm::setSeverity(int severity)
 {
-    pvStructurePtr->getIntField(SeverityFieldKey)->put(severity);
+    pvStructurePtr->getSubField<epics::pvData::PVInt>(SeverityFieldKey)->put(severity);
 }
 
 int PvAlarm::getSeverity() const
 {
-    return pvStructurePtr->getIntField(SeverityFieldKey)->get();
+    return pvStructurePtr->getSubField<epics::pvData::PVInt>(SeverityFieldKey)->get();
 }
 
 void PvAlarm::setStatus(int status)
 {
-    pvStructurePtr->getIntField(StatusFieldKey)->put(status);
+    pvStructurePtr->getSubField<epics::pvData::PVInt>(StatusFieldKey)->put(status);
 }
 
 int PvAlarm::getStatus() const
 {
-    return pvStructurePtr->getIntField(StatusFieldKey)->get();
+    return pvStructurePtr->getSubField<epics::pvData::PVInt>(StatusFieldKey)->get();
 }
 
 void PvAlarm::setMessage(const std::string& message)
 {
-    pvStructurePtr->getStringField(MessageFieldKey)->put(message);
+    pvStructurePtr->getSubField<epics::pvData::PVString>(MessageFieldKey)->put(message);
 }
 
 std::string PvAlarm::getMessage() const
 {
-    return pvStructurePtr->getStringField(MessageFieldKey)->get();
+    return pvStructurePtr->getSubField<epics::pvData::PVString>(MessageFieldKey)->get();
 }
 

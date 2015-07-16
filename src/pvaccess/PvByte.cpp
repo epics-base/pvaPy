@@ -27,12 +27,12 @@ PvByte::~PvByte()
 
 void PvByte::set(char c) 
 {
-    pvStructurePtr->getByteField(ValueFieldKey)->put(c);
+    pvStructurePtr->getSubField<epics::pvData::PVByte>(ValueFieldKey)->put(c);
 }
 
 char PvByte::get() const 
 {
-    return pvStructurePtr->getByteField(ValueFieldKey)->get();
+    return pvStructurePtr->getSubField<epics::pvData::PVByte>(ValueFieldKey)->get();
 }
 
 

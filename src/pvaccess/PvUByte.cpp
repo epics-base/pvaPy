@@ -27,12 +27,12 @@ PvUByte::~PvUByte()
 
 void PvUByte::set(unsigned char uc) 
 {
-    pvStructurePtr->getUByteField(ValueFieldKey)->put(uc);
+    pvStructurePtr->getSubField<epics::pvData::PVUByte>(ValueFieldKey)->put(uc);
 }
 
 unsigned char PvUByte::get() const 
 {
-    return pvStructurePtr->getUByteField(ValueFieldKey)->get();
+    return pvStructurePtr->getSubField<epics::pvData::PVUByte>(ValueFieldKey)->get();
 }
 
 
