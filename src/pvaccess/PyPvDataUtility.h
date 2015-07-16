@@ -81,6 +81,11 @@ epics::pvData::ScalarType getScalarType(const std::string& fieldName, const epic
 epics::pvData::ScalarType getScalarArrayType(const std::string& fieldName, const epics::pvData::PVStructurePtr& pvStructurePtr);
 
 //
+// Conversion PY object => PV Field
+//
+void pyObjectToField(const boost::python::object& pyObject, const std::string& fieldName, epics::pvData::PVStructurePtr& pvStructurePtr);
+
+//
 // Conversion PY object => PV Scalar
 //
 void pyObjectToScalarField(const boost::python::object& pyObject, const std::string& fieldName, epics::pvData::PVStructurePtr& pvStructurePtr);

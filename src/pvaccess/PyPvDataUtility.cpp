@@ -321,6 +321,45 @@ epics::pvData::ScalarType getScalarArrayType(const std::string& fieldName, const
 }
 
 //
+// Conversion PY object => PV Field
+//
+void pyObjectToField(const boost::python::object& pyObject, const std::string& fieldName, epics::pvData::PVStructurePtr& pvStructurePtr)
+{
+    // Find field in pv structure
+    epics::pvData::FieldConstPtr fieldPtr = getField(fieldName, pvStructurePtr);
+    epics::pvData::Type type = fieldPtr->getType();
+    switch (type) {
+        case epics::pvData::scalar: {
+            pyObjectToScalarField(pyObject, fieldName, pvStructurePtr);
+            break;
+        }
+        case epics::pvData::structure: {
+            pyObjectToStructureField(pyObject, fieldName, pvStructurePtr);
+            break;
+        }
+        case epics::pvData::scalarArray: {
+            pyObjectToScalarArrayField(pyObject, fieldName, pvStructurePtr);
+            break;
+        }
+        case epics::pvData::structureArray: {
+            pyObjectToStructureArrayField(pyObject, fieldName, pvStructurePtr);
+            break;
+        }
+        case epics::pvData::union_: {
+            pyObjectToUnionField(pyObject, fieldName, pvStructurePtr);
+            break;
+        }
+        case epics::pvData::unionArray: {
+            pyObjectToUnionArrayField(pyObject, fieldName, pvStructurePtr);
+            break;
+        }
+        default: {
+            throw PvaException("Unrecognized field type: %d", type);
+        }
+    } 
+}    
+
+//
 // Conversion PY object => PV Scalar
 //
 void pyObjectToScalarField(const boost::python::object& pyObject, const std::string& fieldName, epics::pvData::PVStructurePtr& pvStructurePtr)
@@ -653,40 +692,9 @@ void pyDictToStructure(const boost::python::dict& pyDict, epics::pvData::PVStruc
         else {
             throw InvalidDataType("Dictionary key must be a string");
         }
-
-        // Got key/field name, find it in pv structure
-        epics::pvData::FieldConstPtr fieldPtr = getField(key, pvStructurePtr);
-        epics::pvData::Type type = fieldPtr->getType();
-        switch (type) {
-            case epics::pvData::scalar: {
-                pyObjectToScalarField(pyDict[keyObject], key, pvStructurePtr);
-                break;
-            }
-            case epics::pvData::structure: {
-                pyObjectToStructureField(pyDict[keyObject], key, pvStructurePtr);
-                break;
-            }
-            case epics::pvData::scalarArray: {
-                pyObjectToScalarArrayField(pyDict[keyObject], key, pvStructurePtr);
-                break;
-            }
-            case epics::pvData::structureArray: {
-                pyObjectToStructureArrayField(pyDict[keyObject], key, pvStructurePtr);
-                break;
-            }
-            case epics::pvData::union_: {
-                pyObjectToUnionField(pyDict[keyObject], key, pvStructurePtr);
-                break;
-            }
-            case epics::pvData::unionArray: {
-                pyObjectToUnionArrayField(pyDict[keyObject], key, pvStructurePtr);
-                break;
-            }
-            default: {
-                throw PvaException("Unrecognized field type: %d", type);
-            }
-        } 
-    }    
+        boost::python::object pyObject = pyDict[keyObject];
+        pyObjectToField(pyObject, key, pvStructurePtr);
+    }
 }
 
 //

@@ -105,6 +105,28 @@ boost::python::dict PvObject::get() const
     return toDict();
 }
 
+void PvObject::setObject(const std::string& key, const boost::python::object& pyObject)
+{
+    PyPvDataUtility::pyObjectToField(pyObject, key, pvStructurePtr);
+}
+
+void PvObject::setObject(const boost::python::object& pyObject)
+{
+    std::string key = PyPvDataUtility::getValueOrSingleFieldName(pvStructurePtr);
+    setObject(key, pyObject);
+}
+
+boost::python::object PvObject::getObject(const std::string& key) const
+{
+    return toDict()[key];
+}
+
+boost::python::object PvObject::getObject() const
+{
+    std::string key = PyPvDataUtility::getValueOrSingleFieldName(pvStructurePtr);
+    return getObject(key);
+}
+
 // Boolean modifiers/accessors
 void PvObject::setBoolean(const std::string& key, bool value)
 {

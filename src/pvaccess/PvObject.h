@@ -39,6 +39,11 @@ public:
     void set(const boost::python::dict& pyDict);
     boost::python::dict get() const;
 
+    void setObject(const std::string& key, const boost::python::object& pyObject);
+    void setObject(const boost::python::object& pyObject);
+    boost::python::object getObject(const std::string& key) const;
+    boost::python::object getObject() const;
+
     // Boolean fields
     void setBoolean(const std::string& key, bool value);
     void setBoolean(bool value);

@@ -157,6 +157,48 @@ BOOST_PYTHON_MODULE(pvaccess)
             "    pv.set({'anInt' : 1})\n\n"
             "    valueDict = pv.get()\n\n")
 
+        .def("setObject", 
+            static_cast<void(PvObject::*)(const boost::python::object&)>(&PvObject::setObject),
+            args("value"),
+            "Sets value for a single-field structure, or for a structure that has field named 'value'.\n\n"
+            ":Parameter: *value* (object) - value object\n\n"
+            ":Raises: *InvalidRequest* - when single-field structure has no field or multiple-field structure has no 'value' field\n\n"
+            "::\n\n"
+            "    pv = PvObject({'aString' : STRING})\n\n"
+            "    pv.setObject('string value')\n\n")
+
+        .def("setObject", 
+            static_cast<void(PvObject::*)(const std::string&,const boost::python::object&)>(&PvObject::setObject),
+            args("fieldName", "value"),
+            "Sets value for the given PV field.\n\n"
+            ":Parameter: *fieldName* (str) - field name\n\n"
+            ":Parameter: *value* (object) - value object\n\n"
+            ":Raises: *FieldNotFound* - when PV structure does not have specified field\n\n"
+            ":Raises: *InvalidRequest* - when specified field does not match provided object type\n\n"
+            "::\n\n"
+            "    pv = PvObject({'aBoolean' : BOOLEAN, 'aString' : STRING})\n\n"
+            "    pv.setObject('aString', 'string value')\n\n")
+
+        .def("getObject", 
+            static_cast<boost::python::object(PvObject::*)()const>(&PvObject::getObject),
+            "Retrieves value object from a single-field structure, or from a structure that has field named 'value'.\n\n"
+            ":Returns: value object\n\n"
+            ":Raises: *InvalidRequest* - when single-field structure has no field or multiple-field structure has no 'value' field\n\n"
+            "::\n\n"
+            "    pv = PvObject({'aString' : STRING})\n\n"
+            "    value = pv.getObject()\n\n")
+ 
+        .def("getObject", 
+            static_cast<boost::python::object(PvObject::*)(const std::string&)const>(&PvObject::getObject),
+            args("fieldName"), 
+            "Retrieves value object assigned to the given PV field.\n\n"
+            ":Parameter: *fieldName* (str) - field name\n\n"
+            ":Returns: value object\n\n"
+            ":Raises: *FieldNotFound* - when PV structure does not have specified field\n\n"
+            "::\n\n"
+            "    pv = PvObject({'aBoolean' : BOOLEAN, 'aString' : STRING})\n\n"
+            "    value = pv.getObject('aString')\n\n")
+
         .def("setBoolean", 
             static_cast<void(PvObject::*)(bool)>(&PvObject::setBoolean),
             args("value"),
