@@ -28,7 +28,6 @@ void checkFieldExists(const std::string& fieldName, const epics::pvData::PVStruc
 std::string getValueOrSingleFieldName(const epics::pvData::PVStructurePtr& pvStructurePtr)
 {
     // If structure has value field key, return it.
-    // Otherwise, return the first field on the list.
     epics::pvData::StructureConstPtr structurePtr = pvStructurePtr->getStructure();
     epics::pvData::StringArray fieldNames = structurePtr->getFieldNames();
     for (unsigned int i = 0; i < fieldNames.size(); i++) {
@@ -40,6 +39,7 @@ std::string getValueOrSingleFieldName(const epics::pvData::PVStructurePtr& pvStr
     if (fieldNames.size() > 1) {
         throw InvalidRequest("Ambiguous request: object has multiple fields, but no %s field", PvaConstants::ValueFieldKey);
     }
+    // Structure has only one field key.
     return fieldNames[0];
 }
 

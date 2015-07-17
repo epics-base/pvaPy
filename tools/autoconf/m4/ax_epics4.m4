@@ -187,7 +187,7 @@ AC_DEFUN([AX_EPICS4],
         AC_SUBST(NORMATIVETYPESCPP_DIR, "")
         AC_SUBST(PVACLIENTCPP_DIR, "")
         if test "$pva_client_cpp" == "yes" ; then
-            pva_api_version=441
+            pva_api_version=450
             AC_SUBST(NORMATIVETYPESCPP_DIR, $normativetypescpp_dir)
             AC_SUBST(PVACLIENTCPP_DIR, $pvaclientcpp_dir)
         fi

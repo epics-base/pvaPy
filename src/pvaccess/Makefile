@@ -77,7 +77,7 @@ pvaccess_SRCS += StringUtility.cpp
 
 pvaccess_LIBS += pvData
 pvaccess_LIBS += pvAccess
-ifeq ($(shell test $(PVA_API_VERSION) -ge 441; echo $$?),0)
+ifeq ($(shell test $(PVA_API_VERSION) -ge 450; echo $$?),0)
 pvaccess_LIBS += nt
 pvaccess_LIBS += pvaClient
 endif
@@ -96,5 +96,5 @@ include $(TOP)/configure/RULES
 #----------------------------------------
 #  ADD RULES AFTER THIS LINE
 
-Channel.h: Channel.440.h Channel.441.h
-Channel.cpp: Channel.440.cpp Channel.441.cpp
+Channel.h: Channel.440.h Channel.450.h
+Channel.cpp: Channel.440.cpp Channel.450.cpp
