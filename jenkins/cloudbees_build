@@ -53,6 +53,8 @@ export EPICS_HOST_ARCH=$(${EPICS_BASE}/startup/EpicsHostArch)
 export LD_LIBRARY_PATH=${EPICS_BASE}/lib/${EPICS_HOST_ARCH}
 export PATH=${STUFF}/bin:${PATH}
 
+rm -f configure/RELEASE.local configure/CONFIG_SITE.local
+
 make configure
 make
 
