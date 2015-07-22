@@ -27,12 +27,12 @@ PvBoolean::~PvBoolean()
 
 void PvBoolean::set(bool b) 
 {
-    pvStructurePtr->getBooleanField(ValueFieldKey)->put(b);
+    pvStructurePtr->getSubField<epics::pvData::PVBoolean>(ValueFieldKey)->put(b);
 }
 
 bool PvBoolean::get() const 
 {
-    return pvStructurePtr->getBooleanField(ValueFieldKey)->get();
+    return pvStructurePtr->getSubField<epics::pvData::PVBoolean>(ValueFieldKey)->get();
 }
 
 

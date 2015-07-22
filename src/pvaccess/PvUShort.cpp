@@ -27,12 +27,12 @@ PvUShort::~PvUShort()
 
 void PvUShort::set(unsigned short us) 
 {
-    pvStructurePtr->getUShortField(ValueFieldKey)->put(us);
+    pvStructurePtr->getSubField<epics::pvData::PVUShort>(ValueFieldKey)->put(us);
 }
 
 unsigned short PvUShort::get() const 
 {
-    return pvStructurePtr->getUShortField(ValueFieldKey)->get();
+    return pvStructurePtr->getSubField<epics::pvData::PVUShort>(ValueFieldKey)->get();
 }
 
 

@@ -27,12 +27,12 @@ PvInt::~PvInt()
 
 void PvInt::set(int i) 
 {
-    pvStructurePtr->getIntField(ValueFieldKey)->put(i);
+    pvStructurePtr->getSubField<epics::pvData::PVInt>(ValueFieldKey)->put(i);
 }
 
 int PvInt::get() const 
 {
-    return pvStructurePtr->getIntField(ValueFieldKey)->get();
+    return pvStructurePtr->getSubField<epics::pvData::PVInt>(ValueFieldKey)->get();
 }
 
 

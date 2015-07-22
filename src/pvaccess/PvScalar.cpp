@@ -49,51 +49,51 @@ double PvScalar::toDouble() const
     double value;
     switch (scalarType) {
         case epics::pvData::pvBoolean: {
-            value = pvStructurePtr->getBooleanField(ValueFieldKey)->get();
+            value = pvStructurePtr->getSubField<epics::pvData::PVBoolean>(ValueFieldKey)->get();
             break;
         }
         case epics::pvData::pvByte: {
-            value = pvStructurePtr->getByteField(ValueFieldKey)->get();
+            value = pvStructurePtr->getSubField<epics::pvData::PVByte>(ValueFieldKey)->get();
             break;
         }
         case epics::pvData::pvUByte: {
-            value = pvStructurePtr->getUByteField(ValueFieldKey)->get();
+            value = pvStructurePtr->getSubField<epics::pvData::PVUByte>(ValueFieldKey)->get();
             break;
         }
         case epics::pvData::pvShort: {
-            value = pvStructurePtr->getShortField(ValueFieldKey)->get();
+            value = pvStructurePtr->getSubField<epics::pvData::PVShort>(ValueFieldKey)->get();
             break;
         }
         case epics::pvData::pvUShort: {
-            value = pvStructurePtr->getUShortField(ValueFieldKey)->get();
+            value = pvStructurePtr->getSubField<epics::pvData::PVUShort>(ValueFieldKey)->get();
             break;
         }
         case epics::pvData::pvInt: {
-            value = pvStructurePtr->getIntField(ValueFieldKey)->get();
+            value = pvStructurePtr->getSubField<epics::pvData::PVInt>(ValueFieldKey)->get();
             break;
         }
         case epics::pvData::pvUInt: {
-            value = pvStructurePtr->getUIntField(ValueFieldKey)->get();
+            value = pvStructurePtr->getSubField<epics::pvData::PVUInt>(ValueFieldKey)->get();
             break;
         }
         case epics::pvData::pvLong: {
-            value = pvStructurePtr->getLongField(ValueFieldKey)->get();
+            value = pvStructurePtr->getSubField<epics::pvData::PVLong>(ValueFieldKey)->get();
             break;
         }
         case epics::pvData::pvULong: {
-            value = pvStructurePtr->getULongField(ValueFieldKey)->get();
+            value = pvStructurePtr->getSubField<epics::pvData::PVULong>(ValueFieldKey)->get();
             break;
         }
         case epics::pvData::pvFloat: {
-            value = pvStructurePtr->getFloatField(ValueFieldKey)->get();
+            value = pvStructurePtr->getSubField<epics::pvData::PVFloat>(ValueFieldKey)->get();
             break;
         }
         case epics::pvData::pvDouble: {
-            value = pvStructurePtr->getDoubleField(ValueFieldKey)->get();
+            value = pvStructurePtr->getSubField<epics::pvData::PVDouble>(ValueFieldKey)->get();
             break;
         }
         case epics::pvData::pvString: {
-            std::string s = pvStructurePtr->getStringField(ValueFieldKey)->get();
+            std::string s = pvStructurePtr->getSubField<epics::pvData::PVString>(ValueFieldKey)->get();
             value = atof(s.c_str());
             break;
         }
@@ -110,51 +110,51 @@ std::string PvScalar::toString() const
     epics::pvData::ScalarType scalarType = PyPvDataUtility::getScalarType(ValueFieldKey, pvStructurePtr);
     switch (scalarType) {
         case epics::pvData::pvBoolean: {
-            oss << static_cast<bool>(pvStructurePtr->getBooleanField(ValueFieldKey)->get());
+            oss << static_cast<bool>(pvStructurePtr->getSubField<epics::pvData::PVBoolean>(ValueFieldKey)->get());
             break;
         }
         case epics::pvData::pvByte: {
-            oss << pvStructurePtr->getByteField(ValueFieldKey)->get();
+            oss << pvStructurePtr->getSubField<epics::pvData::PVByte>(ValueFieldKey)->get();
             break;
         }
         case epics::pvData::pvUByte: {
-            oss << pvStructurePtr->getUByteField(ValueFieldKey)->get();
+            oss << pvStructurePtr->getSubField<epics::pvData::PVUByte>(ValueFieldKey)->get();
             break;
         }
         case epics::pvData::pvShort: {
-            oss << pvStructurePtr->getShortField(ValueFieldKey)->get();
+            oss << pvStructurePtr->getSubField<epics::pvData::PVShort>(ValueFieldKey)->get();
             break;
         }
         case epics::pvData::pvUShort: {
-            oss << pvStructurePtr->getUShortField(ValueFieldKey)->get();
+            oss << pvStructurePtr->getSubField<epics::pvData::PVUShort>(ValueFieldKey)->get();
             break;
         }
         case epics::pvData::pvInt: {
-            oss << pvStructurePtr->getIntField(ValueFieldKey)->get();
+            oss << pvStructurePtr->getSubField<epics::pvData::PVInt>(ValueFieldKey)->get();
             break;
         }
         case epics::pvData::pvUInt: {
-            oss << pvStructurePtr->getUIntField(ValueFieldKey)->get();
+            oss << pvStructurePtr->getSubField<epics::pvData::PVUInt>(ValueFieldKey)->get();
             break;
         }
         case epics::pvData::pvLong: {
-            oss << pvStructurePtr->getLongField(ValueFieldKey)->get();
+            oss << pvStructurePtr->getSubField<epics::pvData::PVLong>(ValueFieldKey)->get();
             break;
         }
         case epics::pvData::pvULong: {
-            oss << pvStructurePtr->getULongField(ValueFieldKey)->get();
+            oss << pvStructurePtr->getSubField<epics::pvData::PVULong>(ValueFieldKey)->get();
             break;
         }
         case epics::pvData::pvFloat: {
-            oss << pvStructurePtr->getFloatField(ValueFieldKey)->get();
+            oss << pvStructurePtr->getSubField<epics::pvData::PVFloat>(ValueFieldKey)->get();
             break;
         }
         case epics::pvData::pvDouble: {
-            oss << pvStructurePtr->getDoubleField(ValueFieldKey)->get();
+            oss << pvStructurePtr->getSubField<epics::pvData::PVDouble>(ValueFieldKey)->get();
             break;
         }
         case epics::pvData::pvString: {
-            oss << pvStructurePtr->getStringField(ValueFieldKey)->get();
+            oss << pvStructurePtr->getSubField<epics::pvData::PVString>(ValueFieldKey)->get();
             break;
         }
         default: {
@@ -169,62 +169,62 @@ PvScalar& PvScalar::add(int i)
     epics::pvData::ScalarType scalarType = PyPvDataUtility::getScalarType(ValueFieldKey, pvStructurePtr);
     switch (scalarType) {
         case epics::pvData::pvBoolean: {
-            epics::pvData::PVBooleanPtr fieldPtr = pvStructurePtr->getBooleanField(ValueFieldKey);
+            epics::pvData::PVBooleanPtr fieldPtr = pvStructurePtr->getSubField<epics::pvData::PVBoolean>(ValueFieldKey);
             fieldPtr->put(fieldPtr->get()+i);
             break;
         }
         case epics::pvData::pvByte: {
-            epics::pvData::PVBytePtr fieldPtr = pvStructurePtr->getByteField(ValueFieldKey);
+            epics::pvData::PVBytePtr fieldPtr = pvStructurePtr->getSubField<epics::pvData::PVByte>(ValueFieldKey);
             fieldPtr->put(fieldPtr->get()+i);
             break;
         }
         case epics::pvData::pvUByte: {
-            epics::pvData::PVUBytePtr fieldPtr = pvStructurePtr->getUByteField(ValueFieldKey);
+            epics::pvData::PVUBytePtr fieldPtr = pvStructurePtr->getSubField<epics::pvData::PVUByte>(ValueFieldKey);
             fieldPtr->put(fieldPtr->get()+i);
             break;
         }
         case epics::pvData::pvShort: {
-            epics::pvData::PVShortPtr fieldPtr = pvStructurePtr->getShortField(ValueFieldKey);
+            epics::pvData::PVShortPtr fieldPtr = pvStructurePtr->getSubField<epics::pvData::PVShort>(ValueFieldKey);
             fieldPtr->put(fieldPtr->get()+i);
             break;
         }
         case epics::pvData::pvUShort: {
-            epics::pvData::PVUShortPtr fieldPtr = pvStructurePtr->getUShortField(ValueFieldKey);
+            epics::pvData::PVUShortPtr fieldPtr = pvStructurePtr->getSubField<epics::pvData::PVUShort>(ValueFieldKey);
             fieldPtr->put(fieldPtr->get()+i);
             break;
         }
         case epics::pvData::pvInt: {
-            epics::pvData::PVIntPtr fieldPtr = pvStructurePtr->getIntField(ValueFieldKey);
+            epics::pvData::PVIntPtr fieldPtr = pvStructurePtr->getSubField<epics::pvData::PVInt>(ValueFieldKey);
             fieldPtr->put(fieldPtr->get()+i);
             break;
         }
         case epics::pvData::pvUInt: {
-            epics::pvData::PVUIntPtr fieldPtr = pvStructurePtr->getUIntField(ValueFieldKey);
+            epics::pvData::PVUIntPtr fieldPtr = pvStructurePtr->getSubField<epics::pvData::PVUInt>(ValueFieldKey);
             fieldPtr->put(fieldPtr->get()+i);
             break;
         }
         case epics::pvData::pvLong: {
-            epics::pvData::PVLongPtr fieldPtr = pvStructurePtr->getLongField(ValueFieldKey);
+            epics::pvData::PVLongPtr fieldPtr = pvStructurePtr->getSubField<epics::pvData::PVLong>(ValueFieldKey);
             fieldPtr->put(fieldPtr->get()+i);
             break;
         }
         case epics::pvData::pvULong: {
-            epics::pvData::PVULongPtr fieldPtr = pvStructurePtr->getULongField(ValueFieldKey);
+            epics::pvData::PVULongPtr fieldPtr = pvStructurePtr->getSubField<epics::pvData::PVULong>(ValueFieldKey);
             fieldPtr->put(fieldPtr->get()+i);
             break;
         }
         case epics::pvData::pvFloat: {
-            epics::pvData::PVFloatPtr fieldPtr = pvStructurePtr->getFloatField(ValueFieldKey);
+            epics::pvData::PVFloatPtr fieldPtr = pvStructurePtr->getSubField<epics::pvData::PVFloat>(ValueFieldKey);
             fieldPtr->put(fieldPtr->get()+i);
             break;
         }
         case epics::pvData::pvDouble: {
-            epics::pvData::PVDoublePtr fieldPtr = pvStructurePtr->getDoubleField(ValueFieldKey);
+            epics::pvData::PVDoublePtr fieldPtr = pvStructurePtr->getSubField<epics::pvData::PVDouble>(ValueFieldKey);
             fieldPtr->put(fieldPtr->get()+i);
             break;
         }
         case epics::pvData::pvString: {
-            epics::pvData::PVStringPtr fieldPtr = pvStructurePtr->getStringField(ValueFieldKey);
+            epics::pvData::PVStringPtr fieldPtr = pvStructurePtr->getSubField<epics::pvData::PVString>(ValueFieldKey);
             fieldPtr->put(fieldPtr->get()+StringUtility::toString(i));
             break;
         }

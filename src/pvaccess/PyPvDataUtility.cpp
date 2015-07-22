@@ -48,7 +48,7 @@ std::string getValueOrSelectedUnionFieldName(const epics::pvData::PVStructurePtr
     std::string fieldName = PvaConstants::ValueFieldKey;
     epics::pvData::PVFieldPtr pvFieldPtr = pvStructurePtr->getSubField(fieldName);
     if (!pvFieldPtr) {
-        epics::pvData::PVUnionPtr pvUnionPtr = pvStructurePtr->getUnionField(fieldName);
+        epics::pvData::PVUnionPtr pvUnionPtr = pvStructurePtr->getSubField<epics::pvData::PVUnion>(fieldName);
         if (!pvUnionPtr) {
             throw InvalidRequest("Field " + fieldName + " is not a union");
         }
@@ -108,7 +108,7 @@ epics::pvData::StructureConstPtr getStructure(const std::string& fieldName, cons
 epics::pvData::PVStructurePtr getStructureField(const std::string& fieldName, const epics::pvData::PVStructurePtr& pvStructurePtr)
 {
     checkFieldExists(fieldName, pvStructurePtr);
-    epics::pvData::PVStructurePtr pvStructurePtr2 = pvStructurePtr->getStructureField(fieldName);
+    epics::pvData::PVStructurePtr pvStructurePtr2 = pvStructurePtr->getSubField<epics::pvData::PVStructure>(fieldName);
     if (!pvStructurePtr2) {
         throw InvalidRequest("Field " + fieldName + " is not a structure");
     }
@@ -118,7 +118,7 @@ epics::pvData::PVStructurePtr getStructureField(const std::string& fieldName, co
 epics::pvData::PVStructureArrayPtr getStructureArrayField(const std::string& fieldName, const epics::pvData::PVStructurePtr& pvStructurePtr)
 {
     checkFieldExists(fieldName, pvStructurePtr);
-    epics::pvData::PVStructureArrayPtr pvStructureArrayPtr = pvStructurePtr->getStructureArrayField(fieldName);
+    epics::pvData::PVStructureArrayPtr pvStructureArrayPtr = pvStructurePtr->getSubField<epics::pvData::PVStructureArray>(fieldName);
     if (!pvStructureArrayPtr) {
         throw InvalidRequest("Field " + fieldName + " is not a structure array");
     }
@@ -128,7 +128,7 @@ epics::pvData::PVStructureArrayPtr getStructureArrayField(const std::string& fie
 epics::pvData::PVUnionPtr getUnionField(const std::string& fieldName, const epics::pvData::PVStructurePtr& pvStructurePtr)
 {
     checkFieldExists(fieldName, pvStructurePtr);
-    epics::pvData::PVUnionPtr pvUnionPtr = pvStructurePtr->getUnionField(fieldName);
+    epics::pvData::PVUnionPtr pvUnionPtr = pvStructurePtr->getSubField<epics::pvData::PVUnion>(fieldName);
     if (!pvUnionPtr) {
         throw InvalidRequest("Field " + fieldName + " is not an union");
     }
@@ -166,7 +166,7 @@ void setUnionField(const epics::pvData::PVFieldPtr& pvFrom, epics::pvData::PVUni
 epics::pvData::PVUnionArrayPtr getUnionArrayField(const std::string& fieldName, const epics::pvData::PVStructurePtr& pvStructurePtr)
 {
     checkFieldExists(fieldName, pvStructurePtr);
-    epics::pvData::PVUnionArrayPtr pvUnionArrayPtr = pvStructurePtr->getUnionArrayField(fieldName);
+    epics::pvData::PVUnionArrayPtr pvUnionArrayPtr = pvStructurePtr->getSubField<epics::pvData::PVUnionArray>(fieldName);
     if (!pvUnionArrayPtr) {
         throw InvalidRequest("Field " + fieldName + " is not an union array");
     }
@@ -176,7 +176,7 @@ epics::pvData::PVUnionArrayPtr getUnionArrayField(const std::string& fieldName, 
 epics::pvData::PVBooleanPtr getBooleanField(const std::string& fieldName, const epics::pvData::PVStructurePtr& pvStructurePtr) 
 {
     checkFieldExists(fieldName, pvStructurePtr);
-    epics::pvData::PVBooleanPtr fieldPtr = pvStructurePtr->getBooleanField(fieldName);
+    epics::pvData::PVBooleanPtr fieldPtr = pvStructurePtr->getSubField<epics::pvData::PVBoolean>(fieldName);
     if (!fieldPtr) {
         throw InvalidRequest("Field " + fieldName + " is not a boolean");
     }
@@ -186,7 +186,7 @@ epics::pvData::PVBooleanPtr getBooleanField(const std::string& fieldName, const 
 epics::pvData::PVBytePtr getByteField(const std::string& fieldName, const epics::pvData::PVStructurePtr& pvStructurePtr) 
 {
     checkFieldExists(fieldName, pvStructurePtr);
-    epics::pvData::PVBytePtr fieldPtr = pvStructurePtr->getByteField(fieldName);
+    epics::pvData::PVBytePtr fieldPtr = pvStructurePtr->getSubField<epics::pvData::PVByte>(fieldName);
     if (!fieldPtr) {
         throw InvalidRequest("Field " + fieldName + " is not a byte");
     }
@@ -196,7 +196,7 @@ epics::pvData::PVBytePtr getByteField(const std::string& fieldName, const epics:
 epics::pvData::PVUBytePtr getUByteField(const std::string& fieldName, const epics::pvData::PVStructurePtr& pvStructurePtr) 
 {
     checkFieldExists(fieldName, pvStructurePtr);
-    epics::pvData::PVUBytePtr fieldPtr = pvStructurePtr->getUByteField(fieldName);
+    epics::pvData::PVUBytePtr fieldPtr = pvStructurePtr->getSubField<epics::pvData::PVUByte>(fieldName);
     if (!fieldPtr) {
         throw InvalidRequest("Field " + fieldName + " is not an unsigned byte");
     }
@@ -206,7 +206,7 @@ epics::pvData::PVUBytePtr getUByteField(const std::string& fieldName, const epic
 epics::pvData::PVShortPtr getShortField(const std::string& fieldName, const epics::pvData::PVStructurePtr& pvStructurePtr) 
 {
     checkFieldExists(fieldName, pvStructurePtr);
-    epics::pvData::PVShortPtr fieldPtr = pvStructurePtr->getShortField(fieldName);
+    epics::pvData::PVShortPtr fieldPtr = pvStructurePtr->getSubField<epics::pvData::PVShort>(fieldName);
     if (!fieldPtr) {
         throw InvalidRequest("Field " + fieldName + " is not a short");
     }
@@ -216,7 +216,7 @@ epics::pvData::PVShortPtr getShortField(const std::string& fieldName, const epic
 epics::pvData::PVUShortPtr getUShortField(const std::string& fieldName, const epics::pvData::PVStructurePtr& pvStructurePtr) 
 {
     checkFieldExists(fieldName, pvStructurePtr);
-    epics::pvData::PVUShortPtr fieldPtr = pvStructurePtr->getUShortField(fieldName);
+    epics::pvData::PVUShortPtr fieldPtr = pvStructurePtr->getSubField<epics::pvData::PVUShort>(fieldName);
     if (!fieldPtr) {
         throw InvalidRequest("Field " + fieldName + " is not an unsigned short");
     }
@@ -226,7 +226,7 @@ epics::pvData::PVUShortPtr getUShortField(const std::string& fieldName, const ep
 epics::pvData::PVIntPtr getIntField(const std::string& fieldName, const epics::pvData::PVStructurePtr& pvStructurePtr) 
 {
     checkFieldExists(fieldName, pvStructurePtr);
-    epics::pvData::PVIntPtr fieldPtr = pvStructurePtr->getIntField(fieldName);
+    epics::pvData::PVIntPtr fieldPtr = pvStructurePtr->getSubField<epics::pvData::PVInt>(fieldName);
     if (!fieldPtr) {
         throw InvalidRequest("Field " + fieldName + " is not an int");
     }
@@ -236,7 +236,7 @@ epics::pvData::PVIntPtr getIntField(const std::string& fieldName, const epics::p
 epics::pvData::PVUIntPtr getUIntField(const std::string& fieldName, const epics::pvData::PVStructurePtr& pvStructurePtr) 
 {
     checkFieldExists(fieldName, pvStructurePtr);
-    epics::pvData::PVUIntPtr fieldPtr = pvStructurePtr->getUIntField(fieldName);
+    epics::pvData::PVUIntPtr fieldPtr = pvStructurePtr->getSubField<epics::pvData::PVUInt>(fieldName);
     if (!fieldPtr) {
         throw InvalidRequest("Field " + fieldName + " is not an unsigned int");
     }
@@ -246,7 +246,7 @@ epics::pvData::PVUIntPtr getUIntField(const std::string& fieldName, const epics:
 epics::pvData::PVLongPtr getLongField(const std::string& fieldName, const epics::pvData::PVStructurePtr& pvStructurePtr) 
 {
     checkFieldExists(fieldName, pvStructurePtr);
-    epics::pvData::PVLongPtr fieldPtr = pvStructurePtr->getLongField(fieldName);
+    epics::pvData::PVLongPtr fieldPtr = pvStructurePtr->getSubField<epics::pvData::PVLong>(fieldName);
     if (!fieldPtr) {
         throw InvalidRequest("Field " + fieldName + " is not a long");
     }
@@ -256,7 +256,7 @@ epics::pvData::PVLongPtr getLongField(const std::string& fieldName, const epics:
 epics::pvData::PVULongPtr getULongField(const std::string& fieldName, const epics::pvData::PVStructurePtr& pvStructurePtr) 
 {
     checkFieldExists(fieldName, pvStructurePtr);
-    epics::pvData::PVULongPtr fieldPtr = pvStructurePtr->getULongField(fieldName);
+    epics::pvData::PVULongPtr fieldPtr = pvStructurePtr->getSubField<epics::pvData::PVULong>(fieldName);
     if (!fieldPtr) {
         throw InvalidRequest("Field " + fieldName + " is not an unsigned long");
     }
@@ -266,7 +266,7 @@ epics::pvData::PVULongPtr getULongField(const std::string& fieldName, const epic
 epics::pvData::PVFloatPtr getFloatField(const std::string& fieldName, const epics::pvData::PVStructurePtr& pvStructurePtr) 
 {
     checkFieldExists(fieldName, pvStructurePtr);
-    epics::pvData::PVFloatPtr fieldPtr = pvStructurePtr->getFloatField(fieldName);
+    epics::pvData::PVFloatPtr fieldPtr = pvStructurePtr->getSubField<epics::pvData::PVFloat>(fieldName);
     if (!fieldPtr) {
         throw InvalidRequest("Field " + fieldName + " is not a float");
     }
@@ -276,7 +276,7 @@ epics::pvData::PVFloatPtr getFloatField(const std::string& fieldName, const epic
 epics::pvData::PVDoublePtr getDoubleField(const std::string& fieldName, const epics::pvData::PVStructurePtr& pvStructurePtr) 
 {
     checkFieldExists(fieldName, pvStructurePtr);
-    epics::pvData::PVDoublePtr fieldPtr = pvStructurePtr->getDoubleField(fieldName);
+    epics::pvData::PVDoublePtr fieldPtr = pvStructurePtr->getSubField<epics::pvData::PVDouble>(fieldName);
     if (!fieldPtr) {
         throw InvalidRequest("Field " + fieldName + " is not a double");
     }
@@ -286,7 +286,7 @@ epics::pvData::PVDoublePtr getDoubleField(const std::string& fieldName, const ep
 epics::pvData::PVStringPtr getStringField(const std::string& fieldName, const epics::pvData::PVStructurePtr& pvStructurePtr) 
 {
     checkFieldExists(fieldName, pvStructurePtr);
-    epics::pvData::PVStringPtr fieldPtr = pvStructurePtr->getStringField(fieldName);
+    epics::pvData::PVStringPtr fieldPtr = pvStructurePtr->getSubField<epics::pvData::PVString>(fieldName);
     if (!fieldPtr) {
         throw InvalidRequest("Field " + fieldName + " is not a string");
     }
@@ -367,73 +367,73 @@ void pyObjectToScalarField(const boost::python::object& pyObject, const std::str
     epics::pvData::ScalarType scalarType = getScalarType(fieldName, pvStructurePtr);
     switch (scalarType) {
         case epics::pvData::pvBoolean: {
-            epics::pvData::PVBooleanPtr fieldPtr = pvStructurePtr->getBooleanField(fieldName);
+            epics::pvData::PVBooleanPtr fieldPtr = pvStructurePtr->getSubField<epics::pvData::PVBoolean>(fieldName);
             bool value = PyUtility::extractValueFromPyObject<bool>(pyObject);
             fieldPtr->put(static_cast<epics::pvData::boolean>(value));
             break;
         }
         case epics::pvData::pvByte: {
-            epics::pvData::PVBytePtr fieldPtr = pvStructurePtr->getByteField(fieldName);
+            epics::pvData::PVBytePtr fieldPtr = pvStructurePtr->getSubField<epics::pvData::PVByte>(fieldName);
             char value = PyUtility::extractValueFromPyObject<char>(pyObject);
             fieldPtr->put(static_cast<epics::pvData::int8>(value));
             break;
         }
         case epics::pvData::pvUByte: {
-            epics::pvData::PVUBytePtr fieldPtr = pvStructurePtr->getUByteField(fieldName);
+            epics::pvData::PVUBytePtr fieldPtr = pvStructurePtr->getSubField<epics::pvData::PVUByte>(fieldName);
             unsigned char value = PyUtility::extractValueFromPyObject<unsigned char>(pyObject);
             fieldPtr->put(static_cast<epics::pvData::uint8>(value));
             break;
         }
         case epics::pvData::pvShort: {
-            epics::pvData::PVShortPtr fieldPtr = pvStructurePtr->getShortField(fieldName);
+            epics::pvData::PVShortPtr fieldPtr = pvStructurePtr->getSubField<epics::pvData::PVShort>(fieldName);
             short value = PyUtility::extractValueFromPyObject<short>(pyObject);
             fieldPtr->put(static_cast<epics::pvData::int16>(value));
             break;
         }
         case epics::pvData::pvUShort: {
-            epics::pvData::PVUShortPtr fieldPtr = pvStructurePtr->getUShortField(fieldName);
+            epics::pvData::PVUShortPtr fieldPtr = pvStructurePtr->getSubField<epics::pvData::PVUShort>(fieldName);
             unsigned short value = PyUtility::extractValueFromPyObject<unsigned short>(pyObject);
             fieldPtr->put(static_cast<epics::pvData::uint16>(value));
             break;
         }
         case epics::pvData::pvInt: {
-            epics::pvData::PVIntPtr fieldPtr = pvStructurePtr->getIntField(fieldName);
+            epics::pvData::PVIntPtr fieldPtr = pvStructurePtr->getSubField<epics::pvData::PVInt>(fieldName);
             int value = PyUtility::extractValueFromPyObject<int>(pyObject);
             fieldPtr->put(static_cast<epics::pvData::int32>(value));
             break;
         }
         case epics::pvData::pvUInt: {
-            epics::pvData::PVUIntPtr fieldPtr = pvStructurePtr->getUIntField(fieldName);
+            epics::pvData::PVUIntPtr fieldPtr = pvStructurePtr->getSubField<epics::pvData::PVUInt>(fieldName);
             unsigned int value = PyUtility::extractValueFromPyObject<unsigned int>(pyObject);
             fieldPtr->put(static_cast<epics::pvData::uint32>(value));
             break;
         }
         case epics::pvData::pvLong: {
-            epics::pvData::PVLongPtr fieldPtr = pvStructurePtr->getLongField(fieldName);
+            epics::pvData::PVLongPtr fieldPtr = pvStructurePtr->getSubField<epics::pvData::PVLong>(fieldName);
             long long value = PyUtility::extractValueFromPyObject<long long>(pyObject);
             fieldPtr->put(static_cast<epics::pvData::int64>(value));
             break;
         }
         case epics::pvData::pvULong: {
-            epics::pvData::PVULongPtr fieldPtr = pvStructurePtr->getULongField(fieldName);
+            epics::pvData::PVULongPtr fieldPtr = pvStructurePtr->getSubField<epics::pvData::PVULong>(fieldName);
             unsigned long long value = PyUtility::extractValueFromPyObject<unsigned long long>(pyObject);
             fieldPtr->put(static_cast<epics::pvData::uint64>(value));
             break;
         }
         case epics::pvData::pvFloat: {
-            epics::pvData::PVFloatPtr fieldPtr = pvStructurePtr->getFloatField(fieldName);
+            epics::pvData::PVFloatPtr fieldPtr = pvStructurePtr->getSubField<epics::pvData::PVFloat>(fieldName);
             float value = PyUtility::extractValueFromPyObject<float>(pyObject);
             fieldPtr->put(value);
             break;
         }
         case epics::pvData::pvDouble: {
-            epics::pvData::PVDoublePtr fieldPtr = pvStructurePtr->getDoubleField(fieldName);
+            epics::pvData::PVDoublePtr fieldPtr = pvStructurePtr->getSubField<epics::pvData::PVDouble>(fieldName);
             double value = PyUtility::extractValueFromPyObject<double>(pyObject);
             fieldPtr->put(value);
             break;
         }
         case epics::pvData::pvString: {
-            epics::pvData::PVStringPtr fieldPtr = pvStructurePtr->getStringField(fieldName);
+            epics::pvData::PVStringPtr fieldPtr = pvStructurePtr->getSubField<epics::pvData::PVString>(fieldName);
             std::string value = PyUtility::extractValueFromPyObject<std::string>(pyObject);
             fieldPtr->put(value);
             break;
@@ -1258,9 +1258,9 @@ void copyStructureToStructure(const epics::pvData::PVStructurePtr& srcPvStructur
 
 void copyStructureToStructure(const std::string& fieldName, const epics::pvData::PVStructurePtr& srcPvStructurePtr, epics::pvData::PVStructurePtr& destPvStructurePtr)
 {
-    epics::pvData::PVStructurePtr destPvStructurePtr2 = destPvStructurePtr->getStructureField(fieldName);
+    epics::pvData::PVStructurePtr destPvStructurePtr2 = destPvStructurePtr->getSubField<epics::pvData::PVStructure>(fieldName);
     if (destPvStructurePtr2) {
-        epics::pvData::PVStructurePtr srcPvStructurePtr2 = srcPvStructurePtr->getStructureField(fieldName);
+        epics::pvData::PVStructurePtr srcPvStructurePtr2 = srcPvStructurePtr->getSubField<epics::pvData::PVStructure>(fieldName);
         if (srcPvStructurePtr2) {
             copyStructureToStructure(srcPvStructurePtr2, destPvStructurePtr2);
         }
@@ -1326,86 +1326,86 @@ void copyScalarToStructure(const std::string& fieldName, epics::pvData::ScalarTy
 {
     switch (scalarType) {
         case epics::pvData::pvBoolean: {
-            epics::pvData::PVBooleanPtr fieldPtr = destPvStructurePtr->getBooleanField(fieldName);
+            epics::pvData::PVBooleanPtr fieldPtr = destPvStructurePtr->getSubField<epics::pvData::PVBoolean>(fieldName);
             if (fieldPtr) {
-                fieldPtr->put(srcPvStructurePtr->getBooleanField(fieldName)->get());
+                fieldPtr->put(srcPvStructurePtr->getSubField<epics::pvData::PVBoolean>(fieldName)->get());
             }
             break;
         }
         case epics::pvData::pvByte: {
-            epics::pvData::PVBytePtr fieldPtr = destPvStructurePtr->getByteField(fieldName);
+            epics::pvData::PVBytePtr fieldPtr = destPvStructurePtr->getSubField<epics::pvData::PVByte>(fieldName);
             if (fieldPtr) {
-                fieldPtr->put(srcPvStructurePtr->getByteField(fieldName)->get());
+                fieldPtr->put(srcPvStructurePtr->getSubField<epics::pvData::PVByte>(fieldName)->get());
             }
             break;
         }
         case epics::pvData::pvUByte: {
-            epics::pvData::PVUBytePtr fieldPtr = destPvStructurePtr->getUByteField(fieldName);
+            epics::pvData::PVUBytePtr fieldPtr = destPvStructurePtr->getSubField<epics::pvData::PVUByte>(fieldName);
             if (fieldPtr) {
-                fieldPtr->put(srcPvStructurePtr->getUByteField(fieldName)->get());
+                fieldPtr->put(srcPvStructurePtr->getSubField<epics::pvData::PVUByte>(fieldName)->get());
             }
             break;
         }
         case epics::pvData::pvShort: {
-            epics::pvData::PVShortPtr fieldPtr = destPvStructurePtr->getShortField(fieldName);
+            epics::pvData::PVShortPtr fieldPtr = destPvStructurePtr->getSubField<epics::pvData::PVShort>(fieldName);
             if (fieldPtr) {
-                fieldPtr->put(srcPvStructurePtr->getShortField(fieldName)->get());
+                fieldPtr->put(srcPvStructurePtr->getSubField<epics::pvData::PVShort>(fieldName)->get());
             }
             break;
         }
         case epics::pvData::pvUShort: {
-            epics::pvData::PVUShortPtr fieldPtr = destPvStructurePtr->getUShortField(fieldName);
+            epics::pvData::PVUShortPtr fieldPtr = destPvStructurePtr->getSubField<epics::pvData::PVUShort>(fieldName);
             if (fieldPtr) {
-                fieldPtr->put(srcPvStructurePtr->getUShortField(fieldName)->get());
+                fieldPtr->put(srcPvStructurePtr->getSubField<epics::pvData::PVUShort>(fieldName)->get());
             }
             break;
         }
         case epics::pvData::pvInt: {
-            epics::pvData::PVIntPtr fieldPtr = destPvStructurePtr->getIntField(fieldName);
+            epics::pvData::PVIntPtr fieldPtr = destPvStructurePtr->getSubField<epics::pvData::PVInt>(fieldName);
             if (fieldPtr) {
-                fieldPtr->put(srcPvStructurePtr->getIntField(fieldName)->get());
+                fieldPtr->put(srcPvStructurePtr->getSubField<epics::pvData::PVInt>(fieldName)->get());
             }
             break;
         }
         case epics::pvData::pvUInt: {
-            epics::pvData::PVUIntPtr fieldPtr = destPvStructurePtr->getUIntField(fieldName);
+            epics::pvData::PVUIntPtr fieldPtr = destPvStructurePtr->getSubField<epics::pvData::PVUInt>(fieldName);
             if (fieldPtr) {
-                fieldPtr->put(srcPvStructurePtr->getUIntField(fieldName)->get());
+                fieldPtr->put(srcPvStructurePtr->getSubField<epics::pvData::PVUInt>(fieldName)->get());
             }
             break;
         }
         case epics::pvData::pvLong: {
-            epics::pvData::PVLongPtr fieldPtr = destPvStructurePtr->getLongField(fieldName);
+            epics::pvData::PVLongPtr fieldPtr = destPvStructurePtr->getSubField<epics::pvData::PVLong>(fieldName);
             if (fieldPtr) {
-                fieldPtr->put(srcPvStructurePtr->getLongField(fieldName)->get());
+                fieldPtr->put(srcPvStructurePtr->getSubField<epics::pvData::PVLong>(fieldName)->get());
             }
             break;
         }
         case epics::pvData::pvULong: {
-            epics::pvData::PVULongPtr fieldPtr = destPvStructurePtr->getULongField(fieldName);
+            epics::pvData::PVULongPtr fieldPtr = destPvStructurePtr->getSubField<epics::pvData::PVULong>(fieldName);
             if (fieldPtr) {
-                fieldPtr->put(srcPvStructurePtr->getULongField(fieldName)->get());
+                fieldPtr->put(srcPvStructurePtr->getSubField<epics::pvData::PVULong>(fieldName)->get());
             }
             break;
         }
         case epics::pvData::pvFloat: {
-            epics::pvData::PVFloatPtr fieldPtr = destPvStructurePtr->getFloatField(fieldName);
+            epics::pvData::PVFloatPtr fieldPtr = destPvStructurePtr->getSubField<epics::pvData::PVFloat>(fieldName);
             if (fieldPtr) {
-                fieldPtr->put(srcPvStructurePtr->getFloatField(fieldName)->get());
+                fieldPtr->put(srcPvStructurePtr->getSubField<epics::pvData::PVFloat>(fieldName)->get());
             }
             break;
         }
         case epics::pvData::pvDouble: {
-            epics::pvData::PVDoublePtr fieldPtr = destPvStructurePtr->getDoubleField(fieldName);
+            epics::pvData::PVDoublePtr fieldPtr = destPvStructurePtr->getSubField<epics::pvData::PVDouble>(fieldName);
             if (fieldPtr) {
-                fieldPtr->put(srcPvStructurePtr->getDoubleField(fieldName)->get());
+                fieldPtr->put(srcPvStructurePtr->getSubField<epics::pvData::PVDouble>(fieldName)->get());
             }
             break;
         }
         case epics::pvData::pvString: {
-            epics::pvData::PVStringPtr fieldPtr = destPvStructurePtr->getStringField(fieldName);
+            epics::pvData::PVStringPtr fieldPtr = destPvStructurePtr->getSubField<epics::pvData::PVString>(fieldName);
             if (fieldPtr) {
-                fieldPtr->put(srcPvStructurePtr->getStringField(fieldName)->get());
+                fieldPtr->put(srcPvStructurePtr->getSubField<epics::pvData::PVString>(fieldName)->get());
             }
             break;
         }

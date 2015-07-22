@@ -140,12 +140,12 @@ boost::python::list NtTable::getColumn(int column) const
 }
 void NtTable::setDescriptor(const std::string& descriptor)
 {
-        pvStructurePtr->getStringField(DescriptorFieldKey)->put(descriptor);
+        pvStructurePtr->getSubField<epics::pvData::PVString>(DescriptorFieldKey)->put(descriptor);
 }
 
 std::string NtTable::getDescriptor() const
 {
-        return pvStructurePtr->getStringField(DescriptorFieldKey)->get();
+        return pvStructurePtr->getSubField<epics::pvData::PVString>(DescriptorFieldKey)->get();
 }
 
 PvTimeStamp NtTable::getTimeStamp() const

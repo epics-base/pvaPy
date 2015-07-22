@@ -27,12 +27,12 @@ PvString::~PvString()
 
 void PvString::set(const std::string& s) 
 {
-    pvStructurePtr->getStringField(ValueFieldKey)->put(s);
+    pvStructurePtr->getSubField<epics::pvData::PVString>(ValueFieldKey)->put(s);
 }
 
 std::string PvString::get() const 
 {
-    return pvStructurePtr->getStringField(ValueFieldKey)->get();
+    return pvStructurePtr->getSubField<epics::pvData::PVString>(ValueFieldKey)->get();
 }
 
 
