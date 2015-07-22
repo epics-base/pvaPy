@@ -15,6 +15,8 @@
 DEFAULT_BASE=3.14.12.5
 
 BASE=${1:-${DEFAULT_BASE}}
+USE_MB=${2:-"MB_NO"}
+
 if [ "${1}" = "${DEFAULT_BASE}" -o -z "${1}" ]; then
     BUILD_DOCS=YES
 fi
@@ -29,13 +31,16 @@ mkdir -p ${STUFF}
 cd ${STUFF}
 
 wget -nv https://openepics.ci.cloudbees.com/job/Base-${BASE}_Build/lastSuccessfulBuild/artifact/base-${BASE}.CB-dist.tar.gz
-wget -nv https://openepics.ci.cloudbees.com/job/pvCommonCPP_Build/BASE=${BASE}/lastSuccessfulBuild/artifact/pvCommon.CB-dist.tar.gz
 wget -nv https://openepics.ci.cloudbees.com/job/pvDataCPP_Build/BASE=${BASE}/lastSuccessfulBuild/artifact/pvData.CB-dist.tar.gz
 wget -nv https://openepics.ci.cloudbees.com/job/pvAccessCPP_Build/BASE=${BASE}/lastSuccessfulBuild/artifact/pvAccess.CB-dist.tar.gz
 tar -xzf base-${BASE}.CB-dist.tar.gz
-tar -xzf pvCommon.CB-dist.tar.gz
 tar -xzf pvData.CB-dist.tar.gz
 tar -xzf pvAccess.CB-dist.tar.gz
+
+if [ "${USE_MB}" = "MB_YES" ]; then
+    wget -nv https://openepics.ci.cloudbees.com/job/pvCommonCPP_Build/BASE=${BASE}/lastSuccessfulBuild/artifact/pvCommon.CB-dist.tar.gz
+    tar -xzf pvCommon.CB-dist.tar.gz
+fi
 
 ###########################################
 # Build
