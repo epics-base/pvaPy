@@ -66,5 +66,6 @@ fi
 # Publish documentation
 
 if [ "${BUILD_DOCS}" ]; then
+    echo "Nothing to publish at the moment"
     #rsync -aqP --delete -e ssh documentation epics-jenkins@web.sourceforge.net:/home/project-web/epics-pvdata/htdocs/docbuild/pvAccessCPP/tip
 fi
