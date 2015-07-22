@@ -17,9 +17,9 @@ DEFAULT_BASE=3.14.12.5
 BASE=${1:-${DEFAULT_BASE}}
 USE_MB=${2:-"MB_NO"}
 
-if [ "${1}" = "${DEFAULT_BASE}" -o -z "${1}" ]; then
-    BUILD_DOCS=YES
-fi
+#if [ "${1}" = "${DEFAULT_BASE}" -o -z "${1}" ]; then
+#    BUILD_DOCS=YES
+#fi
 
 ###########################################
 # Fetch and unpack dependencies
