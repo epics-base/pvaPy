@@ -52,4 +52,4 @@ export PATH=${STUFF}/bin:${PATH}
 rm -f configure/RELEASE.local configure/CONFIG_SITE.local
 
 make configure
-make
+make clean all
