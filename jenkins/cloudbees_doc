@@ -21,6 +21,7 @@ BASE=${1:-${DEFAULT_BASE}}
 
 cd ${WORKSPACE}
 
+rm -f pvaPy.CB-dist.tar.gz
 wget -nv https://openepics.ci.cloudbees.com/job/pvaPy_Build/BASE=${BASE}/lastSuccessfulBuild/artifact/pvaPy.CB-dist.tar.gz
 tar -xzf pvaPy.CB-dist.tar.gz
 
@@ -28,7 +29,6 @@ virtualenv --distribute DEV
 DEV/bin/pip install Sphinx
 source DEV/bin/activate
 
-cd ${WORKSPACE}
 source setup.sh
 make doc
 
