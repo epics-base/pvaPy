@@ -29,7 +29,7 @@ virtualenv --distribute DEV
 DEV/bin/pip install Sphinx
 source DEV/bin/activate
 
-source setup.sh
+source ./setup.sh
 make doc
 
 ###########################################
