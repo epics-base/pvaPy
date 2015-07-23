@@ -27,6 +27,10 @@ cd ${STUFF}
 
 wget -nv https://openepics.ci.cloudbees.com/job/Base-${BASE}_Build/lastSuccessfulBuild/artifact/base-${BASE}.CB-dist.tar.gz
 tar -xzf base-${BASE}.CB-dist.tar.gz
+wget -nv https://openepics.ci.cloudbees.com/job/pvDataCPP_Build/BASE=${BASE}/lastSuccessfulBuild/artifact/pvData.CB-dist.tar.gz
+tar -xzf pvData.CB-dist.tar.gz
+wget -nv https://openepics.ci.cloudbees.com/job/pvAccessCPP_Build/BASE=${BASE}/lastSuccessfulBuild/artifact/pvAccess.CB-dist.tar.gz
+tar -xzf pvAccess.CB-dist.tar.gz
 
 ###########################################
 # Generate
@@ -34,6 +38,7 @@ tar -xzf base-${BASE}.CB-dist.tar.gz
 cd ${WORKSPACE}
 
 export EPICS_BASE=${STUFF}
+export EPICS4_DIR=${STUFF}
 
 # Fetch pvaPy "distribution"
 rm -f pvaPy.CB-dist.tar.gz
