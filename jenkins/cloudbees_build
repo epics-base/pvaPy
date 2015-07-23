@@ -17,10 +17,6 @@ DEFAULT_BASE=3.14.12.5
 BASE=${1:-${DEFAULT_BASE}}
 USE_MB=${2:-"MB_NO"}
 
-#if [ "${1}" = "${DEFAULT_BASE}" -o -z "${1}" ]; then
-#    BUILD_DOCS=YES
-#fi
-
 ###########################################
 # Fetch and unpack dependencies
 
@@ -57,15 +53,3 @@ rm -f configure/RELEASE.local configure/CONFIG_SITE.local
 
 make configure
 make
-
-if [ "${BUILD_DOCS}" ]; then
-    make doc
-fi
-
-###########################################
-# Publish documentation
-
-if [ "${BUILD_DOCS}" ]; then
-    echo "Nothing to publish at the moment"
-    #rsync -aqP --delete -e ssh documentation epics-jenkins@web.sourceforge.net:/home/project-web/epics-pvdata/htdocs/docbuild/pvAccessCPP/tip
-fi
