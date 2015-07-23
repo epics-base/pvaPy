@@ -114,12 +114,12 @@ AC_DEFUN([AX_EPICS4],
     AC_MSG_RESULT([yes])
 
     # test basic libraries
-    AC_MSG_CHECKING(for usable EPICS4 libraries for $EPICS_OS_CLASS OS and host architecture $EPICS_HOST_ARCH)
+    AC_MSG_CHECKING(for usable EPICS4 libraries for $EPICS_OS_CLASS OS ($EPICS_CMPLR_CLASS compiler) and host architecture $EPICS_HOST_ARCH)
 
     pva_api_version=430
     pva_rpc_api_version=430
     CPPFLAGS_SAVED="$CPPFLAGS"
-    CPPFLAGS="$CPPFLAGS $EPICS_CPPFLAGS -I$EPICS_BASE/include -I$EPICS_BASE/include/os/$EPICS_OS_CLASS -I$pvdatacpp_dir/include -I$pvaccesscpp_dir/include"
+    CPPFLAGS="$CPPFLAGS $EPICS_CPPFLAGS -I$EPICS_BASE/include -I$EPICS_BASE/include/os/$EPICS_OS_CLASS -I$EPICS_BASE/include/compiler/$EPICS_CMPLR_CLASS -I$pvdatacpp_dir/include -I$pvaccesscpp_dir/include"
     export CPPFLAGS
 
     LDFLAGS_SAVED="$LDFLAGS"

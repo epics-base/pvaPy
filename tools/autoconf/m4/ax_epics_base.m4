@@ -20,6 +20,7 @@
 #     EPICS_BASE
 #     EPICS_HOST_ARCH
 #     EPICS_OS_CLASS
+#     EPICS_CMPLR_CLASS
 #
 # LICENSE
 #
@@ -112,11 +113,14 @@ AC_DEFUN([AX_EPICS_BASE],
     # need to determine OS class first
     epics_host_arch_main=`echo $EPICS_HOST_ARCH | cut -f1 -d'-'`
     EPICS_OS_CLASS=`grep OS_CLASS $EPICS_BASE/configure/os/CONFIG.*Common.${epics_host_arch_main}* | head -1 | awk '{print $NF}'`
-    AC_MSG_CHECKING(for usable EPICS base libraries for $EPICS_OS_CLASS OS and host architecture $EPICS_HOST_ARCH)
+    # need to determine CMPLR_CLASS, which is *hard*, so
+    # TODO: remove this hardcoded setting with the correct one from the EPICS configure directory
+    EPICS_CMPLR_CLASS=gcc
+    AC_MSG_CHECKING(for usable EPICS base libraries for $EPICS_OS_CLASS OS ($EPICS_CMPLR_CLASS compiler) and host architecture $EPICS_HOST_ARCH)
 
     succeeded=no
     CPPFLAGS_SAVED="$CPPFLAGS"
-    CPPFLAGS="$CPPFLAGS $EPICS_CPPFLAGS -I$EPICS_BASE/include -I$EPICS_BASE/include/os/$EPICS_OS_CLASS"
+    CPPFLAGS="$CPPFLAGS $EPICS_CPPFLAGS -I$EPICS_BASE/include -I$EPICS_BASE/include/os/$EPICS_OS_CLASS -I$EPICS_BASE/include/compiler/$EPICS_CMPLR_CLASS"
     export CPPFLAGS
 
     LDFLAGS_SAVED="$LDFLAGS"
@@ -145,6 +149,7 @@ AC_DEFUN([AX_EPICS_BASE],
         AC_SUBST(EPICS_BASE)
         AC_SUBST(EPICS_HOST_ARCH)
         AC_SUBST(EPICS_OS_CLASS)
+        AC_SUBST(EPICS_CMPLR_CLASS)
     fi
 
     CPPFLAGS="$CPPFLAGS_SAVED"
