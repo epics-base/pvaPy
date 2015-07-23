@@ -25,15 +25,16 @@ rm -fr ${STUFF}
 mkdir -p ${STUFF}
 cd ${STUFF}
 
-#wget -nv https://openepics.ci.cloudbees.com/job/Doxygen-1.8.3_Build/lastSuccessfulBuild/artifact/doxygen-1.8.3.CB-dist.tar.gz
-#tar -xzf doxygen-1.8.3.CB-dist.tar.gz
-
 ###########################################
 # Generate
 
 cd ${WORKSPACE}
 
 export PATH=${STUFF}/bin:${PATH}
+
+virtualenv --distribute DEV
+DEV/bin/pip install Sphinx
+source DEV/bin/activate
 
 make doc
 
