@@ -53,3 +53,7 @@ rm -f configure/RELEASE.local configure/CONFIG_SITE.local
 
 make configure
 make clean all
+###########################################
+# Create distribution
+
+tar -czf pvaPy.CB-dist.tar.gz lib setup.*

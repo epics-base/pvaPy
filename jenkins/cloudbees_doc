@@ -17,25 +17,18 @@ DEFAULT_BASE=3.14.12.5
 BASE=${1:-${DEFAULT_BASE}}
 
 ###########################################
-# Fetch and unpack dependencies
-
-export STUFF=/tmp/stuff
-
-rm -fr ${STUFF}
-mkdir -p ${STUFF}
-cd ${STUFF}
-
-###########################################
 # Generate
 
 cd ${WORKSPACE}
 
-export PATH=${STUFF}/bin:${PATH}
+wget -nv https://openepics.ci.cloudbees.com/job/pvaPy_Build/BASE=${BASE}/lastSuccessfulBuild/artifact/pvaPy.CB-dist.tar.gz
+tar -xzf pvaPy.CB-dist.tar.gz
 
 virtualenv --distribute DEV
 DEV/bin/pip install Sphinx
 source DEV/bin/activate
 
+source setup.sh
 make doc
 
 ###########################################
