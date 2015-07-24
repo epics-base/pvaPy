@@ -56,4 +56,4 @@ make clean all
 ###########################################
 # Create distribution
 
-tar -czf pvaPy.CB-dist.tar.gz lib setup.*
+tar -czf pvaPy.CB-dist.tar.gz lib
