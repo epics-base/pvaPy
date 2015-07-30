@@ -88,8 +88,8 @@ epics::pvData::ScalarConstPtr getScalarField(const std::string& fieldName, const
 epics::pvData::PVScalarArrayPtr getScalarArrayField(const std::string& fieldName, epics::pvData::ScalarType scalarType, const epics::pvData::PVStructurePtr& pvStructurePtr)
 {
     checkFieldExists(fieldName, pvStructurePtr);
-    epics::pvData::PVScalarArrayPtr pvScalarArrayPtr = pvStructurePtr->getScalarArrayField(fieldName, scalarType);
-    if (!pvScalarArrayPtr) {
+    epics::pvData::PVScalarArrayPtr pvScalarArrayPtr = pvStructurePtr->getSubField<epics::pvData::PVScalarArray>(fieldName);
+    if (!pvScalarArrayPtr || pvScalarArrayPtr->getScalarArray()->getElementType() != scalarType) {
         throw InvalidRequest("Field %s is not a scalar array of type %d", fieldName.c_str(), scalarType);
     }
     return pvScalarArrayPtr; 
@@ -502,7 +502,7 @@ void pyObjectToUnionArrayField(const boost::python::object& pyObject, const std:
 void scalarArrayFieldToPyList(const std::string& fieldName, const epics::pvData::PVStructurePtr& pvStructurePtr, boost::python::list& pyList)
 {
     epics::pvData::ScalarType scalarType = getScalarArrayType(fieldName, pvStructurePtr);
-    epics::pvData::PVScalarArrayPtr pvScalarArrayPtr = pvStructurePtr->getScalarArrayField(fieldName, scalarType);
+    epics::pvData::PVScalarArrayPtr pvScalarArrayPtr = pvStructurePtr->getSubField<epics::pvData::PVScalarArray>(fieldName);
 #if defined PVA_API_VERSION && PVA_API_VERSION == 430
     switch (scalarType) {
         case epics::pvData::pvBoolean: {

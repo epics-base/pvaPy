@@ -27,12 +27,12 @@ PvDouble::~PvDouble()
 
 void PvDouble::set(double d) 
 {
-    pvStructurePtr->getDoubleField(ValueFieldKey)->put(d);
+    pvStructurePtr->getSubField<epics::pvData::PVDouble>(ValueFieldKey)->put(d);
 }
 
 double PvDouble::get() const 
 {
-    return pvStructurePtr->getDoubleField(ValueFieldKey)->get();
+    return pvStructurePtr->getSubField<epics::pvData::PVDouble>(ValueFieldKey)->get();
 }
 
 
