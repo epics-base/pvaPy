@@ -10,6 +10,9 @@ include $(TOP)/configure/CONFIG
 
 LOADABLE_LIBRARY_HOST += pvaccess
 LOADABLE_SHRLIB_PREFIX = 
+ifeq ($(OS_CLASS),Darwin)
+LOADABLE_SHRLIB_SUFFIX = .so
+endif
 
 #PROD_HOST_linux-x86_64 += testClient
 PROD_HOST += $(PROD_HOST_$(T_A))
