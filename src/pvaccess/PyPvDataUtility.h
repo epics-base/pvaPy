@@ -279,7 +279,7 @@ boost::python::dict extractUnionStructureDict(const boost::python::dict& pyDict)
 //
 
 template<typename PvArrayType, typename CppType, typename PyType>
-void pyListToScalarArrayField(const boost::python::list& pyList, const std::string& fieldName, epics::pvData::ScalarType scalarType, epics::pvData::PVStructurePtr pvStructurePtr)
+void pyListToScalarArrayField(const boost::python::list& pyList, const std::string& fieldName, epics::pvData::PVStructurePtr pvStructurePtr)
 {
     int listSize = boost::python::len(pyList);
     std::tr1::shared_ptr<PvArrayType> valueArray = pvStructurePtr->getSubField<PvArrayType>(fieldName);

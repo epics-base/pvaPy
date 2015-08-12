@@ -503,6 +503,7 @@ void scalarArrayFieldToPyList(const std::string& fieldName, const epics::pvData:
 {
     epics::pvData::ScalarType scalarType = getScalarArrayType(fieldName, pvStructurePtr);
     epics::pvData::PVScalarArrayPtr pvScalarArrayPtr = pvStructurePtr->getSubField<epics::pvData::PVScalarArray>(fieldName);
+
     switch (scalarType) {
         case epics::pvData::pvBoolean: {
             scalarArrayToPyList<epics::pvData::PVBooleanArray, epics::pvData::boolean>(pvScalarArrayPtr, pyList);
@@ -566,51 +567,51 @@ void pyListToScalarArrayField(const boost::python::list& pyList, const std::stri
     epics::pvData::ScalarType scalarType = getScalarArrayType(fieldName, pvStructurePtr);
     switch (scalarType) {
         case epics::pvData::pvBoolean: {
-            pyListToScalarArrayField<epics::pvData::PVBooleanArray, epics::pvData::boolean, bool>(pyList, fieldName, scalarType, pvStructurePtr);
+            pyListToScalarArrayField<epics::pvData::PVBooleanArray, epics::pvData::boolean, bool>(pyList, fieldName, pvStructurePtr);
             break;
         }
         case epics::pvData::pvByte: {
-            pyListToScalarArrayField<epics::pvData::PVByteArray, epics::pvData::int8, char>(pyList, fieldName, scalarType, pvStructurePtr);
+            pyListToScalarArrayField<epics::pvData::PVByteArray, epics::pvData::int8, char>(pyList, fieldName, pvStructurePtr);
             break;
         }
         case epics::pvData::pvUByte: {
-            pyListToScalarArrayField<epics::pvData::PVUByteArray, epics::pvData::uint8, unsigned char>(pyList, fieldName, scalarType, pvStructurePtr);
+            pyListToScalarArrayField<epics::pvData::PVUByteArray, epics::pvData::uint8, unsigned char>(pyList, fieldName, pvStructurePtr);
             break;
         }
         case epics::pvData::pvShort: {
-            pyListToScalarArrayField<epics::pvData::PVShortArray, epics::pvData::int16, short>(pyList, fieldName, scalarType, pvStructurePtr);
+            pyListToScalarArrayField<epics::pvData::PVShortArray, epics::pvData::int16, short>(pyList, fieldName, pvStructurePtr);
             break;
         }
         case epics::pvData::pvUShort: {
-            pyListToScalarArrayField<epics::pvData::PVUShortArray, epics::pvData::uint16, unsigned short>(pyList, fieldName, scalarType, pvStructurePtr);
+            pyListToScalarArrayField<epics::pvData::PVUShortArray, epics::pvData::uint16, unsigned short>(pyList, fieldName, pvStructurePtr);
             break;
         }
         case epics::pvData::pvInt: {
-            pyListToScalarArrayField<epics::pvData::PVIntArray, epics::pvData::int32, int>(pyList, fieldName, scalarType, pvStructurePtr);
+            pyListToScalarArrayField<epics::pvData::PVIntArray, epics::pvData::int32, int>(pyList, fieldName, pvStructurePtr);
             break;
         }
         case epics::pvData::pvUInt: {
-            pyListToScalarArrayField<epics::pvData::PVUIntArray, epics::pvData::uint32, unsigned int>(pyList, fieldName, scalarType, pvStructurePtr);
+            pyListToScalarArrayField<epics::pvData::PVUIntArray, epics::pvData::uint32, unsigned int>(pyList, fieldName, pvStructurePtr);
             break;
         }
         case epics::pvData::pvLong: {
-            pyListToScalarArrayField<epics::pvData::PVLongArray, epics::pvData::int64, long long>(pyList, fieldName, scalarType, pvStructurePtr);
+            pyListToScalarArrayField<epics::pvData::PVLongArray, epics::pvData::int64, long long>(pyList, fieldName, pvStructurePtr);
             break;
         }
         case epics::pvData::pvULong: {
-            pyListToScalarArrayField<epics::pvData::PVULongArray, epics::pvData::uint64, unsigned long long>(pyList, fieldName, scalarType, pvStructurePtr);
+            pyListToScalarArrayField<epics::pvData::PVULongArray, epics::pvData::uint64, unsigned long long>(pyList, fieldName, pvStructurePtr);
             break;
         }
         case epics::pvData::pvFloat: {
-            pyListToScalarArrayField<epics::pvData::PVFloatArray, float, float>(pyList, fieldName, scalarType, pvStructurePtr);
+            pyListToScalarArrayField<epics::pvData::PVFloatArray, float, float>(pyList, fieldName, pvStructurePtr);
             break;
         }
         case epics::pvData::pvDouble: {
-            pyListToScalarArrayField<epics::pvData::PVDoubleArray, double, double>(pyList, fieldName, scalarType, pvStructurePtr);
+            pyListToScalarArrayField<epics::pvData::PVDoubleArray, double, double>(pyList, fieldName, pvStructurePtr);
             break;
         }
         case epics::pvData::pvString: {
-            pyListToScalarArrayField<epics::pvData::PVStringArray, std::string, std::string>(pyList, fieldName, scalarType, pvStructurePtr);
+            pyListToScalarArrayField<epics::pvData::PVStringArray, std::string, std::string>(pyList, fieldName, pvStructurePtr);
             break;
         }
         default: {
