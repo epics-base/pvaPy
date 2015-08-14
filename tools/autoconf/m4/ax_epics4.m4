@@ -1,5 +1,5 @@
 # ===========================================================================
-#       http://www.gnu.org/software/autoconf-archive/ax_epics_base.html
+#       http://www.gnu.org/software/autoconf-archive/ax_epics4.html
 # ===========================================================================
 #
 # SYNOPSIS
@@ -127,7 +127,7 @@ AC_DEFUN([AX_EPICS4],
     LDFLAGS="$LDFLAGS -L$EPICS_BASE/lib/$EPICS_HOST_ARCH -L$pvdatacpp_dir/lib/$EPICS_HOST_ARCH -L$pvaccesscpp_dir/lib/$EPICS_HOST_ARCH"
     export LDFLAGS
 
-    LIBS="-lpvData -lpvAccess -lCom"
+    LIBS="-lpvAccess -lpvData -lCom"
     export LIBS
 
     succeeded=no
@@ -167,7 +167,7 @@ AC_DEFUN([AX_EPICS4],
     LDFLAGS_NO_PVACLIENTCPP=$LDFLAGS
     LDFLAGS="$LDFLAGS -L$pvaclientcpp_dir/lib/$EPICS_HOST_ARCH -L$normativetypescpp_dir/lib/$EPICS_HOST_ARCH"
     LIBS_NO_PVACLIENTCPP=$LIBS
-    LIBS="-lpvData -lpvAccess -lnt -lpvaClient -lCom"
+    LIBS="-lpvaClient -lpvAccess -lnt -lpvData -lCom"
     AC_REQUIRE([AC_PROG_CXX])
     AC_LANG_PUSH([C++])
         AC_LINK_IFELSE([AC_LANG_PROGRAM(
