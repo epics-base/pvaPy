@@ -1,7 +1,0 @@
-[branchname]
-master  = master
-develop = default
-feature = feature/
-release = release/
-hotfix  = hotfix/
-support = support/
