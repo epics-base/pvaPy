@@ -3,23 +3,28 @@ TOP=../..
 include $(TOP)/configure/CONFIG
 #----------------------------------------
 #  ADD MACRO DEFINITIONS AFTER THIS LINE
-#=============================
+
+# Global compiler/linker settings
+
+USR_CXXFLAGS += -DPVA_API_VERSION=$(PVA_API_VERSION)
+USR_CXXFLAGS += -DPVA_RPC_API_VERSION=$(PVA_RPC_API_VERSION)
+
+USR_CXXFLAGS += $(PVA_PY_CPPFLAGS)
+USR_LDFLAGS  += $(PVA_PY_LDFLAGS)
+USR_SYS_LIBS += $(PVA_PY_SYS_LIBS)
 
 
-#=============================
+# Build the Python pvaccess loadable library
 
 LOADABLE_LIBRARY_HOST += pvaccess
+
+# Disable 'lib' prefix
 LOADABLE_SHRLIB_PREFIX = 
+
 ifeq ($(OS_CLASS),Darwin)
+# Python on Darwin needs the suffix .so
 LOADABLE_SHRLIB_SUFFIX = .so
 endif
-
-#PROD_HOST_linux-x86_64 += testClient
-PROD_HOST += $(PROD_HOST_$(T_A))
-
-CXXFLAGS += -g -I$(BOOST_DIR)/include $(PVA_PY_CPPFLAGS)
-LDFLAGS += $(PVA_PY_LDFLAGS)
-
 
 pvaccess_SRCS += pvaccess.cpp
 pvaccess_SRCS += CaClient.cpp
@@ -78,26 +83,22 @@ pvaccess_SRCS += RpcServer.cpp
 pvaccess_SRCS += RpcTimeout.cpp
 pvaccess_SRCS += StringUtility.cpp
 
-pvaccess_LIBS += pvData
+with_pvaClient := $(shell $(PERL) -e "print $(PVA_API_VERSION) >= 450")
+pvaccess_1_LIBS += pvaClient
+pvaccess_1_LIBS += nt
+pvaccess_LIBS += $(pvaccess_$(with_pvaClient)_LIBS)
+
 pvaccess_LIBS += pvAccess
-ifeq ($(shell test $(PVA_API_VERSION) -ge 450; echo $$?),0)
-pvaccess_LIBS += nt
-pvaccess_LIBS += pvaClient
-endif
+pvaccess_LIBS += pvData
 pvaccess_LIBS += Com
-USR_SYS_LIBS += $(BOOST_PYTHON_LIB)
 
-testClient_SRCS += testClient.cpp
-testClient_LIBS += pvaccess
-testClient_LIBS += python
-testClient_LIBS += boost_python
-testClient_LIBS += pvData pvAccess Com
 
-#===========================
+# Build the testClient on Linux
+
+#TESTPROD_HOST_Linux += testClient
+#LIBRARY_HOST += pvaccess
+#testClient_LIBS += pvaccess
 
 include $(TOP)/configure/RULES
 #----------------------------------------
 #  ADD RULES AFTER THIS LINE
-
-Channel.h: Channel.440.h Channel.450.h
-Channel.cpp: Channel.440.cpp Channel.450.cpp

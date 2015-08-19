@@ -13,20 +13,29 @@
 #  RELEASE.$(EPICS_HOST_ARCH).Common
 #  RELEASE.Common.$(T_A)
 #  RELEASE.$(EPICS_HOST_ARCH).$(T_A)
-#
-# This file should ONLY define paths to other support modules,
-# or include statements that pull in similar RELEASE files.
-# Build settings that are NOT module paths should appear in a
-# CONFIG_SITE file.
--include $(TOP)/configure/RELEASE.local
 
 
-#PVCOMMON=$(EPICS4_DIR)/pvCommonCPP
-PVDATA=$(PVDATACPP_DIR)
-PVACCESS=$(PVACCESSCPP_DIR)
-NORMATIVETYPES=$(NORMATIVETYPESCPP_DIR)
-PVACLIENT=$(PVACLIENTCPP_DIR)
+# It is not necessary to edit this file if you autoconfigure the
+# pvaPy module (make configure ...).
 
-# Set RULES here if you want to take build rules from somewhere
-# other than EPICS_BASE:
-#RULES=/path/to/epics/support/module/rules/x-y
+# For manual configuration, copy the variables below to a new
+# file RELEASE.local, uncomment them and point them to the
+# appropriate pre-built module directories. You may uncomment
+# and edit them here instead, but must then create an empty
+# RELEASE.local file for the build to work. Also see the
+# CONFIG_SITE file for manual Boost and Python configuration.
+
+# EPICS4_DIR is used here for convenience only
+#EPICS4_DIR = /path/to/epics4/modules
+#PVACLIENT = $(EPICS4_DIR)/pvaClientCPP
+#PVACCESS = $(EPICS4_DIR)/pvAccessCPP
+#NORMATIVE = $(EPICS4_DIR)/normativeTypesCPP
+#PVDATA = $(EPICS4_DIR)/pvDataCPP
+# NB: Do NOT link to pvCommonCPP, its copy of Boost may be
+#     incompatible with the Boost Python one.
+
+# Base comes last:
+#EPICS_BASE = /path/to/epics/base
+
+include $(TOP)/configure/RELEASE.local
+

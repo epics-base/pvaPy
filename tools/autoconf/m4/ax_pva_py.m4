@@ -1,5 +1,5 @@
 # ===========================================================================
-#       http://www.gnu.org/software/autoconf-archive/ax_epics_base.html
+#       http://www.gnu.org/software/autoconf-archive/ax_pva_py.html
 # ===========================================================================
 #
 # SYNOPSIS
@@ -21,11 +21,41 @@
 
 AC_DEFUN([AX_PVA_PY],
 
-[
-    # check for existing RELEASE.local file
-    PVA_PY_TOP=../..
+[AC_ARG_WITH([top],
+    [AS_HELP_STRING([--with-top=TOP_DIR],
+        [Path to TOP from the current directory])
+    ],
+    [
+        if test -z "$withval"; then
+            AC_MSG_ERROR(--with-top requires directory path)
+        else
+            ac_top_path="$withval"
+        fi
+    ],
+    [ac_top_path=""])
+
+    if test -z "$ac_top_path"; then
+        if test -z "$TOP"; then
+            ac_top_path="."
+        else
+            ac_top_path="$TOP"
+        fi
+    fi
+    AC_MSG_CHECKING(for TOP directory $ac_top_path)
+    if ! test -d "$ac_top_path"; then
+        AC_MSG_ERROR($ac_top_path is not a valid directory path)
+    fi
+    if ! test -d "$ac_top_path/configure" -a -f "$ac_top_path/Makefile"; then
+        AC_MSG_ERROR($ac_top_path does not point to an EPICS top directory)
+    fi
+    AC_MSG_RESULT([yes])
+
+    #
+    PVA_PY_TOP="$ac_top_path"
     current_dir=`pwd`
     cd $PVA_PY_TOP > /dev/null && PVA_PY_TOP=`pwd` && cd $current_dir > /dev/null
+
+    # check for existing RELEASE.local file
     release_local=$PVA_PY_TOP/configure/RELEASE.local
     AC_MSG_CHECKING(for existing pvaPy $release_local file)
     if test -f $release_local; then
@@ -35,6 +65,7 @@ AC_DEFUN([AX_PVA_PY],
         AC_MSG_RESULT([no])
     fi
 
+    # check for existing CONFIG_SITE.local file
     config_site_local=$PVA_PY_TOP/configure/CONFIG_SITE.local
     AC_MSG_CHECKING(for existing pvaPy $config_site_local file)
     if test -f $config_site_local; then
@@ -95,23 +126,21 @@ AC_DEFUN([AX_PVA_PY],
     fi
 
     # create RELEASE.local
-    echo "EPICS_BASE=$EPICS_BASE" >> $release_local
-    echo "EPICS4_DIR=$EPICS4_DIR" >> $release_local
-    echo "PVDATACPP_DIR=$PVDATACPP_DIR" >> $release_local
-    echo "PVACCESSCPP_DIR=$PVACCESSCPP_DIR" >> $release_local
-    echo "NORMATIVETYPESCPP_DIR=$NORMATIVETYPESCPP_DIR" >> $release_local
-    echo "PVACLIENTCPP_DIR=$PVACLIENTCPP_DIR" >> $release_local
+    echo "PVACLIENT = $PVACLIENTCPP_DIR" >> $release_local
+    echo "PVACCESS = $PVACCESSCPP_DIR" >> $release_local
+    echo "NORMATIVETYPES = $NORMATIVETYPESCPP_DIR" >> $release_local
+    echo "PVDATA = $PVDATACPP_DIR" >> $release_local
+    echo "EPICS_BASE = $EPICS_BASE" >> $release_local
     AC_MSG_NOTICE([created $release_local file])
 
     # create CONFIG_SITE.local
-    echo "EPICS_HOST_ARCH=$EPICS_HOST_ARCH" >> $config_site_local
-    echo "BOOST_PYTHON_LIB=$BOOST_PYTHON_LIB" >> $config_site_local
-    echo "PVA_API_VERSION=$PVA_API_VERSION" >> $config_site_local
-    echo "PVA_PY_CPPFLAGS=-DPVA_API_VERSION=$PVA_API_VERSION -DPVA_RPC_API_VERSION=$PVA_RPC_API_VERSION $BOOST_CPPFLAGS $PYTHON_CPPFLAGS" >> $config_site_local
-    echo "PVA_PY_LDFLAGS=$BOOST_LDFLAGS $PYTHON_LDFLAGS" >> $config_site_local
+    echo "PVA_PY_CPPFLAGS = $BOOST_CPPFLAGS $PYTHON_CPPFLAGS" >> $config_site_local
+    echo "PVA_PY_LDFLAGS = $BOOST_LDFLAGS $PYTHON_LDFLAGS" >> $config_site_local
+    echo "PVA_PY_SYS_LIBS = $BOOST_PYTHON_LIB" >> $config_site_local
+    echo "PVA_API_VERSION = $PVA_API_VERSION" >> $config_site_local
+    echo "PVA_RPC_API_VERSION = $PVA_RPC_API_VERSION" >> $config_site_local
     AC_MSG_NOTICE([created $config_site_local file])
 
-    
     # create setup.sh
     setup_sh=$PVA_PY_TOP/setup.sh
     AC_MSG_CHECKING(for existing $setup_sh file)

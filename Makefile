@@ -1,60 +1,71 @@
 TOP = .
-RELEASE_LOCAL = $(TOP)/configure/RELEASE.local
-SETUP_SH = $(TOP)/setup.sh
-CONFIG_SITE_LOCAL = $(TOP)/configure/CONFIG_SITE.local
+
+RELEASE_LOCAL = configure/RELEASE.local
+CONFIG_SITE_LOCAL = configure/CONFIG_SITE.local
+
+AC_DIR = tools/autoconf
 DOC_DIR = doc
 
-# Check for configure/distclean targets 
+# Is build target configure or distclean?
 ifeq ($(filter $(MAKECMDGOALS),configure distclean),)
 
-# Make sure RELEASE.local has been created
-ifeq ($(wildcard $(RELEASE_LOCAL)),)
+  ifeq ($(wildcard $(RELEASE_LOCAL)),)
+    # RELEASE.local file doesn't exist
 
-%:
-		@echo "File $(RELEASE_LOCAL) does not exist. Please create both $(RELEASE_LOCAL) and $(CONFIG_SITE_LOCAL) manually, or by running:"
-		@echo ""
-		@echo "  EPICS_BASE=<path> EPICS4_DIR=<path> make configure"
-		@echo ""
+    all:
+    %:
+	@echo "The required file $(RELEASE_LOCAL) does not exist."
+	@echo "See README.txt for instructions on configuring this module"
+	@echo "by hand, or autoconfigure the module by running"
+	@echo ""
+	@echo "    make configure EPICS_BASE=<path> EPICS4_DIR=<path>"
+	@echo ""
+	@exit 1
 
-else
+  else
+    # RELEASE.local file exists
 
-# Include standard epics config files
-include $(TOP)/configure/CONFIG
-DIRS := src 
-include $(TOP)/configure/RULES_DIRS
+    # Standard EPICS build stuff.
+    include $(TOP)/configure/CONFIG
 
-endif # ifeq ($(wildcard $(RELEASE_LOCAL)),)
+    DIRS = configure src
 
-endif # ifeq ($(filter $(MAKECMDGOALS),configure distclean),)
+    src_DEPEND_DIRS = configure
 
-configure: tools/autoconf/configure
-	@if [ -f $(RELEASE_LOCAL) ]; then echo "File $(RELEASE_LOCAL) already exists. Please remove both $(RELEASE_LOCAL) and $(CONFIG_SITE_LOCAL) if you would like to reconfigure pvaPy build."; exit 1; fi
-	@if [ -f $(CONFIG_SITE_LOCAL) ]; then echo "File $(CONFIG_SITE_LOCAL) already exists. Please remove both $(RELEASE_LOCAL) and $(CONFIG_SITE_LOCAL) if you would like to reconfigure pvaPy build."; exit 1; fi
-	cd tools/autoconf && ./configure
+    include $(TOP)/configure/RULES_TOP
 
-bootstrap tools/autoconf/configure: tools/autoconf/configure.ac $(wildcard tools/autoconf/m4/*.m4)
-	cd tools/autoconf && autoreconf --install 
+  endif # RELEASE.local
 
-.PHONY: doc docclean distclean tidy
+endif # configure or distclean targets
+
+RM ?= rm -f
+RMDIR ?= rm -rf
+
+configure: $(AC_DIR)/configure
+	@$(RM) $(RELEASE_LOCAL) $(CONFIG_SITE_LOCAL)
+	$(AC_DIR)/configure --with-top=$(TOP)
+
+bootstrap $(AC_DIR)/configure: $(AC_DIR)/configure.ac \
+    $(wildcard $(AC_DIR)/m4/*.m4)
+	autoreconf --install $(AC_DIR)
+
+distclean:
+	$(RM) setup.sh setup.csh $(RELEASE_LOCAL) $(CONFIG_SITE_LOCAL)
+	$(RMDIR) lib src/pvaccess/O.* $(AC_DIR)/autom4te.cache
+	$(RM) $(AC_DIR)/aclocal.m4 $(AC_DIR)/configure $(AC_DIR)/config.log
+	$(RM) $(AC_DIR)/config.status $(AC_DIR)/install-sh $(AC_DIR)/missing
+	$(RM) $(AC_DIR)/Makefile $(AC_DIR)/Makefile.in config.log
+	$(MAKE) -C $(DOC_DIR) distclean
+
 doc:
 	$(MAKE) -C $(DOC_DIR)
 
 docclean:
 	$(MAKE) -C $(DOC_DIR) clean
 
-distclean: 
-	rm -rf lib
-	rm -rf src/pvaccess/O.*
-	rm -f configure/RELEASE.local
-	rm -f configure/CONFIG_SITE.local
-	cd tools/autoconf && rm -rf autom4te.cache aclocal.m4 config.log config.status missing Makefile Makefile.in 
-	$(MAKE) -C $(DOC_DIR) distclean
-
 tidy: distclean
-	rm -f setup.sh
-	rm -f setup.csh
-	cd tools/autoconf && rm -f configure install-sh
 	$(MAKE) -C $(DOC_DIR) tidy
 
-.PHONY: configure 
+.PHONY: configure distclean
+.PHONY: doc docclean tidy
 
