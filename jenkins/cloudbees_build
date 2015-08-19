@@ -27,10 +27,10 @@ mkdir -p ${STUFF}
 cd ${STUFF}
 
 wget -nv https://openepics.ci.cloudbees.com/job/Base-${BASE}_Build/lastSuccessfulBuild/artifact/base-${BASE}.CB-dist.tar.gz
-wget -nv https://openepics.ci.cloudbees.com/job/pvDataCPP_Build/BASE=${BASE}/lastSuccessfulBuild/artifact/pvData.CB-dist.tar.gz
-wget -nv https://openepics.ci.cloudbees.com/job/pvAccessCPP_Build/BASE=${BASE}/lastSuccessfulBuild/artifact/pvAccess.CB-dist.tar.gz
-wget -nv https://openepics.ci.cloudbees.com/job/normativeTypesCPP_Build/BASE=${BASE}/lastSuccessfulBuild/artifact/normativeTypes.CB-dist.tar.gz
-wget -nv https://openepics.ci.cloudbees.com/job/pvaClientCPP_Build/BASE=${BASE}/lastSuccessfulBuild/artifact/pvaClient.CB-dist.tar.gz
+wget -nv https://openepics.ci.cloudbees.com/job/pvDataCPP_Build/BASE=${BASE},USE_MB=MB_NO/lastSuccessfulBuild/artifact/pvData.CB-dist.tar.gz
+wget -nv https://openepics.ci.cloudbees.com/job/pvAccessCPP_Build/BASE=${BASE},USE_MB=${USE_MB}/lastSuccessfulBuild/artifact/pvAccess.CB-dist.tar.gz
+wget -nv https://openepics.ci.cloudbees.com/job/normativeTypesCPP_Build/BASE=${BASE},USE_MB=MB_NO/lastSuccessfulBuild/artifact/normativeTypes.CB-dist.tar.gz
+wget -nv https://openepics.ci.cloudbees.com/job/pvaClientCPP_Build/BASE=${BASE},USE_MB=MB_NO/lastSuccessfulBuild/artifact/pvaClient.CB-dist.tar.gz
 tar -xzf base-${BASE}.CB-dist.tar.gz
 tar -xzf pvData.CB-dist.tar.gz
 tar -xzf pvAccess.CB-dist.tar.gz
@@ -57,6 +57,7 @@ rm -f configure/RELEASE.local configure/CONFIG_SITE.local
 
 make configure
 make clean all
+
 ###########################################
 # Create distribution
 
