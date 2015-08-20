@@ -13,6 +13,16 @@ USR_CXXFLAGS += $(PVA_PY_CPPFLAGS)
 USR_LDFLAGS  += $(PVA_PY_LDFLAGS)
 USR_SYS_LIBS += $(PVA_PY_SYS_LIBS)
 
+# Set our library install location; /$(T_A) will be added
+INSTALL_LOCATION_LIB = $(INSTALL_LOCATION)/lib/python/$(PYTHON_VERSION)
+
+
+# Expand and install the setup shell scripts
+
+SCRIPTS_HOST = setup.sh setup.csh
+EXPANDFLAGS += -DPYLIB=$(abspath $(INSTALL_LOCATION_LIB))
+EXPAND += $(SCRIPTS:%=%@)
+
 
 # Build the Python pvaccess loadable library
 
@@ -25,6 +35,7 @@ ifeq ($(OS_CLASS),Darwin)
 # Python on Darwin needs the suffix .so
 LOADABLE_SHRLIB_SUFFIX = .so
 endif
+
 
 pvaccess_SRCS += pvaccess.cpp
 pvaccess_SRCS += CaClient.cpp
