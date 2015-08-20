@@ -14,23 +14,39 @@
 # Set CHECK_RELEASE to NO to disable checking completely.
 # Set CHECK_RELEASE to WARN to perform consistency checking but
 #   continue building anyway if conflicts are found.
-CHECK_RELEASE = NO
-
-# Set this when you only want to compile this application
-#   for a subset of the cross-compiled target architectures
-#   that Base is built for.
-#CROSS_COMPILER_TARGET_ARCHS = vxWorks-ppc604
+CHECK_RELEASE = YES
 
 # To install files into a location other than $(TOP) define
 #   INSTALL_LOCATION here.
 #INSTALL_LOCATION=</path/name/to/install/top>
 
-# Set this when your IOC and the host use different paths
-#   to access the application. This will be needed to boot
-#   from a Microsoft FTP server or with some NFS mounts.
-# You must rebuild in the iocBoot directory for this to
-#   take effect.
-#IOCS_APPL_TOP = </IOC/path/to/application/top>
+
+# It is not necessary to uncomment the following variables if
+# you autoconfigure the pvaPy module (make configure ...).
+
+# For manual configuration, uncomment the variables below and
+# edit their values as appropriate. Also see the RELEASE file
+# for module path configuration.
+
+# Use these only if Boost is not in a system location
+#BOOST_DIR = /opt/boost
+#PVA_PY_CPPFLAGS += -I$(BOOST_DIR)/include
+#PVA_PY_LDFLAGS += -L$(BOOST_DIR)/lib64
+
+# The Boost python library to link with (-mt if available)
+#PVA_PY_SYS_LIBS += boost_python-mt
+
+# Python install prefix and version
+#PYTHON_DIR = /usr
+#PYTHON_VERSION = 2.6
+#PVA_PY_CPPFLAGS += -I$(PYTHON_DIR)/include/python$(PYTHON_VERSION)
+#PVA_PY_SYS_LIBS += python$(PYTHON_VERSION)
+
+# The version number of the pvAccess API
+#PVA_API_VERSION = 450
+
+# The version number of the pvAccess RPC API
+#PVA_RPC_API_VERSION = 440
+
 
 -include $(TOP)/configure/CONFIG_SITE.local
--include $(TOP)/../CONFIG_SITE.local
