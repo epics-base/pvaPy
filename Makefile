@@ -6,8 +6,8 @@ CONFIG_SITE_LOCAL = configure/CONFIG_SITE.local
 AC_DIR = tools/autoconf
 DOC_DIR = doc
 
-# Is build target configure or distclean?
 ifeq ($(filter $(MAKECMDGOALS),configure distclean),)
+  # Command-line goal is neither configure nor distclean
 
   ifeq ($(wildcard $(RELEASE_LOCAL)),)
     # RELEASE.local file doesn't exist
@@ -36,26 +36,28 @@ ifeq ($(filter $(MAKECMDGOALS),configure distclean),)
 
   endif # RELEASE.local
 
-endif # configure or distclean targets
+else
+  # Command-line goal is configure or distclean
 
-RM ?= rm -f
-RMDIR ?= rm -rf
+  RM ?= rm -f
+  RMDIR ?= rm -rf
 
-configure: $(AC_DIR)/configure
+  configure: $(AC_DIR)/configure
 	@$(RM) $(RELEASE_LOCAL) $(CONFIG_SITE_LOCAL)
 	$(AC_DIR)/configure --with-top=$(TOP)
 
-bootstrap $(AC_DIR)/configure: $(AC_DIR)/configure.ac \
-    $(wildcard $(AC_DIR)/m4/*.m4)
+  $(AC_DIR)/configure: $(AC_DIR)/configure.ac $(wildcard $(AC_DIR)/m4/*.m4)
 	autoreconf --install $(AC_DIR)
 
-distclean:
+  distclean:
 	$(RM) setup.sh setup.csh $(RELEASE_LOCAL) $(CONFIG_SITE_LOCAL)
 	$(RMDIR) lib src/pvaccess/O.* $(AC_DIR)/autom4te.cache
 	$(RM) $(AC_DIR)/aclocal.m4 $(AC_DIR)/configure $(AC_DIR)/config.log
 	$(RM) $(AC_DIR)/config.status $(AC_DIR)/install-sh $(AC_DIR)/missing
 	$(RM) $(AC_DIR)/Makefile $(AC_DIR)/Makefile.in config.log
 	$(MAKE) -C $(DOC_DIR) distclean
+
+endif # Command-line goal
 
 doc:
 	$(MAKE) -C $(DOC_DIR)
