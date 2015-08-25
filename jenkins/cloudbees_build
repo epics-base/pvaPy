@@ -38,7 +38,7 @@ tar -xzf pvaClient.CB-dist.tar.gz
 tar -xzf normativeTypes.CB-dist.tar.gz
 
 if [ "${USE_MB}" = "MB_YES" ]; then
-    wget -nv https://openepics.ci.cloudbees.com/job/pvCommonCPP_Build/BASE=${BASE}/lastSuccessfulBuild/artifact/pvCommon.CB-dist.tar.gz
+    wget -nv https://openepics.ci.cloudbees.com/job/pvCommonCPP_Build/BASE=${BASE},USE_MB=MB_YES/lastSuccessfulBuild/artifact/pvCommon.CB-dist.tar.gz
     tar -xzf pvCommon.CB-dist.tar.gz
 fi
 
