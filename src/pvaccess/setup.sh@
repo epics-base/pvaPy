@@ -1,0 +1,11 @@
+#!/bin/sh
+#
+# pvaPy sh setup script
+#
+# modifies PYTHONPATH environment variable
+#
+if test -z "$PYTHONPATH" ; then
+    export PYTHONPATH=@PYLIB@/@ARCH@
+else
+    export PYTHONPATH=@PYLIB@/@ARCH@:$PYTHONPATH
+fi

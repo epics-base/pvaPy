@@ -139,53 +139,6 @@ AC_DEFUN([AX_PVA_PY],
     echo "PVA_PY_SYS_LIBS = $BOOST_PYTHON_LIB" >> $config_site_local
     echo "PVA_API_VERSION = $PVA_API_VERSION" >> $config_site_local
     echo "PVA_RPC_API_VERSION = $PVA_RPC_API_VERSION" >> $config_site_local
+    echo "PYTHON_VERSION := \$(shell python -c 'import sys; print sys.version[[:3]]')" >> $config_site_local
     AC_MSG_NOTICE([created $config_site_local file])
-
-    # create setup.sh
-    setup_sh=$PVA_PY_TOP/setup.sh
-    AC_MSG_CHECKING(for existing $setup_sh file)
-    if test -f $setup_sh; then
-        AC_MSG_RESULT([yes])
-        AC_MSG_NOTICE(will not overwrite $setup_sh file)
-    else
-        AC_MSG_RESULT([no])
-        cat >> $setup_sh << EOF
-#!/bin/sh
-# 
-# pvaPy sh setup script
-#
-# modifies PYTHONPATH environment variable
-#
-if test -z "\$PYTHONPATH" ; then
-    export PYTHONPATH=$PVA_PY_TOP/lib/$EPICS_HOST_ARCH
-else
-    export PYTHONPATH=$PVA_PY_TOP/lib/$EPICS_HOST_ARCH:\$PYTHONPATH
-fi
-EOF
-        AC_MSG_NOTICE([created $setup_sh file])
-    fi
-
-    # create setup.csh
-    setup_csh=$PVA_PY_TOP/setup.csh
-    AC_MSG_CHECKING(for existing $setup_csh file)
-    if test -f $setup_csh; then
-        AC_MSG_RESULT([yes])
-        AC_MSG_NOTICE(will not overwrite $setup_csh file)
-    else
-        AC_MSG_RESULT([no])
-        cat >> $setup_csh << EOF
-#!/bin/csh
-# 
-# pvaPy csh setup script
-#
-# modifies PYTHONPATH environment variable
-#
-if ( ! \$?PYTHONPATH ) then
-    setenv PYTHONPATH ${PVA_PY_TOP}/lib/${EPICS_HOST_ARCH}
-else
-    setenv PYTHONPATH ${PVA_PY_TOP}/lib/${EPICS_HOST_ARCH}:\${PYTHONPATH}
-endif
-EOF
-        AC_MSG_NOTICE([created $setup_csh file])
-    fi
 ])

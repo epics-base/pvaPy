@@ -1,0 +1,11 @@
+#!/bin/csh
+#
+# pvaPy csh setup script
+#
+# modifies PYTHONPATH environment variable
+#
+if ( ! $?PYTHONPATH ) then
+    setenv PYTHONPATH @PYLIB@/@ARCH@
+else
+    setenv PYTHONPATH @PYLIB@/@ARCH@:${PYTHONPATH}
+endif

@@ -24,6 +24,9 @@ Nothing special needs to be done when building the EPICS4 CPP modules. Ensure
 that the EPICS Base installation you use for this module is the same one that
 was used to build the EPICS4 modules.
 
+This module has not been adapted for use on Microsoft Windows. Only Unix-like
+operating systems (e.g. Linux, MacOS, Solaris) are currently supported.
+
 
 Build
 =======
@@ -68,8 +71,15 @@ the following boost/python packages installed:
   boost-python-1.41.0-25.el6.x86_64
   python-devel-2.6.6-52.el6.x86_64
 
-Note that the "make configure" command also creates setup.(c)sh files
-that configure PYTHONPATH for using pvaccess python module, e.g.:
+2) Compile the pvaPy source. In the top level package directory run:
+
+  $ make
+
+This will create and install a loadable library named pvaccess.so under the
+lib/python directory which can be imported directly by Python.
+
+This also creates setup.(c)sh files in the bin/$EPICS_HOST_ARCH directory
+that configure PYTHONPATH for using the pvaccess Python module, e.g.:
 
   $ cat setup.sh
   #!/bin/sh
@@ -79,16 +89,20 @@ that configure PYTHONPATH for using pvaccess python module, e.g.:
   # modifies PYTHONPATH environment variable
   #
   if test -z "$PYTHONPATH" ; then
-      export PYTHONPATH=/home/epics/v4/pvaPy/lib/linux-x86_64
+      export PYTHONPATH=/home/epics/v4/pvaPy/lib/python/2.6/linux-x86_64
   else
-      export PYTHONPATH=/home/epics/v4/pvaPy/lib/linux-x86_64:$PYTHONPATH
+      export PYTHONPATH=/home/epics/v4/pvaPy/lib/python/2.6/linux-x86_64:$PYTHONPATH
   fi
 
-2) Compile the pvaPy source. In the top level package directory run:
+These files must be sourced to use, e.g.:
 
-  $ make
+  $ . /home/epics/v4/pvaPy/bin/linux-x86_64/setup.sh
+  $ echo $PYTHONPATH
+  /home/epics/v4/pvaPy/lib/python/2.6/linux-x86_64
 
-This will create a pvaccess.so library in lib/$EPICS_HOST_ARCH directory.
+  % source /home/epics/v4/pvaPy/bin/linux-x86_64/setup.csh
+  % echo $PYTHONPATH
+  /home/epics/v4/pvaPy/lib/python/2.6/linux-x86_64
 
 3) Generate Python html documentation (optional, requires sphinx):
 
@@ -108,8 +122,8 @@ For simple testing, do the following:
   $ cd $EPICS4_DIR/pvaSrv/testTop/iocBoot/testDbPv
   $ ../../bin/$EPICS_HOST_ARCH/testDbPv st.cmd
 
-2) Source setup file (or export PYTHONPATH=$PVAPY_DIR/lib/$EPICS_HOST_ARCH)
-and start python (python PVA module is called pvaccess):
+2) Source the setup file from $PVAPY_DIR/bin/$EPICS_HOST_ARCH
+and start python (the Python PVA module is called pvaccess):
 
   $ python
   >>> import pvaccess
@@ -136,7 +150,7 @@ and start python (python PVA module is called pvaccess):
       int value 5
 
 In the above, note that in addition to PV object classes like PvInt, one
-can also use standard python types as arguments for channel puts.
+can also use standard Python types as arguments for channel puts.
 
 
 Basic Usage: PV monitor
@@ -156,7 +170,7 @@ Basic Usage: PV monitor
   epics> dbpf 'float01' 11.1
   DBR_FLOAT:          11.1
 
-3) Monitor channel in python, passing in a subscriber object (function
+3) Monitor a channel in Python, passing in a subscriber object (function
 that processes PvObject instance):
 
   >>> c = pvaccess.Channel('float01')
@@ -206,7 +220,7 @@ Advanced Usage: RPC Server Class
 Example 1:
 ----------
 
-1) In a separate terminal, source environment file and start python:
+1) In a separate terminal, source the environment file and start python:
 
   $ python # in terminal 2
   >>> import pvaccess

@@ -2,7 +2,6 @@ QtC-
 bin/
 lib/
 include/
-setup.*sh
 config.log
 configure/*.local
 **/O.*
