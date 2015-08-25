@@ -42,7 +42,7 @@ export EPICS4_DIR=${STUFF}
 
 # Fetch pvaPy "distribution"
 rm -f pvaPy.CB-dist.tar.gz
-wget -nv https://openepics.ci.cloudbees.com/job/pvaPy_Build/BASE=${BASE}/lastSuccessfulBuild/artifact/pvaPy.CB-dist.tar.gz
+wget -nv https://openepics.ci.cloudbees.com/job/pvaPy_Build/BASE=${BASE},USE_MB=MB_NO/lastSuccessfulBuild/artifact/pvaPy.CB-dist.tar.gz
 tar -xzf pvaPy.CB-dist.tar.gz
 
 virtualenv --distribute DEV
