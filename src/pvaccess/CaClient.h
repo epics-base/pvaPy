@@ -1,3 +1,6 @@
+// Copyright information and license terms for this software can be
+// found in the file LICENSE that is included with the distribution
+
 #ifndef CA_CLIENT_H
 #define CA_CLIENT_H
 

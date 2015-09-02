@@ -1,3 +1,6 @@
+// Copyright information and license terms for this software can be
+// found in the file LICENSE that is included with the distribution
+
 #ifndef CHANNEL_GET_REQUESTER_IMPL_H
 #define CHANNEL_GET_REQUESTER_IMPL_H
 

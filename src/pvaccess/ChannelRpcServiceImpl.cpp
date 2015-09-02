@@ -1,3 +1,6 @@
+// Copyright information and license terms for this software can be
+// found in the file LICENSE that is included with the distribution
+
 #include "ChannelRpcServiceImpl.h"
 
 ChannelRpcServiceImpl::ChannelRpcServiceImpl(const epics::pvAccess::ChannelRPCRequester::shared_pointer& channelRpcRequester_, const epics::pvAccess::RPCService::shared_pointer& rpcService_) :

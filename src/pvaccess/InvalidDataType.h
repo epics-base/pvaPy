@@ -1,3 +1,6 @@
+// Copyright information and license terms for this software can be
+// found in the file LICENSE that is included with the distribution
+
 #ifndef INVALID_DATA_TYPE_H
 #define INVALID_DATA_TYPE_H
 

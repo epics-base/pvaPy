@@ -1,3 +1,5 @@
+// Copyright information and license terms for this software can be
+// found in the file LICENSE that is included with the distribution
 
 #ifndef RPC_CHANNEL_PROVIDER_FACTORY_H
 #define RPC_CHANNEL_PROVIDER_FACTORY_H
