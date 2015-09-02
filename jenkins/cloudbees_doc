@@ -62,4 +62,4 @@ make doc
 ###########################################
 # Publish
 
-rsync -aqP --delete -e ssh doc/sphinx/_build/html/ epics-jenkins@web.sourceforge.net:/home/project-web/epics-pvdata/htdocs/docbuild/pvaPy/tip
+rsync -aqP --delete -e ssh documentation/sphinx/_build/html/ epics-jenkins@web.sourceforge.net:/home/project-web/epics-pvdata/htdocs/docbuild/pvaPy/tip

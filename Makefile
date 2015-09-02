@@ -4,7 +4,7 @@ RELEASE_LOCAL = configure/RELEASE.local
 CONFIG_SITE_LOCAL = configure/CONFIG_SITE.local
 
 AC_DIR = tools/autoconf
-DOC_DIR = doc
+DOC_DIR = documentation
 
 ifeq ($(filter $(MAKECMDGOALS),configure distclean),)
   # Command-line goal is neither configure nor distclean
