@@ -16,6 +16,14 @@ DEFAULT_BASE=3.14.12.5
 
 BASE=${1:-${DEFAULT_BASE}}
 
+# Dependent module branches
+PVCOMMON_BRANCH="Release-4.1-"
+PVDATA_BRANCH=""
+PVACCESS_BRANCH="Release-4.1-"
+NORMATIVETYPES_BRANCH=""
+PVACLIENT_BRANCH=""
+PVAPY_BRANCH="Release-0.5-"
+
 ###########################################
 # Fetch and unpack dependencies
 
@@ -26,10 +34,10 @@ mkdir -p ${STUFF}
 cd ${STUFF}
 
 wget -nv https://openepics.ci.cloudbees.com/job/Base-${BASE}_Build/lastSuccessfulBuild/artifact/base-${BASE}.CB-dist.tar.gz
-wget -nv https://openepics.ci.cloudbees.com/job/pvDataCPP_Build/BASE=${BASE},USE_MB=MB_NO/lastSuccessfulBuild/artifact/pvData.CB-dist.tar.gz
-wget -nv https://openepics.ci.cloudbees.com/job/pvAccessCPP_Build/BASE=${BASE},USE_MB=MB_NO/lastSuccessfulBuild/artifact/pvAccess.CB-dist.tar.gz
-wget -nv https://openepics.ci.cloudbees.com/job/normativeTypesCPP_Build/BASE=${BASE},USE_MB=MB_NO/lastSuccessfulBuild/artifact/normativeTypes.CB-dist.tar.gz
-wget -nv https://openepics.ci.cloudbees.com/job/pvaClientCPP_Build/BASE=${BASE},USE_MB=MB_NO/lastSuccessfulBuild/artifact/pvaClient.CB-dist.tar.gz
+wget -nv https://openepics.ci.cloudbees.com/job/pvDataCPP_${PVDATA_BRANCH}Build/BASE=${BASE},USE_MB=MB_NO/lastSuccessfulBuild/artifact/pvData.CB-dist.tar.gz
+wget -nv https://openepics.ci.cloudbees.com/job/pvAccessCPP_${PVACCESS_BRANCH}Build/BASE=${BASE},USE_MB=${USE_MB}/lastSuccessfulBuild/artifact/pvAccess.CB-dist.tar.gz
+wget -nv https://openepics.ci.cloudbees.com/job/normativeTypesCPP_${NORMATIVETYPES_BRANCH}Build/BASE=${BASE},USE_MB=MB_NO/lastSuccessfulBuild/artifact/normativeTypes.CB-dist.tar.gz
+wget -nv https://openepics.ci.cloudbees.com/job/pvaClientCPP_${PVACLIENT_BRANCH}Build/BASE=${BASE},USE_MB=MB_NO/lastSuccessfulBuild/artifact/pvaClient.CB-dist.tar.gz
 tar -xzf base-${BASE}.CB-dist.tar.gz
 tar -xzf pvData.CB-dist.tar.gz
 tar -xzf pvAccess.CB-dist.tar.gz
@@ -48,7 +56,7 @@ export LD_LIBRARY_PATH=${EPICS_BASE}/lib/${EPICS_HOST_ARCH}
 
 # Fetch pvaPy "distribution"
 rm -f pvaPy.CB-dist.tar.gz
-wget -nv https://openepics.ci.cloudbees.com/job/pvaPy_Build/BASE=${BASE},USE_MB=MB_NO/lastSuccessfulBuild/artifact/pvaPy.CB-dist.tar.gz
+wget -nv https://openepics.ci.cloudbees.com/job/pvaPy_${PVAPY_BRANCH}Build/BASE=${BASE},USE_MB=MB_NO/lastSuccessfulBuild/artifact/pvaPy.CB-dist.tar.gz
 tar -xzf pvaPy.CB-dist.tar.gz
 
 virtualenv --distribute DEV
@@ -62,4 +70,4 @@ make doc
 ###########################################
 # Publish
 
-rsync -aqP --delete -e ssh documentation/sphinx/_build/html/ epics-jenkins@web.sourceforge.net:/home/project-web/epics-pvdata/htdocs/docbuild/pvaPy/tip
+rsync -aqP --delete -e ssh documentation/sphinx/_build/html/ epics-jenkins@web.sourceforge.net:/home/project-web/epics-pvdata/htdocs/docbuild/pvaPy/0.5
