@@ -109,7 +109,7 @@ These files must be sourced to use, e.g.:
   $ make doc
 
 If sphinx-build is present on the system, html pages will be generated
-in doc/sphinx/_build directory.
+in the documentation/sphinx/_build/html directory.
 
 
 Basic Usage: PV put/get
