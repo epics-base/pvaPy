@@ -17,6 +17,13 @@ DEFAULT_BASE=3.14.12.5
 BASE=${1:-${DEFAULT_BASE}}
 USE_MB=${2:-"MB_NO"}
 
+# Dependent module branches (empty = master)
+PVCOMMON_BRANCH=""
+PVDATA_BRANCH=""
+PVACCESS_BRANCH=""
+NORMATIVETYPES_BRANCH=""
+PVACLIENT_BRANCH=""
+
 ###########################################
 # Fetch and unpack dependencies
 
@@ -27,10 +34,10 @@ mkdir -p ${STUFF}
 cd ${STUFF}
 
 wget -nv https://openepics.ci.cloudbees.com/job/Base-${BASE}_Build/lastSuccessfulBuild/artifact/base-${BASE}.CB-dist.tar.gz
-wget -nv https://openepics.ci.cloudbees.com/job/pvDataCPP_Build/BASE=${BASE},USE_MB=MB_NO/lastSuccessfulBuild/artifact/pvData.CB-dist.tar.gz
-wget -nv https://openepics.ci.cloudbees.com/job/pvAccessCPP_Build/BASE=${BASE},USE_MB=${USE_MB}/lastSuccessfulBuild/artifact/pvAccess.CB-dist.tar.gz
-wget -nv https://openepics.ci.cloudbees.com/job/normativeTypesCPP_Build/BASE=${BASE},USE_MB=MB_NO/lastSuccessfulBuild/artifact/normativeTypes.CB-dist.tar.gz
-wget -nv https://openepics.ci.cloudbees.com/job/pvaClientCPP_Build/BASE=${BASE},USE_MB=MB_NO/lastSuccessfulBuild/artifact/pvaClient.CB-dist.tar.gz
+wget -nv https://openepics.ci.cloudbees.com/job/pvDataCPP_${PVDATA_BRANCH}Build/BASE=${BASE},USE_MB=MB_NO/lastSuccessfulBuild/artifact/pvData.CB-dist.tar.gz
+wget -nv https://openepics.ci.cloudbees.com/job/pvAccessCPP_${PVACCESS_BRANCH}Build/BASE=${BASE},USE_MB=${USE_MB}/lastSuccessfulBuild/artifact/pvAccess.CB-dist.tar.gz
+wget -nv https://openepics.ci.cloudbees.com/job/normativeTypesCPP_${NORMATIVETYPES_BRANCH}Build/BASE=${BASE},USE_MB=MB_NO/lastSuccessfulBuild/artifact/normativeTypes.CB-dist.tar.gz
+wget -nv https://openepics.ci.cloudbees.com/job/pvaClientCPP_${PVACLIENT_BRANCH}Build/BASE=${BASE},USE_MB=MB_NO/lastSuccessfulBuild/artifact/pvaClient.CB-dist.tar.gz
 tar -xzf base-${BASE}.CB-dist.tar.gz
 tar -xzf pvData.CB-dist.tar.gz
 tar -xzf pvAccess.CB-dist.tar.gz
@@ -38,7 +45,7 @@ tar -xzf pvaClient.CB-dist.tar.gz
 tar -xzf normativeTypes.CB-dist.tar.gz
 
 if [ "${USE_MB}" = "MB_YES" ]; then
-    wget -nv https://openepics.ci.cloudbees.com/job/pvCommonCPP_Build/BASE=${BASE},USE_MB=MB_YES/lastSuccessfulBuild/artifact/pvCommon.CB-dist.tar.gz
+    wget -nv https://openepics.ci.cloudbees.com/job/pvCommonCPP_${PVCOMMON_BRANCH}Build/BASE=${BASE},USE_MB=MB_YES/lastSuccessfulBuild/artifact/pvCommon.CB-dist.tar.gz
     tar -xzf pvCommon.CB-dist.tar.gz
 fi
 
