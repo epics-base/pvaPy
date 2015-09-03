@@ -17,7 +17,7 @@ DEFAULT_BASE=3.14.12.5
 BASE=${1:-${DEFAULT_BASE}}
 USE_MB=${2:-"MB_NO"}
 
-# Dependent module branches
+# Dependent module branches (empty = master)
 PVCOMMON_BRANCH="Release-4.1-"
 PVDATA_BRANCH=""
 PVACCESS_BRANCH="Release-4.1-"
