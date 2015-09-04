@@ -18,10 +18,10 @@ BASE=${1:-${DEFAULT_BASE}}
 
 # Dependent module branches
 PVCOMMON_BRANCH="Release-4.1-"
-PVDATA_BRANCH=""
+PVDATA_BRANCH="Release-5.0-"
 PVACCESS_BRANCH="Release-4.1-"
-NORMATIVETYPES_BRANCH=""
-PVACLIENT_BRANCH=""
+NORMATIVETYPES_BRANCH="Release-5.0-"
+PVACLIENT_BRANCH="Release-4.1-"
 PVAPY_BRANCH="Release-0.5-"
 
 ###########################################
