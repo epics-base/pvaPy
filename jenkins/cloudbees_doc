@@ -10,11 +10,10 @@
 # All rights reserved. Use is subject to license terms.
 
 ###########################################
-# Determine EPICS Base version
+# Set EPICS Base version and upload target
 
-DEFAULT_BASE=3.14.12.5
-
-BASE=${1:-${DEFAULT_BASE}}
+BASE=3.15.2
+PUBLISH=${1:-DONT}
 
 # Dependent module branches
 PVCOMMON_BRANCH=""
@@ -23,9 +22,6 @@ PVACCESS_BRANCH=""
 NORMATIVETYPES_BRANCH=""
 PVACLIENT_BRANCH=""
 PVAPY_BRANCH=""
-
-# Document publication version
-PVAPY_PUBLISH="tip"
 
 ###########################################
 # Fetch and unpack dependencies
@@ -73,4 +69,6 @@ make doc
 ###########################################
 # Publish
 
-rsync -aqP --delete -e ssh documentation/sphinx/_build/html/ epics-jenkins@web.sourceforge.net:/home/project-web/epics-pvdata/htdocs/docbuild/pvaPy/${PVAPY_PUBLISH}
+if [ "${PUBLISH}" != "DONT" ]; then
+    rsync -aqP --delete -e ssh documentation/sphinx/_build/html/ epics-jenkins@web.sourceforge.net:/home/project-web/epics-pvdata/htdocs/docbuild/pvaPy/${PUBLISH}/
+fi
