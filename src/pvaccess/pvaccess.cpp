@@ -920,7 +920,7 @@ BOOST_PYTHON_MODULE(pvaccess)
         .def("getUnion",
             static_cast<PvObject(PvObject::*)(const std::string&)const>(&PvObject::getUnion),
             args("fieldName"),
-            "Retrieves union assigned to the given PV field.\n"
+            "Retrieves union assigned to the given PV field.\n\n"
             ":Parameter: *fieldName* (str) - field name\n\n"
             ":Returns: union PV object\n\n"
             ":Raises: *FieldNotFound* - when PV structure does not have specified field\n\n"
@@ -932,7 +932,7 @@ BOOST_PYTHON_MODULE(pvaccess)
         .def("getUnionFieldNames",
             static_cast<boost::python::list(PvObject::*)(const std::string&)const>(&PvObject::getUnionFieldNames),
             args("fieldName"),
-            "Retrieves list of field names for a union.\n"
+            "Retrieves list of field names for a union.\n\n"
             ":Parameter: *fieldName* (str) - field name\n\n"
             ":Returns: list of union field names\n\n"
             ":Raises: *FieldNotFound* - when PV structure does not have specified field\n\n"
@@ -953,7 +953,7 @@ BOOST_PYTHON_MODULE(pvaccess)
         .def("getSelectedUnionFieldName",
             static_cast<std::string(PvObject::*)(const std::string&)const>(&PvObject::getSelectedUnionFieldName),
             args("fieldName"),
-            "Retrieves selected field name for an union.\n"
+            "Retrieves selected field name for an union.\n\n"
             ":Parameter: *fieldName* (str) - field name\n\n"
             ":Returns: selected union field name\n\n"
             ":Raises: *FieldNotFound* - when PV structure does not have specified field\n\n"
@@ -975,7 +975,7 @@ BOOST_PYTHON_MODULE(pvaccess)
         .def("selectUnionField",
             static_cast<PvObject(PvObject::*)(const std::string&, const std::string&)const>(&PvObject::selectUnionField),
             args("fieldName", "unionFieldName"),
-            "Selects field for an union assigned to a given field name.\n"
+            "Selects field for an union assigned to a given field name.\n\n"
             ":Parameter: *fieldName* (str) - field name\n\n"
             ":Parameter: *unionFieldName* (str) - union field name to be selected\n\n"
             ":Returns: PV object for the selected union field\n\n"
@@ -999,7 +999,7 @@ BOOST_PYTHON_MODULE(pvaccess)
         .def("isUnionVariant",
             static_cast<bool(PvObject::*)(const std::string&)const>(&PvObject::isUnionVariant),
             args("fieldName"),
-            "Checks if an union assigned to a given field name is variant.\n"
+            "Checks if an union assigned to a given field name is variant.\n\n"
             ":Parameter: *fieldName* (str) - field name\n\n"
             ":Returns: true if union is variant, false otherwise\n\n"
             ":Raises: *FieldNotFound* - when PV structure does not have specified field\n\n"
@@ -1020,7 +1020,7 @@ BOOST_PYTHON_MODULE(pvaccess)
         .def("createUnionField",
             static_cast<PvObject(PvObject::*)(const std::string&, const std::string&)const>(&PvObject::createUnionField),
             args("fieldName", "unionFieldName"),
-            "Creates union field object for an union assigned to a given field name.\n"
+            "Creates union field object for an union assigned to a given field name.\n\n"
             ":Parameter: *fieldName* (str) - field name\n\n"
             ":Parameter: *unionFieldName* (str) - union field name to be created\n\n"
             ":Returns: PV object for new union field\n\n"
@@ -1089,7 +1089,7 @@ BOOST_PYTHON_MODULE(pvaccess)
         .def("getUnionArrayFieldNames",
             static_cast<boost::python::list(PvObject::*)(const std::string&)const>(&PvObject::getUnionArrayFieldNames),
             args("fieldName"),
-            "Retrieves list of field names for an union array.\n"
+            "Retrieves list of field names for an union array.\n\n"
             ":Parameter: *fieldName* (str) - field name\n\n"
             ":Returns: list of union array field names\n\n"
             ":Raises: *FieldNotFound* - when PV structure does not have specified field\n\n"
@@ -1110,7 +1110,7 @@ BOOST_PYTHON_MODULE(pvaccess)
         .def("isUnionArrayVariant",
             static_cast<bool(PvObject::*)(const std::string&)const>(&PvObject::isUnionArrayVariant),
             args("fieldName"),
-            "Checks if an union array assigned to a given field name is variant.\n"
+            "Checks if an union array assigned to a given field name is variant.\n\n"
             ":Parameter: *fieldName* (str) - field name\n\n"
             ":Returns: true if union array is variant, false otherwise\n\n"
             ":Raises: *FieldNotFound* - when PV structure does not have specified field\n\n"
@@ -1131,7 +1131,7 @@ BOOST_PYTHON_MODULE(pvaccess)
         .def("createUnionArrayElementField",
             static_cast<PvObject(PvObject::*)(const std::string&, const std::string&)const>(&PvObject::createUnionArrayElementField),
             args("fieldName", "unionFieldName"),
-            "Creates union field object for an union array assigned to a given field name.\n"
+            "Creates union field object for an union array assigned to a given field name.\n\n"
             ":Parameter: *fieldName* (str) - field name\n\n"
             ":Parameter: *unionFieldName* (str) - union field name to be created\n\n"
             ":Returns: PV object for new union field\n\n"
