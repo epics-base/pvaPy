@@ -32,23 +32,23 @@ operating systems (e.g. Linux, MacOS, Solaris) are currently supported.
 
 This can be done manually, or using autoconf.
 
-For manual configuration: Read the comments in both the configure/RELEASE and
-configure/CONFIG_SITE files and follow the instructions given there.
+For manual configuration: Read the comments in both the `configure/RELEASE` and
+`configure/CONFIG_SITE` files and follow the instructions given there.
 
 For automatic configuration: In the top level directory run
 
 ```sh
-  $ make configure EPICS_BASE=<epics_base> EPICS4_DIR=<epics4_dir>
+  $ make configure EPICS_BASE=/epics/base/path EPICS4_DIR=/epics/v4/path
 ```
 
-In the above command replace <epics_base> with the full path to your
-EPICS Base directory, and <epics4_dir> with the full path to your top level
+In the above command replace `/epics/base/path` with the full path to your
+EPICS Base directory, and `/epics/v4/path` with the full path to your top level
 directory containing the v4 modules pvDataCPP, pvAccessCPP, etc.
 Note that you can only use the automatic configuration if the v4 modules have
 not been renamed.
 
-The "make configure" command will check for your Boost/Python libraries, and
-create suitable configure/RELEASE.local and configure/CONFIG_SITE.local files.
+The `make configure` command will check for your Boost/Python libraries, and
+create suitable `configure/RELEASE.local` and `configure/CONFIG_SITE.local` files.
 They should look roughly like the examples below:
 
 ```sh
@@ -84,11 +84,11 @@ In the top level package directory run:
   $ make
 ```
 
-This will create and install a loadable library named pvaccess.so under the
-lib/python directory which can be imported directly by Python.
+This will create and install a loadable library named `pvaccess.so` under the
+`lib/python` directory which can be imported directly by Python.
 
-This also creates setup.(c)sh files in the bin/$EPICS_HOST_ARCH directory
-that configure PYTHONPATH for using the pvaccess Python module, e.g.:
+This also creates `setup.sh` and `setup.csh` files in the `bin/$EPICS_HOST_ARCH`
+directory that configure PYTHONPATH for using the pvaccess Python module, e.g.:
 
 ```sh
   $ cat setup.sh
@@ -122,14 +122,14 @@ or for csh users:
 
 ### 3. Generate documentation.
 
-This step is optional and requires sphinx to be installed:
+This step is optional and requires Sphinx to be installed:
 
 ```sh
   $ make doc
 ```
 
-If sphinx-build is present on the system, html pages will be generated
-in the documentation/sphinx/_build/html directory.
+If a `sphinx-build` script is present on the system, html pages will be
+generated in the `documentation/sphinx/_build/html` directory.
 
 
 ## Basic Usage: PV put/get
@@ -143,8 +143,8 @@ For simple testing, do the following:
   $ ../../bin/$EPICS_HOST_ARCH/testDbPv st.cmd
 ```
 
-2) Source the setup file from $PVAPY_DIR/bin/$EPICS_HOST_ARCH
-and start python (the Python PVA module is called pvaccess):
+2) Source the appropriate setup file from pvaPy's `bin/$EPICS_HOST_ARCH`
+directory and start python (the Python PVA module is called pvaccess):
 
 ```
   $ python
@@ -185,7 +185,7 @@ can also use standard Python types as arguments for channel puts.
   $ ../../bin/$EPICS_HOST_ARCH/testDbPv st.cmd
 ```
 
-2) PV values can be changed using the IOC shell command 'dbpf', e.g:
+2) PV values can be changed using the IOC shell command `dbpf`, e.g:
 
 ```
   epics> dbpr 'float01'
@@ -220,7 +220,7 @@ that processes PvObject instance):
 
 ## Advanced Usage: RPC Client Class
 
-1) In a separate terminal, start v4 test RPC service:
+1) In a separate terminal, start the v4 test RPC service:
 
 ```sh
   $ cd $EPICS4_DIR/pvAccessCPP/bin/$EPICS_HOST_ARCH
