@@ -10,6 +10,7 @@
 - enhanced documentation with additional examples
 - removed code for building against EPICS 4.3.0
 - converted to PVA API from pvAccessCPP module
+- README and Release notes converted to Markdown
 
 ## Release 0.4 (2014/12/03)
 

@@ -5,12 +5,12 @@
 The pvAccess for Python package requires recent versions of the following
 software:
 
-1) EPICS Base (v3.14.12.3 or 3.15.2)
-2) EPICS4 CPP release (v4.4.0 or v4.5.0)
-3) Python development header files/libraries (v2.6.6)
-4) Boost (v1.41.0); must have the boost_python library built.
-5) Standard development tools (gcc, make, autoconf, etc.)
-6) Sphinx (optional, for generating documentation)
+1. EPICS Base (v3.14.12.3 or 3.15.2)
+2. EPICS4 CPP release (v4.4.0 or v4.5.0)
+3. Python development header files/libraries (v2.6.6)
+4. Boost (v1.41.0); must have the boost_python library built.
+5. Standard development tools (gcc, make, autoconf, etc.)
+6. Sphinx (optional, for generating documentation)
 
 The Software versions listed above were used for prototype development and
 testing. It is likely that any recent version of Python and the Boost libraries
@@ -28,14 +28,16 @@ operating systems (e.g. Linux, MacOS, Solaris) are currently supported.
 
 ## Build
 
-1) Configure pvaPy. This can be done manually, or using autoconf.
+### 1. Configure pvaPy.
+
+This can be done manually, or using autoconf.
 
 For manual configuration: Read the comments in both the configure/RELEASE and
 configure/CONFIG_SITE files and follow the instructions given there.
 
 For automatic configuration: In the top level directory run
 
-```
+```sh
   $ make configure EPICS_BASE=<epics_base> EPICS4_DIR=<epics4_dir>
 ```
 
@@ -49,7 +51,7 @@ The "make configure" command will check for your Boost/Python libraries, and
 create suitable configure/RELEASE.local and configure/CONFIG_SITE.local files.
 They should look roughly like the examples below:
 
-```
+```sh
   $ cat RELEASE.local
   PVACLIENT = /home/epics/v4/pvaClientCPP
   PVACCESS = /home/epics/v4/pvAccessCPP
@@ -68,15 +70,17 @@ They should look roughly like the examples below:
 The above files were created automatically on a 64-bit RHEL 6.6 machine, with
 the following boost/python packages installed:
 
-```
+```sh
   $ rpm -q boost-python python-devel
   boost-python-1.41.0-25.el6.x86_64
   python-devel-2.6.6-52.el6.x86_64
 ```
 
-2) Compile the pvaPy source. In the top level package directory run:
+### 2. Compile the pvaPy source.
 
-```
+In the top level package directory run:
+
+```sh
   $ make
 ```
 
@@ -86,7 +90,7 @@ lib/python directory which can be imported directly by Python.
 This also creates setup.(c)sh files in the bin/$EPICS_HOST_ARCH directory
 that configure PYTHONPATH for using the pvaccess Python module, e.g.:
 
-```
+```sh
   $ cat setup.sh
   #!/bin/sh
   #
@@ -103,19 +107,24 @@ that configure PYTHONPATH for using the pvaccess Python module, e.g.:
 
 These files must be sourced to use, e.g.:
 
-```
+```sh
   $ . /home/epics/v4/pvaPy/bin/linux-x86_64/setup.sh
   $ echo $PYTHONPATH
   /home/epics/v4/pvaPy/lib/python/2.6/linux-x86_64
+```
+or for csh users:
 
+```sh
   % source /home/epics/v4/pvaPy/bin/linux-x86_64/setup.csh
   % echo $PYTHONPATH
   /home/epics/v4/pvaPy/lib/python/2.6/linux-x86_64
 ```
 
-3) Generate Python html documentation (optional, requires sphinx):
+### 3. Generate documentation.
 
-```
+This step is optional and requires sphinx to be installed:
+
+```sh
   $ make doc
 ```
 
@@ -129,7 +138,7 @@ For simple testing, do the following:
 
 1) In a separate terminal, start the testDbPv IOC:
 
-```
+```sh
   $ cd $EPICS4_DIR/pvaSrv/testTop/iocBoot/testDbPv
   $ ../../bin/$EPICS_HOST_ARCH/testDbPv st.cmd
 ```
@@ -171,7 +180,7 @@ can also use standard Python types as arguments for channel puts.
 
 1) In a separate terminal, start the testDbPv IOC:
 
-```
+```sh
   $ cd $EPICS4_DIR/pvaSrv/testTop/iocBoot/testDbPv
   $ ../../bin/$EPICS_HOST_ARCH/testDbPv st.cmd
 ```
@@ -213,7 +222,7 @@ that processes PvObject instance):
 
 1) In a separate terminal, start v4 test RPC service:
 
-```
+```sh
   $ cd $EPICS4_DIR/pvAccessCPP/bin/$EPICS_HOST_ARCH
   $ ./rpcServiceExample # in terminal 2
 ```
