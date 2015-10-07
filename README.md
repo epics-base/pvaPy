@@ -1,8 +1,6 @@
-                      pvaPy - pvAccess for Python
-                    ===============================
+# pvaPy - pvAccess for Python
 
-Prerequisites
-===============
+## Prerequisites
 
 The pvAccess for Python package requires recent versions of the following
 software:
@@ -28,8 +26,7 @@ This module has not been adapted for use on Microsoft Windows. Only Unix-like
 operating systems (e.g. Linux, MacOS, Solaris) are currently supported.
 
 
-Build
-=======
+## Build
 
 1) Configure pvaPy. This can be done manually, or using autoconf.
 
@@ -38,7 +35,9 @@ configure/CONFIG_SITE files and follow the instructions given there.
 
 For automatic configuration: In the top level directory run
 
+```
   $ make configure EPICS_BASE=<epics_base> EPICS4_DIR=<epics4_dir>
+```
 
 In the above command replace <epics_base> with the full path to your
 EPICS Base directory, and <epics4_dir> with the full path to your top level
@@ -50,6 +49,7 @@ The "make configure" command will check for your Boost/Python libraries, and
 create suitable configure/RELEASE.local and configure/CONFIG_SITE.local files.
 They should look roughly like the examples below:
 
+```
   $ cat RELEASE.local
   PVACLIENT = /home/epics/v4/pvaClientCPP
   PVACCESS = /home/epics/v4/pvAccessCPP
@@ -63,17 +63,22 @@ They should look roughly like the examples below:
   PVA_PY_SYS_LIBS = boost_python-mt
   PVA_API_VERSION = 450
   PVA_RPC_API_VERSION = 440
+```
 
 The above files were created automatically on a 64-bit RHEL 6.6 machine, with
 the following boost/python packages installed:
 
+```
   $ rpm -q boost-python python-devel
   boost-python-1.41.0-25.el6.x86_64
   python-devel-2.6.6-52.el6.x86_64
+```
 
 2) Compile the pvaPy source. In the top level package directory run:
 
+```
   $ make
+```
 
 This will create and install a loadable library named pvaccess.so under the
 lib/python directory which can be imported directly by Python.
@@ -81,6 +86,7 @@ lib/python directory which can be imported directly by Python.
 This also creates setup.(c)sh files in the bin/$EPICS_HOST_ARCH directory
 that configure PYTHONPATH for using the pvaccess Python module, e.g.:
 
+```
   $ cat setup.sh
   #!/bin/sh
   #
@@ -93,9 +99,11 @@ that configure PYTHONPATH for using the pvaccess Python module, e.g.:
   else
       export PYTHONPATH=/home/epics/v4/pvaPy/lib/python/2.6/linux-x86_64:$PYTHONPATH
   fi
+```
 
 These files must be sourced to use, e.g.:
 
+```
   $ . /home/epics/v4/pvaPy/bin/linux-x86_64/setup.sh
   $ echo $PYTHONPATH
   /home/epics/v4/pvaPy/lib/python/2.6/linux-x86_64
@@ -103,28 +111,33 @@ These files must be sourced to use, e.g.:
   % source /home/epics/v4/pvaPy/bin/linux-x86_64/setup.csh
   % echo $PYTHONPATH
   /home/epics/v4/pvaPy/lib/python/2.6/linux-x86_64
+```
 
 3) Generate Python html documentation (optional, requires sphinx):
 
+```
   $ make doc
+```
 
 If sphinx-build is present on the system, html pages will be generated
 in the documentation/sphinx/_build/html directory.
 
 
-Basic Usage: PV put/get
-=========================
+## Basic Usage: PV put/get
 
 For simple testing, do the following:
 
 1) In a separate terminal, start the testDbPv IOC:
 
+```
   $ cd $EPICS4_DIR/pvaSrv/testTop/iocBoot/testDbPv
   $ ../../bin/$EPICS_HOST_ARCH/testDbPv st.cmd
+```
 
 2) Source the setup file from $PVAPY_DIR/bin/$EPICS_HOST_ARCH
 and start python (the Python PVA module is called pvaccess):
 
+```
   $ python
   >>> import pvaccess
   >>> dir (pvaccess)
@@ -148,31 +161,36 @@ and start python (the Python PVA module is called pvaccess):
   >>> print c.get()
   epics:nt/NTScalar:1.0
       int value 5
+```
 
 In the above, note that in addition to PV object classes like PvInt, one
 can also use standard Python types as arguments for channel puts.
 
 
-Basic Usage: PV monitor
-=========================
+## Basic Usage: PV monitor
 
 1) In a separate terminal, start the testDbPv IOC:
 
+```
   $ cd $EPICS4_DIR/pvaSrv/testTop/iocBoot/testDbPv
   $ ../../bin/$EPICS_HOST_ARCH/testDbPv st.cmd
+```
 
 2) PV values can be changed using the IOC shell command 'dbpf', e.g:
 
+```
   epics> dbpr 'float01'
   ASG:                DESC:               DISA: 0             DISP: 0
   DISV: 1             NAME: float01       SEVR: MAJOR         STAT: LOLO
   TPRO: 0             VAL: 0
   epics> dbpf 'float01' 11.1
   DBR_FLOAT:          11.1
+```
 
 3) Monitor a channel in Python, passing in a subscriber object (function
 that processes PvObject instance):
 
+```python
   >>> c = pvaccess.Channel('float01')
   >>> def echo(x):
   ...     print 'New PV value:', x
@@ -189,18 +207,20 @@ that processes PvObject instance):
       float value 11.3
 
   >>> c.stopMonitor()
+```
 
-
-Advanced Usage: RPC Client Class
-==================================
+## Advanced Usage: RPC Client Class
 
 1) In a separate terminal, start v4 test RPC service:
 
+```
   $ cd $EPICS4_DIR/pvAccessCPP/bin/$EPICS_HOST_ARCH
   $ ./rpcServiceExample # in terminal 2
+```
 
 2) RPC test channel is 'sum':
 
+```python
   >>> rpc = pvaccess.RpcClient('sum')
   >>> request = pvaccess.PvObject({'a': pvaccess.STRING, 'b': pvaccess.STRING})
   >>> request.set({'a': '11', 'b': '22' })
@@ -212,16 +232,15 @@ Advanced Usage: RPC Client Class
   >>> print response
   structure
       double c 33
+```
 
+## Advanced Usage: RPC Server Class
 
-Advanced Usage: RPC Server Class
-==================================
-
-Example 1:
-----------
+### Example 1
 
 1) In a separate terminal, source the environment file and start python:
 
+```
   $ python # in terminal 2
   >>> import pvaccess
   >>> srv = pvaccess.RpcServer()
@@ -230,21 +249,24 @@ Example 1:
   ...     return x    # service must return an instance of PvObject
   >>> srv.registerService('echo', echo)
   >>> srv.listen()
+```
 
 2) In terminal 1, reuse previous request object
 
+```python
   >>> rpc = pvaccess.RpcClient('echo')
   >>> response = rpc.invoke(request)
   >>> print response
   structure
       string a 11
       string b 22
+```
 
-Example 2:
-----------
+### Example 2
 
 1) In terminal 2:
 
+```
   $ python
   >>> import pvaccess
   >>> srv = pvaccess.RpcServer()
@@ -254,9 +276,11 @@ Example 2:
   ...     return pvaccess.PvInt(a+b)
   >>> srv.registerService('sum', sum)
   >>> srv.listen()
+```
 
 2) In terminal 1:
 
+```python
   >>> rpc = pvaccess.RpcClient('sum')
   >>> request = pvaccess.PvObject({'a': pvaccess.INT, 'b': pvaccess.INT})
   >>> request.set({'a': 11, 'b': 22})
@@ -268,13 +292,13 @@ Example 2:
   >>> print response
   structure
       int value 33
+```
 
-
-Example 3:
-----------
+### Example 3
 
 1) In terminal 2:
 
+```python
   >>> import pvaccess
   >>> srv = pvaccess.RpcServer()
   >>> def hash(x):
@@ -289,13 +313,15 @@ Example 3:
   ...     return response
   >>> srv.registerService('hash', hash)
   >>> srv.listen()
+```
 
 2) In terminal 1:
 
+```python
   >>> rpc = pvaccess.RpcClient('hash')
   >>> request = pvaccess.PvString('abcd')
   >>> print rpc.invoke(request)
   structure
       string hash 0a380e7375d8c3f68d1bbe068141d6ce
       string value
-
+```
