@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
+
 import pvaccess
 import random
 
@@ -7,7 +9,7 @@ srv = pvaccess.RpcServer()
 def createNtTable(x):
     nRows = x.getInt('nRows')
     nColumns = x.getInt('nColumns')
-    print 'Creating table with %d rows and %d columns' % (nRows, nColumns)
+    print('Creating table with %d rows and %d columns' % (nRows, nColumns))
     ntTable = pvaccess.NtTable(nColumns, pvaccess.DOUBLE)
     labels = []
     for j in range (0, nColumns):

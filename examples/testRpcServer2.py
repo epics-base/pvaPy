@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
+
 import pvaccess
 import random
 import time
@@ -8,7 +10,7 @@ srv = pvaccess.RpcServer()
 def createNtTable(x):
     nRows = x.getInt('nRows')
     nColumns = x.getInt('nColumns')
-    print 'Creating table with %d rows and %d columns' % (nRows, nColumns)
+    print('Creating table with %d rows and %d columns' % (nRows, nColumns))
     ntTable = pvaccess.NtTable(nColumns, pvaccess.DOUBLE)
     labels = []
     for j in range (0, nColumns):
@@ -24,16 +26,16 @@ def createNtTable(x):
 srv.registerService('createNtTable', createNtTable)
 
 # Listen in interactive mode for couple of minutes
-print 'Starting server listener'
+print('Starting server listener')
 srv.startListener()
 cnt = 120
 while cnt > 0:
-    print 'Remaining listener uptime:', cnt
+    print('Remaining listener uptime:', cnt)
     time.sleep(1)
     cnt = cnt - 1
-print 'Stopping server listener'
+print('Stopping server listener')
 srv.stopListener()
-print 'Server listener done'
+print('Server listener done')
 
 
 
