@@ -44,8 +44,8 @@ public:
 
     void setObject(const std::string& key, const boost::python::object& pyObject);
     void setObject(const boost::python::object& pyObject);
-    boost::python::object getObject(const std::string& key) const;
-    boost::python::object getObject() const;
+    boost::python::object getPyObject(const std::string& key) const;
+    boost::python::object getPyObject() const;
 
     // Boolean fields
     void setBoolean(const std::string& key, bool value);
