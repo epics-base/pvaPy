@@ -14,6 +14,7 @@ template<typename T>
 std::string toString(const T& t);
 std::string toString(const char* s);
 std::string toString(char* s);
+std::string toString(bool b);
 
 std::string& leftTrim(std::string& s);
 std::string& rightTrim(std::string& s); 

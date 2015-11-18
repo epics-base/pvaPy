@@ -22,6 +22,15 @@ std::string toString(const char* s)
     }
     return "";
 }
+
+std::string toString(bool b) 
+{
+    if (b) {
+        return "true";
+    }
+    return "false";
+}
+
 std::string& leftTrim(std::string& s) 
 {
     s.erase(s.begin(), std::find_if(s.begin(), s.end(),
