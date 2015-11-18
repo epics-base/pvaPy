@@ -21,8 +21,12 @@
 #include "PyGilManager.h"
 #include "PvUtility.h"
 #include "PyUtility.h"
+#include "PyPvDataUtility.h"
+#include "PvaConstants.h"
+#include "PvaClientUtility.h"
 
 const char* Channel::DefaultRequestDescriptor("field(value)");
+const char* Channel::DefaultPutGetRequestDescriptor("putField(value)getField(value)");
 const double Channel::DefaultTimeout(3.0);
 const double Channel::ShutdownWaitTime(0.1);
 
@@ -136,9 +140,6 @@ void Channel::put(const std::string& value)
 
 void Channel::put(const std::string& value, const std::string& requestDescriptor) 
 {
-    //std::vector<std::string> values;
-    //values.push_back(value);
-    //put(values, requestDescriptor);
     try {
         epics::pvaClient::PvaClientPutPtr pvaPut = pvaClientChannelPtr->put(requestDescriptor);
         epics::pvData::PVScalarPtr pvScalar = pvaPut->getData()->getScalarValue();
@@ -165,9 +166,16 @@ void Channel::put(const boost::python::list& pyList)
     put(pyList, DefaultRequestDescriptor);
 }
 
+//
+// Given that python cannot distinguish between some data types
+// like short vs int, use generic put method that utilizes strings
+// for all scalar types
+//
+
 void Channel::put(bool value, const std::string& requestDescriptor)
 {
-    put(StringUtility::toString<bool>(value), requestDescriptor);
+    put(StringUtility::toString(value), requestDescriptor);
+    //PvaClientUtility::put<bool, epics::pvData::PVBoolean, epics::pvData::PVBooleanPtr>(pvaClientChannelPtr, value, requestDescriptor);
 }
 
 void Channel::put(bool value)
@@ -178,6 +186,7 @@ void Channel::put(bool value)
 void Channel::put(char value, const std::string& requestDescriptor)
 {
     put(StringUtility::toString<int>(static_cast<int>(value)), requestDescriptor);
+    //PvaClientUtility::put<char, epics::pvData::PVByte, epics::pvData::PVBytePtr>(pvaClientChannelPtr, value, requestDescriptor);
 }
 
 void Channel::put(char value)
@@ -188,6 +197,7 @@ void Channel::put(char value)
 void Channel::put(unsigned char value, const std::string& requestDescriptor)
 {
     put(StringUtility::toString<int>(static_cast<int>(value)), requestDescriptor);
+    //PvaClientUtility::put<unsigned char, epics::pvData::PVUByte, epics::pvData::PVUBytePtr>(pvaClientChannelPtr, value, requestDescriptor);
 }
 
 void Channel::put(unsigned char value)
@@ -198,6 +208,7 @@ void Channel::put(unsigned char value)
 void Channel::put(short value, const std::string& requestDescriptor)
 {
     put(StringUtility::toString<short>(value), requestDescriptor);
+    //PvaClientUtility::put<short, epics::pvData::PVShort, epics::pvData::PVShortPtr>(pvaClientChannelPtr, value, requestDescriptor);
 }
 
 void Channel::put(short value)
@@ -208,6 +219,7 @@ void Channel::put(short value)
 void Channel::put(unsigned short value, const std::string& requestDescriptor)
 {
     put(StringUtility::toString<unsigned short>(value), requestDescriptor);
+    //PvaClientUtility::put<unsigned short, epics::pvData::PVUShort, epics::pvData::PVUShortPtr>(pvaClientChannelPtr, value, requestDescriptor);
 }
 
 void Channel::put(unsigned short value)
@@ -215,22 +227,24 @@ void Channel::put(unsigned short value)
     put(value, DefaultRequestDescriptor);
 }
 
-void Channel::put(int value, const std::string& requestDescriptor)
+void Channel::put(long int value, const std::string& requestDescriptor)
 {
     put(StringUtility::toString<int>(value), requestDescriptor);
+    //PvaClientUtility::put<int, epics::pvData::PVInt, epics::pvData::PVIntPtr>(pvaClientChannelPtr, value, requestDescriptor);
 }
 
-void Channel::put(int value)
+void Channel::put(long int value)
 {
     put(value, DefaultRequestDescriptor);
 }
 
-void Channel::put(unsigned int value, const std::string& requestDescriptor)
+void Channel::put(unsigned long int value, const std::string& requestDescriptor)
 {
     put(StringUtility::toString<unsigned int>(value), requestDescriptor);
+    //PvaClientUtility::put<unsigned int, epics::pvData::PVUInt, epics::pvData::PVUIntPtr>(pvaClientChannelPtr, value, requestDescriptor);
 }
 
-void Channel::put(unsigned int value)
+void Channel::put(unsigned long int value)
 {
     put(value, DefaultRequestDescriptor);
 }
@@ -238,6 +252,7 @@ void Channel::put(unsigned int value)
 void Channel::put(long long value, const std::string& requestDescriptor)
 {
     put(StringUtility::toString<long long>(value), requestDescriptor);
+    //PvaClientUtility::put<long long, epics::pvData::PVLong, epics::pvData::PVLongPtr>(pvaClientChannelPtr, value, requestDescriptor);
 }
 
 void Channel::put(long long value)
@@ -248,6 +263,7 @@ void Channel::put(long long value)
 void Channel::put(unsigned long long value, const std::string& requestDescriptor)
 {
     put(StringUtility::toString<unsigned long long>(value), requestDescriptor);
+    //PvaClientUtility::put<unsigned long long, epics::pvData::PVULong, epics::pvData::PVULongPtr>(pvaClientChannelPtr, value, requestDescriptor);
 }
 
 void Channel::put(unsigned long long value)
@@ -258,6 +274,7 @@ void Channel::put(unsigned long long value)
 void Channel::put(float value, const std::string& requestDescriptor)
 {
     put(StringUtility::toString<float>(value), requestDescriptor);
+    //PvaClientUtility::put<float, epics::pvData::PVFloat, epics::pvData::PVFloatPtr>(pvaClientChannelPtr, value, requestDescriptor);
 }
 
 void Channel::put(float value)
@@ -268,6 +285,7 @@ void Channel::put(float value)
 void Channel::put(double value, const std::string& requestDescriptor)
 {
     put(StringUtility::toString<double>(value), requestDescriptor);
+    //PvaClientUtility::put<double, epics::pvData::PVDouble, epics::pvData::PVDoublePtr>(pvaClientChannelPtr, value, requestDescriptor);
 }
 
 void Channel::put(double value)
@@ -275,6 +293,227 @@ void Channel::put(double value)
     put(value, DefaultRequestDescriptor);
 }
 
+// PutGet methods
+
+PvObject* Channel::putGet(const PvObject& pvObject, const std::string& requestDescriptor) 
+{
+    try {
+        epics::pvaClient::PvaClientPutGetPtr pvaPutGet = pvaClientChannelPtr->createPutGet(requestDescriptor);
+        epics::pvData::PVStructurePtr pvPut = pvaPutGet->getPutData()->getPVStructure();
+        pvPut << pvObject;
+        pvaPutGet->putGet();
+        epics::pvData::PVStructurePtr pvGet = pvaPutGet->getGetData()->getPVStructure();
+        return new PvObject(pvGet);
+    } 
+    catch (std::runtime_error e) {
+        throw PvaException(e.what());
+    }
+}
+
+PvObject* Channel::putGet(const PvObject& pvObject)
+{
+    return putGet(pvObject, DefaultPutGetRequestDescriptor);
+}
+
+PvObject* Channel::putGet(const std::vector<std::string>& values, const std::string& requestDescriptor) 
+{
+    try {
+        epics::pvaClient::PvaClientPutGetPtr pvaPutGet = pvaClientChannelPtr->createPutGet(requestDescriptor);
+        epics::pvaClient::PvaClientPutDataPtr pvaData = pvaPutGet->getPutData();
+        pvaData->putStringArray(values);
+        pvaPutGet->putGet();
+        return new PvObject(pvaPutGet->getGetData()->getPVStructure());
+    } 
+    catch (std::runtime_error e) {
+        throw PvaException(e.what());
+    }
+}
+
+PvObject* Channel::putGet(const std::vector<std::string>& values)
+{
+    return putGet(values, DefaultPutGetRequestDescriptor);
+}
+
+PvObject* Channel::putGet(const std::string& value, const std::string& requestDescriptor) 
+{
+    try {
+        epics::pvaClient::PvaClientPutGetPtr pvaPutGet = pvaClientChannelPtr->createPutGet(requestDescriptor);
+        epics::pvaClient::PvaClientPutDataPtr pvaData = pvaPutGet->getPutData();
+        epics::pvData::PVScalarPtr pvScalar = pvaData->getScalarValue();
+        epics::pvData::getConvert()->fromString(pvScalar,value);
+        pvaPutGet->putGet();
+        return new PvObject(pvaPutGet->getGetData()->getPVStructure());
+    } 
+    catch (std::runtime_error e) {
+        throw PvaException(e.what());
+    }
+}
+
+PvObject* Channel::putGet(const std::string& value)
+{
+    return putGet(value, DefaultPutGetRequestDescriptor);
+}
+
+PvObject* Channel::putGet(const boost::python::list& pyList, const std::string& requestDescriptor) 
+{
+    int listSize = boost::python::len(pyList);
+    std::vector<std::string> values(listSize);
+    for (int i = 0; i < listSize; i++) {
+        values[i] = PyUtility::extractStringFromPyObject(pyList[i]);
+    }
+    return putGet(values, requestDescriptor);
+}
+
+PvObject* Channel::putGet(const boost::python::list& pyList)
+{
+    return putGet(pyList, DefaultPutGetRequestDescriptor);
+}
+
+PvObject* Channel::putGet(bool value, const std::string& requestDescriptor)
+{
+    return putGet(StringUtility::toString(value), requestDescriptor);
+    //return PvaClientUtility::putGet<bool, epics::pvData::PVBoolean, epics::pvData::PVBooleanPtr>(pvaClientChannelPtr, value, requestDescriptor);
+}
+
+PvObject* Channel::putGet(bool value)
+{
+    return putGet(value, DefaultPutGetRequestDescriptor);
+}
+
+PvObject* Channel::putGet(char value, const std::string& requestDescriptor)
+{
+    return putGet(StringUtility::toString<int>(static_cast<int>(value)), requestDescriptor);
+    //return PvaClientUtility::putGet<char, epics::pvData::PVByte, epics::pvData::PVBytePtr>(pvaClientChannelPtr, value, requestDescriptor);
+}
+
+PvObject* Channel::putGet(char value)
+{
+    return putGet(value, DefaultPutGetRequestDescriptor);
+}
+
+PvObject* Channel::putGet(unsigned char value, const std::string& requestDescriptor)
+{
+    return putGet(StringUtility::toString<int>(static_cast<int>(value)), requestDescriptor);
+    //return PvaClientUtility::putGet<unsigned char, epics::pvData::PVUByte, epics::pvData::PVUBytePtr>(pvaClientChannelPtr, value, requestDescriptor);
+}
+
+PvObject* Channel::putGet(unsigned char value)
+{
+    return putGet(value, DefaultPutGetRequestDescriptor);
+}
+
+PvObject* Channel::putGet(short value, const std::string& requestDescriptor)
+{
+    return putGet(StringUtility::toString<short>(value), requestDescriptor);
+    //return PvaClientUtility::putGet<short, epics::pvData::PVShort, epics::pvData::PVShortPtr>(pvaClientChannelPtr, value, requestDescriptor);
+}
+
+PvObject* Channel::putGet(short value)
+{
+    return putGet(value, DefaultPutGetRequestDescriptor);
+}
+
+PvObject* Channel::putGet(unsigned short value, const std::string& requestDescriptor)
+{
+    return putGet(StringUtility::toString<unsigned short>(value), requestDescriptor);
+    //return PvaClientUtility::putGet<unsigned short, epics::pvData::PVUShort, epics::pvData::PVUShortPtr>(pvaClientChannelPtr, value, requestDescriptor);
+}
+
+PvObject* Channel::putGet(unsigned short value)
+{
+    return putGet(value, DefaultPutGetRequestDescriptor);
+}
+
+PvObject* Channel::putGet(long int value, const std::string& requestDescriptor)
+{
+    return putGet(StringUtility::toString<int>(value), requestDescriptor);
+    //return PvaClientUtility::putGet<int, epics::pvData::PVInt, epics::pvData::PVIntPtr>(pvaClientChannelPtr, value, requestDescriptor);
+}
+
+PvObject* Channel::putGet(long int value)
+{
+    return putGet(value, DefaultPutGetRequestDescriptor);
+}
+
+PvObject* Channel::putGet(unsigned long int value, const std::string& requestDescriptor)
+{
+    return putGet(StringUtility::toString<unsigned int>(value), requestDescriptor);
+    //return PvaClientUtility::putGet<unsigned int, epics::pvData::PVUInt, epics::pvData::PVUIntPtr>(pvaClientChannelPtr, value, requestDescriptor);
+}
+
+PvObject* Channel::putGet(unsigned long int value)
+{
+    return putGet(value, DefaultPutGetRequestDescriptor);
+}
+
+PvObject* Channel::putGet(long long value, const std::string& requestDescriptor)
+{
+    return putGet(StringUtility::toString<long long>(value), requestDescriptor);
+    //return PvaClientUtility::putGet<long long, epics::pvData::PVLong, epics::pvData::PVLongPtr>(pvaClientChannelPtr, value, requestDescriptor);
+}
+
+PvObject* Channel::putGet(long long value)
+{
+    return putGet(value, DefaultPutGetRequestDescriptor);
+}
+
+PvObject* Channel::putGet(unsigned long long value, const std::string& requestDescriptor)
+{
+    return putGet(StringUtility::toString<unsigned long long>(value), requestDescriptor);
+    //return PvaClientUtility::putGet<unsigned long long, epics::pvData::PVULong, epics::pvData::PVULongPtr>(pvaClientChannelPtr, value, requestDescriptor);
+}
+
+PvObject* Channel::putGet(unsigned long long value)
+{
+    return putGet(value, DefaultPutGetRequestDescriptor);
+}
+
+PvObject* Channel::putGet(float value, const std::string& requestDescriptor)
+{
+    return putGet(StringUtility::toString<float>(value), requestDescriptor);
+    //return PvaClientUtility::putGet<float, epics::pvData::PVFloat, epics::pvData::PVFloatPtr>(pvaClientChannelPtr, value, requestDescriptor);
+}
+
+PvObject* Channel::putGet(float value)
+{
+    return putGet(value, DefaultPutGetRequestDescriptor);
+}
+
+PvObject* Channel::putGet(double value, const std::string& requestDescriptor)
+{
+    return putGet(StringUtility::toString<double>(value), requestDescriptor);
+    //return PvaClientUtility::putGet<double, epics::pvData::PVDouble, epics::pvData::PVDoublePtr>(pvaClientChannelPtr, value, requestDescriptor);
+}
+
+PvObject* Channel::putGet(double value)
+{
+    return putGet(value, DefaultPutGetRequestDescriptor);
+}
+
+// GetPut methods
+/*
+PvObject* Channel::getPut(const PvObject& pvObject, const std::string& requestDescriptor) 
+{
+    try {
+        epics::pvaClient::PvaClientGetPutPtr pvaGetPut = pvaClientChannelPtr->createGetPut(requestDescriptor);
+        epics::pvData::PVStructurePtr pvPut = pvaGetPut->getPutData()->getPVStructure();
+        pvPut << pvObject;
+        pvaGetPut->getPut();
+        epics::pvData::PVStructurePtr pvGet = pvaGetPut->getGetData()->getPVStructure();
+        return new PvObject(pvGet);
+    } 
+    catch (std::runtime_error e) {
+        throw PvaException(e.what());
+    }
+}
+
+PvObject* Channel::getPut(const PvObject& pvObject)
+{
+    return getPut(pvObject, DefaultPutGetRequestDescriptor);
+}
+*/
+
+// Monitor methods
 void Channel::subscribe(const std::string& subscriberName, const boost::python::object& pySubscriber)
 {
     //epics::pvData::Lock lock(subscriberMutex);
