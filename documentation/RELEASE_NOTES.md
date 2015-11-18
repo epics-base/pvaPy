@@ -1,3 +1,7 @@
+## Release 0.6 ()
+
+- added support for channel putGet() operations
+
 ## Release 0.5 (2015/10/08)
 
 - added support for unions (both variant and restricted)
