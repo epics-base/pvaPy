@@ -29,6 +29,8 @@ void put(epics::pvaClient::PvaClientChannelPtr pvaClientChannelPtr, CppType valu
 template<typename CppType, typename PvType, typename PvPtrType>
 PvObject* putGet(epics::pvaClient::PvaClientChannelPtr pvaClientChannelPtr, CppType value, const std::string& requestDescriptor);
 
+template<typename CppType, typename PvType, typename PvPtrType>
+PvObject* getPut(epics::pvaClient::PvaClientChannelPtr pvaClientChannelPtr, CppType value, const std::string& requestDescriptor);
 
 //
 // Template implementations
@@ -82,6 +84,22 @@ PvObject* putGet(epics::pvaClient::PvaClientChannelPtr pvaClientChannelPtr, CppT
     }
 }
 
+template<typename CppType, typename PvType, typename PvPtrType>
+PvObject* getPut(epics::pvaClient::PvaClientChannelPtr pvaClientChannelPtr, CppType value, const std::string& requestDescriptor)
+{
+    try {
+        epics::pvaClient::PvaClientPutGetPtr pvaPutGet = pvaClientChannelPtr->createPutGet(requestDescriptor);
+        epics::pvaClient::PvaClientPutDataPtr pvaData = pvaPutGet->getPutData();
+        epics::pvData::PVStructurePtr pvStructurePtr = pvaData->getPVStructure();
+        PvPtrType pvValue = getField<PvType, PvPtrType>(PvaConstants::ValueFieldKey, pvStructurePtr);
+        pvValue->put(value);
+        pvaPutGet->getPut();
+        return new PvObject(pvaPutGet->getGetData()->getPVStructure());
+    } 
+    catch (std::runtime_error e) {
+        throw PvaException(e.what());
+    }
+}
 
 } // namespace PvaClientUtility
 

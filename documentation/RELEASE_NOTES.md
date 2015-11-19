@@ -1,6 +1,6 @@
 ## Release 0.6 ()
 
-- added support for channel putGet() operations
+- added support for channel putGet() and getPut() operations
 
 ## Release 0.5 (2015/10/08)
 

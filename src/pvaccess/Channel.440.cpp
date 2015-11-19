@@ -462,6 +462,16 @@ PvObject* Channel::putGet(double value)
     throw PvaException("PutGet() is not supported for 4.4.0 release.");
 }
 
+PvObject* Channel::getPut()
+{
+    throw PvaException("GetPut() is not supported for 4.4.0 release.");
+}
+
+PvObject* Channel::getPut(const std::string& requestDescriptor)
+{
+    throw PvaException("GetPut() is not supported for 4.4.0 release.");
+}
+
 ChannelMonitorRequesterImpl* Channel::getMonitorRequester()
 {
     return static_cast<ChannelMonitorRequesterImpl*>(monitorRequester.get());

@@ -1046,18 +1046,124 @@ class_<Channel>("Channel",
         "    channel = Channel('exampleString')\n\n"
         "    pv = channel.putGet('string value')\n\n")
 
+    //
+    // GetPut methods
+    //
 
-        .def("subscribe", &Channel::subscribe, args("subscriberName", "subscriber"), "Subscribes python object to notifications of changes in PV value. Channel can have any number of subscribers that start receiving PV updates after *startMonitor()* is invoked. Updates stop after channel monitor is stopped via *stopMonitor()* call, or object is unsubscribed from notifications using *unsubscribe()* call.\n\n:Parameter: *fieldName* (str) - subscriber object name\n\n:Parameter: *subscriber* (object) - reference to python subscriber object (e.g., python function) that will be executed when PV value changes\n\nThe following code snippet defines a simple subscriber object, subscribes it to PV value changes, and starts channel monitor:\n\n::\n\n    def echo(x):\n\n        print 'New PV value: ', x\n\n    channel = Channel('exampleFloat')\n\n    channel.subscribe('echo', echo)\n\n    channel.startMonitor()\n\n")
-        .def("unsubscribe", &Channel::unsubscribe, args("fieldName"), "Unsubscribes subscriber object from notifications of changes in PV value.\n\n:Parameter: *fieldName* (str) - subscriber name\n\n::\n\n    channel.unsubscribe('echo')\n\n")
-        .def("subscribe", &Channel::subscribe, args("subscriberName", "subscriber"), "Subscribes python object to notifications of changes in PV value. Channel can have any number of subscribers that start receiving PV updates after *startMonitor()* is invoked. Updates stop after channel monitor is stopped via *stopMonitor()* call, or object is unsubscribed from notifications using *unsubscribe()* call.\n\n:Parameter: *fieldName* (str) - subscriber object name\n\n:Parameter: *subscriber* (object) - reference to python subscriber object (e.g., python function) that will be executed when PV value changes\n\nThe following code snippet defines a simple subscriber object, subscribes it to PV value changes, and starts channel monitor:\n\n::\n\n    def echo(x):\n\n        print 'New PV value: ', x\n\n    channel = Channel('exampleFloat')\n\n    channel.subscribe('echo', echo)\n\n    channel.startMonitor()\n\n")
-        .def("unsubscribe", &Channel::unsubscribe, args("fieldName"), "Unsubscribes subscriber object from notifications of changes in PV value.\n\n:Parameter: *fieldName* (str) - subscriber name\n\n::\n\n    channel.unsubscribe('echo')\n\n")
-        .def("startMonitor", static_cast<void(Channel::*)(const std::string&)>(&Channel::startMonitor), args("requestDescriptor"), "Starts channel monitor for PV value changes.\n\n:Parameter: *requestDescriptor* (str) - describes what PV data should be sent to subscribed channel clients\n\n::\n\n    channel.startMonitor('field(value.index)')\n\n")
-        .def("startMonitor", static_cast<void(Channel::*)()>(&Channel::startMonitor), "Starts channel monitor for PV value changes using the default request descriptor 'field(value)'.\n\n::\n\n    channel.startMonitor()\n\n")
-        .def("stopMonitor", &Channel::stopMonitor, "Stops channel monitor for PV value changes.\n\n::\n\n    channel.stopMonitor()\n\n")
-        .def("getTimeout", &Channel::getTimeout, "Retrieves channel timeout.\n\n:Returns: channel timeout in seconds\n\n::\n\n    timeout = channel.getTimeout()\n\n")
-        .def("setTimeout", &Channel::setTimeout, args("timeout"), "Sets channel timeout.\n\n:Parameter: *timeout* (float) - channel timeout in seconds\n\n::\n\n    channel.setTimeout(10.0)\n\n")
-        .def("getMonitorMaxQueueLength", &Channel::getMonitorMaxQueueLength, "Retrieves maximum monitor queue length.\n\n:Returns: maximum monitor queue length\n\n::\n\n    maxQueueLength = channel.getMonitorMaxQueueLength()\n\n")
-        .def("setMonitorMaxQueueLength", &Channel::setMonitorMaxQueueLength, args("maxQueueLength"), "Sets maximum monitor queue length. In case subscribers cannot process incoming PV objects quickly enough, oldest PV object will be discarded after monitoring queue reaches maximum size. Default monitor queue length is unlimited.\n\n:Parameter: *maxQueueLength* (int) - maximum queue length\n\n::\n\n    channel.setMonitorMaxQueueLengthTimeout(10)\n\n")
+    .def("getPut", 
+        static_cast<PvObject*(Channel::*)(const std::string&)>(&Channel::getPut), 
+        return_value_policy<manage_new_object>(), 
+        args("requestDescriptor"), 
+        "Retrieves put PV data from the channel.\n\n"
+        ":Parameter: *requestDescriptor* (str) - PV request descriptor\n\n"
+        ":Returns: channel put PV data corresponding to the specified request descriptor\n\n"
+        "::\n\n"
+        "    channel = Channel('enum01')\n\n"
+        "    pv = channel.getPut('field(value.index)')\n\n")
+
+    .def("getPut", 
+        static_cast<PvObject*(Channel::*)()>(&Channel::get), 
+        return_value_policy<manage_new_object>(), 
+        "Retrieves put PV data from the channel using the default request descriptor 'field(value)'.\n\n"
+        ":Returns: channel put PV data\n\n"
+        "::\n\n"
+        "    pv = channel.getPut()\n\n")
+
+    //
+    // Monitor methods
+    //
+    
+    .def("subscribe", 
+        &Channel::subscribe, 
+        args("subscriberName", "subscriber"), 
+        "Subscribes python object to notifications of changes in PV value. Channel can have any number of subscribers that start receiving PV updates after *startMonitor()* is invoked. Updates stop after channel monitor is stopped via *stopMonitor()* call, or object is unsubscribed from notifications using *unsubscribe()* call.\n\n"
+        ":Parameter: *fieldName* (str) - subscriber object name\n\n"
+        ":Parameter: *subscriber* (object) - reference to python subscriber object (e.g., python function) that will be executed when PV value changes\n\n"
+        "The following code snippet defines a simple subscriber object, subscribes it to PV value changes, and starts channel monitor:\n\n"
+        "::\n\n"
+        "    def echo(x):\n\n"
+        "        print 'New PV value: ', x\n\n"
+        "    channel = Channel('exampleFloat')\n\n"
+        "    channel.subscribe('echo', echo)\n\n"
+        "    channel.startMonitor()\n\n")
+
+    .def("unsubscribe", 
+        &Channel::unsubscribe, 
+        args("fieldName"), 
+        "Unsubscribes subscriber object from notifications of changes in PV value.\n\n"
+        ":Parameter: *fieldName* (str) - subscriber name\n\n"
+        "::\n\n"
+        "    channel.unsubscribe('echo')\n\n")
+
+    .def("subscribe", 
+        &Channel::subscribe, 
+        args("subscriberName", "subscriber"), 
+        "Subscribes python object to notifications of changes in PV value. Channel can have any number of subscribers that start receiving PV updates after *startMonitor()* is invoked. Updates stop after channel monitor is stopped via *stopMonitor()* call, or object is unsubscribed from notifications using *unsubscribe()* call.\n\n"
+        ":Parameter: *fieldName* (str) - subscriber object name\n\n"
+        ":Parameter: *subscriber* (object) - reference to python subscriber object (e.g., python function) that will be executed when PV value changes\n\n"
+        "The following code snippet defines a simple subscriber object, subscribes it to PV value changes, and starts channel monitor:\n\n"
+        "::\n\n"
+        "    def echo(x):\n\n"
+        "        print 'New PV value: ', x\n\n"
+        "    channel = Channel('exampleFloat')\n\n"
+        "    channel.subscribe('echo', echo)\n\n"
+        "    channel.startMonitor()\n\n")
+
+    .def("unsubscribe", 
+        &Channel::unsubscribe, 
+        args("fieldName"), 
+        "Unsubscribes subscriber object from notifications of changes in PV value.\n\n"
+        ":Parameter: *fieldName* (str) - subscriber name\n\n"
+        "::\n\n"
+        "    channel.unsubscribe('echo')\n\n")
+
+    .def("startMonitor", 
+        static_cast<void(Channel::*)(const std::string&)>(&Channel::startMonitor), args("requestDescriptor"), 
+        "Starts channel monitor for PV value changes.\n\n"
+        ":Parameter: *requestDescriptor* (str) - describes what PV data should be sent to subscribed channel clients\n\n"
+        "::\n\n"
+        "    channel.startMonitor('field(value.index)')\n\n")
+
+    .def("startMonitor", 
+        static_cast<void(Channel::*)()>(&Channel::startMonitor), 
+        "Starts channel monitor for PV value changes using the default request descriptor 'field(value)'.\n\n"
+        "::\n\n"
+        "    channel.startMonitor()\n\n")
+
+    .def("stopMonitor", 
+        &Channel::stopMonitor, 
+        "Stops channel monitor for PV value changes.\n\n"
+        "::\n\n"
+        "    channel.stopMonitor()\n\n")
+
+    .def("getTimeout", 
+        &Channel::getTimeout, 
+        "Retrieves channel timeout.\n\n"
+        ":Returns: channel timeout in seconds\n\n"
+        "::\n\n"
+        "    timeout = channel.getTimeout()\n\n")
+
+    .def("setTimeout", 
+        &Channel::setTimeout, 
+        args("timeout"), 
+        "Sets channel timeout.\n\n"
+        ":Parameter: *timeout* (float) - channel timeout in seconds\n\n"
+        "::\n\n"
+        "    channel.setTimeout(10.0)\n\n")
+
+    .def("getMonitorMaxQueueLength", 
+        &Channel::getMonitorMaxQueueLength, 
+        "Retrieves maximum monitor queue length.\n\n"
+        ":Returns: maximum monitor queue length\n\n"
+        "::\n\n"
+        "    maxQueueLength = channel.getMonitorMaxQueueLength()\n\n")
+
+    .def("setMonitorMaxQueueLength", 
+        &Channel::setMonitorMaxQueueLength, 
+        args("maxQueueLength"), 
+        "Sets maximum monitor queue length. In case subscribers cannot process incoming PV objects quickly enough, oldest PV object will be discarded after monitoring queue reaches maximum size. Default monitor queue length is unlimited.\n\n"
+        ":Parameter: *maxQueueLength* (int) - maximum queue length\n\n"
+        "::\n\n    channel.setMonitorMaxQueueLengthTimeout(10)\n\n")
 
 ;
 

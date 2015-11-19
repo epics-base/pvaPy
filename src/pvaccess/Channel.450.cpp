@@ -490,30 +490,29 @@ PvObject* Channel::putGet(double value)
     return putGet(value, DefaultPutGetRequestDescriptor);
 }
 
+//
 // GetPut methods
-/*
-PvObject* Channel::getPut(const PvObject& pvObject, const std::string& requestDescriptor) 
+//
+PvObject* Channel::getPut()
+{
+    return getPut(DefaultRequestDescriptor);
+}
+
+PvObject* Channel::getPut(const std::string& requestDescriptor) 
 {
     try {
-        epics::pvaClient::PvaClientGetPutPtr pvaGetPut = pvaClientChannelPtr->createGetPut(requestDescriptor);
-        epics::pvData::PVStructurePtr pvPut = pvaGetPut->getPutData()->getPVStructure();
-        pvPut << pvObject;
-        pvaGetPut->getPut();
-        epics::pvData::PVStructurePtr pvGet = pvaGetPut->getGetData()->getPVStructure();
-        return new PvObject(pvGet);
+        epics::pvaClient::PvaClientPutGetPtr pvaPutGet = pvaClientChannelPtr->createPutGet(requestDescriptor);
+        pvaPutGet->getPut();
+        return new PvObject(pvaPutGet->getPutData()->getPVStructure());
     } 
     catch (std::runtime_error e) {
         throw PvaException(e.what());
     }
 }
 
-PvObject* Channel::getPut(const PvObject& pvObject)
-{
-    return getPut(pvObject, DefaultPutGetRequestDescriptor);
-}
-*/
-
+//
 // Monitor methods
+//
 void Channel::subscribe(const std::string& subscriberName, const boost::python::object& pySubscriber)
 {
     //epics::pvData::Lock lock(subscriberMutex);

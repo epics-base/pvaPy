@@ -98,6 +98,10 @@ public:
     virtual PvObject* putGet(double value, const std::string& requestDescriptor);
     virtual PvObject* putGet(double value);
 
+    // GetPut methods
+    virtual PvObject* getPut(const std::string& requestDescriptor);
+    virtual PvObject* getPut();
+
     virtual void subscribe(const std::string& subscriberName, const boost::python::object& pySubscriber);
     virtual void unsubscribe(const std::string& subscriberName);
     virtual void callSubscribers(PvObject& pvObject);

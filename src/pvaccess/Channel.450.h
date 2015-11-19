@@ -106,8 +106,8 @@ public:
     virtual PvObject* putGet(double value);
 
     // GetPut methods
-    //virtual PvObject* getPut(const PvObject& pvObject, const std::string& requestDescriptor);
-    //virtual PvObject* getPut(const PvObject& pvObject);
+    virtual PvObject* getPut(const std::string& requestDescriptor);
+    virtual PvObject* getPut();
 
     // Monitor methods
     virtual void subscribe(const std::string& subscriberName, const boost::python::object& pySubscriber);
