@@ -16,12 +16,12 @@ BASE=3.15.2
 PUBLISH=${1:-DONT}
 
 # Dependent module branches
-PVCOMMON_BRANCH=""
-PVDATA_BRANCH=""
-PVACCESS_BRANCH=""
-NORMATIVETYPES_BRANCH=""
-PVACLIENT_BRANCH=""
-PVAPY_BRANCH=""
+PVCOMMON_BRANCH="Release-4.1-"
+PVDATA_BRANCH="Release-5.0-"
+PVACCESS_BRANCH="Release-4.1-"
+NORMATIVETYPES_BRANCH="Release-5.0-"
+PVACLIENT_BRANCH="Release-4.1-"
+PVAPY_BRANCH="Release-0.5-"
 
 ###########################################
 # Fetch and unpack dependencies
