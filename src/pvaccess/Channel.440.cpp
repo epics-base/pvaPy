@@ -202,7 +202,7 @@ void Channel::put(const boost::python::list& pyList)
 
 void Channel::put(bool value, const std::string& requestDescriptor)
 {
-    put(StringUtility::toString<bool>(value), requestDescriptor);
+    put(StringUtility::toString(value), requestDescriptor);
 }
 
 void Channel::put(bool value)
@@ -250,22 +250,22 @@ void Channel::put(unsigned short value)
     put(value, DefaultRequestDescriptor);
 }
 
-void Channel::put(int value, const std::string& requestDescriptor)
+void Channel::put(long int value, const std::string& requestDescriptor)
 {
-    put(StringUtility::toString<int>(value), requestDescriptor);
+    put(StringUtility::toString<long int>(value), requestDescriptor);
 }
 
-void Channel::put(int value)
+void Channel::put(long int value)
 {
     put(value, DefaultRequestDescriptor);
 }
 
-void Channel::put(unsigned int value, const std::string& requestDescriptor)
+void Channel::put(unsigned long int value, const std::string& requestDescriptor)
 {
-    put(StringUtility::toString<unsigned int>(value), requestDescriptor);
+    put(StringUtility::toString<unsigned long int>(value), requestDescriptor);
 }
 
-void Channel::put(unsigned int value)
+void Channel::put(unsigned long int value)
 {
     put(value, DefaultRequestDescriptor);
 }
@@ -308,6 +308,158 @@ void Channel::put(double value, const std::string& requestDescriptor)
 void Channel::put(double value)
 {
     put(value, DefaultRequestDescriptor);
+}
+
+// PutGet methods are not supported
+
+PvObject* Channel::putGet(const PvObject& pvObject, const std::string& requestDescriptor) 
+{
+    throw PvaException("PutGet() is not supported for 4.4.0 release.");
+}
+
+PvObject* Channel::putGet(const PvObject& pvObject)
+{
+    throw PvaException("PutGet() is not supported for 4.4.0 release.");
+}
+
+PvObject* Channel::putGet(const std::vector<std::string>& values, const std::string& requestDescriptor) 
+{
+    throw PvaException("PutGet() is not supported for 4.4.0 release.");
+}
+
+PvObject* Channel::putGet(const std::vector<std::string>& values)
+{
+    throw PvaException("PutGet() is not supported for 4.4.0 release.");
+}
+
+PvObject* Channel::putGet(const std::string& value, const std::string& requestDescriptor) 
+{
+    throw PvaException("PutGet() is not supported for 4.4.0 release.");
+}
+
+PvObject* Channel::putGet(const std::string& value)
+{
+    throw PvaException("PutGet() is not supported for 4.4.0 release.");
+}
+
+PvObject* Channel::putGet(const boost::python::list& pyList, const std::string& requestDescriptor) 
+{
+    throw PvaException("PutGet() is not supported for 4.4.0 release.");
+}
+
+PvObject* Channel::putGet(const boost::python::list& pyList)
+{
+    throw PvaException("PutGet() is not supported for 4.4.0 release.");
+}
+
+PvObject* Channel::putGet(bool value, const std::string& requestDescriptor)
+{
+    throw PvaException("PutGet() is not supported for 4.4.0 release.");
+}
+
+PvObject* Channel::putGet(bool value)
+{
+    throw PvaException("PutGet() is not supported for 4.4.0 release.");
+}
+
+PvObject* Channel::putGet(char value, const std::string& requestDescriptor)
+{
+    throw PvaException("PutGet() is not supported for 4.4.0 release.");
+}
+
+PvObject* Channel::putGet(char value)
+{
+    throw PvaException("PutGet() is not supported for 4.4.0 release.");
+}
+
+PvObject* Channel::putGet(unsigned char value, const std::string& requestDescriptor)
+{
+    throw PvaException("PutGet() is not supported for 4.4.0 release.");
+}
+
+PvObject* Channel::putGet(unsigned char value)
+{
+    throw PvaException("PutGet() is not supported for 4.4.0 release.");
+}
+
+PvObject* Channel::putGet(short value, const std::string& requestDescriptor)
+{
+    throw PvaException("PutGet() is not supported for 4.4.0 release.");
+}
+
+PvObject* Channel::putGet(short value)
+{
+    throw PvaException("PutGet() is not supported for 4.4.0 release.");
+}
+
+PvObject* Channel::putGet(unsigned short value, const std::string& requestDescriptor)
+{
+    throw PvaException("PutGet() is not supported for 4.4.0 release.");
+}
+
+PvObject* Channel::putGet(unsigned short value)
+{
+    throw PvaException("PutGet() is not supported for 4.4.0 release.");
+}
+
+PvObject* Channel::putGet(long int value, const std::string& requestDescriptor)
+{
+    throw PvaException("PutGet() is not supported for 4.4.0 release.");
+}
+
+PvObject* Channel::putGet(long int value)
+{
+    throw PvaException("PutGet() is not supported for 4.4.0 release.");
+}
+
+PvObject* Channel::putGet(unsigned long int value, const std::string& requestDescriptor)
+{
+    throw PvaException("PutGet() is not supported for 4.4.0 release.");
+}
+
+PvObject* Channel::putGet(unsigned long int value)
+{
+    throw PvaException("PutGet() is not supported for 4.4.0 release.");
+}
+
+PvObject* Channel::putGet(long long value, const std::string& requestDescriptor)
+{
+    throw PvaException("PutGet() is not supported for 4.4.0 release.");
+}
+
+PvObject* Channel::putGet(long long value)
+{
+    throw PvaException("PutGet() is not supported for 4.4.0 release.");
+}
+
+PvObject* Channel::putGet(unsigned long long value, const std::string& requestDescriptor)
+{
+    throw PvaException("PutGet() is not supported for 4.4.0 release.");
+}
+
+PvObject* Channel::putGet(unsigned long long value)
+{
+    throw PvaException("PutGet() is not supported for 4.4.0 release.");
+}
+
+PvObject* Channel::putGet(float value, const std::string& requestDescriptor)
+{
+    throw PvaException("PutGet() is not supported for 4.4.0 release.");
+}
+
+PvObject* Channel::putGet(float value)
+{
+    throw PvaException("PutGet() is not supported for 4.4.0 release.");
+}
+
+PvObject* Channel::putGet(double value, const std::string& requestDescriptor)
+{
+    throw PvaException("PutGet() is not supported for 4.4.0 release.");
+}
+
+PvObject* Channel::putGet(double value)
+{
+    throw PvaException("PutGet() is not supported for 4.4.0 release.");
 }
 
 ChannelMonitorRequesterImpl* Channel::getMonitorRequester()

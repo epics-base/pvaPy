@@ -53,10 +53,10 @@ public:
     virtual void put(short value);
     virtual void put(unsigned short value, const std::string& requestDescriptor);
     virtual void put(unsigned short value);
-    virtual void put(int value, const std::string& requestDescriptor);
-    virtual void put(int value);
-    virtual void put(unsigned int value, const std::string& requestDescriptor);
-    virtual void put(unsigned int value);
+    virtual void put(long int value, const std::string& requestDescriptor);
+    virtual void put(long int value);
+    virtual void put(unsigned long int value, const std::string& requestDescriptor);
+    virtual void put(unsigned long int value);
     virtual void put(long long value, const std::string& requestDescriptor);
     virtual void put(long long value);
     virtual void put(unsigned long long value, const std::string& requestDescriptor);
@@ -65,6 +65,38 @@ public:
     virtual void put(float value);
     virtual void put(double value, const std::string& requestDescriptor);
     virtual void put(double value);
+
+    virtual PvObject* putGet(const PvObject& pvObject, const std::string& requestDescriptor);
+    virtual PvObject* putGet(const PvObject& pvObject);
+    virtual PvObject* putGet(const std::vector<std::string>& values, const std::string& requestDescriptor);
+    virtual PvObject* putGet(const std::vector<std::string>& values);
+    virtual PvObject* putGet(const std::string& value, const std::string& requestDescriptor);
+    virtual PvObject* putGet(const std::string& value);
+    virtual PvObject* putGet(const boost::python::list& pyList, const std::string& requestDescriptor);
+    virtual PvObject* putGet(const boost::python::list& pyList);
+
+    virtual PvObject* putGet(bool value, const std::string& requestDescriptor);
+    virtual PvObject* putGet(bool value);
+    virtual PvObject* putGet(char value, const std::string& requestDescriptor);
+    virtual PvObject* putGet(char value);
+    virtual PvObject* putGet(unsigned char value, const std::string& requestDescriptor);
+    virtual PvObject* putGet(unsigned char value);
+    virtual PvObject* putGet(short value, const std::string& requestDescriptor);
+    virtual PvObject* putGet(short value);
+    virtual PvObject* putGet(unsigned short value, const std::string& requestDescriptor);
+    virtual PvObject* putGet(unsigned short value);
+    virtual PvObject* putGet(long int value, const std::string& requestDescriptor);
+    virtual PvObject* putGet(long int value);
+    virtual PvObject* putGet(unsigned long int value, const std::string& requestDescriptor);
+    virtual PvObject* putGet(unsigned long int value);
+    virtual PvObject* putGet(long long value, const std::string& requestDescriptor);
+    virtual PvObject* putGet(long long value);
+    virtual PvObject* putGet(unsigned long long value, const std::string& requestDescriptor);
+    virtual PvObject* putGet(unsigned long long value);
+    virtual PvObject* putGet(float value, const std::string& requestDescriptor);
+    virtual PvObject* putGet(float value);
+    virtual PvObject* putGet(double value, const std::string& requestDescriptor);
+    virtual PvObject* putGet(double value);
 
     virtual void subscribe(const std::string& subscriberName, const boost::python::object& pySubscriber);
     virtual void unsubscribe(const std::string& subscriberName);
