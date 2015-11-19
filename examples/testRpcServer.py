@@ -18,6 +18,10 @@ def createNtTable(x):
         for i in range (0, nRows):
             column.append(random.uniform(0,1))
         ntTable.setColumn(j, column)
+    timeStamp = ntTable.getTimeStamp()
+    timeStamp.setSecondsPastEpoch(123456)
+    timeStamp.setNanoseconds(123)
+    timeStamp.setUserTag(11)
     ntTable.setLabels(labels)
     ntTable.setDescriptor('Automatically created by RPC Server')
     return ntTable
