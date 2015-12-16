@@ -228,16 +228,6 @@ AC_DEFUN([AX_EPICS4],
         ],[pva_rpc_api_version1=430],[pva_rpc_api_version1=undefined])
         AC_LINK_IFELSE([AC_LANG_PROGRAM(
             [[
-            #include "pv/event.h"
-            #include "pv/rpcClient.h"
-            ]],
-            [[
-            epics::pvData::PVStructure::shared_pointer pvRequest;
-            epics::pvAccess::RPCClient::shared_pointer rpcClient = epics::pvAccess::RPCClient::create("Channel", pvRequest);
-            ]])
-        ],[pva_rpc_api_version2=435],[pva_rpc_api_version2=undefined])
-        AC_LINK_IFELSE([AC_LANG_PROGRAM(
-            [[
             #include "pv/rpcClient.h"
             ]],
             [[
@@ -249,8 +239,6 @@ AC_DEFUN([AX_EPICS4],
     pva_rpc_api_version="undefined"
     if test "$pva_rpc_api_version1" != "undefined" ; then
         pva_rpc_api_version=$pva_rpc_api_version1
-    elif test "$pva_rpc_api_version2" != "undefined" ; then
-        pva_rpc_api_version=$pva_rpc_api_version2
     elif test "$pva_rpc_api_version3" != "undefined" ; then
         pva_rpc_api_version=$pva_rpc_api_version3
     fi
