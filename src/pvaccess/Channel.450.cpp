@@ -39,12 +39,13 @@ epics::pvaClient::PvaClientPtr Channel::pvaClientPtr(epics::pvaClient::PvaClient
 Channel::Channel(const std::string& channelName, PvProvider::ProviderType providerType) :
     pvaClientChannelPtr(pvaClientPtr->createChannel(channelName,PvProvider::getProviderName(providerType))),
     pvObjectMonitorQueue(),
+    shutdownThreads(true),
     monitorThreadDone(true),
+    processingThreadDone(true),
     subscriberMap(),
     subscriberMutex(),
     monitorElementProcessingMutex(),
     monitorThreadMutex(),
-    monitorThreadExitEvent(),
     timeout(DefaultTimeout)
 {
     connect();
@@ -53,10 +54,11 @@ Channel::Channel(const std::string& channelName, PvProvider::ProviderType provid
 Channel::Channel(const Channel& c) :
     pvaClientChannelPtr(c.pvaClientChannelPtr),
     pvObjectMonitorQueue(),
+    shutdownThreads(true),
     monitorThreadDone(true),
+    processingThreadDone(true),
     subscriberMap(),
     subscriberMutex(),
-    monitorThreadExitEvent(),
     timeout(DefaultTimeout)
 {
     connect();
@@ -576,8 +578,7 @@ void Channel::startMonitor()
 void Channel::startMonitor(const std::string& requestDescriptor)
 {
     epics::pvData::Lock lock(monitorThreadMutex);
-    if (monitorThreadDone) {
-        monitorThreadDone = false;
+    if (shutdownThreads == true) {
 
         // One must call PyEval_InitThreads() in the main thread
         // to initialize thread state, which is needed for proper functioning
@@ -593,6 +594,7 @@ void Channel::startMonitor(const std::string& requestDescriptor)
             logger.error(e.what());
             throw PvaException(e.what());
         }
+        shutdownThreads = false;
         epicsThreadCreate("ChannelMonitorThread", epicsThreadPriorityLow, epicsThreadGetStackSize(epicsThreadStackSmall), (EPICSTHREADFUNC)monitorThread, this);
         epicsThreadCreate("ChannelProcessingThread", epicsThreadPriorityHigh, epicsThreadGetStackSize(epicsThreadStackSmall), (EPICSTHREADFUNC)processingThread, this);
     }
@@ -601,11 +603,10 @@ void Channel::startMonitor(const std::string& requestDescriptor)
 void Channel::stopMonitor()
 {
     epics::pvData::Lock lock(monitorThreadMutex);
-    if (monitorThreadDone) {
+    if (shutdownThreads == true) {
         logger.debug("Monitor thread is not running");
         return;
     }
-    monitorThreadDone = true;
     logger.debug("Stopping monitor");
     try {
         pvaClientMonitorPtr->stop();
@@ -614,13 +615,13 @@ void Channel::stopMonitor()
         logger.error(e.what());
         throw PvaException(e.what());
     }
-    logger.debug("Monitor stopped, waiting for thread exit");
-    monitorThreadExitEvent.wait(getTimeout());
-}
+    shutdownThreads = true;
 
-bool Channel::isMonitorThreadDone() const
-{
-    return monitorThreadDone;
+    while (monitorThreadDone == false || processingThreadDone == false) {
+        PyThreadState *state = PyEval_SaveThread();
+        // Give threads GIL and time to evaluate shutdownThreads
+        PyEval_RestoreThread(state);
+    }
 }
 
 bool Channel::processMonitorElement() 
@@ -649,35 +650,32 @@ bool Channel::processMonitorElement()
 
 void Channel::monitorThread(Channel* channel)
 {
+    channel->monitorThreadDone = false;
     logger.debug("Started monitor thread %s", epicsThreadGetNameSelf());
     epics::pvaClient::PvaClientMonitorPtr monitor = channel->getMonitor();
     epics::pvaClient::PvaClientMonitorDataPtr pvaData = monitor->getData();
-    while (true) {
-        if (channel->isMonitorThreadDone()) {
-            break;
-        }
-
+    while (channel->shutdownThreads == false) {
         monitor->waitEvent();
         PvObject pvObject(pvaData->getPVStructure());
         channel->queueMonitorData(pvObject);
         monitor->releaseEvent();
     }
     logger.debug("Exiting monitor thread %s", epicsThreadGetNameSelf());
-    channel->notifyMonitorThreadExit();
+    channel->monitorThreadDone = true;
 }
+
 
 void Channel::processingThread(Channel* channel)
 {
+    channel->processingThreadDone = false;
     logger.debug("Started processing thread %s", epicsThreadGetNameSelf());
     epics::pvaClient::PvaClientMonitorPtr monitor = channel->getMonitor();
     epics::pvaClient::PvaClientMonitorDataPtr pvaData = monitor->getData();
-    while (true) {
-        if (channel->isMonitorThreadDone()) {
-            break;
-        }
+    while (channel->shutdownThreads == false) {
         channel->processMonitorElement();
     }
     logger.debug("Exiting processing thread %s", epicsThreadGetNameSelf());
+    channel->processingThreadDone = true;
 }
 
 epics::pvaClient::PvaClientMonitorPtr Channel::getMonitor() 
