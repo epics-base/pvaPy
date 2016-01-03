@@ -1,6 +1,14 @@
+#include "boost/python/class.hpp"
+#include "PvScalarArray.h"
+
+using namespace boost::python;
+
 //
 // PV Scalar Array class
 //
+void wrapPvScalarArray()
+{
+
 class_<PvScalarArray, bases<PvObject> >("PvScalarArray", 
     "PvScalarArray represents PV scalar array.\n\n"
     "**PvScalarArray(scalarType)**\n\n"
@@ -32,3 +40,6 @@ class_<PvScalarArray, bases<PvObject> >("PvScalarArray",
         "::\n\n"
         "    valueList = pv.toList()\n\n")
 ;
+
+} // wrapPvScalarArray()
+

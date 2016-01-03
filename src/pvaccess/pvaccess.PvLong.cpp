@@ -1,6 +1,14 @@
+#include "boost/python/class.hpp"
+#include "PvLong.h"
+
+using namespace boost::python;
+
 //
 // PV Long class
 //
+void wrapPvLong() 
+{
+
 class_<PvLong, bases<PvScalar> >("PvLong", 
     "PvLong represents PV long type.\n\n"
     "**PvLong([value=0])**\n\n"
@@ -25,3 +33,6 @@ class_<PvLong, bases<PvScalar> >("PvLong",
         "::\n\n"
         "    pv.set(-100000L)\n\n")
 ;
+
+} // wrapPvLong()
+

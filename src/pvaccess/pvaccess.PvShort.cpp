@@ -1,6 +1,14 @@
+#include "boost/python/class.hpp"
+#include "PvShort.h"
+
+using namespace boost::python;
+
 //
 // PV Short
 //
+void wrapPvShort() 
+{
+
 class_<PvShort, bases<PvScalar> >("PvShort", 
     "PvShort represents PV short type.\n\n"
     "**PvShort([value=0])**\n\n"
@@ -26,3 +34,6 @@ class_<PvShort, bases<PvScalar> >("PvShort",
         "::\n\n"
         "    pv.set(-10)\n\n")
 ;
+
+} // wrapPvShort()
+

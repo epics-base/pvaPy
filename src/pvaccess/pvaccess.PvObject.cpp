@@ -1,6 +1,16 @@
+#include "boost/python/class.hpp"
+#include "boost/python/self.hpp"
+#include "boost/python/operators.hpp"
+#include "PvObject.h"
+
+using namespace boost::python;
+
 //
 // PvObject class
 //
+void wrapPvObject()
+{
+
 class_<PvObject>("PvObject", 
     "PvObject represents a generic PV structure.\n\n"
     "**PvObject(structureDict)**\n\n"
@@ -1046,4 +1056,6 @@ class_<PvObject>("PvObject",
         "Retrieves PV structure definition as python dictionary.\n\n:Returns: python key:value dictionary representing PV structure definition in terms of field names and their types\n\n::\n\n    structureDict = pv.getStructureDict()\n\n")
 
 ;
+
+} // wrapPvObject()
 

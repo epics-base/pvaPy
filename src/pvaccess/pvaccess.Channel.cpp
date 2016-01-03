@@ -1,6 +1,16 @@
+#include "boost/python/class.hpp"
+#include "boost/python/manage_new_object.hpp"
+#include "Channel.h"
+
+using namespace boost::python;
+
+
 //
 // Channel class
 //
+void wrapChannel()
+{
+
 class_<Channel>("Channel", 
     "This class represents PV channels.\n\n"
     "**Channel(name [, providerType=PVA])**\n\n"
@@ -1166,4 +1176,6 @@ class_<Channel>("Channel",
         "::\n\n    channel.setMonitorMaxQueueLengthTimeout(10)\n\n")
 
 ;
+
+} // wrapChannel()
 

@@ -1,6 +1,14 @@
+#include "boost/python/class.hpp"
+#include "PvTimeStamp.h"
+
+using namespace boost::python;
+
 //
 // PV TimeStamp class
 //
+void wrapPvTimeStamp()
+{
+
 class_<PvTimeStamp, bases<PvObject> >("PvTimeStamp", 
     "PvTimeStamp represents PV time stamp structure.\n\n"
     "**PvTimeStamp()**\n\n"
@@ -64,3 +72,6 @@ class_<PvTimeStamp, bases<PvObject> >("PvTimeStamp",
         "::\n\n"
         "    timeStamp.setUserTag(1)\n\n")
 ;
+
+} // wrapPvTimeStamp()
+

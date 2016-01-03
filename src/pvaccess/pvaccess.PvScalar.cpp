@@ -1,6 +1,14 @@
+#include "boost/python/class.hpp"
+#include "PvScalar.h"
+
+using namespace boost::python;
+
 //
 // PV Scalar class
 //
+void wrapPvScalar()
+{
+
 class_<PvScalar, bases<PvObject> >("PvScalar", 
     "PvScalar is a base class for all scalar PV types. It cannot be instantiated directly from python.\n\n", 
     no_init)
@@ -15,3 +23,6 @@ class_<PvScalar, bases<PvObject> >("PvScalar",
 
     .def("__str__", &PvScalar::toString)
 ;
+
+} // wrapPvScalar()
+

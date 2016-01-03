@@ -1,6 +1,14 @@
+#include "boost/python/class.hpp"
+#include "PvByte.h"
+
+using namespace boost::python;
+
 //
 // PV Byte class
 //
+void wrapPvByte()
+{
+
 class_<PvByte, bases<PvScalar> >("PvByte", 
     "PvByte represents PV byte type.\n\n"
     "**PvByte([value=''])**\n\n"
@@ -25,3 +33,6 @@ class_<PvByte, bases<PvScalar> >("PvByte",
         "::\n\n"
         "    pv.set('a')\n\n")
 ;
+
+} // wrapPvByte()
+

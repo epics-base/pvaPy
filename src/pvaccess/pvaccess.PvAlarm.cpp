@@ -1,6 +1,14 @@
+#include "boost/python/class.hpp"
+#include "PvAlarm.h"
+
+using namespace boost::python;
+
 //
 // PV Alarm class
 //
+void wrapPvAlarm() 
+{
+
 class_<PvAlarm, bases<PvObject> >("PvAlarm", 
     "PvAlarm represents PV alarm structure.\n\n"
     "**PvAlarm()**\n\n"
@@ -61,3 +69,7 @@ class_<PvAlarm, bases<PvObject> >("PvAlarm",
         "::\n\n"
         "    alarm.setmessage('alarm message')\n\n")
 ;
+
+} // wrapPvAlarm()
+
+

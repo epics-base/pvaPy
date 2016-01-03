@@ -1,6 +1,14 @@
+#include "boost/python/class.hpp"
+#include "PvDouble.h"
+
+using namespace boost::python;
+
 //
 // PV Double class
 //
+void wrapPvDouble()
+{
+
 class_<PvDouble, bases<PvScalar> >("PvDouble", 
     "PvDouble represents PV double type.\n\n"
     "**PvDouble([value=0])**\n\n"
@@ -26,3 +34,6 @@ class_<PvDouble, bases<PvScalar> >("PvDouble",
         "::\n\n"
         "    pv.set(1.1)\n\n")
 ;
+
+} // wrapPvDouble()
+

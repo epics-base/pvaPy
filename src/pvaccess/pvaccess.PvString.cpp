@@ -1,6 +1,14 @@
+#include "boost/python/class.hpp"
+#include "PvString.h"
+
+using namespace boost::python;
+
 //
 // PV String class
 //
+void wrapPvString()
+{
+
 class_<PvString, bases<PvScalar> >("PvString", 
     "PvString represents PV string type.\n\n"
     "**PvString([value=''])**\n\n"
@@ -26,3 +34,7 @@ class_<PvString, bases<PvScalar> >("PvString",
         "::\n\n"
         "    pv.set('stringValue')\n\n")
 ;
+
+} // wrapPvString()
+
+

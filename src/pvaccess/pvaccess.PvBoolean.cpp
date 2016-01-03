@@ -1,6 +1,14 @@
+#include "boost/python/class.hpp"
+#include "PvBoolean.h"
+
+using namespace boost::python;
+
 //
 // PV Boolean class
 //
+void wrapPvBoolean()
+{
+
 class_<PvBoolean, bases<PvScalar> >("PvBoolean", 
     "PvBoolean represents PV boolean type.\n\n"
     "**PvBoolean([value=False])**\n\n"
@@ -25,3 +33,8 @@ class_<PvBoolean, bases<PvScalar> >("PvBoolean",
         "::\n\n"
         "    pv.set(False)\n\n")
 ;
+
+} // wrapPvBoolean()
+
+
+

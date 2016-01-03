@@ -1,6 +1,14 @@
+#include "boost/python/class.hpp"
+#include "PvInt.h"
+
+using namespace boost::python;
+
 //
 // PV Int class
 //
+void wrapPvInt() 
+{
+
 class_<PvInt, bases<PvScalar> >("PvInt", 
     "PvInt represents PV integer type.\n\n"
     "**PvInt([value=0])**\n\n"
@@ -26,3 +34,6 @@ class_<PvInt, bases<PvScalar> >("PvInt",
         "::\n\n"
         "    pv.set(-1000)\n\n")
 ;
+
+} // wrapPvInt()
+

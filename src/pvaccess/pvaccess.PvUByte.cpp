@@ -1,6 +1,14 @@
+#include "boost/python/class.hpp"
+#include "PvUByte.h"
+
+using namespace boost::python;
+
 //
 // PV UByte class
 //
+void wrapPvUByte() 
+{
+
 class_<PvUByte, bases<PvScalar> >("PvUByte", 
     "PvUByte represents PV unsigned byte type.\n\n"
     "**PvUByte([value=0])**\n\n"
@@ -25,3 +33,7 @@ class_<PvUByte, bases<PvScalar> >("PvUByte",
         "::\n\n"
         "    pv.set(10)\n\n")
 ;
+
+} // wrapPvUByte()
+
+
