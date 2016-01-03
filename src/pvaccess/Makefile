@@ -38,6 +38,37 @@ endif
 
 
 pvaccess_SRCS += pvaccess.cpp
+
+pvaccess_SRCS += pvaccess.PvType.cpp
+pvaccess_SRCS += pvaccess.PvProvider.cpp
+
+pvaccess_SRCS += pvaccess.PvObject.cpp
+pvaccess_SRCS += pvaccess.PvScalar.cpp
+pvaccess_SRCS += pvaccess.PvBoolean.cpp
+pvaccess_SRCS += pvaccess.PvByte.cpp
+pvaccess_SRCS += pvaccess.PvUByte.cpp
+pvaccess_SRCS += pvaccess.PvShort.cpp
+pvaccess_SRCS += pvaccess.PvUShort.cpp
+pvaccess_SRCS += pvaccess.PvInt.cpp
+pvaccess_SRCS += pvaccess.PvUInt.cpp
+pvaccess_SRCS += pvaccess.PvLong.cpp
+pvaccess_SRCS += pvaccess.PvULong.cpp
+pvaccess_SRCS += pvaccess.PvFloat.cpp
+pvaccess_SRCS += pvaccess.PvDouble.cpp
+pvaccess_SRCS += pvaccess.PvString.cpp
+pvaccess_SRCS += pvaccess.PvScalarArray.cpp
+pvaccess_SRCS += pvaccess.PvUnion.cpp
+
+pvaccess_SRCS += pvaccess.PvAlarm.cpp
+pvaccess_SRCS += pvaccess.PvTimeStamp.cpp
+
+pvaccess_SRCS += pvaccess.NtType.cpp
+pvaccess_SRCS += pvaccess.NtTable.cpp
+
+pvaccess_SRCS += pvaccess.Channel.cpp
+pvaccess_SRCS += pvaccess.RpcClient.cpp
+pvaccess_SRCS += pvaccess.RpcServer.cpp
+
 pvaccess_SRCS += CaClient.cpp
 pvaccess_SRCS += Channel.cpp
 pvaccess_SRCS += ChannelGetRequesterImpl.cpp
