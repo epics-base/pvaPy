@@ -12,7 +12,7 @@
 ###########################################
 # Set EPICS Base version and upload target
 
-BASE=3.15.2
+BASE=3.15.3
 PUBLISH=${1:-DONT}
 
 # Dependent module branches
