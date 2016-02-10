@@ -63,7 +63,7 @@ AC_DEFUN([AX_EPICS4],
     normativetypescpp_dir="$ac_epics4_dir_path/normativeTypesCPP"
     pvaclientcpp_dir="$ac_epics4_dir_path/pvaClientCPP"
 
-    epics4_version_h="$pvaccesscpp_dir/include/pv/pvaVersion.h"
+    epics4_version_h="$pvaccesscpp_dir/include/pv/pvaVersionNum.h"
     if ! test -f "$epics4_version_h"; then
         pvaccesscpp_dir="$ac_epics4_dir_path"
         pvdatacpp_dir="$ac_epics4_dir_path"
