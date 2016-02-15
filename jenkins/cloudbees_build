@@ -18,11 +18,11 @@ BASE=${1:-${DEFAULT_BASE}}
 USE_MB=${2:-"MB_NO"}
 
 # Dependent module branches (empty = master)
-PVCOMMON_BRANCH="Release-4.1-"
-PVDATA_BRANCH="Release-5.0-"
-PVACCESS_BRANCH="Release-4.1-"
-NORMATIVETYPES_BRANCH="Release-5.0-"
-PVACLIENT_BRANCH="Release-4.1-"
+PVCOMMON_BRANCH=""
+PVDATA_BRANCH=""
+PVACCESS_BRANCH=""
+NORMATIVETYPES_BRANCH=""
+PVACLIENT_BRANCH=""
 
 ###########################################
 # Fetch and unpack dependencies
