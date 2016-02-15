@@ -1,3 +1,6 @@
+// Copyright information and license terms for this software can be
+// found in the file LICENSE that is included with the distribution
+
 #include "boost/python/class.hpp"
 #include "boost/python/self.hpp"
 #include "boost/python/operators.hpp"
