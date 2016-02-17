@@ -4,11 +4,11 @@
 #
 # SYNOPSIS
 #
-#   AX_EPICS4([MINIMUM-VERSION])
+#   AX_EPICS4([MINIMUM-PVA-VERSION])
 #
 # DESCRIPTION
 #
-#   Test for the EPICS4 libraries of a particular version (or newer)
+#   Test for EPICS V4 libraries with a minimum pvAccess version
 #
 #   If no path to the installed epics4 directory is given, the macro 
 #   evaluates $EPICS4_DIR environment variable and searches under
@@ -29,7 +29,7 @@
 
 #serial 1
 
-DEFAULT_EPICS4_VERSION=4.4.0
+DEFAULT_PVA_VERSION=4.0.4
 
 AC_DEFUN([AX_EPICS4],
 
@@ -58,127 +58,121 @@ AC_DEFUN([AX_EPICS4],
         AC_MSG_ERROR($ac_epics4_dir_path is not a valid directory path)
     fi
 
-    pvaccesscpp_dir="$ac_epics4_dir_path/pvAccessCPP"
-    pvdatacpp_dir="$ac_epics4_dir_path/pvDataCPP"
-    normativetypescpp_dir="$ac_epics4_dir_path/normativeTypesCPP"
-    pvaclientcpp_dir="$ac_epics4_dir_path/pvaClientCPP"
+    # save compile/link flags, set lang to C++
+    AC_REQUIRE([AC_PROG_CXX])
+    AC_LANG_PUSH([C++])
+    SAVED_CPPFLAGS="$CPPFLAGS"
+    SAVED_LDFLAGS="$LDFLAGS"
 
-    epics4_version_h="$pvaccesscpp_dir/include/pv/pvaVersionNum.h"
-    if ! test -f "$epics4_version_h"; then
-        pvaccesscpp_dir="$ac_epics4_dir_path"
+    # look for required v4 modules, assume common epics4 install dir if not found
+    pvdatacpp_dir="$ac_epics4_dir_path/pvDataCPP"
+    if ! test -d "$pvdatacpp_dir"; then
         pvdatacpp_dir="$ac_epics4_dir_path"
+    fi
+    pvaccesscpp_dir="$ac_epics4_dir_path/pvAccessCPP"
+    if ! test -d "$pvaccesscpp_dir"; then
+        pvaccesscpp_dir="$ac_epics4_dir_path"
+    fi
+    normativetypescpp_dir="$ac_epics4_dir_path/normativeTypesCPP"
+    if ! test -d "$normativetypescpp_dir"; then
         normativetypescpp_dir="$ac_epics4_dir_path"
+    fi
+    pvaclientcpp_dir="$ac_epics4_dir_path/pvaClientCPP"
+    if ! test -d "$pvaclientcpp_dir"; then
         pvaclientcpp_dir="$ac_epics4_dir_path"
-        epics4_version_h="$pvaccesscpp_dir/include/pv/pvaVersion.h"
     fi
 
-    if ! test -f "$epics4_version_h"; then
+    pva_version_h="$pvaccesscpp_dir/include/pv/pvaVersion.h"
+    if ! test -f "$pva_version_h"; then
         AC_MSG_RESULT([no])
-        AC_MSG_ERROR(could not find valid EPICS4 installation in $ac_epics4_dir_path: no version header file $epics_version_h)
+        AC_MSG_ERROR("could not find pvAccess installation: no header file $epics_version_h")
     fi
     AC_MSG_RESULT([yes])
 
     # define EPICS4_DIR
     EPICS4_DIR=$ac_epics4_dir_path
 
-    # determine requested version
-    epics4_version_req=ifelse([$1], , $DEFAULT_EPICS4_VERSION, $1)
-    AC_MSG_CHECKING(for EPICS4 >= $epics4_version_req)
-    epics4_version_req_major=`expr $epics4_version_req : '\([[0-9]]*\)'`
-    epics4_version_req_minor=`expr $epics4_version_req : '[[0-9]]*\.\([[0-9]]*\)'`
-    epics4_version_req_sub_minor=`expr $epics4_version_req : '[[0-9]]*\.[[0-9]]*\.\([[0-9]]*\)'`
-    if test "x$epics4_version_req_sub_minor" = "x" ; then
-        epics4_version_req_sub_minor="0"
-        epics4_version_req_patch="0"
-    else
-        epics4_version_req_patch=`expr $epics4_version_req : '[[0-9]]*\.[[0-9]]*\.[[0-9]]*\.\([[0-9]]*\)'`
-        if test "x$epics4_version_req_patch" = "x" ; then
-            epics4_version_req_patch="0"
-        fi
+    # determine required version
+    pva_version_req=ifelse([$1], , $DEFAULT_PVA_VERSION, $1)
+    AC_MSG_CHECKING(for pvAccess version >= $pva_version_req)
+    pva_version_req_major=`expr $pva_version_req : '\([[0-9]]*\)'`
+    pva_version_req_minor=`expr $pva_version_req : '[[0-9]]*\.\([[0-9]]*\)'`
+    pva_version_req_patch=`expr $pva_version_req : '[[0-9]]*\.[[0-9]]*\.\([[0-9]]*\)'`
+    if test "x$pva_version_req_patch" == "x" ; then
+        pva_version_req_patch="0"
     fi
 
-    # get epics4 version info
-    # assume release version is always 4
-    epics4_version_release=4
-    epics4_version_major=`grep EPICS_PVA_MAJOR_VERSION $epics4_version_h | head -1 | awk '{print $NF}' | sed $'s/\r//'`
-    epics4_version_minor=`grep EPICS_PVA_MINOR_VERSION $epics4_version_h | head -1 | awk '{print $NF}' | sed $'s/\r//'`
-    epics4_version_maintenance=`grep EPICS_PVA_MAINTENANCE_VERSION $epics4_version_h | head -1 | awk '{print $NF}' | sed $'s/\r//'`
+    # options for building with pvData & pvAccess
+    PVA_CPPFLAGS="-I$pvdatacpp_dir/include -I$pvaccesscpp_dir/include"
+    PVA_LDFLAGS="-L$pvdatacpp_dir/lib/$EPICS_HOST_ARCH -L$pvaccesscpp_dir/lib/$EPICS_HOST_ARCH"
+    PVA_LIBS="-lpvAccess -lpvData -lCom"
 
-    # test version
-    want_epics4_version=`expr $epics4_version_req_major \* 1000000 \+  $epics4_version_req_minor \* 10000 \+ $epics4_version_req_sub_minor \* 100 \+ $epics4_version_req_patch`
-    have_epics4_version=`expr $epics4_version_release \* 1000000 \+  $epics4_version_major \* 10000 \+ $epics4_version_minor \* 100 \+ $epics4_version_maintenance`
-    if ! test $have_epics4_version -ge $want_epics4_version; then
+    # check pvAccess version number
+    export CPPFLAGS="$PVA_CPPFLAGS $EPICS_CPPFLAGS"
+    AC_PREPROC_IFELSE([AC_LANG_SOURCE([[
+        #include "pv/pvaVersion.h"
+        #undef VERSION_INT
+        #undef PVA_VERSION_INT
+        #define VERSION_INT(V,M,P) (((V)<<16) | ((M)<<8) | (P))
+        #define PVA_VERSION_INT VERSION_INT(EPICS_PVA_MAJOR_VERSION,EPICS_PVA_MINOR_VERSION,EPICS_PVA_MAINTENANCE_VERSION)
+        #if PVA_VERSION_INT < VERSION_INT($pva_version_req_major,$pva_version_req_minor,$pva_version_req_patch)
+        #  error too old
+        #endif
+    ]])],[AC_MSG_RESULT([yes])],[
         AC_MSG_RESULT([no])
-        AC_MSG_ERROR("EPICS4 installation in $ac_epics4_dir_path is too old (required: $want_epics4_version, found: $have_epics4_version)")
-    fi
-    AC_MSG_RESULT([yes])
+        AC_MSG_ERROR("EPICS4 installation in $ac_epics4_dir_path is too old (required: pvAccess $pva_version_req)")
+    ])
 
     # test basic libraries
-    AC_MSG_CHECKING(for usable EPICS4 libraries for $EPICS_OS_CLASS OS ($EPICS_CMPLR_CLASS compiler) and host architecture $EPICS_HOST_ARCH)
-
+    AC_MSG_CHECKING(for EPICS4 libraries for $EPICS_HOST_ARCH)
     pva_api_version=430
     pva_rpc_api_version=430
-    CPPFLAGS_SAVED="$CPPFLAGS"
-    CPPFLAGS="$CPPFLAGS $EPICS_CPPFLAGS -I$EPICS_BASE/include -I$EPICS_BASE/include/os/$EPICS_OS_CLASS -I$EPICS_BASE/include/compiler/$EPICS_CMPLR_CLASS -I$pvdatacpp_dir/include -I$pvaccesscpp_dir/include"
-    export CPPFLAGS
 
-    LDFLAGS_SAVED="$LDFLAGS"
-    LDFLAGS="$LDFLAGS $EPICS_LDFLAGS"
-    LDFLAGS="$LDFLAGS -L$EPICS_BASE/lib/$EPICS_HOST_ARCH -L$pvdatacpp_dir/lib/$EPICS_HOST_ARCH -L$pvaccesscpp_dir/lib/$EPICS_HOST_ARCH"
-    export LDFLAGS
+    export LDFLAGS="$PVA_LDFLAGS $EPICS_LDFLAGS"
+    export LIBS="$PVA_LIBS"
+    AC_LINK_IFELSE([AC_LANG_PROGRAM(
+        [[
+        #include "pv/pvAccess.h"
+        #include "pv/pvData.h"
+        ]],
+        [[
+        epics::pvData::FieldConstPtrArray fields;
+        ]])
+    ],[succeeded=yes],[succeeded=no])
+    AC_LINK_IFELSE([AC_LANG_PROGRAM(
+        [[
+        #include "pv/pvAccess.h"
+        #include "pv/pvData.h"
+        class RequesterImpl : public epics::pvData::Requester
+        {
+        public:
+            RequesterImpl(const epics::pvData::String& requesterName) {}
+            virtual epics::pvData::String getRequesterName() { return "requester"; }
+            virtual void message(const epics::pvData::String& message, epics::pvData::MessageType messageType) {}
+        };
+        ]],
+        [[
+        epics::pvData::Requester::shared_pointer requester(new RequesterImpl("Channel"));
+        epics::pvData::PVStructure::shared_pointer pvRequest = epics::pvAccess::getCreateRequest()->createRequest("field(value)", requester);
+        ]])
+    ],[pva_api_version=430],[pva_api_version=440])
 
-    LIBS="-lpvAccess -lpvData -lCom"
-    export LIBS
+    # options for building with normativeTypes & pvaClient
+    PVAC_CPPFLAGS="-I$normativetypescpp_dir/include -I$pvaclientcpp_dir/include"
+    PVAC_LDFLAGS="-L$pvaclientcpp_dir/lib/$EPICS_HOST_ARCH -L$normativetypescpp_dir/lib/$EPICS_HOST_ARCH"
+    PVAC_LIBS="-lpvaClient -lnt"
 
-    succeeded=no
-    AC_REQUIRE([AC_PROG_CXX])
-    AC_LANG_PUSH([C++])
-        AC_LINK_IFELSE([AC_LANG_PROGRAM(
-            [[
-            #include "pv/pvAccess.h"
-            #include "pv/pvData.h"
-            ]],
-            [[
-            epics::pvData::FieldConstPtrArray fields;
-            ]])
-        ],[succeeded=yes],[succeeded=no])
-        AC_LINK_IFELSE([AC_LANG_PROGRAM(
-            [[
-            #include "pv/pvAccess.h"
-            #include "pv/pvData.h"
-            class RequesterImpl : public epics::pvData::Requester
-            {
-            public:
-                RequesterImpl(const epics::pvData::String& requesterName) {}
-                virtual epics::pvData::String getRequesterName() { return "requester"; }
-                virtual void message(const epics::pvData::String& message, epics::pvData::MessageType messageType) {}
-            };
-            ]],
-            [[
-            epics::pvData::Requester::shared_pointer requester(new RequesterImpl("Channel"));
-            epics::pvData::PVStructure::shared_pointer pvRequest = epics::pvAccess::getCreateRequest()->createRequest("field(value)", requester);
-            ]])
-        ],[pva_api_version=430],[pva_api_version=440])
-    AC_LANG_POP([C++])
-
-    # Check for pvaClient API
-    CPPFLAGS_NO_PVACLIENTCPP=$CPPFLAGS
-    CPPFLAGS="$CPPFLAGS -I$normativetypescpp_dir/include -I$pvaclientcpp_dir/include"
-    LDFLAGS_NO_PVACLIENTCPP=$LDFLAGS
-    LDFLAGS="$LDFLAGS -L$pvaclientcpp_dir/lib/$EPICS_HOST_ARCH -L$normativetypescpp_dir/lib/$EPICS_HOST_ARCH"
-    LIBS_NO_PVACLIENTCPP=$LIBS
-    LIBS="-lpvaClient -lpvAccess -lnt -lpvData -lCom"
-    AC_REQUIRE([AC_PROG_CXX])
-    AC_LANG_PUSH([C++])
-        AC_LINK_IFELSE([AC_LANG_PROGRAM(
-            [[
-            #include "pv/pvaClient.h"
-            ]],
-            [[
-            epics::pvaClient::PvaClientChannelPtr pvaClientChannel;
-            ]])
-        ],[pva_client_cpp=yes],[pva_client_cpp=no])
-    AC_LANG_POP([C++])
+    export CPPFLAGS="$PVAC_CPPFLAGS $PVA_CPPFLAGS $EPICS_CPPFLAGS"
+    export LDFLAGS="$PVAC_LDFLAGS $PVA_LDFLAGS $EPICS_LDFLAGS"
+    export LIBS="$PVAC_LIBS $PVA_LIBS"
+    AC_LINK_IFELSE([AC_LANG_PROGRAM(
+        [[
+        #include "pv/pvaClient.h"
+        ]],
+        [[
+        epics::pvaClient::PvaClientChannelPtr pvaClientChannel;
+        ]])
+    ],[pva_client_cpp=yes],[pva_client_cpp=no])
 
     if test "$succeeded" != "yes" ; then
         AC_MSG_RESULT([no])
@@ -200,41 +194,37 @@ AC_DEFUN([AX_EPICS4],
         AC_SUBST(PVACCESSCPP_DIR, $pvaccesscpp_dir)
     fi
 
-    CPPFLAGS=$CPPFLAGS_NO_PVACLIENTCPP
-    LDFLAGS=$LDFLAGS_NO_PVACLIENTCPP
-    LIBS=$LIBS_NO_PVACLIENTCPP
+    export CPPFLAGS="$PVA_CPPFLAGS $EPICS_CPPFLAGS"
+    export LDFLAGS="$PVA_LDFLAGS $EPICS_LDFLAGS"
+    export LIBS="$PVA_LIBS"
     AC_MSG_CHECKING(EPICS4 PVA RPC API version)
-    succeeded=no
-    AC_REQUIRE([AC_PROG_CXX])
-    AC_LANG_PUSH([C++])
-        AC_LINK_IFELSE([AC_LANG_PROGRAM(
-            [[
-            #include "pv/pvAccess.h"
-            #include "pv/pvData.h"
-            #include "pv/event.h"
-            #include "pv/rpcClient.h"
-            ]],
-            [[
-            epics::pvAccess::RPCClient::shared_pointer rpcClient;
-            ]])
-        ],[succeeded=yes],[succeeded=no])
-        AC_LINK_IFELSE([AC_LANG_PROGRAM(
-            [[
-            #include "pv/rpcClient.h"
-            ]],
-            [[
-            epics::pvAccess::RPCClientFactory::create("Channel");
-            ]])
-        ],[pva_rpc_api_version1=430],[pva_rpc_api_version1=undefined])
-        AC_LINK_IFELSE([AC_LANG_PROGRAM(
-            [[
-            #include "pv/rpcClient.h"
-            ]],
-            [[
-            epics::pvAccess::RPCClient::create("Channel");
-            ]])
-        ],[pva_rpc_api_version3=440],[pva_rpc_api_version3=undefined])
-    AC_LANG_POP([C++])
+    AC_LINK_IFELSE([AC_LANG_PROGRAM(
+        [[
+        #include "pv/pvAccess.h"
+        #include "pv/pvData.h"
+        #include "pv/event.h"
+        #include "pv/rpcClient.h"
+        ]],
+        [[
+        epics::pvAccess::RPCClient::shared_pointer rpcClient;
+        ]])
+    ],[succeeded=yes],[succeeded=no])
+    AC_LINK_IFELSE([AC_LANG_PROGRAM(
+        [[
+        #include "pv/rpcClient.h"
+        ]],
+        [[
+        epics::pvAccess::RPCClientFactory::create("Channel");
+        ]])
+    ],[pva_rpc_api_version1=430],[pva_rpc_api_version1=undefined])
+    AC_LINK_IFELSE([AC_LANG_PROGRAM(
+        [[
+        #include "pv/rpcClient.h"
+        ]],
+        [[
+        epics::pvAccess::RPCClient::create("Channel");
+        ]])
+    ],[pva_rpc_api_version3=440],[pva_rpc_api_version3=undefined])
 
     pva_rpc_api_version="undefined"
     if test "$pva_rpc_api_version1" != "undefined" ; then
@@ -255,7 +245,8 @@ AC_DEFUN([AX_EPICS4],
         AC_SUBST(PVA_RPC_API_VERSION, $pva_rpc_api_version)
     fi
 
-    CPPFLAGS="$CPPFLAGS_SAVED"
-    LDFLAGS="$LDFLAGS_SAVED"
-
+    # restore compile/link flags
+    CPPFLAGS="$SAVED_CPPFLAGS"
+    LDFLAGS="$SAVED_LDFLAGS"
+    AC_LANG_POP([C++])
 ])
