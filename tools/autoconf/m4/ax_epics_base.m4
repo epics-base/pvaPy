@@ -105,7 +105,7 @@ AC_DEFUN([AX_EPICS_BASE],
     CPPFLAGS="$SAVED_CPPFLAGS $EPICS_CPPFLAGS"
 
     # check epics version
-    AC_PREPROC_IFELSE([
+    AC_PREPROC_IFELSE([AC_LANG_SOURCE([[
         #include "epicsVersion.h"
         #ifndef VERSION_INT
         #  define VERSION_INT(V,R,M,P) (((V)<<24) | ((R)<<16) | ((M)<<8) | (P))
@@ -114,7 +114,7 @@ AC_DEFUN([AX_EPICS_BASE],
         #if EPICS_VERSION_INT < VERSION_INT($req_epics_version,$req_epics_revision,$req_epics_modification,$req_epics_patch_level)
         #  error too old
         #endif
-    ],[AC_MSG_RESULT([yes])],[
+    ]])],[AC_MSG_RESULT([yes])],[
         AC_MSG_RESULT([no])
         AC_MSG_ERROR("EPICS Base installation in $ac_epics_base_path is too old (required: $epics_version_req)")
     ])

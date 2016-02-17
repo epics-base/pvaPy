@@ -109,7 +109,7 @@ AC_DEFUN([AX_EPICS4],
 
     # check pvAccess version number
     export CPPFLAGS="$PVA_CPPFLAGS $EPICS_CPPFLAGS"
-    AC_PREPROC_IFELSE([
+    AC_PREPROC_IFELSE([AC_LANG_SOURCE([[
         #include "pv/pvaVersion.h"
         #undef VERSION_INT
         #undef PVA_VERSION_INT
@@ -118,7 +118,7 @@ AC_DEFUN([AX_EPICS4],
         #if PVA_VERSION_INT < VERSION_INT($pva_version_req_major,$pva_version_req_minor,$pva_version_req_patch)
         #  error too old
         #endif
-    ],[AC_MSG_RESULT([yes])],[
+    ]])],[AC_MSG_RESULT([yes])],[
         AC_MSG_RESULT([no])
         AC_MSG_ERROR("EPICS4 installation in $ac_epics4_dir_path is too old (required: pvAccess $pva_version_req)")
     ])
