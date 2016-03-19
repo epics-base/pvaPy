@@ -521,7 +521,10 @@ void Channel::callSubscribers(PvObject& pvObject)
             pySubscriber(pvObject);
         }
         catch(const boost::python::error_already_set&) {
-            logger.error("Channel subscriber " + subscriberName + " error");
+            PyErr_Print();
+            PyErr_Clear();
+            logger.error("Channel subscriber " + subscriberName + " throws python exception.  unsubscribing.");
+            unsubscribe(subscriberName);
         }
 
         // Release GIL. 
