@@ -657,9 +657,11 @@ void Channel::monitorThread(Channel* channel)
     logger.debug("Started monitor thread %s", epicsThreadGetNameSelf());
     epics::pvaClient::PvaClientMonitorPtr monitor = channel->getMonitor();
     epics::pvaClient::PvaClientMonitorDataPtr pvaData = monitor->getData();
+    epics::pvData::PVDataCreatePtr create(epics::pvData::getPVDataCreate());
     while (channel->shutdownThreads == false) {
         monitor->waitEvent();
-        PvObject pvObject(pvaData->getPVStructure());
+        epics::pvData::PVStructurePtr C(create->createPVStructure(pvaData->getPVStructure())); // copy
+        PvObject pvObject(C);
         channel->queueMonitorData(pvObject);
         monitor->releaseEvent();
     }
