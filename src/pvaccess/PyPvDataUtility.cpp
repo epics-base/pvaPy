@@ -1854,24 +1854,24 @@ boost::python::object getFieldPathAsPyObject(const std::string& fieldPath, const
         case epics::pvData::scalar: {
             epics::pvData::ScalarConstPtr scalarPtr = std::tr1::static_pointer_cast<const epics::pvData::Scalar>(fieldPtr);
             epics::pvData::ScalarType scalarType = scalarPtr->getScalarType();
-            return getScalarFieldAsPyObject(fieldName, scalarType, pvStructurePtr);
+            return getScalarFieldAsPyObject(fieldName, scalarType, pvStructurePtr2);
         }
         case epics::pvData::scalarArray: {
             epics::pvData::ScalarArrayConstPtr scalarArrayPtr = std::tr1::static_pointer_cast<const epics::pvData::ScalarArray>(fieldPtr);
             epics::pvData::ScalarType scalarType = scalarArrayPtr->getElementType();
-            return getScalarArrayFieldAsPyObject(fieldName, scalarType, pvStructurePtr);
+            return getScalarArrayFieldAsPyObject(fieldName, scalarType, pvStructurePtr2);
         }
         case epics::pvData::structure: {
-            return getStructureFieldAsPyObject(fieldName, pvStructurePtr);
+            return getStructureFieldAsPyObject(fieldName, pvStructurePtr2);
         }
         case epics::pvData::structureArray: {
-            return getStructureArrayFieldAsPyObject(fieldName, pvStructurePtr);
+            return getStructureArrayFieldAsPyObject(fieldName, pvStructurePtr2);
         }
         case epics::pvData::union_: {
-            return getUnionFieldAsPyObject(fieldName, pvStructurePtr);
+            return getUnionFieldAsPyObject(fieldName, pvStructurePtr2);
         }
         case epics::pvData::unionArray: {
-            return getUnionArrayFieldAsPyObject(fieldName, pvStructurePtr);
+            return getUnionArrayFieldAsPyObject(fieldName, pvStructurePtr2);
         }
         default: {
             throw PvaException("Unrecognized field type: %d", type);
