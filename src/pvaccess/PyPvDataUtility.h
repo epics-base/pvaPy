@@ -183,31 +183,37 @@ void structureFieldToPyDict(const std::string& fieldName, const epics::pvData::P
 // Add PV Scalar => PY {}
 // 
 void addScalarFieldToDict(const std::string& fieldName, epics::pvData::ScalarType scalarType, const epics::pvData::PVStructurePtr& pvStructurePtr, boost::python::dict& pyDict);
+boost::python::object getScalarFieldAsPyObject(const std::string& fieldName, epics::pvData::ScalarType scalarType, const epics::pvData::PVStructurePtr& pvStructurePtr);
 
 //
 // Add PV Scalar Array => PY {}
 // 
 void addScalarArrayFieldToDict(const std::string& fieldName, epics::pvData::ScalarType scalarType, const epics::pvData::PVStructurePtr& pvStructurePtr, boost::python::dict& pyDict);
+boost::python::object  getScalarArrayFieldAsPyObject(const std::string& fieldName, epics::pvData::ScalarType scalarType, const epics::pvData::PVStructurePtr& pvStructurePtr);
 
 //
 // Add PV Structure => PY {}
 // 
 void addStructureFieldToDict(const std::string& fieldName, const epics::pvData::PVStructurePtr& pvStructurePtr, boost::python::dict& pyDict);
+boost::python::object getStructureFieldAsPyObject(const std::string& fieldName, const epics::pvData::PVStructurePtr& pvStructurePtr);
 
 //
 // Add PV Structure Array => PY {}
 // 
 void addStructureArrayFieldToDict(const std::string& fieldName, const epics::pvData::PVStructurePtr& pvStructurePtr, boost::python::dict& pyDict);
+boost::python::object getStructureArrayFieldAsPyObject(const std::string& fieldName, const epics::pvData::PVStructurePtr& pvStructurePtr);
 
 //
 // Add PV Union => PY {}
 // 
 void addUnionFieldToDict(const std::string& fieldName, const epics::pvData::PVStructurePtr& pvStructurePtr, boost::python::dict& pyDict);
+boost::python::object getUnionFieldAsPyObject(const std::string& fieldName, const epics::pvData::PVStructurePtr& pvStructurePtr);
 
 //
 // Add PV Union Array => PY {}
 // 
 void addUnionArrayFieldToDict(const std::string& fieldName, const epics::pvData::PVStructurePtr& pvStructurePtr, boost::python::dict& pyDict);
+boost::python::object getUnionArrayFieldAsPyObject(const std::string& fieldName, const epics::pvData::PVStructurePtr& pvStructurePtr);
 
 //
 // Conversion Structure => PY {}
@@ -278,9 +284,10 @@ bool updateFieldArrayFromPvObjectList(const boost::python::object& pyObject, con
 boost::python::dict extractUnionStructureDict(const boost::python::dict& pyDict);
 
 //
+// Support for field path notation.
 //
-//
-boost::python::object structureFieldToPyObject(const std::string& fieldPath, const epics::pvData::PVStructurePtr& pvStructurePtr);
+boost::python::object getFieldPathAsPyObject(const std::string& fieldPath, const epics::pvData::PVStructurePtr& pvStructurePtr);
+void setPyObjectToFieldPath(const boost::python::object& pyObject, const std::string& fieldPath, const epics::pvData::PVStructurePtr& pvStructurePtr);
 
 //
 // Template implementations

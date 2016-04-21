@@ -108,9 +108,9 @@ boost::python::dict PvObject::get() const
     return toDict();
 }
 
-void PvObject::setPyObject(const std::string& key, const boost::python::object& pyObject)
+void PvObject::setPyObject(const std::string& fieldPath, const boost::python::object& pyObject)
 {
-    PyPvDataUtility::pyObjectToField(pyObject, key, pvStructurePtr);
+    PyPvDataUtility::setPyObjectToFieldPath(pyObject, fieldPath, pvStructurePtr);
 }
 
 void PvObject::setPyObject(const boost::python::object& pyObject)
@@ -119,10 +119,9 @@ void PvObject::setPyObject(const boost::python::object& pyObject)
     setPyObject(key, pyObject);
 }
 
-boost::python::object PvObject::getPyObject(const std::string& key) const
+boost::python::object PvObject::getPyObject(const std::string& fieldPath) const
 {
-    //return toDict()[key];
-    return PyPvDataUtility::structureFieldToPyObject(key, pvStructurePtr);
+    return PyPvDataUtility::getFieldPathAsPyObject(fieldPath, pvStructurePtr);
 }
 
 boost::python::object PvObject::getPyObject() const
