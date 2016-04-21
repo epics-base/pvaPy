@@ -1848,7 +1848,7 @@ boost::python::object getFieldPathAsPyObject(const std::string& fieldPath, const
 
     // Last field in the path is what we want.
     std::string fieldName = fieldNames[nElements-1];
-    epics::pvData::FieldConstPtr fieldPtr = getField(fieldName, pvStructurePtr);
+    epics::pvData::FieldConstPtr fieldPtr = getField(fieldName, pvStructurePtr2);
     epics::pvData::Type type = fieldPtr->getType();
     switch (type) {
         case epics::pvData::scalar: {
