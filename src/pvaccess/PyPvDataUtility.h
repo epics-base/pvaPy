@@ -278,6 +278,11 @@ bool updateFieldArrayFromPvObjectList(const boost::python::object& pyObject, con
 boost::python::dict extractUnionStructureDict(const boost::python::dict& pyDict);
 
 //
+//
+//
+boost::python::object structureFieldToPyObject(const std::string& fieldPath, const epics::pvData::PVStructurePtr& pvStructurePtr);
+
+//
 // Template implementations
 //
 

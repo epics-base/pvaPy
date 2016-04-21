@@ -1787,7 +1787,31 @@ boost::python::dict extractUnionStructureDict(const boost::python::dict& pyDict)
     // We could not find union in the structure, simply use provided dict
     return pyDict;
 }
-        
+
+//
+// Return structure field as python object. Allow notation like 'x.y.z'
+// for the field name.
+//
+boost::python::object structureFieldToPyObject(const std::string& fieldPath, const epics::pvData::PVStructurePtr& pvStructurePtr)
+{
+    std::vector<std::string> fieldNames = StringUtility::split(fieldPath);
+    epics::pvData::PVStructurePtr pvStructurePtr2 = pvStructurePtr;
+    // All path parts except for the last one must be structures
+    int nElements = fieldNames.size();
+    for (int i = 0; i < nElements-1; i++) {
+        std::string fieldName = fieldNames[i];
+        pvStructurePtr2 = getStructureField(fieldName, pvStructurePtr2);
+    }
+
+    // This needs to be made more efficient.
+    // No need to convert all fields, just need to pick up the one
+    // we want.
+    boost::python::dict pyDict;
+    structureToPyDict(pvStructurePtr2, pyDict);
+    boost::python::object pyObject = pyDict[fieldNames[nElements-1]];
+    return pyObject;
+}
+
 } // namespace PyPvDataUtility
 
 
