@@ -144,8 +144,19 @@ void Channel::put(const std::string& value, const std::string& requestDescriptor
 {
     try {
         epics::pvaClient::PvaClientPutPtr pvaPut = pvaClientChannelPtr->put(requestDescriptor);
-        epics::pvData::PVScalarPtr pvScalar = pvaPut->getData()->getScalarValue();
-        epics::pvData::getConvert()->fromString(pvScalar,value);
+        epics::pvaClient::PvaClientPutDataPtr pvaData = pvaPut->getData();
+        if (pvaData->isValueScalar()) {
+            // value is scalar
+            epics::pvData::PVScalarPtr pvScalar = pvaData->getScalarValue();
+            epics::pvData::getConvert()->fromString(pvScalar,value);
+        }
+        else {
+            // value is not scalar, try object
+            epics::pvData::PVStructurePtr pvStructure = pvaData->getPVStructure();
+            std::vector<std::string> values;
+            values.push_back(value);
+            PvUtility::fromString(pvStructure, values);
+        }
         pvaPut->put();
     } 
     catch (std::runtime_error e) {
