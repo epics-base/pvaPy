@@ -1,6 +1,8 @@
 ## Release 0.6 ()
 
 - added support for channel putGet() and getPut() operations
+- added PvObject support for field path notation (e.g, 'x.y.z')
+- added PvObject support for __getitem__ and __setitem__ 
 
 ## Release 0.5 (2015/10/08)
 
