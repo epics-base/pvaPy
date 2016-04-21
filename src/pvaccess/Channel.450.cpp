@@ -352,8 +352,18 @@ PvObject* Channel::putGet(const std::string& value, const std::string& requestDe
     try {
         epics::pvaClient::PvaClientPutGetPtr pvaPutGet = pvaClientChannelPtr->createPutGet(requestDescriptor);
         epics::pvaClient::PvaClientPutDataPtr pvaData = pvaPutGet->getPutData();
-        epics::pvData::PVScalarPtr pvScalar = pvaData->getScalarValue();
-        epics::pvData::getConvert()->fromString(pvScalar,value);
+        if (pvaData->isValueScalar()) {
+            // value is scalar
+            epics::pvData::PVScalarPtr pvScalar = pvaData->getScalarValue();
+            epics::pvData::getConvert()->fromString(pvScalar,value);
+        }
+        else {
+            // value is not scalar, try object
+            epics::pvData::PVStructurePtr pvStructure = pvaData->getPVStructure();
+            std::vector<std::string> values;
+            values.push_back(value);
+            PvUtility::fromString(pvStructure, values);
+        }
         pvaPutGet->putGet();
         return new PvObject(pvaPutGet->getGetData()->getPVStructure());
     } 
