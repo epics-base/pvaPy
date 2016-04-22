@@ -25,6 +25,17 @@ void checkFieldExists(const std::string& fieldName, const epics::pvData::PVStruc
     }
 }
 
+void checkFieldPathExists(const std::string& fieldPath, const epics::pvData::PVStructurePtr& pvStructurePtr)
+{
+    std::vector<std::string> fieldNames = StringUtility::split(fieldPath);
+    epics::pvData::PVStructurePtr pvStructurePtr2 = getParentStructureForFieldPath(fieldNames, pvStructurePtr);
+    int nElements = fieldNames.size();
+    
+    // Last field in the path is what we want.
+    std::string fieldName = fieldNames[nElements-1];
+    checkFieldExists(fieldName, pvStructurePtr2);
+}
+
 //
 // Field retrieval
 //
@@ -76,6 +87,24 @@ epics::pvData::FieldConstPtr getField(const std::string& fieldName, const epics:
         throw FieldNotFound("Object does not have field " + fieldName);
     }
     return pvFieldPtr->getField();
+}
+
+epics::pvData::PVStructurePtr getParentStructureForFieldPath(const std::string& fieldPath, const epics::pvData::PVStructurePtr& pvStructurePtr)
+{
+    std::vector<std::string> fieldNames = StringUtility::split(fieldPath);
+    return getParentStructureForFieldPath(fieldNames, pvStructurePtr);
+}
+
+epics::pvData::PVStructurePtr getParentStructureForFieldPath(const std::vector<std::string>& fieldNames, const epics::pvData::PVStructurePtr& pvStructurePtr)
+{
+    // All path parts except for the last one must be structures
+    epics::pvData::PVStructurePtr pvStructurePtr2 = pvStructurePtr;
+    int nElements = fieldNames.size();
+    for (int i = 0; i < nElements-1; i++) {
+        std::string fieldName = fieldNames[i];
+        pvStructurePtr2 = getStructureField(fieldName, pvStructurePtr2);
+    }
+    return pvStructurePtr2;
 }
 
 epics::pvData::ScalarConstPtr getScalarField(const std::string& fieldName, const epics::pvData::PVStructurePtr& pvStructurePtr)
@@ -1838,15 +1867,10 @@ boost::python::dict extractUnionStructureDict(const boost::python::dict& pyDict)
 boost::python::object getFieldPathAsPyObject(const std::string& fieldPath, const epics::pvData::PVStructurePtr& pvStructurePtr)
 {
     std::vector<std::string> fieldNames = StringUtility::split(fieldPath);
-    epics::pvData::PVStructurePtr pvStructurePtr2 = pvStructurePtr;
-    // All path parts except for the last one must be structures
-    int nElements = fieldNames.size();
-    for (int i = 0; i < nElements-1; i++) {
-        std::string fieldName = fieldNames[i];
-        pvStructurePtr2 = getStructureField(fieldName, pvStructurePtr2);
-    }
+    epics::pvData::PVStructurePtr pvStructurePtr2 = getParentStructureForFieldPath(fieldNames, pvStructurePtr);
 
     // Last field in the path is what we want.
+    int nElements = fieldNames.size();
     std::string fieldName = fieldNames[nElements-1];
     epics::pvData::FieldConstPtr fieldPtr = getField(fieldName, pvStructurePtr2);
     epics::pvData::Type type = fieldPtr->getType();
@@ -1886,14 +1910,9 @@ boost::python::object getFieldPathAsPyObject(const std::string& fieldPath, const
 void setPyObjectToFieldPath(const boost::python::object& pyObject, const std::string& fieldPath, const epics::pvData::PVStructurePtr& pvStructurePtr)
 {
     std::vector<std::string> fieldNames = StringUtility::split(fieldPath);
-    epics::pvData::PVStructurePtr pvStructurePtr2 = pvStructurePtr;
-    // All path parts except for the last one must be structures
+    epics::pvData::PVStructurePtr pvStructurePtr2 = getParentStructureForFieldPath(fieldNames, pvStructurePtr);
     int nElements = fieldNames.size();
-    for (int i = 0; i < nElements-1; i++) {
-        std::string fieldName = fieldNames[i];
-        pvStructurePtr2 = getStructureField(fieldName, pvStructurePtr2);
-    }
-
+    
     // Last field in the path is what we want.
     std::string fieldName = fieldNames[nElements-1];
     pyObjectToField(pyObject, fieldName, pvStructurePtr2);

@@ -96,6 +96,20 @@ epics::pvData::PVStructurePtr& operator<<(epics::pvData::PVStructurePtr& pvStruc
 }
 
 //
+// Has field?
+//
+bool PvObject::hasField(const std::string& fieldPath) const
+{
+    try {
+        PyPvDataUtility::checkFieldPathExists(fieldPath, pvStructurePtr);
+        return true;
+    }
+    catch (PvaException) {
+        return false;
+    }
+}
+
+//
 // Object set/get
 //
 void PvObject::set(const boost::python::dict& pyDict)

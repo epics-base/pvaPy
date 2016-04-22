@@ -38,6 +38,9 @@ public:
     friend std::ostream& operator<<(std::ostream& out, const PvObject& pvObject);
     friend epics::pvData::PVStructurePtr& operator<<(epics::pvData::PVStructurePtr& pvStructurePtr, const PvObject& pvObject);
 
+    // Has field?
+    bool hasField(const std::string& fieldPath) const;
+
     // Object set/get
     void set(const boost::python::dict& pyDict);
     boost::python::dict get() const;

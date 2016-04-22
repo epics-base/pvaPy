@@ -69,6 +69,28 @@ class_<PvObject>("PvObject",
         "    pv = PvObject({'aString' : STRING})\n\n"
         "    pv.setPyObject('string value')\n\n")
 
+    .def("hasField", 
+        static_cast<bool(PvObject::*)(const std::string&)const>(&PvObject::hasField),
+        args("fieldPath"),
+        "Checks if the PV object has field specified by the given path, using '.' as the field name separator.\n\n"
+        ":Parameter: *fieldPath* (str) - field path\n\n"
+        ":Returns: true if path exists, false otherwise\n\n"
+        "::\n\n"
+        "    pv = PvObject({'aString' : STRING, 'aStruct' : {'anInt' : INT, 'aString2' : STRING}})\n\n"
+        "    hasField = pv.hasField('aString')\n\n"
+        "    hasField2 = pv.hasField('aString.anInt')\n\n")
+
+    .def("__contains__", 
+        static_cast<bool(PvObject::*)(const std::string&)const>(&PvObject::hasField),
+        args("fieldPath"),
+        "Checks if the PV object has field specified by the given path, using '.' as the field name separator.\n\n"
+        ":Parameter: *fieldPath* (str) - field path\n\n"
+        ":Returns: true if path exists, false otherwise\n\n"
+        "::\n\n"
+        "    pv = PvObject({'aString' : STRING, 'aStruct' : {'anInt' : INT, 'aString2' : STRING}})\n\n"
+        "    hasField = 'aString' in pv\n\n"
+        "    hasField2 = 'aString.anInt' in pv\n\n")
+
     .def("setPyObject", 
         static_cast<void(PvObject::*)(const std::string&,const boost::python::object&)>(&PvObject::setPyObject),
         args("fieldPath", "value"),
