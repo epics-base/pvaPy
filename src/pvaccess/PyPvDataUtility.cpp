@@ -180,16 +180,16 @@ void setUnionField(const epics::pvData::PVFieldPtr& pvFrom, epics::pvData::PVUni
         epics::pvData::StringArray fieldNames = pvUnionPtr->getUnion()->getFieldNames();
         for (size_t i = 0; i < fields.size(); ++i) {
             epics::pvData::FieldConstPtr unionField = fields[i];
-            if (fields[i]==field) {
-                if (fieldNames[i] != fieldName) {
-                    throw InvalidArgument("PV field name %s does not match union field name %s.", fieldName.c_str(), fieldNames[i].c_str());
+            if (fieldNames[i] == fieldName) {
+                if (fields[i] != field) {
+                    throw InvalidArgument("PV field type does not match union field type for field name: %s.", fieldName.c_str());
                 }
                 fieldIndex = i;
                 break;
             }
         }
         if (fieldIndex < 0) {
-            throw InvalidArgument("PV field type does not match any of union fields.");
+            throw InvalidArgument("PV field does not match any of union fields.");
         }
         pvUnionPtr->set(fieldIndex, pvFrom);
     }
@@ -591,6 +591,14 @@ void scalarArrayFieldToPyList(const std::string& fieldName, const epics::pvData:
     }
 }
 
+boost::python::list getScalarArrayFieldAsPyList(const std::string& fieldName, const epics::pvData::PVStructurePtr& pvStructurePtr)
+{
+    boost::python::list pyList;
+    scalarArrayFieldToPyList(fieldName, pvStructurePtr, pyList);
+    return pyList;
+}
+
+
 //
 // Conversion PY List => PV Scalar Array
 //
@@ -651,7 +659,6 @@ void pyListToScalarArrayField(const boost::python::list& pyList, const std::stri
         }
     }
 }
-
 
 //
 // Conversion PY {} => PV Structure
@@ -834,7 +841,7 @@ void stringArrayToPyList(const epics::pvData::StringArray& stringArray, boost::p
 //
 // Conversion PV Structure => PY {}
 //
-void structureToPyDict(const epics::pvData::PVStructurePtr& pvStructurePtr, boost::python::dict& pyDict)
+void structureToPyDict(const epics::pvData::PVStructurePtr& pvStructurePtr, boost::python::dict& pyDict, bool useNumPyArrays)
 {
     epics::pvData::StructureConstPtr structurePtr = pvStructurePtr->getStructure();
     epics::pvData::StringArray fieldNames = structurePtr->getFieldNames();
@@ -852,7 +859,7 @@ void structureToPyDict(const epics::pvData::PVStructurePtr& pvStructurePtr, boos
             case epics::pvData::scalarArray: {
                 epics::pvData::ScalarArrayConstPtr scalarArrayPtr = std::tr1::static_pointer_cast<const epics::pvData::ScalarArray>(fieldPtr);
                 epics::pvData::ScalarType scalarType = scalarArrayPtr->getElementType();
-                addScalarArrayFieldToDict(fieldName, scalarType, pvStructurePtr, pyDict);
+                addScalarArrayFieldToDict(fieldName, scalarType, pvStructurePtr, pyDict, useNumPyArrays);
                 break;
             }
             case epics::pvData::structure: {
@@ -965,18 +972,27 @@ boost::python::object getScalarFieldAsPyObject(const std::string& fieldName, epi
 //
 // Add PV Scalar Array => PY {}
 // 
-void addScalarArrayFieldToDict(const std::string& fieldName, epics::pvData::ScalarType scalarType, const epics::pvData::PVStructurePtr& pvStructurePtr, boost::python::dict& pyDict)
+void addScalarArrayFieldToDict(const std::string& fieldName, epics::pvData::ScalarType scalarType, const epics::pvData::PVStructurePtr& pvStructurePtr, boost::python::dict& pyDict, bool useNumPyArrays)
 {
-    boost::python::list pyList;
-    scalarArrayFieldToPyList(fieldName, pvStructurePtr, pyList);
-    pyDict[fieldName] = pyList;
+    pyDict[fieldName] = getScalarArrayFieldAsPyObject(fieldName, scalarType, pvStructurePtr, useNumPyArrays); 
 }
 
-boost::python::object getScalarArrayFieldAsPyObject(const std::string& fieldName, epics::pvData::ScalarType scalarType, const epics::pvData::PVStructurePtr& pvStructurePtr)
+
+boost::python::object getScalarArrayFieldAsPyObject(const std::string& fieldName, epics::pvData::ScalarType scalarType, const epics::pvData::PVStructurePtr& pvStructurePtr, bool useNumPyArrays)
 {
-    boost::python::list pyList;
-    scalarArrayFieldToPyList(fieldName, pvStructurePtr, pyList);
-    return pyList;
+
+// Only use NumPy arrays if support is compiled in and the corresponding
+// flag is set 
+#if defined HAVE_BOOST_NUM_PY && HAVE_BOOST_NUM_PY == 1
+    if (useNumPyArrays && scalarType != epics::pvData::pvString) {
+        return getScalarArrayFieldAsNumPyArray(fieldName, pvStructurePtr);
+    }
+    else {
+        return getScalarArrayFieldAsPyList(fieldName, pvStructurePtr);
+    }
+#else
+    return getScalarArrayFieldAsPyList(fieldName, pvStructurePtr);
+#endif // if defined HAVE_BOOST_NUM_PY && HAVE_BOOST_NUM_PY == 1
 }
 
 
@@ -1864,7 +1880,7 @@ boost::python::dict extractUnionStructureDict(const boost::python::dict& pyDict)
 // Return structure field as python object. Allow notation like 'x.y.z'
 // for the field path.
 //
-boost::python::object getFieldPathAsPyObject(const std::string& fieldPath, const epics::pvData::PVStructurePtr& pvStructurePtr)
+boost::python::object getFieldPathAsPyObject(const std::string& fieldPath, const epics::pvData::PVStructurePtr& pvStructurePtr, bool useNumPyArrays)
 {
     std::vector<std::string> fieldNames = StringUtility::split(fieldPath);
     epics::pvData::PVStructurePtr pvStructurePtr2 = getParentStructureForFieldPath(fieldNames, pvStructurePtr);
@@ -1883,7 +1899,7 @@ boost::python::object getFieldPathAsPyObject(const std::string& fieldPath, const
         case epics::pvData::scalarArray: {
             epics::pvData::ScalarArrayConstPtr scalarArrayPtr = std::tr1::static_pointer_cast<const epics::pvData::ScalarArray>(fieldPtr);
             epics::pvData::ScalarType scalarType = scalarArrayPtr->getElementType();
-            return getScalarArrayFieldAsPyObject(fieldName, scalarType, pvStructurePtr2);
+            return getScalarArrayFieldAsPyObject(fieldName, scalarType, pvStructurePtr2, useNumPyArrays);
         }
         case epics::pvData::structure: {
             return getStructureFieldAsPyObject(fieldName, pvStructurePtr2);
@@ -1918,6 +1934,91 @@ void setPyObjectToFieldPath(const boost::python::object& pyObject, const std::st
     pyObjectToField(pyObject, fieldName, pvStructurePtr2);
 }
 
+#if defined HAVE_BOOST_NUM_PY && HAVE_BOOST_NUM_PY == 1
+
+//
+// Conversion PV Scalar Array => NumPy Array
+//
+boost::numpy::ndarray getScalarArrayFieldAsNumPyArray(const std::string& fieldName, const epics::pvData::PVStructurePtr& pvStructurePtr)
+{
+    epics::pvData::ScalarType scalarType = getScalarArrayType(fieldName, pvStructurePtr);
+    epics::pvData::PVScalarArrayPtr pvScalarArrayPtr = pvStructurePtr->getSubField<epics::pvData::PVScalarArray>(fieldName);
+    int nDataElements = pvScalarArrayPtr->getLength();
+    boost::python::tuple shape = boost::python::make_tuple(nDataElements);
+    boost::python::object arrayOwner;
+
+    switch (scalarType) {
+        case epics::pvData::pvBoolean: {
+            return getScalarArrayAsNumPyArray<epics::pvData::PVBooleanArray, epics::pvData::boolean>(pvScalarArrayPtr);
+        }
+        case epics::pvData::pvByte: {
+            return getScalarArrayAsNumPyArray<epics::pvData::PVByteArray, int8_t>(pvScalarArrayPtr);
+        }
+        case epics::pvData::pvUByte: {
+            return getScalarArrayAsNumPyArray<epics::pvData::PVUByteArray, uint8_t>(pvScalarArrayPtr);
+        }
+        case epics::pvData::pvShort: {
+            return getScalarArrayAsNumPyArray<epics::pvData::PVShortArray, short>(pvScalarArrayPtr);
+        }
+        case epics::pvData::pvUShort: {
+            return getScalarArrayAsNumPyArray<epics::pvData::PVUShortArray, ushort>(pvScalarArrayPtr);
+        }
+        case epics::pvData::pvInt: {
+            return getScalarArrayAsNumPyArray<epics::pvData::PVIntArray, int32_t>(pvScalarArrayPtr);
+        }
+        case epics::pvData::pvUInt: {
+            return getScalarArrayAsNumPyArray<epics::pvData::PVUIntArray, uint32_t>(pvScalarArrayPtr);
+        }
+        case epics::pvData::pvLong: {
+            return getScalarArrayAsNumPyArray<epics::pvData::PVLongArray, int64_t>(pvScalarArrayPtr);
+        }
+        case epics::pvData::pvULong: {
+            return getScalarArrayAsNumPyArray<epics::pvData::PVULongArray, uint64_t>(pvScalarArrayPtr);
+        }
+        case epics::pvData::pvFloat: {
+            return getScalarArrayAsNumPyArray<epics::pvData::PVFloatArray, float>(pvScalarArrayPtr);
+        }
+        case epics::pvData::pvDouble: {
+            return getScalarArrayAsNumPyArray<epics::pvData::PVDoubleArray, double>(pvScalarArrayPtr);
+        }
+        default: {
+            throw PvaException("Unrecognized scalar type: %d", scalarType);
+        }
+    }
+}
+
+#endif // if defined HAVE_BOOST_NUM_PY && HAVE_BOOST_NUM_PY == 1
+
+/***SVDBG*******
+    //std::cout << "ADD SCALARA ARRAY FILED:" << fieldName << std::endl;
+    epics::pvData::PVScalarArrayPtr pvScalarArrayPtr = pvStructurePtr->getSubField<epics::pvData::PVScalarArray>(fieldName);
+    int nDataElements = pvScalarArrayPtr->getLength();
+    //std::cout << "N DATA ELEMENTS:" << nDataElements << std::endl;
+    epics::pvData::PVFloatArray::const_svector data;
+    pvScalarArrayPtr->getAs<float>(data);
+
+    const float* fdata = data.data();
+    //std::cout << "FIRST ELEMENTS: " << fdata[0] << std::endl;
+
+    static bool initialized = false;
+    if (!initialized) {
+        boost::numpy::initialize();
+        initialized = true;
+    }
+    static boost::numpy::dtype dtype = boost::numpy::dtype::get_builtin<float>();
+    static boost::python::tuple shape = boost::python::make_tuple(nDataElements);
+    static boost::python::tuple stride = boost::python::make_tuple(sizeof(float));
+    boost::python::object owner = pyDict;
+
+    //std::cout << "GETTING PY ARRAY"  << std::endl;
+    boost::numpy::ndarray py_array = boost::numpy::from_data(fdata, dtype, shape, stride, owner);
+
+    // COPY
+    //Py_intptr_t shape[1] = { nDataElements };
+    //boost::numpy::ndarray py_array = boost::numpy::zeros(1, shape, dtype);
+    //std::copy(data.begin(), data.end(), reinterpret_cast<float*>(py_array.get_data()));
+    pyDict[fieldName] = py_array;
+**********/
 } // namespace PyPvDataUtility
 
 

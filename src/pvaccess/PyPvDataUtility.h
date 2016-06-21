@@ -13,6 +13,10 @@
 #include "boost/python/dict.hpp"
 #include "boost/python/tuple.hpp"
 
+#if defined HAVE_BOOST_NUM_PY && HAVE_BOOST_NUM_PY == 1
+#include "boost/numpy.hpp"
+#endif // if defined HAVE_BOOST_NUM_PY && HAVE_BOOST_NUM_PY == 1
+
 #include "PyUtility.h"
 #include "InvalidDataType.h"
 
@@ -132,6 +136,7 @@ void pyListToScalarArrayField(const boost::python::list& pyList, const std::stri
 // Conversion PV Scalar Array => PY []
 //
 void scalarArrayFieldToPyList(const std::string& fieldName, const epics::pvData::PVStructurePtr& pvStructurePtr, boost::python::list& pyList);
+boost::python::list getScalarArrayFieldAsPyList(const std::string& fieldName, const epics::pvData::PVStructurePtr& pvStructurePtr);
 
 //
 // Conversion PV String Array => PY []
@@ -179,7 +184,7 @@ void structureArrayFieldToPyList(const std::string& fieldName, const epics::pvDa
 //
 // Conversion PV Structure => PY {}
 //
-void structureToPyDict(const epics::pvData::PVStructurePtr& pvStructurePtr, boost::python::dict& pyDict);
+void structureToPyDict(const epics::pvData::PVStructurePtr& pvStructurePtr, boost::python::dict& pyDict, bool useNumPyArrays=false);
 
 void structureFieldToPyDict(const std::string& fieldName, const epics::pvData::PVStructurePtr& pvStructurePtr, boost::python::dict& pyDict);
 
@@ -193,8 +198,8 @@ boost::python::object getScalarFieldAsPyObject(const std::string& fieldName, epi
 //
 // Add PV Scalar Array => PY {}
 // 
-void addScalarArrayFieldToDict(const std::string& fieldName, epics::pvData::ScalarType scalarType, const epics::pvData::PVStructurePtr& pvStructurePtr, boost::python::dict& pyDict);
-boost::python::object  getScalarArrayFieldAsPyObject(const std::string& fieldName, epics::pvData::ScalarType scalarType, const epics::pvData::PVStructurePtr& pvStructurePtr);
+void addScalarArrayFieldToDict(const std::string& fieldName, epics::pvData::ScalarType scalarType, const epics::pvData::PVStructurePtr& pvStructurePtr, boost::python::dict& pyDict, bool useNumPyArrays=false);
+boost::python::object getScalarArrayFieldAsPyObject(const std::string& fieldName, epics::pvData::ScalarType scalarType, const epics::pvData::PVStructurePtr& pvStructurePtr, bool useNumPyArrays=false);
 
 //
 // Add PV Structure => PY {}
@@ -291,8 +296,23 @@ boost::python::dict extractUnionStructureDict(const boost::python::dict& pyDict)
 //
 // Support for field path notation.
 //
-boost::python::object getFieldPathAsPyObject(const std::string& fieldPath, const epics::pvData::PVStructurePtr& pvStructurePtr);
+boost::python::object getFieldPathAsPyObject(const std::string& fieldPath, const epics::pvData::PVStructurePtr& pvStructurePtr, bool useNumPyArrays=false);
 void setPyObjectToFieldPath(const boost::python::object& pyObject, const std::string& fieldPath, const epics::pvData::PVStructurePtr& pvStructurePtr);
+
+//
+// Boost NumPy Support
+//
+#if defined HAVE_BOOST_NUM_PY && HAVE_BOOST_NUM_PY == 1
+
+//
+// Conversion PV Scalar Array => NumPy Array
+//
+boost::numpy::ndarray getScalarArrayFieldAsNumPyArray(const std::string& fieldName, const epics::pvData::PVStructurePtr& pvStructurePtr);
+
+template<typename PvArrayType, typename CppType>
+boost::numpy::ndarray getScalarArrayAsNumPyArray(const epics::pvData::PVScalarArrayPtr& pvScalarArrayPtr);
+
+#endif // if defined HAVE_BOOST_NUM_PY && HAVE_BOOST_NUM_PY == 1
 
 //
 // Template implementations
@@ -339,6 +359,23 @@ void copyScalarArrayToScalarArray(const epics::pvData::PVScalarArrayPtr& srcPvSc
     destPvScalarArrayPtr->setCapacity(nDataElements);
     destPvScalarArrayPtr->putFrom(data);
 }
+
+#if defined HAVE_BOOST_NUM_PY && HAVE_BOOST_NUM_PY == 1
+template<typename PvArrayType, typename CppType>
+boost::numpy::ndarray getScalarArrayAsNumPyArray(const epics::pvData::PVScalarArrayPtr& pvScalarArrayPtr)
+{
+    int nDataElements = pvScalarArrayPtr->getLength();
+    typename PvArrayType::const_svector data;
+    pvScalarArrayPtr->PVScalarArray::template getAs<CppType>(data);
+    const CppType* arrayData = data.data();
+    boost::numpy::dtype dataType = boost::numpy::dtype::get_builtin<CppType>();
+    boost::python::tuple shape = boost::python::make_tuple(nDataElements);
+    boost::python::object arrayOwner;
+    boost::python::tuple stride = boost::python::make_tuple(sizeof(CppType));
+    return boost::numpy::from_data(arrayData, dataType, shape, stride, arrayOwner);
+}
+
+#endif // if defined HAVE_BOOST_NUM_PY && HAVE_BOOST_NUM_PY == 1
 
 } // namespace PyPvDataUtility
 
