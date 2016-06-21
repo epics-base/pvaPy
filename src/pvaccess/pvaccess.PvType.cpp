@@ -12,7 +12,7 @@ using namespace boost::python;
 void wrapPvType()
 {
 
-enum_<PvType::ScalarType>("PvType")
+enum_<PvType::ScalarType>("ScalarType")
     .value("BOOLEAN", PvType::Boolean)
     .value("BYTE", PvType::Byte)
     .value("UBYTE", PvType::UByte)
@@ -27,6 +27,6 @@ enum_<PvType::ScalarType>("PvType")
     .value("STRING", PvType::String)
     .export_values()
 ;
-    
+
 } // wrapPvType()
 
