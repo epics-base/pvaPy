@@ -35,6 +35,11 @@ enum ScalarType {
     String = epics::pvData::pvString,
 };
 
+enum UnionType {
+    RestrictedUnion,
+    VariantUnion,
+};
+
 }
 
 #endif
