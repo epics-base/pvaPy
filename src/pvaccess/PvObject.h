@@ -18,10 +18,12 @@ public:
     // Constants
     static const char* ValueFieldKey;
     static const char* StructureId;
+    static const bool UseNumPyArraysDefault;
 
     // Constructors
     PvObject(const epics::pvData::PVStructurePtr& pvStructurePtr);
-    PvObject(const boost::python::dict& pyDict, const std::string& structureId=StructureId);
+    PvObject(const boost::python::dict& structureDict, const std::string& structureId=StructureId);
+    PvObject(const boost::python::dict& structureDict, const boost::python::dict& valueDict, const std::string& structureId=StructureId);
     PvObject(const PvObject& pvObject);
 
     // Destructor
@@ -33,7 +35,7 @@ public:
     operator epics::pvData::PVStructurePtr();
     operator boost::python::dict() const;
     boost::python::dict toDict() const;
-    boost::python::dict getStructureDict();
+    boost::python::dict getStructureDict() const;
     PvType::DataType getDataType();
     friend std::ostream& operator<<(std::ostream& out, const PvObject& pvObject);
     friend epics::pvData::PVStructurePtr& operator<<(epics::pvData::PVStructurePtr& pvStructurePtr, const PvObject& pvObject);
@@ -174,10 +176,23 @@ public:
     PvObject createUnionArrayElementField(const std::string& key, const std::string& fieldName) const;
     PvObject createUnionArrayElementField(const std::string& fieldName) const;
 
+#if defined HAVE_BOOST_NUM_PY && HAVE_BOOST_NUM_PY == 1
+    void setUseNumPyArraysFlag(bool useNumPyArrays);
+    bool getUseNumPyArraysFlag() const;
+#endif // if defined HAVE_BOOST_NUM_PY && HAVE_BOOST_NUM_PY == 1
+
 protected:
     epics::pvData::PVStructurePtr pvStructurePtr;
     PvType::DataType dataType;
+    bool useNumPyArrays; 
+
 private:
+
+#if defined HAVE_BOOST_NUM_PY && HAVE_BOOST_NUM_PY == 1
+    static bool initializeBoostNumPy();
+    static bool boostNumPyInitialized;
+#endif // if defined HAVE_BOOST_NUM_PY && HAVE_BOOST_NUM_PY == 1
+
  
 };
 

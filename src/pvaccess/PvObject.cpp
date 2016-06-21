@@ -15,6 +15,13 @@
 #include "boost/python/extract.hpp"
 #include "boost/python/stl_iterator.hpp"
 
+#if defined HAVE_BOOST_NUM_PY && HAVE_BOOST_NUM_PY == 1
+#include "boost/numpy.hpp"
+const bool PvObject::UseNumPyArraysDefault(true);
+#else
+const bool PvObject::UseNumPyArraysDefault(false);
+#endif // if defined HAVE_BOOST_NUM_PY && HAVE_BOOST_NUM_PY == 1
+
 // Constants
 const char* PvObject::ValueFieldKey(PvaConstants::ValueFieldKey);
 const char* PvObject::StructureId("structure");
@@ -22,19 +29,30 @@ const char* PvObject::StructureId("structure");
 // Constructors
 PvObject::PvObject(const epics::pvData::PVStructurePtr& pvStructurePtr_)
     : pvStructurePtr(pvStructurePtr_),
-    dataType(PvType::Structure)
+    dataType(PvType::Structure),
+    useNumPyArrays(UseNumPyArraysDefault)
 {
 }
 
-PvObject::PvObject(const boost::python::dict& pyDict, const std::string& structureId)
-    : pvStructurePtr(epics::pvData::getPVDataCreate()->createPVStructure(PyPvDataUtility::createStructureFromDict(pyDict, structureId))),
-    dataType(PvType::Structure)
+PvObject::PvObject(const boost::python::dict& structureDict, const std::string& structureId)
+    : pvStructurePtr(epics::pvData::getPVDataCreate()->createPVStructure(PyPvDataUtility::createStructureFromDict(structureDict, structureId))),
+    dataType(PvType::Structure),
+    useNumPyArrays(UseNumPyArraysDefault)
 {
+}
+
+PvObject::PvObject(const boost::python::dict& structureDict, const boost::python::dict& valueDict, const std::string& structureId)
+    : pvStructurePtr(epics::pvData::getPVDataCreate()->createPVStructure(PyPvDataUtility::createStructureFromDict(structureDict, structureId))),
+    dataType(PvType::Structure),
+    useNumPyArrays(UseNumPyArraysDefault)
+{
+    PyPvDataUtility::pyDictToStructure(valueDict, pvStructurePtr);
 }
 
 PvObject::PvObject(const PvObject& pvObject)
     : pvStructurePtr(pvObject.pvStructurePtr),
-    dataType(pvObject.dataType)
+    dataType(pvObject.dataType),
+    useNumPyArrays(pvObject.useNumPyArrays)
 {
 }
 
@@ -67,11 +85,11 @@ PvObject::operator boost::python::dict() const
 boost::python::dict PvObject::toDict() const
 {
     boost::python::dict pyDict;
-    PyPvDataUtility::structureToPyDict(pvStructurePtr, pyDict);
+    PyPvDataUtility::structureToPyDict(pvStructurePtr, pyDict, useNumPyArrays);
     return pyDict;
 }
 
-boost::python::dict PvObject::getStructureDict() 
+boost::python::dict PvObject::getStructureDict() const 
 {
     boost::python::dict pyDict;
     PyPvDataUtility::structureToPyDict(getStructurePtr(), pyDict);
@@ -135,7 +153,7 @@ void PvObject::setPyObject(const boost::python::object& pyObject)
 
 boost::python::object PvObject::getPyObject(const std::string& fieldPath) const
 {
-    return PyPvDataUtility::getFieldPathAsPyObject(fieldPath, pvStructurePtr);
+    return PyPvDataUtility::getFieldPathAsPyObject(fieldPath, pvStructurePtr, useNumPyArrays);
 }
 
 boost::python::object PvObject::getPyObject() const
@@ -726,5 +744,26 @@ PvObject PvObject::createUnionArrayElementField(const std::string& fieldName) co
     std::string key = PyPvDataUtility::getValueOrSingleFieldName(pvStructurePtr);
     return createUnionArrayElementField(key, fieldName);
 }
+
+// Methods specific to Boost NumPy 
+#if defined HAVE_BOOST_NUM_PY && HAVE_BOOST_NUM_PY == 1
+bool PvObject::boostNumPyInitialized(initializeBoostNumPy());
+bool PvObject::initializeBoostNumPy() 
+{
+    boost::numpy::initialize();
+    return true;
+}
+
+void PvObject::setUseNumPyArraysFlag(bool useNumPyArrays)
+{
+    this->useNumPyArrays = useNumPyArrays; 
+}
+
+bool PvObject::getUseNumPyArraysFlag() const
+{
+    return useNumPyArrays;
+}
+
+#endif // if defined HAVE_BOOST_NUM_PY && HAVE_BOOST_NUM_PY == 1
 
 

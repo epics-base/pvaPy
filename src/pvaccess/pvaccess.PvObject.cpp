@@ -5,6 +5,7 @@
 #include "boost/python/self.hpp"
 #include "boost/python/operators.hpp"
 #include "PvObject.h"
+#include "PvObjectPickleSuite.h"
 
 using namespace boost::python;
 
@@ -16,7 +17,7 @@ void wrapPvObject()
 
 class_<PvObject>("PvObject", 
     "PvObject represents a generic PV structure.\n\n"
-    "**PvObject(structureDict)**\n\n"
+    "**PvObject(structureDict [,valueDict])**\n\n"
     "\t:Parameter: *structureDict* (dict) - dictionary of key:value pairs describing the underlying PV structure in terms of field names and their types\n\n"
     "\tThe dictionary key is a string (PV field name), and value is one of:\n\n"
     "\t- PVTYPE: scalar type, can be BOOLEAN, BYTE, UBYTE, SHORT, USHORT, INT, UINT, LONG, ULONG, FLOAT, DOUBLE, or STRING\n"
@@ -27,15 +28,68 @@ class_<PvObject>("PvObject",
     "\t- [()]: single element list representing variant union array\n"
     "\t- ({key:value,…},): restricted union\n"
     "\t- [({key:value,…},)]: single element list representing restricted union array\n\n"
+    "\t:Parameter: *valueDict* (dict) - (optional) dictionary of key:value pairs to be used to set field values in the underlying PV structure\n\n"
     "\t:Raises: *InvalidArgument* - in case structure dictionary cannot be parsed\n\n"
-    "\t::\n\n"
+    "\tExamples of PvObject initialization: ::\n\n"
     "\t\tpv1 = PvObject({'anInt' : INT})\n\n"
     "\t\tpv2 = PvObject({'aShort' : SHORT, 'anUInt' : UINT, 'aString' : STRING})\n\n"
     "\t\tpv3 = PvObject({'aStringArray' : [STRING], 'aStruct' : {'aString2' : STRING, 'aBoolArray' : [BOOLEAN], 'aStruct2' : {'aFloat' : FLOAT, 'aString3' : [STRING]}}})\n\n"
     "\t\tpv4 = PvObject({'aStructArray' : [{'anInt' : INT, 'anInt2' : INT, 'aDouble' : DOUBLE}]})\n\n" 
     "\t\tpv5 = PvObject({'anUnion' : ({'anInt' : INT, 'aDouble' : DOUBLE},)})\n\n" 
-    "\t\tpv6 = PvObject({'aVariant' : ()})\n\n", 
+    "\t\tpv6 = PvObject({'aVariant' : ()})\n\n" 
+    "\tIn addition to various set/get methods described below,\n"
+    "\tPvObject elements can be accessed and manipulated similar to dictionaries: ::\n\n"
+    "\t\t>>> pv = PvObject({'a' : {'b' : STRING, 'c' : FLOAT}}, {'a' : {'b' : 'my string', 'c' : 10.1}})\n"
+    "\t\t>>> print pv\n"
+    "\t\tstructure\n"
+    "\t\t    structure a\n"
+    "\t\t        float c 10.1\n"
+    "\t\t        string b my string\n"
+    "\t\t>>> pv['a.b']\n"
+    "\t\t'my string'\n"
+    "\t\t>>> pv['a.c']\n"
+    "\t\t10.1\n"
+    "\t\t \n"
+    "\t\t>>> print 'a.b' in pv\n"
+    "\t\tTrue\n"
+    "\t\t>>> print 'a.d' in pv\n"
+    "\t\tFalse\n"
+    "\t\t \n"
+    "\t\t>>> pv['a.b'] = 'updated string'\n"
+    "\t\t>>> pv['a.c'] = 20.2\n"
+    "\t\t>>> print pv\n"
+    "\t\tstructure\n"
+    "\t\t    structure a\n"
+    "\t\t        float c 20.2\n"
+    "\t\t        string b updated string\n"
+    "\tNote that compiling pvaPy with Boost.NumPy allows one to retrieve\n"
+    "\tnumeric scalar arrays as read-only NumPy arrays: ::\n\n"
+    "\t\t>>> pv = PvObject({'a' : {'b' : STRING, 'c' : [INT]}}, {'a' : {'b' : 'my string', 'c' : [1,2,3,4,5]}})\n"
+    "\t\t>>> print pv\n"
+    "\t\tstructure\n"
+    "\t\t    structure a\n"
+    "\t\t        int[] c [1,2,3,4,5]\n"
+    "\t\t        string b my string\n"
+    "\t\t>>> print pv.useNumPyArrays\n"
+    "\t\tTrue\n"
+    "\t\t>>> c = pv['a.c']\n"
+    "\t\t>>> c\n"
+    "\t\tarray([1, 2, 3, 4, 5], dtype=int32)\n"
+    "\t\t>>> type(c)\n"
+    "\t\t<type 'numpy.ndarray'>\n"
+    "\t\t \n"
+    "\t\t>>> pv.useNumPyArrays = False\n"
+    "\t\t>>> c2 = pv['a.c']\n"
+    "\t\t>>> c2\n"
+    "\t\t>>> [1, 2, 3, 4, 5]\n"
+    "\t\t>>> type(c2)\n"
+    "\t\t<type 'list'>\n"
+    "\n\n", 
     init<boost::python::dict>(args("structureDict")))
+
+    .def(init<boost::python::dict,boost::python::dict>(args("structureDict","valueDict")))
+
+    .def_pickle(PvObjectPickleSuite())
 
     .def(str(self))
 
@@ -1106,6 +1160,10 @@ class_<PvObject>("PvObject",
     .def("getStructureDict", 
         &PvObject::getStructureDict,
         "Retrieves PV structure definition as python dictionary.\n\n:Returns: python key:value dictionary representing PV structure definition in terms of field names and their types\n\n::\n\n    structureDict = pv.getStructureDict()\n\n")
+
+#if defined HAVE_BOOST_NUM_PY && HAVE_BOOST_NUM_PY == 1
+    .add_property("useNumPyArrays", &PvObject::getUseNumPyArraysFlag, &PvObject::setUseNumPyArraysFlag)
+#endif // if defined HAVE_BOOST_NUM_PY && HAVE_BOOST_NUM_PY == 1
 
 ;
 
