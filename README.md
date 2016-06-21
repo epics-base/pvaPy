@@ -67,6 +67,7 @@ They should look roughly like the examples below:
   PVA_PY_SYS_LIBS = boost_python-mt
   PVA_API_VERSION = 450
   PVA_RPC_API_VERSION = 440
+  HAVE_BOOST_NUM_PY = 0
 ```
 
 The above files were created automatically on a 64-bit RHEL 6.6 machine, with
