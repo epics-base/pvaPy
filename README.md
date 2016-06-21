@@ -10,7 +10,8 @@ software:
 3. Python development header files/libraries (v2.6.6)
 4. Boost (v1.41.0); must have the boost_python library built.
 5. Standard development tools (gcc, make, autoconf, etc.)
-6. Sphinx (optional, for generating documentation)
+6. Boost.NumPy (optional, for retrieving numeric scalar arrays as numpy arrays)
+7. Sphinx (optional, for generating documentation)
 
 The Software versions listed above were used for prototype development and
 testing. It is likely that any recent version of Python and the Boost libraries
@@ -38,13 +39,14 @@ For manual configuration: Read the comments in both the `configure/RELEASE` and
 For automatic configuration: In the top level directory run
 
 ```sh
-  $ make configure EPICS_BASE=/epics/base/path EPICS4_DIR=/epics/v4/path
+  $ make configure EPICS_BASE=/epics/base/path EPICS4_DIR=/epics/v4/path [BOOST_NUM_PY_DIR=/boost.numpy/path]
 ```
 
 In the above command replace `/epics/base/path` with the full path to your
 EPICS Base directory, and `/epics/v4/path` with the full path to your top level
-directory containing the v4 modules pvDataCPP, pvAccessCPP, etc.
-Note that you can only use the automatic configuration if the v4 modules have
+directory containing the v4 modules pvDataCPP, pvAccessCPP, etc. 
+Note that the optional `BOOST_NUM_PY_DIR` argument enables NumPy array support,
+and that you can only use the automatic configuration if the v4 modules have
 not been renamed.
 
 The `make configure` command will check for your Boost/Python libraries, and
