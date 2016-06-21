@@ -93,6 +93,14 @@ AC_DEFUN([AX_PVA_PY],
         AC_MSG_RESULT([yes])
     fi
 
+    # check for boost numpy library
+    AC_MSG_CHECKING(for boost numpy)
+    if test $HAVE_BOOST_NUM_PY -eq 1 ; then
+        AC_MSG_RESULT([yes])
+    else
+        AC_MSG_RESULT([no])
+    fi
+
     # check for python library
     AC_MSG_CHECKING(for python development library)
     if test -z "$PYTHON_CPPFLAGS"; then
@@ -134,11 +142,12 @@ AC_DEFUN([AX_PVA_PY],
     AC_MSG_NOTICE([created $release_local file])
 
     # create CONFIG_SITE.local
-    echo "PVA_PY_CPPFLAGS = $BOOST_CPPFLAGS $PYTHON_CPPFLAGS" >> $config_site_local
-    echo "PVA_PY_LDFLAGS = $BOOST_LDFLAGS $PYTHON_LDFLAGS" >> $config_site_local
-    echo "PVA_PY_SYS_LIBS = $BOOST_PYTHON_LIB" >> $config_site_local
+    echo "PVA_PY_CPPFLAGS = $BOOST_CPPFLAGS $PYTHON_CPPFLAGS $BOOST_NUM_PY_CPPFLAGS" >> $config_site_local
+    echo "PVA_PY_LDFLAGS = $BOOST_LDFLAGS $PYTHON_LDFLAGS $BOOST_NUM_PY_LDFLAGS" >> $config_site_local
+    echo "PVA_PY_SYS_LIBS = $BOOST_PYTHON_LIB $BOOST_NUM_PY_LIBS" >> $config_site_local
     echo "PVA_API_VERSION = $PVA_API_VERSION" >> $config_site_local
     echo "PVA_RPC_API_VERSION = $PVA_RPC_API_VERSION" >> $config_site_local
+    echo "HAVE_BOOST_NUM_PY = $HAVE_BOOST_NUM_PY" >> $config_site_local
     echo "PYTHON_VERSION := \$(shell python -c 'import sys; print sys.version[[:3]]')" >> $config_site_local
     AC_MSG_NOTICE([created $config_site_local file])
 ])
