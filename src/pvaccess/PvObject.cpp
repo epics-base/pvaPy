@@ -89,6 +89,7 @@ boost::python::dict PvObject::toDict() const
     return pyDict;
 }
 
+// Introspection
 boost::python::dict PvObject::getStructureDict() const 
 {
     boost::python::dict pyDict;
@@ -477,7 +478,7 @@ void PvObject::setStructure(const boost::python::dict& pyDict)
 boost::python::dict PvObject::getStructure(const std::string& key) const
 {
     boost::python::dict pyDict;
-    PyPvDataUtility::structureFieldToPyDict(key, pvStructurePtr, pyDict);
+    PyPvDataUtility::structureFieldToPyDict(key, pvStructurePtr, pyDict, useNumPyArrays);
     return pyDict;
 }
 
@@ -502,7 +503,7 @@ void PvObject::setStructureArray(const boost::python::list& pyList)
 boost::python::list PvObject::getStructureArray(const std::string& key) const
 {
     boost::python::list pyList;
-    PyPvDataUtility::structureArrayFieldToPyList(key, pvStructurePtr, pyList);
+    PyPvDataUtility::structureArrayFieldToPyList(key, pvStructurePtr, pyList, useNumPyArrays);
     return pyList;
 }
 
