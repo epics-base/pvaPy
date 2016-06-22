@@ -1989,36 +1989,6 @@ boost::numpy::ndarray getScalarArrayFieldAsNumPyArray(const std::string& fieldNa
 
 #endif // if defined HAVE_BOOST_NUM_PY && HAVE_BOOST_NUM_PY == 1
 
-/***SVDBG*******
-    //std::cout << "ADD SCALARA ARRAY FILED:" << fieldName << std::endl;
-    epics::pvData::PVScalarArrayPtr pvScalarArrayPtr = pvStructurePtr->getSubField<epics::pvData::PVScalarArray>(fieldName);
-    int nDataElements = pvScalarArrayPtr->getLength();
-    //std::cout << "N DATA ELEMENTS:" << nDataElements << std::endl;
-    epics::pvData::PVFloatArray::const_svector data;
-    pvScalarArrayPtr->getAs<float>(data);
-
-    const float* fdata = data.data();
-    //std::cout << "FIRST ELEMENTS: " << fdata[0] << std::endl;
-
-    static bool initialized = false;
-    if (!initialized) {
-        boost::numpy::initialize();
-        initialized = true;
-    }
-    static boost::numpy::dtype dtype = boost::numpy::dtype::get_builtin<float>();
-    static boost::python::tuple shape = boost::python::make_tuple(nDataElements);
-    static boost::python::tuple stride = boost::python::make_tuple(sizeof(float));
-    boost::python::object owner = pyDict;
-
-    //std::cout << "GETTING PY ARRAY"  << std::endl;
-    boost::numpy::ndarray py_array = boost::numpy::from_data(fdata, dtype, shape, stride, owner);
-
-    // COPY
-    //Py_intptr_t shape[1] = { nDataElements };
-    //boost::numpy::ndarray py_array = boost::numpy::zeros(1, shape, dtype);
-    //std::copy(data.begin(), data.end(), reinterpret_cast<float*>(py_array.get_data()));
-    pyDict[fieldName] = py_array;
-**********/
 } // namespace PyPvDataUtility
 
 
