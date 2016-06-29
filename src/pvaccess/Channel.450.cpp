@@ -716,6 +716,6 @@ epics::pvaClient::PvaClientMonitorPtr Channel::getMonitor()
 
 void Channel::queueMonitorData(PvObject& pvObject) 
 {
-    pvObjectMonitorQueue.push(pvObject);
+    pvObjectMonitorQueue.pushIfNotFull(pvObject);
 }
 

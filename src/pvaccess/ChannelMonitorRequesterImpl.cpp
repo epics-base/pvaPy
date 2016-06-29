@@ -50,7 +50,7 @@ void ChannelMonitorRequesterImpl::monitorEvent(const epics::pvData::Monitor::sha
     while (element = monitor->poll()) {
         epics::pvData::PVStructurePtr pvStructurePtr = epics::pvData::getPVDataCreate()->createPVStructure(element->pvStructurePtr);
         PvObject pvObject(pvStructurePtr); 
-        pvObjectQueue.push(pvObject);
+        pvObjectQueue.pushIfNotFull(pvObject);
         monitor->release(element);
     }
     logger.debug("Pushed new monitor element into the queue: %d elements have not been processed.", pvObjectQueue.size());

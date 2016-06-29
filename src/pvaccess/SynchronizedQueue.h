@@ -9,6 +9,7 @@
 #include "pv/pvData.h"
 #include "InvalidState.h"
 
+
 template <class T>
 class SynchronizedQueue : public std::queue<T>
 {
@@ -23,7 +24,8 @@ public:
     T frontAndPop() throw(InvalidState);
     T frontAndPop(double timeout) throw(InvalidState);
     void pop();
-    void push(const T& t);
+    void push(const T& t) throw(InvalidState);
+    void pushIfNotFull(const T& t);
     void waitForItem(double timeout);
     void cancelWaitForItem();
     void clear();
@@ -128,14 +130,27 @@ void SynchronizedQueue<T>::pop()
 }
 
 template <class T>
-void SynchronizedQueue<T>::push(const T& t)
+void SynchronizedQueue<T>::push(const T& t) throw(InvalidState)
 {
     epics::pvData::Lock lock(mutex);
-    if (maxLength > 0) {
-        int nPop = std::queue<T>::size()-maxLength+1;
-        for (int i = 0; i < nPop; i++) {
-            std::queue<T>::pop();
-        }
+    int size = std::queue<T>::size();
+    if (maxLength > 0 && size >= maxLength) {
+        // We are full, throw exception
+        throw InvalidState("Invalid state: queue is full.");
+        return;
+    }
+    std::queue<T>::push(t);
+    event.signal();
+}
+
+template <class T>
+void SynchronizedQueue<T>::pushIfNotFull(const T& t)
+{
+    epics::pvData::Lock lock(mutex);
+    int size = std::queue<T>::size();
+    if (maxLength > 0 && size >= maxLength) {
+        // We are full, ignore push request
+        return;
     }
     std::queue<T>::push(t);
     event.signal();
