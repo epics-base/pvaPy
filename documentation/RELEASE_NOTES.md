@@ -5,7 +5,7 @@
 - introduced PvObject support for __getitem__, __setitem__, __contains__ 
 - new constructor for PvObject allows optional value dictionary
 - added PvObject support for retrieving numeric scalar arrays as
-  read-only numpy arrays; this requires compiling with Boost.NumPy 
+  read-only numpy arrays (requires compiling with Boost.NumPy)
 
 ## Release 0.5 (2015/10/08)
 
