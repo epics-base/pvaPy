@@ -6,6 +6,78 @@
 #
 # Author: Ralph Lange <Ralph.Lange@gmx.de>
 # Copyright (C) 2013 Helmholtz-Zentrum Berlin für Materialien und Energie GmbH
+# Copyright (C) 2014-2016 ITER Organization.
+# All rights reserved. Use is subject to license terms.
+
+installTool () {
+    local module=$1
+    local version=$2
+
+    wget -nv https://openepics.ci.cloudbees.com/job/${module}-${version}_Build/lastSuccessfulBuild/artifact/${module,,}-${version}.CB-dist.tar.gz
+    tar -xzf ${module,,}-${version}.CB-dist.tar.gz
+}
+
+installE4 () {
+    local module=$1
+    local branch=$2
+
+    wget -nv https://openepics.ci.cloudbees.com/job/e4-cpp-${module}-${branch}-build/BASE=${BASE},MB=${MB}/lastSuccessfulBuild/artifact/${module}.CB-dist.tar.gz
+    # If microbench version does not exist, try without
+    if [ $? -eq 8 -a \( "${MB}" = "WITH_MICROBENCH" \) ]; then
+        wget -nv https://openepics.ci.cloudbees.com/job/e4-cpp-${module}-${branch}-build/BASE=${BASE},MB=NO_MICROBENCH/lastSuccessfulBuild/artifact/${module}.CB-dist.tar.gz
+    fi
+    tar -xzf ${module}.CB-dist.tar.gz
+}
+
+###########################################
+# Defaults for EPICS Base and parameters
+
+BASE=3.15.4
+PUBLISH=${PUBLISH:-NO}
+BRANCH=${BRANCH:-master}
+MB=NO_MICROBENCH
+
+###########################################
+# Dependent module branches
+
+PVDATA_BRANCH="master"
+PVACCESS_BRANCH="master"
+NORMATIVETYPES_BRANCH="master"
+PVACLIENT_BRANCH="master"
+
+###########################################
+# Fetch and unpack dependencies
+
+export STUFF=/tmp/stuff
+
+rm -fr ${STUFF}
+mkdir -p ${STUFF}
+cd ${STUFF}
+
+installTool Boost 1.61.0
+installTool Base ${BASE}
+
+installE4 pvData ${PVDATA_BRANCH}
+installE4 pvAccess ${PVACCESS_BRANCH}
+installE4 normativeTypes ${NORMATIVETYPES_BRANCH}
+installE4 pvaClient ${PVACLIENT_BRANCH}
+
+###########################################
+# Generate
+
+cd ${WORKSPACE}
+
+installE4 pvaPy ${BRANCH}
+
+export PATH=${STUFF}/bin:${PATH}
+
+doxygen
+
+
+
+
+
+
 # Copyright (C) 2014-2015 ITER Organization.
 # All rights reserved. Use is subject to license terms.
 
