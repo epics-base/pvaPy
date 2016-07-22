@@ -21,9 +21,12 @@ installE4 () {
     local module=$1
     local branch=$2
 
-    wget -nv https://openepics.ci.cloudbees.com/job/e4-cpp-${module}-${branch}-build/BASE=${BASE},MB=${MB}/lastSuccessfulBuild/artifact/${module}.CB-dist.tar.gz
     # If microbench version does not exist, try without
-    if [ $? -eq 8 -a \( "${MB}" = "WITH_MICROBENCH" \) ]; then
+    if [ "${MB}" = "WITH_MICROBENCH" ]; then
+        if ! wget -nv https://openepics.ci.cloudbees.com/job/e4-cpp-${module}-${branch}-build/BASE=${BASE},MB=WITH_MICROBENCH/lastSuccessfulBuild/artifact/${module}.CB-dist.tar.gz; then
+            wget -nv https://openepics.ci.cloudbees.com/job/e4-cpp-${module}-${branch}-build/BASE=${BASE},MB=NO_MICROBENCH/lastSuccessfulBuild/artifact/${module}.CB-dist.tar.gz
+        fi
+    else
         wget -nv https://openepics.ci.cloudbees.com/job/e4-cpp-${module}-${branch}-build/BASE=${BASE},MB=NO_MICROBENCH/lastSuccessfulBuild/artifact/${module}.CB-dist.tar.gz
     fi
     tar -xzf ${module}.CB-dist.tar.gz
@@ -39,6 +42,7 @@ MB=${MB:-"NO_MICROBENCH"}
 ###########################################
 # Dependent module branches
 
+PVCOMMON_BRANCH="master"
 PVDATA_BRANCH="master"
 PVACCESS_BRANCH="master"
 NORMATIVETYPES_BRANCH="master"
@@ -56,6 +60,7 @@ cd ${STUFF}
 installTool Boost 1.61.0
 installTool Base ${BASE}
 
+installE4 pvCommon ${PVCOMMON_BRANCH}
 installE4 pvData ${PVDATA_BRANCH}
 installE4 pvAccess ${PVACCESS_BRANCH}
 installE4 normativeTypes ${NORMATIVETYPES_BRANCH}
