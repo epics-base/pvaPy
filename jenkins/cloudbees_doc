@@ -48,7 +48,6 @@ PVDATA_BRANCH="master"
 PVACCESS_BRANCH="master"
 NORMATIVETYPES_BRANCH="master"
 PVACLIENT_BRANCH="master"
-PVAPY_BRANCH="master"
 
 ###########################################
 # Fetch and unpack dependencies
