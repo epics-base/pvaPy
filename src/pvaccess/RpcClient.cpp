@@ -14,13 +14,26 @@ RpcClient::RpcClient(const std::string& channelName_) :
     rpcClient(),
     channelName(channelName_)
 {
+    pvRequest = epics::pvData::CreateRequest::create()->createRequest("");
 }
+
+#if defined PVA_RPC_API_VERSION && PVA_RPC_API_VERSION == 460
+RpcClient::RpcClient(const std::string& channelName_, const PvObject& pvRequestObject) :
+    PvaClient(),
+    rpcClientInitialized(false),
+    rpcClient(),
+    channelName(channelName_)
+{
+    pvRequest = pvRequestObject.getPvStructurePtr();
+}
+#endif
 
 RpcClient::RpcClient(const RpcClient& pvaRpcClient) :
     PvaClient(),
     rpcClientInitialized(pvaRpcClient.rpcClientInitialized),
     rpcClient(pvaRpcClient.rpcClient),
-    channelName(pvaRpcClient.channelName)
+    channelName(pvaRpcClient.channelName),
+    pvRequest(pvaRpcClient.pvRequest)
 {
 }
 
@@ -36,6 +49,8 @@ epics::pvAccess::RPCClient::shared_pointer RpcClient::createRpcClient(const std:
 {
 #if defined PVA_RPC_API_VERSION && PVA_RPC_API_VERSION == 440
     return epics::pvAccess::RPCClient::create(channelName);
+#elif defined PVA_RPC_API_VERSION && PVA_RPC_API_VERSION == 460
+    return epics::pvAccess::RPCClient::create(channelName, pvRequest);
 #endif // if defined PVA_RPC_API_VERSION && PVA_RPC_API_VERSION == 440
 }
 
@@ -48,14 +63,14 @@ epics::pvAccess::RPCClient::shared_pointer RpcClient::getRpcClient(const epics::
     return rpcClient;
 }
 
-epics::pvData::PVStructure::shared_pointer RpcClient::request(const epics::pvData::PVStructurePtr& pvRequest, double timeout) 
+epics::pvData::PVStructure::shared_pointer RpcClient::request(const epics::pvData::PVStructurePtr& arguments, double timeout)
 {
     try {
         epics::pvAccess::RPCClient::shared_pointer client = getRpcClient(pvRequest, timeout);
 
-#if defined PVA_RPC_API_VERSION && PVA_RPC_API_VERSION == 440
-        epics::pvData::PVStructure::shared_pointer response = client->request(pvRequest, timeout);
-#endif // if defined PVA_RPC_API_VERSION && PVA_RPC_API_VERSION == 440
+#if defined PVA_RPC_API_VERSION && PVA_RPC_API_VERSION >= 440
+        epics::pvData::PVStructure::shared_pointer response = client->request(arguments, timeout);
+#endif // if defined PVA_RPC_API_VERSION && PVA_RPC_API_VERSION >= 440
 
         return response;
     }
@@ -72,9 +87,10 @@ epics::pvData::PVStructure::shared_pointer RpcClient::request(const epics::pvDat
 
 
 //PvObject* RpcClient::request(const PvObject& pvObject, double timeout) 
-PvObject* RpcClient::invoke(const PvObject& pvObject) 
+PvObject* RpcClient::invoke(const PvObject& pvArgumentObject) 
 {
-    epics::pvData::PVStructurePtr pvStructurePtr = pvObject.getPvStructurePtr();
+    epics::pvData::PVStructurePtr pvStructurePtr = pvArgumentObject.getPvStructurePtr();
+
     PvObject* response = new PvObject(request(pvStructurePtr));
     return response;
 }

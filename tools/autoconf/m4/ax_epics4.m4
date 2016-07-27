@@ -225,10 +225,23 @@ AC_DEFUN([AX_EPICS4],
         epics::pvAccess::RPCClient::create("Channel");
         ]])
     ],[pva_rpc_api_version3=440],[pva_rpc_api_version3=undefined])
+    AC_LINK_IFELSE([AC_LANG_PROGRAM(
+        [[
+        #include "pv/rpcClient.h"
+        #include "pv/createRequest.h"
+        ]],
+        [[
+        epics::pvAccess::RPCClient::create("Channel");
+        epics::pvAccess::RPCClient::create("Channel",
+            epics::pvData::CreateRequest::create()->createRequest(""));
+        ]])
+    ],[pva_rpc_api_version4=460],[pva_rpc_api_version4=undefined])
 
     pva_rpc_api_version="undefined"
     if test "$pva_rpc_api_version1" != "undefined" ; then
         pva_rpc_api_version=$pva_rpc_api_version1
+    elif test "$pva_rpc_api_version4" != "undefined" ; then
+        pva_rpc_api_version=$pva_rpc_api_version4
     elif test "$pva_rpc_api_version3" != "undefined" ; then
         pva_rpc_api_version=$pva_rpc_api_version3
     fi
