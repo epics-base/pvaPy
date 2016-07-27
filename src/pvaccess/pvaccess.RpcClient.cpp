@@ -34,7 +34,7 @@ class_<RpcClient>("RpcClient",
         "    pvRequest = PvObject({'nRows' : INT, 'nColumns' : INT})\n\n"
         "    pvRequest.set({'nRows' : 10, 'nColumns' : 10})\n\n"
         "    pvResponse = rpcClient(pvRequest)\n\n"
-        "    ntTable = NtTable(pvRequest)\n\n")
+        "    ntTable = NtTable(pvResponse)\n\n")
 ;
 
 } // wrapRpcClient()
