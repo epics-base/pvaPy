@@ -61,7 +61,7 @@ class_<PvObject>("PvObject",
     "\t\tstructure\n"
     "\t\t    structure a\n"
     "\t\t        float c 20.2\n"
-    "\t\t        string b updated string\n"
+    "\t\t        string b updated string\n\n"
     "\tNote that compiling pvaPy with Boost.NumPy allows one to retrieve\n"
     "\tnumeric scalar arrays as read-only NumPy arrays: ::\n\n"
     "\t\t>>> pv = PvObject({'a' : {'b' : STRING, 'c' : [INT]}}, {'a' : {'b' : 'my string', 'c' : [1,2,3,4,5]}})\n"
