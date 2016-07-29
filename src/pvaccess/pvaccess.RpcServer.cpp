@@ -64,7 +64,7 @@ class_<RpcServer>("RpcServer",
         &RpcServer::startListener, 
         "Starts RPC listener in its own thread. This method is typically used for multi-threaded programs, or for testing and debugging in python interactive mode. It should be used in conjunction with *stopListener()* call.\n\n"
         "::\n\n"
-        "    rpcServer.startListener()")
+        "    rpcServer.startListener()\n\n")
 
     .def("stopListener", 
         &RpcServer::stopListener, 
@@ -76,13 +76,13 @@ class_<RpcServer>("RpcServer",
         &RpcServer::start, 
         "Start serving RPC requests. This method is equivalent to *listen()*, and blocks until either *stop()* or *shutdown()* methods are invoked.\n\n"
         "::\n\n"
-        "    rpcServer.start()")
+        "    rpcServer.start()\n\n")
 
     .def("stop", 
         &RpcServer::stop, 
         "Stop serving RPC requests. This method is equivalent to *shutdown()*.\n\n"
         "::\n\n"
-        "    rpcServer.stop()")
+        "    rpcServer.stop()\n\n")
 
     .def("listen", 
         static_cast<void(RpcServer::*)(int)>(&RpcServer::listen), 
@@ -96,7 +96,7 @@ class_<RpcServer>("RpcServer",
         &RpcServer::shutdown, 
         "Stop serving RPC requests. This method is equivalent to *stop()*.\n\n"
         "::\n\n"
-        "    rpcServer.shutdown()")
+        "    rpcServer.shutdown()\n\n")
 ;
 
 } // wrapRpcServer()
