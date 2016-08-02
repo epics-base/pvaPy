@@ -47,7 +47,7 @@ PVCOMMON_BRANCH="release-4.2"
 PVDATA_BRANCH="release-6.0"
 PVACCESS_BRANCH="release-5.0"
 NORMATIVETYPES_BRANCH="release-5.1"
-PVACLIENT_BRANCH="release-0.12"
+PVACLIENT_BRANCH="release-4.2"
 
 ###########################################
 # Fetch and unpack dependencies
