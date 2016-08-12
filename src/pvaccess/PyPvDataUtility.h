@@ -20,6 +20,8 @@
 #include "PyUtility.h"
 #include "InvalidDataType.h"
 
+class PvObject;
+
 namespace PyPvDataUtility
 {
 
@@ -273,7 +275,9 @@ epics::pvData::PVStructurePtr createUnionFieldPvStructure(epics::pvData::UnionCo
 void addScalarField(const std::string& fieldName, epics::pvData::ScalarType scalarType, epics::pvData::FieldConstPtrArray& fields, epics::pvData::StringArray& names);
 void addScalarArrayField(const std::string& fieldName, epics::pvData::ScalarType scalarType, epics::pvData::FieldConstPtrArray& fields, epics::pvData::StringArray& names);
 void addStructureField(const std::string& fieldName, const boost::python::dict& pyDict, epics::pvData::FieldConstPtrArray& fields, epics::pvData::StringArray& names);
+void addStructureField(const std::string& fieldName, const PvObject & pvObject, epics::pvData::FieldConstPtrArray& fields, epics::pvData::StringArray& names);
 void addStructureArrayField(const std::string& fieldName, const boost::python::dict& pyDict, epics::pvData::FieldConstPtrArray& fields, epics::pvData::StringArray& names);
+void addStructureArrayField(const std::string& fieldName, const PvObject & pvObject, epics::pvData::FieldConstPtrArray& fields, epics::pvData::StringArray& names);
 void addUnionField(const std::string& fieldName, const boost::python::dict& pyDict, epics::pvData::FieldConstPtrArray& fields, epics::pvData::StringArray& names);
 void addUnionArrayField(const std::string& fieldName, const boost::python::dict& pyDict, epics::pvData::FieldConstPtrArray& fields, epics::pvData::StringArray& names);
 void addVariantUnionField(const std::string& fieldName, epics::pvData::FieldConstPtrArray& fields, epics::pvData::StringArray& names);

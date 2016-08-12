@@ -17,7 +17,7 @@ void wrapPvObject()
 
 class_<PvObject>("PvObject", 
     "PvObject represents a generic PV structure.\n\n"
-    "**PvObject(structureDict [,valueDict])**\n\n"
+    "**PvObject(structureDict [,valueDict][,typeId])**\n\n"
     "\t:Parameter: *structureDict* (dict) - dictionary of key:value pairs describing the underlying PV structure in terms of field names and their types\n\n"
     "\tThe dictionary key is a string (PV field name), and value is one of:\n\n"
     "\t- PVTYPE: scalar type, can be BOOLEAN, BYTE, UBYTE, SHORT, USHORT, INT, UINT, LONG, ULONG, FLOAT, DOUBLE, or STRING\n"
@@ -30,6 +30,7 @@ class_<PvObject>("PvObject",
     "\t- [({key:value, ...},)]: single element list representing restricted union array\n\n"
     "\t:Parameter: *valueDict* (dict) - (optional) dictionary of key:value pairs to be used to set field values in the underlying PV structure\n\n"
     "\t:Raises: *InvalidArgument* - in case structure dictionary cannot be parsed\n\n"
+    "\t:Parameter: *typeId* (str) - (optional) The type ID string of the PV structure\n\n"
     "\tExamples of PvObject initialization: ::\n\n"
     "\t\tpv1 = PvObject({'anInt' : INT})\n\n"
     "\t\tpv2 = PvObject({'aShort' : SHORT, 'anUInt' : UINT, 'aString' : STRING})\n\n"
@@ -37,6 +38,7 @@ class_<PvObject>("PvObject",
     "\t\tpv4 = PvObject({'aStructArray' : [{'anInt' : INT, 'anInt2' : INT, 'aDouble' : DOUBLE}]})\n\n" 
     "\t\tpv5 = PvObject({'anUnion' : ({'anInt' : INT, 'aDouble' : DOUBLE},)})\n\n" 
     "\t\tpv6 = PvObject({'aVariant' : ()})\n\n" 
+    "\t\tpv7 = PvObject({'value' : DOUBLE}, 'epics:nt/NTScalar:1.0')\n\n"
     "\tIn addition to various set/get methods described below,\n"
     "\tPvObject elements can be accessed and manipulated similar to dictionaries: ::\n\n"
     "\t\t>>> pv = PvObject({'a' : {'b' : STRING, 'c' : FLOAT}}, {'a' : {'b' : 'my string', 'c' : 10.1}})\n"
@@ -87,7 +89,12 @@ class_<PvObject>("PvObject",
     "\n\n", 
     init<boost::python::dict>(args("structureDict")))
 
+    .def(init<boost::python::dict,const std::string &>(args("structureDict","typeId")))
+
     .def(init<boost::python::dict,boost::python::dict>(args("structureDict","valueDict")))
+
+
+    .def(init<boost::python::dict,boost::python::dict,const std::string>(args("structureDict","valueDict","typeId")))
 
     .def_pickle(PvObjectPickleSuite())
 
