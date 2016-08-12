@@ -1624,10 +1624,22 @@ void addStructureField(const std::string& fieldName, const boost::python::dict& 
     names.push_back(fieldName);
 }
 
+void addStructureField(const std::string& fieldName, const PvObject & pvObject, epics::pvData::FieldConstPtrArray& fields, epics::pvData::StringArray& names)
+{
+    fields.push_back(pvObject.getPvStructurePtr()->getStructure());
+    names.push_back(fieldName);   
+}
+
 void addStructureArrayField(const std::string& fieldName, const boost::python::dict& pyDict, epics::pvData::FieldConstPtrArray& fields, epics::pvData::StringArray& names)
 {
     fields.push_back(epics::pvData::getFieldCreate()->createStructureArray(createStructureFromDict(pyDict)));
     names.push_back(fieldName);
+}
+
+void addStructureArrayField(const std::string& fieldName, const PvObject & pvObject, epics::pvData::FieldConstPtrArray& fields, epics::pvData::StringArray& names)
+{
+    fields.push_back(epics::pvData::getFieldCreate()->createStructureArray(pvObject.getPvStructurePtr()->getStructure()));
+    names.push_back(fieldName);   
 }
 
 void addUnionField(const std::string& fieldName, const boost::python::dict& pyDict, epics::pvData::FieldConstPtrArray& fields, epics::pvData::StringArray& names)
@@ -1806,7 +1818,7 @@ bool updateFieldArrayFromPvObject(const boost::python::object& pyObject, const s
             break;
         }
         default: {
-            addStructureField(fieldName, pyDict2, fields, names);
+            addStructureField(fieldName, pvObject, fields, names);
         }
     }
     return true;
@@ -1836,7 +1848,7 @@ bool updateFieldArrayFromPvObjectList(const boost::python::object& pyObject, con
             break;
         }
         default: {
-            addStructureArrayField(fieldName, pyDict2, fields, names);
+            addStructureArrayField(fieldName, pvObject, fields, names);
         }
     }
     return true;
