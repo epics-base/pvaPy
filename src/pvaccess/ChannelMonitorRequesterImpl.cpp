@@ -40,6 +40,8 @@ void ChannelMonitorRequesterImpl::monitorConnect(const epics::pvData::Status& st
         epics::pvData::Status startStatus = monitor->start();
         if (!startStatus.isSuccess()) {
             std::cerr << "[" << channelName << "] channel monitor start: " << startStatus.getMessage() << std::endl;
+        }
+        else {
             isActive = true;
         }
     }
@@ -56,7 +58,6 @@ void ChannelMonitorRequesterImpl::monitorEvent(const epics::pvData::Monitor::sha
             element = monitor->poll();
             if (!element) {
                 logger.debug("Inactivating monitor after empty poll result.");
-                isActive = false;
                 break;
             }
             epics::pvData::PVStructurePtr pvStructurePtr = epics::pvData::getPVDataCreate()->createPVStructure(element->pvStructurePtr);
