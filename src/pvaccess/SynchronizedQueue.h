@@ -19,6 +19,7 @@ public:
     virtual ~SynchronizedQueue();
     void setMaxLength(int maxLength);
     int getMaxLength();
+    bool isFull();
     T back() throw(InvalidState);
     T front() throw(InvalidState);
     T frontAndPop() throw(InvalidState);
@@ -26,8 +27,11 @@ public:
     void pop();
     void push(const T& t) throw(InvalidState);
     void pushIfNotFull(const T& t);
-    void waitForItem(double timeout);
-    void cancelWaitForItem();
+    void waitForItemPushed(double timeout);
+    void waitForItemPopped(double timeout);
+    void waitForItemPoppedIfFull(double timeout);
+    void cancelWaitForItemPushed();
+    void cancelWaitForItemPopped();
     void clear();
 
 private:
@@ -35,7 +39,8 @@ private:
     T frontAndPopUnsynchronized();
 
     epics::pvData::Mutex mutex;
-    epicsEvent event;
+    epicsEvent itemPushedEvent;
+    epicsEvent itemPoppedEvent;
     int maxLength;
 };
 
@@ -43,7 +48,8 @@ template <class T>
 SynchronizedQueue<T>::SynchronizedQueue() :
     std::queue<T>(),
     mutex(),
-    event(),
+    itemPushedEvent(),
+    itemPoppedEvent(),
     maxLength(Unlimited)
 {
 }
@@ -51,7 +57,8 @@ SynchronizedQueue<T>::SynchronizedQueue() :
 template <class T>
 SynchronizedQueue<T>::~SynchronizedQueue()
 {
-    event.signal();
+    itemPushedEvent.signal();
+    itemPoppedEvent.signal();
 }
 
 template <class T>
@@ -65,6 +72,16 @@ void SynchronizedQueue<T>::setMaxLength(int maxLength)
 {
     epics::pvData::Lock lock(mutex);
     this->maxLength = maxLength; 
+}
+
+template <class T>
+bool SynchronizedQueue<T>::isFull() 
+{
+    int size = std::queue<T>::size();
+    if (maxLength > 0 && size >= maxLength) {
+        return true;
+    }
+    return false;
 }
 
 template <class T>
@@ -96,6 +113,7 @@ T SynchronizedQueue<T>::frontAndPopUnsynchronized()
 {
     T t = std::queue<T>::front();
     std::queue<T>::pop();
+    itemPoppedEvent.signal();
     return t;
 }
 
@@ -116,7 +134,7 @@ T SynchronizedQueue<T>::frontAndPop(double timeout) throw(InvalidState)
             return frontAndPopUnsynchronized();
         }
     }
-    waitForItem(timeout);
+    waitForItemPushed(timeout);
     return frontAndPop();
 }
 
@@ -126,6 +144,7 @@ void SynchronizedQueue<T>::pop()
     epics::pvData::Lock lock(mutex);
     if (!std::queue<T>::empty()) {
         std::queue<T>::pop();
+        itemPoppedEvent.signal();
     }
 }
 
@@ -140,7 +159,7 @@ void SynchronizedQueue<T>::push(const T& t) throw(InvalidState)
         return;
     }
     std::queue<T>::push(t);
-    event.signal();
+    itemPushedEvent.signal();
 }
 
 template <class T>
@@ -153,19 +172,41 @@ void SynchronizedQueue<T>::pushIfNotFull(const T& t)
         return;
     }
     std::queue<T>::push(t);
-    event.signal();
+    itemPushedEvent.signal();
 }
 
 template <class T>
-void SynchronizedQueue<T>::waitForItem(double timeout) 
+void SynchronizedQueue<T>::waitForItemPushed(double timeout) 
 {
-    event.wait(timeout);
+    itemPushedEvent.wait(timeout);
 }
 
 template <class T>
-void SynchronizedQueue<T>::cancelWaitForItem() 
+void SynchronizedQueue<T>::waitForItemPopped(double timeout) 
 {
-    event.signal();
+    itemPoppedEvent.wait(timeout);
+}
+
+template <class T>
+void SynchronizedQueue<T>::waitForItemPoppedIfFull(double timeout) 
+{
+    // Wait for pop only if we are full
+    int size = std::queue<T>::size();
+    if (maxLength > 0 && size >= maxLength) {
+        itemPoppedEvent.wait(timeout);
+    }
+}
+
+template <class T>
+void SynchronizedQueue<T>::cancelWaitForItemPushed() 
+{
+    itemPushedEvent.signal();
+}
+
+template <class T>
+void SynchronizedQueue<T>::cancelWaitForItemPopped() 
+{
+    itemPoppedEvent.signal();
 }
 
 template <class T>
@@ -174,8 +215,8 @@ void SynchronizedQueue<T>::clear()
     epics::pvData::Lock lock(mutex);
     while (!std::queue<T>::empty()) {
         std::queue<T>::pop();
+        itemPoppedEvent.signal();
     }
-    event.signal();
 }
 
 #endif
