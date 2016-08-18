@@ -6,6 +6,8 @@
 - new constructor for PvObject allows optional value dictionary
 - added PvObject support for retrieving numeric scalar arrays as
   read-only numpy arrays (requires compiling with Boost.NumPy)
+- added ability to specify PV request in RPC client code
+- fixed PvObject type ID issues
 
 ## Release 0.5 (2015/10/08)
 
