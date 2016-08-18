@@ -685,11 +685,16 @@ void Channel::monitorThread(Channel* channel)
     epics::pvaClient::PvaClientMonitorDataPtr pvaData = monitor->getData();
     epics::pvData::PVDataCreatePtr create(epics::pvData::getPVDataCreate());
     while (channel->shutdownThreads == false) {
-        monitor->waitEvent();
-        epics::pvData::PVStructurePtr C(create->createPVStructure(pvaData->getPVStructure())); // copy
-        PvObject pvObject(C);
-        channel->queueMonitorData(pvObject);
-        monitor->releaseEvent();
+        if (!channel->isMonitorQueueFull()) {
+            monitor->waitEvent();
+            epics::pvData::PVStructurePtr pvStructurePtr(create->createPVStructure(pvaData->getPVStructure())); // copy
+            PvObject pvObject(pvStructurePtr);
+            channel->queueMonitorData(pvObject);
+            monitor->releaseEvent();
+        }
+        else {
+            channel->waitForMonitorQueuePop();
+        }
     }
     logger.debug("Exiting monitor thread %s", epicsThreadGetNameSelf());
     channel->monitorThreadDone = true;
@@ -718,4 +723,15 @@ void Channel::queueMonitorData(PvObject& pvObject)
 {
     pvObjectMonitorQueue.pushIfNotFull(pvObject);
 }
+
+bool Channel::isMonitorQueueFull() 
+{
+    return pvObjectMonitorQueue.isFull();
+}
+
+void Channel::waitForMonitorQueuePop(double timeout)
+{
+    pvObjectMonitorQueue.waitForItemPopped(timeout);
+}
+
 

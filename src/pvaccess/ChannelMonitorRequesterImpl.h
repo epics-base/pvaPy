@@ -18,6 +18,8 @@
 class ChannelMonitorRequesterImpl : public epics::pvData::MonitorRequester
 {
 public:
+    static const double DefaultTimeout;
+
     POINTER_DEFINITIONS(ChannelMonitorRequesterImpl);
     ChannelMonitorRequesterImpl(const std::string& channelName);
     ChannelMonitorRequesterImpl(const ChannelMonitorRequesterImpl& channelMonitor);
@@ -35,10 +37,15 @@ public:
     virtual void setPvObjectQueueMaxLength(int maxLength);
     virtual int getPvObjectQueueMaxLength();
 
+    virtual bool isPvObjectQueueFull();
+    virtual void waitForPvObjectQueuePop(double timeout);
+    virtual void stop();
+
 private:
     static PvaPyLogger logger;
     std::string channelName;
     SynchronizedQueue<PvObject> pvObjectQueue;
+    bool isActive;
 };
 
 #endif // CHANNEL_MONITOR_REQUESTER_IMPL_H

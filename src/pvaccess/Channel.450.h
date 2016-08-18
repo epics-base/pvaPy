@@ -120,6 +120,8 @@ public:
     virtual double getTimeout() const;
     virtual void setMonitorMaxQueueLength(int maxLength);
     virtual int getMonitorMaxQueueLength();
+    virtual bool isMonitorQueueFull();
+    virtual void waitForMonitorQueuePop(double timeout=DefaultTimeout);
 
 private:
     static const double ShutdownWaitTime;

@@ -4,16 +4,19 @@
 #include "ChannelMonitorRequesterImpl.h"
 
 PvaPyLogger ChannelMonitorRequesterImpl::logger("ChannelMonitorRequesterImpl");
+const double ChannelMonitorRequesterImpl::DefaultTimeout(3.0);
 
 ChannelMonitorRequesterImpl::ChannelMonitorRequesterImpl(const std::string& channelName_) : 
     channelName(channelName_),
-    pvObjectQueue()
+    pvObjectQueue(),
+    isActive(false)
 {
 }
 
 ChannelMonitorRequesterImpl::ChannelMonitorRequesterImpl(const ChannelMonitorRequesterImpl& channelMonitor) : 
     channelName(channelMonitor.channelName),
-    pvObjectQueue()
+    pvObjectQueue(),
+    isActive(false)
 {
 }
 
@@ -38,6 +41,9 @@ void ChannelMonitorRequesterImpl::monitorConnect(const epics::pvData::Status& st
         if (!startStatus.isSuccess()) {
             std::cerr << "[" << channelName << "] channel monitor start: " << startStatus.getMessage() << std::endl;
         }
+        else {
+            isActive = true;
+        }
     }
     else {
         std::cerr << "monitorConnect(" << status.getMessage() << ")" << std::endl;
@@ -47,17 +53,28 @@ void ChannelMonitorRequesterImpl::monitorConnect(const epics::pvData::Status& st
 void ChannelMonitorRequesterImpl::monitorEvent(const epics::pvData::Monitor::shared_pointer& monitor)
 {
     epics::pvData::MonitorElement::shared_pointer element;
-    while (element = monitor->poll()) {
-        epics::pvData::PVStructurePtr pvStructurePtr = epics::pvData::getPVDataCreate()->createPVStructure(element->pvStructurePtr);
-        PvObject pvObject(pvStructurePtr); 
-        pvObjectQueue.pushIfNotFull(pvObject);
-        monitor->release(element);
+    while (isActive) {
+        if (!pvObjectQueue.isFull()) {
+            element = monitor->poll();
+            if (!element) {
+                logger.debug("Inactivating monitor after empty poll result.");
+                break;
+            }
+            epics::pvData::PVStructurePtr pvStructurePtr = epics::pvData::getPVDataCreate()->createPVStructure(element->pvStructurePtr);
+            PvObject pvObject(pvStructurePtr); 
+            pvObjectQueue.pushIfNotFull(pvObject);
+            //logger.debug("Pushed new monitor element into the queue: %d elements have not been processed.", pvObjectQueue.size());
+            monitor->release(element);
+        }
+        else {
+            pvObjectQueue.waitForItemPopped(DefaultTimeout);
+        }
     }
-    logger.debug("Pushed new monitor element into the queue: %d elements have not been processed.", pvObjectQueue.size());
 }
 
 void ChannelMonitorRequesterImpl::unlisten(const epics::pvData::Monitor::shared_pointer& monitor)
 {
+    isActive = false;
 }
 
 PvObject ChannelMonitorRequesterImpl::getQueuedPvObject(double timeout) throw(ChannelTimeout)
@@ -72,7 +89,7 @@ PvObject ChannelMonitorRequesterImpl::getQueuedPvObject(double timeout) throw(Ch
 
 void ChannelMonitorRequesterImpl::cancelGetQueuedPvObject()
 {
-    pvObjectQueue.cancelWaitForItem();
+    pvObjectQueue.cancelWaitForItemPushed();
 }
 
 void ChannelMonitorRequesterImpl::clearPvObjectQueue()
@@ -98,3 +115,19 @@ int ChannelMonitorRequesterImpl::getPvObjectQueueMaxLength()
     return pvObjectQueue.getMaxLength();
 }
 
+bool ChannelMonitorRequesterImpl::isPvObjectQueueFull()
+{
+    return pvObjectQueue.isFull();
+}
+
+void ChannelMonitorRequesterImpl::waitForPvObjectQueuePop(double timeout)
+{
+    pvObjectQueue.waitForItemPopped(timeout);
+}
+
+void ChannelMonitorRequesterImpl::stop()
+{
+    isActive = false;
+    pvObjectQueue.cancelWaitForItemPushed();
+    clearPvObjectQueue();
+}

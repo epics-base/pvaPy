@@ -577,10 +577,9 @@ void Channel::stopMonitor()
     monitor->stop();
     logger.debug("Monitor stopped, waiting for thread exit");
     ChannelMonitorRequesterImpl* monitorRequester = getMonitorRequester();
-    monitorRequester->cancelGetQueuedPvObject();
+    logger.debug("Stopping requester");
+    monitorRequester->stop();
     monitorThreadExitEvent.wait(getTimeout());
-    logger.debug("Clearing requester queue");
-    monitorRequester->clearPvObjectQueue();
 }
 
 bool Channel::isMonitorThreadDone() const
