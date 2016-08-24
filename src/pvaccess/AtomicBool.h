@@ -36,7 +36,11 @@ public:
     {
         return !operator==(v);
     }
-    
+
+    operator bool() const {
+        return _value;
+    }   
+
 private:
     bool _value;
     epicsMutex _mutex;
