@@ -15,7 +15,7 @@ class SynchronizedQueue : public std::queue<T>
 {
 public:
     static const int Unlimited = -1;
-    SynchronizedQueue();
+    SynchronizedQueue(int maxLength=Unlimited);
     virtual ~SynchronizedQueue();
     void setMaxLength(int maxLength);
     int getMaxLength();
@@ -45,12 +45,12 @@ private:
 };
 
 template <class T>
-SynchronizedQueue<T>::SynchronizedQueue() :
+SynchronizedQueue<T>::SynchronizedQueue(int maxLength_) :
     std::queue<T>(),
     mutex(),
     itemPushedEvent(),
     itemPoppedEvent(),
-    maxLength(Unlimited)
+    maxLength(maxLength_)
 {
 }
 
