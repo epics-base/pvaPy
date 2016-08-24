@@ -116,12 +116,11 @@ public:
     virtual void startMonitor(const std::string& requestDescriptor);
     virtual void startMonitor();
     virtual void stopMonitor();
+    virtual bool isMonitorThreadDone() const;
     virtual void setTimeout(double timeout);
     virtual double getTimeout() const;
     virtual void setMonitorMaxQueueLength(int maxLength);
     virtual int getMonitorMaxQueueLength();
-    virtual bool isMonitorQueueFull();
-    virtual void waitForMonitorQueuePop(double timeout=DefaultTimeout);
 
 private:
     static const double ShutdownWaitTime;
@@ -130,26 +129,24 @@ private:
     static PvaClient pvaClient;
     static CaClient caClient;
     static void monitorThread(Channel* channel);
-    static void processingThread(Channel* channel);
 
     void connect();
-    epics::pvaClient::PvaClientMonitorPtr getMonitor();
-    void queueMonitorData(PvObject& pvObject);
 
+    ChannelMonitorRequesterImpl* getMonitorRequesterImpl();
     bool processMonitorElement();
+    void notifyMonitorThreadExit();
 
     static epics::pvaClient::PvaClientPtr pvaClientPtr;
     epics::pvaClient::PvaClientChannelPtr  pvaClientChannelPtr;
-    epics::pvaClient::PvaClientMonitorPtr pvaClientMonitorPtr;
-    SynchronizedQueue<PvObject> pvObjectMonitorQueue;
+    epics::pvaClient::PvaClientMonitorRequesterPtr monitorRequester;
+    epics::pvaClient::PvaClientMonitorPtr monitor;
 
-    AtomicBool shutdownThreads;
     AtomicBool monitorThreadDone;
-    AtomicBool processingThreadDone;
     std::map<std::string, boost::python::object> subscriberMap;
     epics::pvData::Mutex subscriberMutex;
     epics::pvData::Mutex monitorElementProcessingMutex;
     epics::pvData::Mutex monitorThreadMutex;
+    epicsEvent monitorThreadExitEvent;
     double timeout;
 };
 
@@ -170,12 +167,19 @@ inline double Channel::getTimeout() const
 
 inline void Channel::setMonitorMaxQueueLength(int maxLength) 
 {
-    pvObjectMonitorQueue.setMaxLength(maxLength);
+    ChannelMonitorRequesterImpl* monitorRequester = getMonitorRequesterImpl();
+    monitorRequester->setPvObjectQueueMaxLength(maxLength);
 }
 
 inline int Channel::getMonitorMaxQueueLength() 
 {
-    return pvObjectMonitorQueue.getMaxLength();
+    ChannelMonitorRequesterImpl* monitorRequester = getMonitorRequesterImpl();
+    return monitorRequester->getPvObjectQueueMaxLength();
+}
+
+inline void Channel::notifyMonitorThreadExit()
+{
+    monitorThreadExitEvent.signal();
 }
 
 #endif
