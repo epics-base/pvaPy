@@ -1,4 +1,4 @@
-## Release 0.6 ()
+## Release 0.6 (2016-08-26)
 
 - added support for channel putGet() and getPut() operations
 - introduced PvObject support for field path notation (e.g, 'x.y.z')
