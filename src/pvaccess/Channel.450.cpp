@@ -29,7 +29,7 @@
 const char* Channel::DefaultRequestDescriptor("field(value)");
 const char* Channel::DefaultPutGetRequestDescriptor("putField(value)getField(value)");
 const double Channel::DefaultTimeout(3.0);
-const int Channel::DefaultMaxPvObjectQueueLength(10);
+const int Channel::DefaultMaxPvObjectQueueLength(0);
 const double Channel::ShutdownWaitTime(1.0);
 
 PvaPyLogger Channel::logger("Channel");
