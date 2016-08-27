@@ -2,7 +2,6 @@
 // found in the file LICENSE that is included with the distribution
 
 #include <iostream>
-#include <list>
 
 #include "boost/python/extract.hpp"
 
@@ -82,7 +81,7 @@ void Channel::connect()
     try {
         pvaClientChannelPtr->connect(timeout);
     } 
-    catch (std::runtime_error e) {
+    catch (std::runtime_error&) {
         throw ChannelTimeout("Channel %s get request timed out", pvaClientChannelPtr->getChannelName().c_str());
     }
 }
@@ -100,8 +99,8 @@ PvObject* Channel::get(const std::string& requestDescriptor)
         epics::pvData::PVStructurePtr pvStructure = pvaGet->getData()->getPVStructure();
         return new PvObject(pvStructure);
     }
-    catch (std::runtime_error e) {
-        throw PvaException(e.what());
+    catch (std::runtime_error& ex) {
+        throw PvaException(ex.what());
     }
 }
 
@@ -118,8 +117,8 @@ void Channel::put(const PvObject& pvObject, const std::string& requestDescriptor
         pvSend << pvObject;
         pvaPut->put();
     } 
-    catch (std::runtime_error e) {
-        throw PvaException(e.what());
+    catch (std::runtime_error& ex) {
+        throw PvaException(ex.what());
     }
 }
 
@@ -136,8 +135,8 @@ void Channel::put(const std::vector<std::string>& values, const std::string& req
         pvaData->putStringArray(values);
         pvaPut->put();
     } 
-    catch (std::runtime_error e) {
-        throw PvaException(e.what());
+    catch (std::runtime_error& ex) {
+        throw PvaException(ex.what());
     }
 }
 
@@ -165,8 +164,8 @@ void Channel::put(const std::string& value, const std::string& requestDescriptor
         }
         pvaPut->put();
     } 
-    catch (std::runtime_error e) {
-        throw PvaException(e.what());
+    catch (std::runtime_error& ex) {
+        throw PvaException(ex.what());
     }
 }
 
@@ -324,8 +323,8 @@ PvObject* Channel::putGet(const PvObject& pvObject, const std::string& requestDe
         epics::pvData::PVStructurePtr pvGet = pvaPutGet->getGetData()->getPVStructure();
         return new PvObject(pvGet);
     } 
-    catch (std::runtime_error e) {
-        throw PvaException(e.what());
+    catch (std::runtime_error& ex) {
+        throw PvaException(ex.what());
     }
 }
 
@@ -343,8 +342,8 @@ PvObject* Channel::putGet(const std::vector<std::string>& values, const std::str
         pvaPutGet->putGet();
         return new PvObject(pvaPutGet->getGetData()->getPVStructure());
     } 
-    catch (std::runtime_error e) {
-        throw PvaException(e.what());
+    catch (std::runtime_error& ex) {
+        throw PvaException(ex.what());
     }
 }
 
@@ -373,8 +372,8 @@ PvObject* Channel::putGet(const std::string& value, const std::string& requestDe
         pvaPutGet->putGet();
         return new PvObject(pvaPutGet->getGetData()->getPVStructure());
     } 
-    catch (std::runtime_error e) {
-        throw PvaException(e.what());
+    catch (std::runtime_error& ex) {
+        throw PvaException(ex.what());
     }
 }
 
@@ -534,8 +533,8 @@ PvObject* Channel::getPut(const std::string& requestDescriptor)
         pvaPutGet->getPut();
         return new PvObject(pvaPutGet->getPutData()->getPVStructure());
     } 
-    catch (std::runtime_error e) {
-        throw PvaException(e.what());
+    catch (std::runtime_error& ex) {
+        throw PvaException(ex.what());
     }
 }
 
