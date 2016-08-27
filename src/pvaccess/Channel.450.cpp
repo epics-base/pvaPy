@@ -2,6 +2,7 @@
 // found in the file LICENSE that is included with the distribution
 
 #include <iostream>
+#include <list>
 
 #include "boost/python/extract.hpp"
 
@@ -18,6 +19,7 @@
 #include "InvalidRequest.h"
 #include "InvalidArgument.h"
 #include "ObjectNotFound.h"
+#include "ObjectAlreadyExists.h"
 #include "PyGilManager.h"
 #include "PvUtility.h"
 #include "PyUtility.h"
@@ -29,7 +31,7 @@ const char* Channel::DefaultRequestDescriptor("field(value)");
 const char* Channel::DefaultPutGetRequestDescriptor("putField(value)getField(value)");
 const double Channel::DefaultTimeout(3.0);
 const int Channel::DefaultMaxPvObjectQueueLength(10);
-const double Channel::ShutdownWaitTime(0.25);
+const double Channel::ShutdownWaitTime(1.0);
 
 PvaPyLogger Channel::logger("Channel");
 PvaClient Channel::pvaClient;
@@ -71,6 +73,7 @@ Channel::~Channel()
 {
     stopMonitor();
     pvaClientChannelPtr.reset();
+    waitForProcessingThreadExit(ShutdownWaitTime);
     epicsThreadSleep(ShutdownWaitTime);
 }
 
@@ -542,34 +545,45 @@ PvObject* Channel::getPut(const std::string& requestDescriptor)
 void Channel::subscribe(const std::string& subscriberName, const boost::python::object& pySubscriber)
 {
     epics::pvData::Lock lock(subscriberMutex);
+    std::map<std::string,boost::python::object>::const_iterator iterator = subscriberMap.find(subscriberName);
+    if (iterator != subscriberMap.end()) {
+        throw ObjectAlreadyExists("Subscriber " + subscriberName + " is already registered for channel " + getName() + ".");
+    }
     subscriberMap[subscriberName] = pySubscriber;
-    logger.trace("Subscribed monitor " + subscriberName);
+    logger.trace("Subscribed " + subscriberName + " to monitor channel " + getName() + ".");
+
+    //boost::python::incref(pySubscriber.ptr());
+    //PyObject* pyObject = pySubscriber.ptr();
+    //int refCount = pyObject->ob_refcnt;
+    //boost::python::decref(pySubscriber.ptr());
 }
 
 void Channel::unsubscribe(const std::string& subscriberName)
 {
     epics::pvData::Lock lock(subscriberMutex);
-    boost::python::object pySubscriber = subscriberMap[subscriberName];
     std::map<std::string,boost::python::object>::const_iterator iterator = subscriberMap.find(subscriberName);
     if (iterator == subscriberMap.end()) {
-        throw ObjectNotFound("Subscriber " + subscriberName + " is not registered.");
+        throw ObjectNotFound("Subscriber " + subscriberName + " is not registered for channel " + getName() + ".");
     }
+    boost::python::object pySubscriber = subscriberMap[subscriberName];
     subscriberMap.erase(subscriberName);
-    logger.trace("Unsubscribed monitor " + subscriberName);
+    logger.trace("Unsubscribed " + subscriberName + " from channel " + getName() + ".");
 }
 
 void Channel::callSubscribers(PvObject& pvObject)
 {
     std::map<std::string,boost::python::object> subscriberMap2;
     {
+        // Cannot lock entire call, as subscribers may be added/deleted at
+        // any time, causing deadlock
         epics::pvData::Lock lock(subscriberMutex);
         subscriberMap2 = subscriberMap;
     }
-    
-    std::map<std::string,boost::python::object>::iterator iter;
-    for (iter = subscriberMap2.begin(); iter != subscriberMap2.end(); iter++) {
-        std::string subscriberName = iter->first;
-        boost::python::object pySubscriber = iter->second;
+
+    std::map<std::string,boost::python::object>::iterator mIter;
+    for (mIter = subscriberMap2.begin(); mIter != subscriberMap2.end(); mIter++) {
+        std::string subscriberName = mIter->first;
+        boost::python::object pySubscriber = mIter->second;
 
         // Acquire GIL. This is required because callSubscribers()
         // is called in a monitoring thread. Before monitoring thread
@@ -581,25 +595,24 @@ void Channel::callSubscribers(PvObject& pvObject)
         logger.trace("Acquiring python GIL for subscriber " + subscriberName);
         PyGilManager::gilStateEnsure();
 
+        // Call python code
         try {
-            logger.debug("Invoking subscriber: " + subscriberName);
-
-            // Call python code
             pySubscriber(pvObject);
         }
         catch(const boost::python::error_already_set&) {
+            logger.error("Channel subscriber " + subscriberName + " raised python exception.");
             PyErr_Print();
             PyErr_Clear();
-            logger.error("Channel subscriber " + subscriberName + " throws python exception.  unsubscribing.");
-            unsubscribe(subscriberName);
+        }
+        catch (const std::exception& ex) {
+            logger.error(ex.what());
         }
 
         // Release GIL. 
         // PyGILState_Release(gilState);
-        logger.trace("Releasing python GIL");
+        logger.trace("Releasing python GIL after processing monitor data with " + subscriberName);
         PyGilManager::gilStateRelease();
     }
-    logger.trace("Done calling subscribers");
 }
 
 void Channel::setMonitorMaxQueueLength(int maxLength)
@@ -623,31 +636,30 @@ void Channel::startMonitor()
 void Channel::startMonitor(const std::string& requestDescriptor)
 {
     epics::pvData::Lock lock(monitorMutex);
-    if (!monitorActive) {
-        monitorActive = true;
+    if (monitorActive) {
+        logger.warn("Monitor is already active.");
+        return;
+    }
+    monitorActive = true;
 
+    // One must call PyEval_InitThreads() in the main thread
+    // to initialize thread state, which is needed for proper functioning
+    // of PyGILState_Ensure()/PyGILState_Release().
+    // PyEval_InitThreads();
+    PyGilManager::evalInitThreads();
+    try {
         monitorRequester = epics::pvaClient::PvaClientMonitorRequesterPtr(new ChannelMonitorRequesterImpl(getName(), this));
 
-        // One must call PyEval_InitThreads() in the main thread
-        // to initialize thread state, which is needed for proper functioning
-        // of PyGILState_Ensure()/PyGILState_Release().
-        // PyEval_InitThreads();
-        PyGilManager::evalInitThreads();
-        try {
-            monitor = pvaClientChannelPtr->monitor(requestDescriptor, monitorRequester);
-        } 
-        catch (std::runtime_error e) {
-            logger.error(e.what());
-            throw PvaException(e.what());
-        }
-        
-        // If queue length is zero, there is no need for processing thread.
-        if (pvObjectQueue.getMaxLength() != 0) {
-            startProcessingThread();
-        }
+        monitor = pvaClientChannelPtr->monitor(requestDescriptor, monitorRequester);
+    } 
+    catch (std::runtime_error& ex) {
+        logger.error(ex.what());
+        throw PvaException(ex.what());
     }
-    else {
-        logger.warn("Monitor is already active.");
+        
+    // If queue length is zero, there is no need for processing thread.
+    if (pvObjectQueue.getMaxLength() != 0) {
+        startProcessingThread();
     }
 }
 
@@ -662,6 +674,12 @@ void Channel::startProcessingThread()
     }
 }
 
+void Channel::waitForProcessingThreadExit(double timeout) 
+{
+    logger.debug("Waiting on processing thread exit, timeout in %f seconds", timeout);
+    processingThreadExitEvent.wait(timeout);
+}
+
 void Channel::stopMonitor()
 {
     epics::pvData::Lock lock(monitorMutex);
@@ -669,21 +687,18 @@ void Channel::stopMonitor()
         logger.trace("Monitor is not active.");
         return;
     }
-    monitorActive = false;
-    if (processingThreadRunning) {
-        logger.debug("Waiting for processing thread exit");
-        processingThreadExitEvent.wait(timeout);
-    }
 
+    // Processing thread should exit after monitorActive is set to false
+    monitorActive = false;
+    logger.debug("Stopping monitor");
+    monitorRequester->unlisten();
     try {
-        logger.debug("Stopping monitor");
         monitor->stop();
-        monitorRequester->unlisten();
     } 
-    catch (std::runtime_error e) {
-        logger.error(e.what());
-        throw PvaException(e.what());
+    catch (std::runtime_error& ex) {
+        logger.error("Caught exception while trying to stop monitor: %s", ex.what());
     }
+    pvObjectQueue.cancelWaitForItemPushed();
 }
 
 void Channel::processingThread(Channel* channel)
@@ -698,6 +713,9 @@ void Channel::processingThread(Channel* channel)
         // Handle possible exceptions while retrieving data from empty queue.
         try {
             PvObject pvObject = channel->pvObjectQueue.frontAndPop(channel->timeout);
+            if (!channel->monitorActive) {
+                break;
+            }
             channel->callSubscribers(pvObject);
         }
         catch (InvalidState& ex) {
@@ -712,8 +730,8 @@ void Channel::processingThread(Channel* channel)
     // Processing thread done.
     logger.debug("Exiting monitor data processing thread %s", epicsThreadGetNameSelf());
     channel->pvObjectQueue.clear();
-    channel->processingThreadRunning = false;
     channel->notifyProcessingThreadExit();
+    channel->processingThreadRunning = false;
 }
 
 //

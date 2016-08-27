@@ -6,6 +6,7 @@
 
 #include <string>
 #include <vector>
+#include <map>
 
 #include "boost/python/list.hpp"
 #include "pv/pvaClient.h"
@@ -113,6 +114,7 @@ public:
     // Monitor methods
     virtual void subscribe(const std::string& subscriberName, const boost::python::object& pySubscriber);
     virtual void unsubscribe(const std::string& subscriberName);
+
     virtual void callSubscribers(PvObject& pvObject);
     virtual void startMonitor(const std::string& requestDescriptor);
     virtual void startMonitor();
@@ -133,6 +135,7 @@ private:
 
     static void processingThread(Channel* channel);
     void startProcessingThread();
+    void waitForProcessingThreadExit(double timeout);
     void notifyProcessingThreadExit();
 
     void connect();

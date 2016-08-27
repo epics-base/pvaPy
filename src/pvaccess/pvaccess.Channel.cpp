@@ -1087,7 +1087,7 @@ class_<Channel>("Channel",
         &Channel::subscribe, 
         args("subscriberName", "subscriber"), 
         "Subscribes python object to notifications of changes in PV value. Channel can have any number of subscribers that start receiving PV updates after *startMonitor()* is invoked. Updates stop after channel monitor is stopped via *stopMonitor()* call, or object is unsubscribed from notifications using *unsubscribe()* call.\n\n"
-        ":Parameter: *fieldName* (str) - subscriber object name\n\n"
+        ":Parameter: *subscriberName* (str) - subscriber object name\n\n"
         ":Parameter: *subscriber* (object) - reference to python subscriber object (e.g., python function) that will be executed when PV value changes\n\n"
         "The following code snippet defines a simple subscriber object, subscribes it to PV value changes, and starts channel monitor:\n\n"
         "::\n\n"
@@ -1099,31 +1099,9 @@ class_<Channel>("Channel",
 
     .def("unsubscribe", 
         &Channel::unsubscribe, 
-        args("fieldName"), 
+        args("subscriberName"), 
         "Unsubscribes subscriber object from notifications of changes in PV value.\n\n"
-        ":Parameter: *fieldName* (str) - subscriber name\n\n"
-        "::\n\n"
-        "    channel.unsubscribe('echo')\n\n")
-
-    .def("subscribe", 
-        &Channel::subscribe, 
-        args("subscriberName", "subscriber"), 
-        "Subscribes python object to notifications of changes in PV value. Channel can have any number of subscribers that start receiving PV updates after *startMonitor()* is invoked. Updates stop after channel monitor is stopped via *stopMonitor()* call, or object is unsubscribed from notifications using *unsubscribe()* call.\n\n"
-        ":Parameter: *fieldName* (str) - subscriber object name\n\n"
-        ":Parameter: *subscriber* (object) - reference to python subscriber object (e.g., python function) that will be executed when PV value changes\n\n"
-        "The following code snippet defines a simple subscriber object, subscribes it to PV value changes, and starts channel monitor:\n\n"
-        "::\n\n"
-        "    def echo(x):\n\n"
-        "        print 'New PV value: ', x\n\n"
-        "    channel = Channel('exampleFloat')\n\n"
-        "    channel.subscribe('echo', echo)\n\n"
-        "    channel.startMonitor()\n\n")
-
-    .def("unsubscribe", 
-        &Channel::unsubscribe, 
-        args("fieldName"), 
-        "Unsubscribes subscriber object from notifications of changes in PV value.\n\n"
-        ":Parameter: *fieldName* (str) - subscriber name\n\n"
+        ":Parameter: *subscriberName* (str) - subscriber name\n\n"
         "::\n\n"
         "    channel.unsubscribe('echo')\n\n")
 
