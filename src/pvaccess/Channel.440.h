@@ -134,7 +134,6 @@ private:
     epics::pvData::MonitorRequester::shared_pointer monitorRequester;
     epics::pvData::Monitor::shared_pointer monitor;
     bool monitorThreadDone;
-    SynchronizedQueue<PvObject> pvObjectMonitorQueue;
     std::map<std::string, boost::python::object> subscriberMap;
     epics::pvData::Mutex subscriberMutex;
     epics::pvData::Mutex monitorElementProcessingMutex;

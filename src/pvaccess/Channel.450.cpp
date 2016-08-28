@@ -18,6 +18,7 @@
 #include "InvalidRequest.h"
 #include "InvalidArgument.h"
 #include "ObjectNotFound.h"
+#include "ObjectAlreadyExists.h"
 #include "PyGilManager.h"
 #include "PvUtility.h"
 #include "PyUtility.h"
@@ -28,7 +29,8 @@
 const char* Channel::DefaultRequestDescriptor("field(value)");
 const char* Channel::DefaultPutGetRequestDescriptor("putField(value)getField(value)");
 const double Channel::DefaultTimeout(3.0);
-const double Channel::ShutdownWaitTime(0.1);
+const int Channel::DefaultMaxPvObjectQueueLength(0);
+const double Channel::ShutdownWaitTime(1.0);
 
 PvaPyLogger Channel::logger("Channel");
 PvaClient Channel::pvaClient;
@@ -38,14 +40,14 @@ epics::pvaClient::PvaClientPtr Channel::pvaClientPtr(epics::pvaClient::PvaClient
 
 Channel::Channel(const std::string& channelName, PvProvider::ProviderType providerType) :
     pvaClientChannelPtr(pvaClientPtr->createChannel(channelName,PvProvider::getProviderName(providerType))),
-    pvObjectMonitorQueue(),
-    shutdownThreads(true),
-    monitorThreadDone(true),
-    processingThreadDone(true),
+    monitorActive(false),
+    processingThreadRunning(false),
+    pvObjectQueue(DefaultMaxPvObjectQueueLength),
     subscriberMap(),
     subscriberMutex(),
-    monitorElementProcessingMutex(),
-    monitorThreadMutex(),
+    monitorMutex(),
+    processingThreadMutex(),
+    processingThreadExitEvent(),
     timeout(DefaultTimeout)
 {
     connect();
@@ -53,12 +55,14 @@ Channel::Channel(const std::string& channelName, PvProvider::ProviderType provid
     
 Channel::Channel(const Channel& c) :
     pvaClientChannelPtr(c.pvaClientChannelPtr),
-    pvObjectMonitorQueue(),
-    shutdownThreads(true),
-    monitorThreadDone(true),
-    processingThreadDone(true),
+    monitorActive(false),
+    processingThreadRunning(false),
+    pvObjectQueue(DefaultMaxPvObjectQueueLength),
     subscriberMap(),
     subscriberMutex(),
+    monitorMutex(),
+    processingThreadMutex(),
+    processingThreadExitEvent(),
     timeout(DefaultTimeout)
 {
     connect();
@@ -67,8 +71,9 @@ Channel::Channel(const Channel& c) :
 Channel::~Channel()
 {
     stopMonitor();
-    epicsThreadSleep(ShutdownWaitTime);
     pvaClientChannelPtr.reset();
+    waitForProcessingThreadExit(ShutdownWaitTime);
+    epicsThreadSleep(ShutdownWaitTime);
 }
 
 void Channel::connect() 
@@ -76,7 +81,7 @@ void Channel::connect()
     try {
         pvaClientChannelPtr->connect(timeout);
     } 
-    catch (std::runtime_error e) {
+    catch (std::runtime_error&) {
         throw ChannelTimeout("Channel %s get request timed out", pvaClientChannelPtr->getChannelName().c_str());
     }
 }
@@ -94,8 +99,8 @@ PvObject* Channel::get(const std::string& requestDescriptor)
         epics::pvData::PVStructurePtr pvStructure = pvaGet->getData()->getPVStructure();
         return new PvObject(pvStructure);
     }
-    catch (std::runtime_error e) {
-        throw PvaException(e.what());
+    catch (std::runtime_error& ex) {
+        throw PvaException(ex.what());
     }
 }
 
@@ -112,8 +117,8 @@ void Channel::put(const PvObject& pvObject, const std::string& requestDescriptor
         pvSend << pvObject;
         pvaPut->put();
     } 
-    catch (std::runtime_error e) {
-        throw PvaException(e.what());
+    catch (std::runtime_error& ex) {
+        throw PvaException(ex.what());
     }
 }
 
@@ -130,8 +135,8 @@ void Channel::put(const std::vector<std::string>& values, const std::string& req
         pvaData->putStringArray(values);
         pvaPut->put();
     } 
-    catch (std::runtime_error e) {
-        throw PvaException(e.what());
+    catch (std::runtime_error& ex) {
+        throw PvaException(ex.what());
     }
 }
 
@@ -159,8 +164,8 @@ void Channel::put(const std::string& value, const std::string& requestDescriptor
         }
         pvaPut->put();
     } 
-    catch (std::runtime_error e) {
-        throw PvaException(e.what());
+    catch (std::runtime_error& ex) {
+        throw PvaException(ex.what());
     }
 }
 
@@ -318,8 +323,8 @@ PvObject* Channel::putGet(const PvObject& pvObject, const std::string& requestDe
         epics::pvData::PVStructurePtr pvGet = pvaPutGet->getGetData()->getPVStructure();
         return new PvObject(pvGet);
     } 
-    catch (std::runtime_error e) {
-        throw PvaException(e.what());
+    catch (std::runtime_error& ex) {
+        throw PvaException(ex.what());
     }
 }
 
@@ -337,8 +342,8 @@ PvObject* Channel::putGet(const std::vector<std::string>& values, const std::str
         pvaPutGet->putGet();
         return new PvObject(pvaPutGet->getGetData()->getPVStructure());
     } 
-    catch (std::runtime_error e) {
-        throw PvaException(e.what());
+    catch (std::runtime_error& ex) {
+        throw PvaException(ex.what());
     }
 }
 
@@ -367,8 +372,8 @@ PvObject* Channel::putGet(const std::string& value, const std::string& requestDe
         pvaPutGet->putGet();
         return new PvObject(pvaPutGet->getGetData()->getPVStructure());
     } 
-    catch (std::runtime_error e) {
-        throw PvaException(e.what());
+    catch (std::runtime_error& ex) {
+        throw PvaException(ex.what());
     }
 }
 
@@ -528,8 +533,8 @@ PvObject* Channel::getPut(const std::string& requestDescriptor)
         pvaPutGet->getPut();
         return new PvObject(pvaPutGet->getPutData()->getPVStructure());
     } 
-    catch (std::runtime_error e) {
-        throw PvaException(e.what());
+    catch (std::runtime_error& ex) {
+        throw PvaException(ex.what());
     }
 }
 
@@ -539,34 +544,45 @@ PvObject* Channel::getPut(const std::string& requestDescriptor)
 void Channel::subscribe(const std::string& subscriberName, const boost::python::object& pySubscriber)
 {
     epics::pvData::Lock lock(subscriberMutex);
+    std::map<std::string,boost::python::object>::const_iterator iterator = subscriberMap.find(subscriberName);
+    if (iterator != subscriberMap.end()) {
+        throw ObjectAlreadyExists("Subscriber " + subscriberName + " is already registered for channel " + getName() + ".");
+    }
     subscriberMap[subscriberName] = pySubscriber;
-    logger.trace("Subscribed monitor " + subscriberName);
+    logger.trace("Subscribed " + subscriberName + " to monitor channel " + getName() + ".");
+
+    //boost::python::incref(pySubscriber.ptr());
+    //PyObject* pyObject = pySubscriber.ptr();
+    //int refCount = pyObject->ob_refcnt;
+    //boost::python::decref(pySubscriber.ptr());
 }
 
 void Channel::unsubscribe(const std::string& subscriberName)
 {
     epics::pvData::Lock lock(subscriberMutex);
-    boost::python::object pySubscriber = subscriberMap[subscriberName];
     std::map<std::string,boost::python::object>::const_iterator iterator = subscriberMap.find(subscriberName);
     if (iterator == subscriberMap.end()) {
-        throw ObjectNotFound("Subscriber " + subscriberName + " is not registered.");
+        throw ObjectNotFound("Subscriber " + subscriberName + " is not registered for channel " + getName() + ".");
     }
+    boost::python::object pySubscriber = subscriberMap[subscriberName];
     subscriberMap.erase(subscriberName);
-    logger.trace("Unsubscribed monitor " + subscriberName);
+    logger.trace("Unsubscribed " + subscriberName + " from channel " + getName() + ".");
 }
 
 void Channel::callSubscribers(PvObject& pvObject)
 {
     std::map<std::string,boost::python::object> subscriberMap2;
     {
+        // Cannot lock entire call, as subscribers may be added/deleted at
+        // any time, causing deadlock
         epics::pvData::Lock lock(subscriberMutex);
         subscriberMap2 = subscriberMap;
     }
-    
-    std::map<std::string,boost::python::object>::iterator iter;
-    for (iter = subscriberMap2.begin(); iter != subscriberMap2.end(); iter++) {
-        std::string subscriberName = iter->first;
-        boost::python::object pySubscriber = iter->second;
+
+    std::map<std::string,boost::python::object>::iterator mIter;
+    for (mIter = subscriberMap2.begin(); mIter != subscriberMap2.end(); mIter++) {
+        std::string subscriberName = mIter->first;
+        boost::python::object pySubscriber = mIter->second;
 
         // Acquire GIL. This is required because callSubscribers()
         // is called in a monitoring thread. Before monitoring thread
@@ -578,25 +594,37 @@ void Channel::callSubscribers(PvObject& pvObject)
         logger.trace("Acquiring python GIL for subscriber " + subscriberName);
         PyGilManager::gilStateEnsure();
 
+        // Call python code
         try {
-            logger.debug("Invoking subscriber: " + subscriberName);
-
-            // Call python code
             pySubscriber(pvObject);
         }
         catch(const boost::python::error_already_set&) {
+            logger.error("Channel subscriber " + subscriberName + " raised python exception.");
             PyErr_Print();
             PyErr_Clear();
-            logger.error("Channel subscriber " + subscriberName + " throws python exception.  unsubscribing.");
-            unsubscribe(subscriberName);
+        }
+        catch (const std::exception& ex) {
+            logger.error(ex.what());
         }
 
         // Release GIL. 
         // PyGILState_Release(gilState);
-        logger.trace("Releasing python GIL");
+        logger.trace("Releasing python GIL after processing monitor data with " + subscriberName);
         PyGilManager::gilStateRelease();
     }
-    logger.trace("Done calling subscribers");
+}
+
+void Channel::setMonitorMaxQueueLength(int maxLength)
+{
+    pvObjectQueue.setMaxLength(maxLength);
+    if (maxLength != 0 && !processingThreadRunning) {
+        startProcessingThread();
+    }
+}
+
+int Channel::getMonitorMaxQueueLength()
+{
+    return pvObjectQueue.getMaxLength();
 }
 
 void Channel::startMonitor()
@@ -606,132 +634,142 @@ void Channel::startMonitor()
 
 void Channel::startMonitor(const std::string& requestDescriptor)
 {
-    epics::pvData::Lock lock(monitorThreadMutex);
-    if (shutdownThreads == true) {
-
-        // One must call PyEval_InitThreads() in the main thread
-        // to initialize thread state, which is needed for proper functioning
-        // of PyGILState_Ensure()/PyGILState_Release().
-        // PyEval_InitThreads();
-        PyGilManager::evalInitThreads();
-        try {
-            pvaClientMonitorPtr = pvaClientChannelPtr->createMonitor(requestDescriptor);
-            pvaClientMonitorPtr->connect();
-            pvaClientMonitorPtr->start();
-        } 
-        catch (std::runtime_error e) {
-            logger.error(e.what());
-            throw PvaException(e.what());
-        }
-        shutdownThreads = false;
-        epicsThreadCreate("ChannelMonitorThread", epicsThreadPriorityLow, epicsThreadGetStackSize(epicsThreadStackSmall), (EPICSTHREADFUNC)monitorThread, this);
-        epicsThreadCreate("ChannelProcessingThread", epicsThreadPriorityHigh, epicsThreadGetStackSize(epicsThreadStackSmall), (EPICSTHREADFUNC)processingThread, this);
+    epics::pvData::Lock lock(monitorMutex);
+    if (monitorActive) {
+        logger.warn("Monitor is already active.");
+        return;
     }
+    monitorActive = true;
+
+    // One must call PyEval_InitThreads() in the main thread
+    // to initialize thread state, which is needed for proper functioning
+    // of PyGILState_Ensure()/PyGILState_Release().
+    // PyEval_InitThreads();
+    PyGilManager::evalInitThreads();
+    try {
+        monitorRequester = epics::pvaClient::PvaClientMonitorRequesterPtr(new ChannelMonitorRequesterImpl(getName(), this));
+
+        monitor = pvaClientChannelPtr->monitor(requestDescriptor, monitorRequester);
+    } 
+    catch (std::runtime_error& ex) {
+        logger.error(ex.what());
+        throw PvaException(ex.what());
+    }
+        
+    // If queue length is zero, there is no need for processing thread.
+    if (pvObjectQueue.getMaxLength() != 0) {
+        startProcessingThread();
+    }
+}
+
+void Channel::startProcessingThread() 
+{
+    epics::pvData::Lock lock(processingThreadMutex);
+    if (!processingThreadRunning) {
+        epicsThreadCreate("ProcessingThread", epicsThreadPriorityHigh, epicsThreadGetStackSize(epicsThreadStackSmall), (EPICSTHREADFUNC)processingThread, this);
+    }
+    else {
+        logger.warn("Processing thread is already running.");
+    }
+}
+
+void Channel::waitForProcessingThreadExit(double timeout) 
+{
+    logger.debug("Waiting on processing thread exit, timeout in %f seconds", timeout);
+    processingThreadExitEvent.wait(timeout);
 }
 
 void Channel::stopMonitor()
 {
-    epics::pvData::Lock lock(monitorThreadMutex);
-    if (shutdownThreads == true) {
-        logger.debug("Monitor thread is not running");
+    epics::pvData::Lock lock(monitorMutex);
+    if (!monitorActive) {
+        logger.trace("Monitor is not active.");
         return;
     }
+
+    // Processing thread should exit after monitorActive is set to false
+    monitorActive = false;
     logger.debug("Stopping monitor");
+    monitorRequester->unlisten();
     try {
-        pvaClientMonitorPtr->stop();
+        monitor->stop();
     } 
-    catch (std::runtime_error e) {
-        logger.error(e.what());
-        throw PvaException(e.what());
+    catch (std::runtime_error& ex) {
+        logger.error("Caught exception while trying to stop monitor: %s", ex.what());
     }
-    shutdownThreads = true;
-
-    while (monitorThreadDone == false || processingThreadDone == false) {
-        PyThreadState *state = PyEval_SaveThread();
-        // Give threads GIL and time to evaluate shutdownThreads
-        PyEval_RestoreThread(state);
-    }
+    pvObjectQueue.cancelWaitForItemPushed();
 }
-
-bool Channel::processMonitorElement() 
-{
-    //epics::pvData::Lock lock(monitorElementProcessingMutex);
-
-    // Handle possible exceptions while retrieving data from empty queue.
-    try {
-        try {
-            PvObject pvObject = pvObjectMonitorQueue.frontAndPop(timeout);
-            callSubscribers(pvObject);
-        }
-        catch (InvalidState& ex) {
-            throw ChannelTimeout("No PV changes received.");
-        }
-    }
-    catch (const ChannelTimeout& ex) {
-        // Ignore, no changes received.
-    }
-    catch (const std::exception& ex) {
-        // Not good.
-        logger.error("Exception caught in monitor thread: %s", ex.what());
-    }
-    return false;
-}
-
-void Channel::monitorThread(Channel* channel)
-{
-    channel->monitorThreadDone = false;
-    logger.debug("Started monitor thread %s", epicsThreadGetNameSelf());
-    epics::pvaClient::PvaClientMonitorPtr monitor = channel->getMonitor();
-    epics::pvaClient::PvaClientMonitorDataPtr pvaData = monitor->getData();
-    epics::pvData::PVDataCreatePtr create(epics::pvData::getPVDataCreate());
-    while (channel->shutdownThreads == false) {
-        if (!channel->isMonitorQueueFull()) {
-            monitor->waitEvent();
-            epics::pvData::PVStructurePtr pvStructurePtr(create->createPVStructure(pvaData->getPVStructure())); // copy
-            PvObject pvObject(pvStructurePtr);
-            channel->queueMonitorData(pvObject);
-            monitor->releaseEvent();
-        }
-        else {
-            channel->waitForMonitorQueuePop();
-        }
-    }
-    logger.debug("Exiting monitor thread %s", epicsThreadGetNameSelf());
-    channel->monitorThreadDone = true;
-}
-
 
 void Channel::processingThread(Channel* channel)
 {
-    channel->processingThreadDone = false;
-    logger.debug("Started processing thread %s", epicsThreadGetNameSelf());
-    epics::pvaClient::PvaClientMonitorPtr monitor = channel->getMonitor();
-    epics::pvaClient::PvaClientMonitorDataPtr pvaData = monitor->getData();
-    while (channel->shutdownThreads == false) {
-        channel->processMonitorElement();
+    channel->processingThreadRunning = true;
+    logger.debug("Started monitor data processing thread %s", epicsThreadGetNameSelf());
+    while (true) {
+        if (!channel->monitorActive) {
+            break;
+        }
+    
+        // Handle possible exceptions while retrieving data from empty queue.
+        try {
+            PvObject pvObject = channel->pvObjectQueue.frontAndPop(channel->timeout);
+            if (!channel->monitorActive) {
+                break;
+            }
+            channel->callSubscribers(pvObject);
+        }
+        catch (InvalidState& ex) {
+            // Queue empty, no PV changes received.
+        }
+        catch (const std::exception& ex) {
+            // Not good.
+            logger.error("Monitor data processing thread caught exception: %s", ex.what());
+        }
     }
-    logger.debug("Exiting processing thread %s", epicsThreadGetNameSelf());
-    channel->processingThreadDone = true;
+
+    // Processing thread done.
+    logger.debug("Exiting monitor data processing thread %s", epicsThreadGetNameSelf());
+    channel->pvObjectQueue.clear();
+    channel->notifyProcessingThreadExit();
+    channel->processingThreadRunning = false;
 }
 
-epics::pvaClient::PvaClientMonitorPtr Channel::getMonitor() 
+//
+// Monitor data processing interface
+//
+void Channel::processMonitorData(epics::pvData::PVStructurePtr pvStructurePtr)
 {
-    return pvaClientChannelPtr->monitor("");
-}
+    if (pvObjectQueue.getMaxLength() == 0 && pvObjectQueue.size() != 0) {
+        // Process object directly
+        try {
+            PvObject pvObject(pvStructurePtr);
+            callSubscribers(pvObject);
+        }
+        catch (const std::exception& ex) {
+            // Not good.
+            logger.error("Exception caught while processing monitor data: %s", ex.what());
+        }
+    }
+    else {
+        // Loop until object is queued, or monitor becomes inactive.
+        while (true) {
+            if (!monitorActive) {
+                break;
+            }
 
-void Channel::queueMonitorData(PvObject& pvObject) 
-{
-    pvObjectMonitorQueue.pushIfNotFull(pvObject);
-}
-
-bool Channel::isMonitorQueueFull() 
-{
-    return pvObjectMonitorQueue.isFull();
-}
-
-void Channel::waitForMonitorQueuePop(double timeout)
-{
-    pvObjectMonitorQueue.waitForItemPopped(timeout);
+            if (pvObjectQueue.isFull()) {
+                // Cannot queue object
+                pvObjectQueue.waitForItemPopped(timeout);
+            }
+            else {
+                // Copy and queue object.
+                epics::pvData::PVStructurePtr pvStructurePtr2(epics::pvData::getPVDataCreate()->createPVStructure(pvStructurePtr)); // copy
+                PvObject pvObject(pvStructurePtr2);
+                pvObjectQueue.pushIfNotFull(pvObject);
+                logger.trace("Pushed new monitor element into the queue: %d elements have not been processed.", pvObjectQueue.size());
+                break;
+            }
+        }
+    }
 }
 
 

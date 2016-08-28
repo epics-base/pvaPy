@@ -38,7 +38,6 @@ Channel::Channel(const std::string& channelName, PvProvider::ProviderType provid
     monitorRequester(new ChannelMonitorRequesterImpl(channelName)),
     monitor(),
     monitorThreadDone(true),
-    pvObjectMonitorQueue(),
     subscriberMap(),
     subscriberMutex(),
     monitorElementProcessingMutex(),
@@ -53,9 +52,10 @@ Channel::Channel(const Channel& c) :
     channel(c.channel),
     monitorRequester(c.monitorRequester),
     monitorThreadDone(true),
-    pvObjectMonitorQueue(),
     subscriberMap(),
     subscriberMutex(),
+    monitorElementProcessingMutex(),
+    monitorThreadMutex(),
     monitorThreadExitEvent(),
     timeout(DefaultTimeout)
 {

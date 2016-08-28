@@ -8,9 +8,13 @@
 
 #include "PvaException.h"
 #include "FieldNotFound.h"
+#include "ObjectNotFound.h"
+#include "ObjectAlreadyExists.h"
 #include "InvalidArgument.h"
 #include "InvalidDataType.h"
+#include "InvalidState.h"
 #include "InvalidRequest.h"
+#include "ChannelTimeout.h"
 
 #include "PvaExceptionTranslator.h"
 
@@ -51,9 +55,13 @@ void wrapRpcClient();
 // Exceptions
 PyObject* pvaException = NULL;
 PyObject* fieldNotFoundException = NULL;
+PyObject* objectNotFoundException = NULL;
+PyObject* objectAlreadyExistsException = NULL;
 PyObject* invalidArgumentException = NULL;
 PyObject* invalidDataTypeException = NULL;
 PyObject* invalidRequestException = NULL;
+PyObject* invalidStateException = NULL;
+PyObject* channelTimeoutException = NULL;
 
 BOOST_PYTHON_MODULE(pvaccess)
 {
@@ -67,9 +75,13 @@ BOOST_PYTHON_MODULE(pvaccess)
     register_exception_translator<PvaException>(PvaExceptionTranslator::translator);
     pvaException = PvaExceptionTranslator::createExceptionClass(PvaException::PyExceptionClassName);
     fieldNotFoundException = PvaExceptionTranslator::createExceptionClass(FieldNotFound::PyExceptionClassName, pvaException);
+    objectNotFoundException = PvaExceptionTranslator::createExceptionClass(ObjectNotFound::PyExceptionClassName, pvaException);
+    objectAlreadyExistsException = PvaExceptionTranslator::createExceptionClass(ObjectAlreadyExists::PyExceptionClassName, pvaException);
     invalidArgumentException = PvaExceptionTranslator::createExceptionClass(InvalidArgument::PyExceptionClassName, pvaException);
     invalidDataTypeException = PvaExceptionTranslator::createExceptionClass(InvalidDataType::PyExceptionClassName, pvaException);
     invalidRequestException = PvaExceptionTranslator::createExceptionClass(InvalidRequest::PyExceptionClassName, pvaException);
+    invalidStateException = PvaExceptionTranslator::createExceptionClass(InvalidState::PyExceptionClassName, pvaException);
+    channelTimeoutException = PvaExceptionTranslator::createExceptionClass(ChannelTimeout::PyExceptionClassName, pvaException);
 
     // Enum wrappers
     wrapPvType();
