@@ -6,13 +6,14 @@
 
 #include <string>
 #include <vector>
+#include <map>
 
 #include "boost/python/list.hpp"
 #include "pv/pvaClient.h"
 
-#include "AtomicBool.h"
 #include "ChannelGetRequesterImpl.h"
 #include "ChannelMonitorRequesterImpl.h"
+#include "ChannelMonitorDataProcessor.h"
 #include "ChannelRequesterImpl.h"
 #include "SynchronizedQueue.h"
 #include "PvaClient.h"
@@ -21,13 +22,14 @@
 #include "PvProvider.h"
 #include "PvaPyLogger.h"
 
-class Channel
+class Channel : public ChannelMonitorDataProcessor
 {
 public:
 
     static const char* DefaultRequestDescriptor;
     static const char* DefaultPutGetRequestDescriptor;
     static const double DefaultTimeout;
+    static const int DefaultMaxPvObjectQueueLength;
         
     Channel(const std::string& channelName, PvProvider::ProviderType providerType=PvProvider::PvaProviderType);
     Channel(const Channel& channel);
@@ -112,6 +114,7 @@ public:
     // Monitor methods
     virtual void subscribe(const std::string& subscriberName, const boost::python::object& pySubscriber);
     virtual void unsubscribe(const std::string& subscriberName);
+
     virtual void callSubscribers(PvObject& pvObject);
     virtual void startMonitor(const std::string& requestDescriptor);
     virtual void startMonitor();
@@ -120,36 +123,37 @@ public:
     virtual double getTimeout() const;
     virtual void setMonitorMaxQueueLength(int maxLength);
     virtual int getMonitorMaxQueueLength();
-    virtual bool isMonitorQueueFull();
-    virtual void waitForMonitorQueuePop(double timeout=DefaultTimeout);
 
+    // Monitor data processing interface
+    virtual void processMonitorData(epics::pvData::PVStructurePtr pvStructurePtr);
 private:
     static const double ShutdownWaitTime;
 
     static PvaPyLogger logger;
     static PvaClient pvaClient;
     static CaClient caClient;
-    static void monitorThread(Channel* channel);
+
     static void processingThread(Channel* channel);
+    void startProcessingThread();
+    void waitForProcessingThreadExit(double timeout);
+    void notifyProcessingThreadExit();
 
     void connect();
-    epics::pvaClient::PvaClientMonitorPtr getMonitor();
-    void queueMonitorData(PvObject& pvObject);
-
-    bool processMonitorElement();
 
     static epics::pvaClient::PvaClientPtr pvaClientPtr;
     epics::pvaClient::PvaClientChannelPtr  pvaClientChannelPtr;
-    epics::pvaClient::PvaClientMonitorPtr pvaClientMonitorPtr;
-    SynchronizedQueue<PvObject> pvObjectMonitorQueue;
+    epics::pvaClient::PvaClientMonitorRequesterPtr monitorRequester;
+    epics::pvaClient::PvaClientMonitorPtr monitor;
 
-    AtomicBool shutdownThreads;
-    AtomicBool monitorThreadDone;
-    AtomicBool processingThreadDone;
+    bool monitorActive;
+    bool processingThreadRunning;
+    SynchronizedQueue<PvObject> pvObjectQueue;
+
     std::map<std::string, boost::python::object> subscriberMap;
     epics::pvData::Mutex subscriberMutex;
-    epics::pvData::Mutex monitorElementProcessingMutex;
-    epics::pvData::Mutex monitorThreadMutex;
+    epics::pvData::Mutex monitorMutex;
+    epics::pvData::Mutex processingThreadMutex;
+    epicsEvent processingThreadExitEvent;
     double timeout;
 };
 
@@ -168,14 +172,9 @@ inline double Channel::getTimeout() const
     return timeout;
 }
 
-inline void Channel::setMonitorMaxQueueLength(int maxLength) 
+inline void Channel::notifyProcessingThreadExit()
 {
-    pvObjectMonitorQueue.setMaxLength(maxLength);
-}
-
-inline int Channel::getMonitorMaxQueueLength() 
-{
-    return pvObjectMonitorQueue.getMaxLength();
+    processingThreadExitEvent.signal();
 }
 
 #endif

@@ -8,6 +8,10 @@
   read-only numpy arrays (requires compiling with Boost.NumPy)
 - added ability to specify PV request in RPC client code
 - fixed PvObject type ID issues
+- reworked monitor code to allow two processing modes: immediate processing
+  and processing in a separate thread (requires copying/queueing monitor data);
+  the processing thread mode now utilizes monitor requester callbacks, and
+  unnecessary monitor polling when monitor queue is full has been eliminated
 
 ## Release 0.5 (2015/10/08)
 
