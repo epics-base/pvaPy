@@ -1,8 +1,8 @@
-## Release 0.6 (2016-08-26)
+## Release 0.6 (2016/08/29)
 
 - added support for channel putGet() and getPut() operations
 - introduced PvObject support for field path notation (e.g, 'x.y.z')
-- introduced PvObject support for __getitem__, __setitem__, __contains__ 
+- introduced PvObject support for __getitem__, __setitem__, __contains__
 - new constructor for PvObject allows optional value dictionary
 - added PvObject support for retrieving numeric scalar arrays as
   read-only numpy arrays (requires compiling with Boost.NumPy)
