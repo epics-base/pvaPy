@@ -14,7 +14,7 @@ void wrapChannel()
 class_<Channel>("Channel", 
     "This class represents PV channels.\n\n"
     "**Channel(name [, providerType=PVA])**\n\n"
-    "\t:Parameter: *fieldName* (str) - channel name\n\n"
+    "\t:Parameter: *name* (str) - channel name\n\n"
     "\t:Parameter: *providerType* (PROVIDERTYPE) - provider type, either PVA (PV Access) or CA (Channel Access)\n\n"
     "\tNote that PV structures representing objects on CA channels always have a single key 'value'.\n"
     "\tThe following example creates PVA channel 'enum01':\n\n"
