@@ -1,4 +1,10 @@
-## Release 0.6 ()
+## Release 0.7 ()
+
+- added initial version of PvaServer class: PvObject exposed via instance of
+  this class can be retrieved and manipulated using standard PVA command line 
+  tools and APIs
+
+## Release 0.6 (2016/09/15)
 
 - added support for channel putGet() and getPut() operations
 - introduced PvObject support for field path notation (e.g, 'x.y.z')
