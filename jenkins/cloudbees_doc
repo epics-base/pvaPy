@@ -48,6 +48,7 @@ PVDATA_BRANCH="master"
 PVACCESS_BRANCH="master"
 NORMATIVETYPES_BRANCH="master"
 PVACLIENT_BRANCH="master"
+PVDATABASE_BRANCH="master"
 
 ###########################################
 # Fetch and unpack dependencies
@@ -66,6 +67,7 @@ installE4 pvData ${PVDATA_BRANCH}
 installE4 pvAccess ${PVACCESS_BRANCH}
 installE4 normativeTypes ${NORMATIVETYPES_BRANCH}
 installE4 pvaClient ${PVACLIENT_BRANCH}
+installE4 pvDatabase ${PVDATABASE_BRANCH}
 
 ###########################################
 # Generate
