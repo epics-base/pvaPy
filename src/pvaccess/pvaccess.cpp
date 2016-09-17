@@ -52,6 +52,8 @@ void wrapChannel();
 void wrapRpcServer();
 void wrapRpcClient();
 
+void wrapPvaServer();
+
 // Exceptions
 PyObject* pvaException = NULL;
 PyObject* fieldNotFoundException = NULL;
@@ -113,4 +115,6 @@ BOOST_PYTHON_MODULE(pvaccess)
     wrapChannel();
     wrapRpcClient();
     wrapRpcServer(); 
+
+    wrapPvaServer(); 
 }
