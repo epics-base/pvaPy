@@ -81,6 +81,10 @@ AC_DEFUN([AX_EPICS4],
     if ! test -d "$pvaclientcpp_dir"; then
         pvaclientcpp_dir="$ac_epics4_dir_path"
     fi
+    pvdatabasecpp_dir="$ac_epics4_dir_path/pvDatabaseCPP"
+    if ! test -d "$pvdatabasecpp_dir"; then
+        pvdatabasecpp_dir="$ac_epics4_dir_path"
+    fi
 
     pva_version_h="$pvaccesscpp_dir/include/pv/pvaVersion.h"
     if ! test -f "$pva_version_h"; then
@@ -192,6 +196,7 @@ AC_DEFUN([AX_EPICS4],
         AC_SUBST(EPICS4_DIR)
         AC_SUBST(PVDATACPP_DIR, $pvdatacpp_dir)
         AC_SUBST(PVACCESSCPP_DIR, $pvaccesscpp_dir)
+        AC_SUBST(PVDATABASECPP_DIR, $pvdatabasecpp_dir)
     fi
 
     export CPPFLAGS="$PVA_CPPFLAGS $EPICS_CPPFLAGS"
