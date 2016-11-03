@@ -89,7 +89,7 @@ AC_DEFUN([AX_EPICS4],
     pva_version_h="$pvaccesscpp_dir/include/pv/pvaVersion.h"
     if ! test -f "$pva_version_h"; then
         AC_MSG_RESULT([no])
-        AC_MSG_ERROR("could not find pvAccess installation: no header file $epics_version_h")
+        AC_MSG_ERROR("could not find pvAccess installation: no header file $pva_version_h")
     fi
     AC_MSG_RESULT([yes])
 
@@ -180,7 +180,7 @@ AC_DEFUN([AX_EPICS4],
 
     if test "$succeeded" != "yes" ; then
         AC_MSG_RESULT([no])
-        AC_MSG_ERROR(could not compile and link EPICS4 test code: check your EPICS4 installation)
+        AC_MSG_FAILURE(could not compile and link EPICS4 test code: check your EPICS4 installation)
     else
         AC_SUBST(NORMATIVETYPESCPP_DIR, "")
         AC_SUBST(PVACLIENTCPP_DIR, "")
@@ -253,7 +253,7 @@ AC_DEFUN([AX_EPICS4],
 
     if test "$succeeded" != "yes" ; then
         AC_MSG_RESULT([unknown])
-        AC_MSG_ERROR(could not compile and link EPICS4 RPC test code: check your EPICS4 installation)
+        AC_MSG_FAILURE(could not compile and link EPICS4 RPC test code: check your EPICS4 installation)
     elif test "$pva_rpc_api_version" == "undefined" ; then
         AC_MSG_RESULT([unknown])
         AC_MSG_ERROR(could not determine EPICS4 RPC API version: check your EPICS4 installation)

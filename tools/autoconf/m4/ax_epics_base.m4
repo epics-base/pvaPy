@@ -151,7 +151,7 @@ AC_DEFUN([AX_EPICS_BASE],
 
     if test "$succeeded" != "yes" ; then
         AC_MSG_RESULT([no])
-        AC_MSG_ERROR(could not compile and link EPICS test code: check your EPICS base installation)
+        AC_MSG_FAILURE(could not compile and link EPICS test code: check your EPICS base installation)
     else
         AC_MSG_RESULT([yes])
         AC_DEFINE(HAVE_EPICS, , [define if the EPICS base is available])
