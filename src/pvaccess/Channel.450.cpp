@@ -738,7 +738,7 @@ void Channel::processingThread(Channel* channel)
 //
 void Channel::processMonitorData(epics::pvData::PVStructurePtr pvStructurePtr)
 {
-    if (pvObjectQueue.getMaxLength() == 0 && pvObjectQueue.size() != 0) {
+    if (pvObjectQueue.getMaxLength() == 0) {
         // Process object directly
         try {
             PvObject pvObject(pvStructurePtr);

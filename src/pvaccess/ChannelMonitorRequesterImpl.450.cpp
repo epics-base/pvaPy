@@ -27,13 +27,13 @@ ChannelMonitorRequesterImpl::~ChannelMonitorRequesterImpl()
 
 void ChannelMonitorRequesterImpl::event(const PvaClientMonitorPtr& monitor)
 {
-    epics::pvaClient::PvaClientMonitorDataPtr pvaData = monitor->getData();
     try {
         while (isActive) {
             if (!monitor->poll()) {;
                 break;
             }
             if (isActive) {
+                epics::pvaClient::PvaClientMonitorDataPtr pvaData = monitor->getData();
                 processor->processMonitorData(pvaData->getPVStructure()); 
             }
             monitor->releaseEvent();
