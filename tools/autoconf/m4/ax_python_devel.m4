@@ -117,9 +117,9 @@ to something else than an empty string.
 	if test -n "$1"; then
 		AC_MSG_CHECKING([for a version of Python $1 $2])
 		ac_supports_python_ver=`$PYTHON -c "import sys; \
-            from distutils.version import StrictVersion; \
+            from distutils.version import LooseVersion; \
 			ver = sys.version.split ()[[0]]; \
-			print (StrictVersion(ver) $1 StrictVersion('$2'))"`
+			print (LooseVersion(ver) $1 LooseVersion('$2'))"`
 		if test "$ac_supports_python_ver" = "True"; then
 		   AC_MSG_RESULT([yes])
 		else
