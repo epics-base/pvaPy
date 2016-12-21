@@ -48,9 +48,11 @@ Channel::Channel(const std::string& channelName, PvProvider::ProviderType provid
     monitorMutex(),
     processingThreadMutex(),
     processingThreadExitEvent(),
-    timeout(DefaultTimeout)
+    timeout(DefaultTimeout),
+    isConnected(false)
 {
-    connect();
+    stateRequester = epics::pvaClient::PvaClientChannelStateChangeRequesterPtr(new ChannelStateRequesterImpl(isConnected));
+    pvaClientChannelPtr->setStateChangeRequester(stateRequester);
 }
     
 Channel::Channel(const Channel& c) :
@@ -63,9 +65,10 @@ Channel::Channel(const Channel& c) :
     monitorMutex(),
     processingThreadMutex(),
     processingThreadExitEvent(),
-    timeout(DefaultTimeout)
+    timeout(DefaultTimeout),
+    isConnected(false)
 {
-    connect();
+    stateRequester = epics::pvaClient::PvaClientChannelStateChangeRequesterPtr(new ChannelStateRequesterImpl(isConnected));
 }
 
 Channel::~Channel()
@@ -78,6 +81,9 @@ Channel::~Channel()
 
 void Channel::connect() 
 {
+    if (isConnected) {
+        return;
+    }
     try {
         pvaClientChannelPtr->connect(timeout);
     } 
@@ -93,6 +99,7 @@ PvObject* Channel::get()
 
 PvObject* Channel::get(const std::string& requestDescriptor) 
 {
+    connect();
     try {
         epics::pvaClient::PvaClientGetPtr pvaGet = pvaClientChannelPtr->createGet(requestDescriptor);
         pvaGet->get();
@@ -111,6 +118,7 @@ void Channel::put(const PvObject& pvObject)
 
 void Channel::put(const PvObject& pvObject, const std::string& requestDescriptor) 
 {
+    connect();
     try {
         epics::pvaClient::PvaClientPutPtr pvaPut = pvaClientChannelPtr->put(requestDescriptor);
         epics::pvData::PVStructurePtr pvSend = pvaPut->getData()->getPVStructure();
@@ -129,6 +137,7 @@ void Channel::put(const std::vector<std::string>& values)
 
 void Channel::put(const std::vector<std::string>& values, const std::string& requestDescriptor) 
 {
+    connect();
     try {
         epics::pvaClient::PvaClientPutPtr pvaPut = pvaClientChannelPtr->put(requestDescriptor);
         epics::pvaClient::PvaClientPutDataPtr pvaData = pvaPut->getData();
@@ -147,6 +156,7 @@ void Channel::put(const std::string& value)
 
 void Channel::put(const std::string& value, const std::string& requestDescriptor) 
 {
+    connect();
     try {
         epics::pvaClient::PvaClientPutPtr pvaPut = pvaClientChannelPtr->put(requestDescriptor);
         epics::pvaClient::PvaClientPutDataPtr pvaData = pvaPut->getData();
@@ -315,6 +325,7 @@ void Channel::put(double value)
 
 PvObject* Channel::putGet(const PvObject& pvObject, const std::string& requestDescriptor) 
 {
+    connect();
     try {
         epics::pvaClient::PvaClientPutGetPtr pvaPutGet = pvaClientChannelPtr->createPutGet(requestDescriptor);
         epics::pvData::PVStructurePtr pvPut = pvaPutGet->getPutData()->getPVStructure();
@@ -335,6 +346,7 @@ PvObject* Channel::putGet(const PvObject& pvObject)
 
 PvObject* Channel::putGet(const std::vector<std::string>& values, const std::string& requestDescriptor) 
 {
+    connect();
     try {
         epics::pvaClient::PvaClientPutGetPtr pvaPutGet = pvaClientChannelPtr->createPutGet(requestDescriptor);
         epics::pvaClient::PvaClientPutDataPtr pvaData = pvaPutGet->getPutData();
@@ -354,6 +366,7 @@ PvObject* Channel::putGet(const std::vector<std::string>& values)
 
 PvObject* Channel::putGet(const std::string& value, const std::string& requestDescriptor) 
 {
+    connect();
     try {
         epics::pvaClient::PvaClientPutGetPtr pvaPutGet = pvaClientChannelPtr->createPutGet(requestDescriptor);
         epics::pvaClient::PvaClientPutDataPtr pvaData = pvaPutGet->getPutData();
@@ -528,6 +541,7 @@ PvObject* Channel::getPut()
 
 PvObject* Channel::getPut(const std::string& requestDescriptor) 
 {
+    connect();
     try {
         epics::pvaClient::PvaClientPutGetPtr pvaPutGet = pvaClientChannelPtr->createPutGet(requestDescriptor);
         pvaPutGet->getPut();
@@ -634,6 +648,7 @@ void Channel::startMonitor()
 
 void Channel::startMonitor(const std::string& requestDescriptor)
 {
+    connect();
     epics::pvData::Lock lock(monitorMutex);
     if (monitorActive) {
         logger.warn("Monitor is already active.");

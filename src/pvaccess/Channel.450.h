@@ -13,6 +13,7 @@
 
 #include "ChannelGetRequesterImpl.h"
 #include "ChannelMonitorRequesterImpl.h"
+#include "ChannelStateRequesterImpl.h"
 #include "ChannelMonitorDataProcessor.h"
 #include "ChannelRequesterImpl.h"
 #include "SynchronizedQueue.h"
@@ -126,6 +127,7 @@ public:
 
     // Monitor data processing interface
     virtual void processMonitorData(epics::pvData::PVStructurePtr pvStructurePtr);
+
 private:
     static const double ShutdownWaitTime;
 
@@ -155,6 +157,9 @@ private:
     epics::pvData::Mutex processingThreadMutex;
     epicsEvent processingThreadExitEvent;
     double timeout;
+
+    bool isConnected;
+    epics::pvaClient::PvaClientChannelStateChangeRequesterPtr stateRequester;
 };
 
 inline std::string Channel::getName() const
