@@ -157,6 +157,7 @@ private:
     epics::pvData::Mutex processingThreadMutex;
     epicsEvent processingThreadExitEvent;
     double timeout;
+    PvProvider::ProviderType providerType;
 
     bool isConnected;
     epics::pvaClient::PvaClientChannelStateChangeRequesterPtr stateRequester;

@@ -38,7 +38,7 @@ CaClient Channel::caClient;
 epics::pvaClient::PvaClientPtr Channel::pvaClientPtr(epics::pvaClient::PvaClient::create());
 
 
-Channel::Channel(const std::string& channelName, PvProvider::ProviderType providerType) :
+Channel::Channel(const std::string& channelName, PvProvider::ProviderType providerType_) :
     pvaClientChannelPtr(pvaClientPtr->createChannel(channelName,PvProvider::getProviderName(providerType))),
     monitorActive(false),
     processingThreadRunning(false),
@@ -49,6 +49,7 @@ Channel::Channel(const std::string& channelName, PvProvider::ProviderType provid
     processingThreadMutex(),
     processingThreadExitEvent(),
     timeout(DefaultTimeout),
+    providerType(providerType_),
     isConnected(false)
 {
     stateRequester = epics::pvaClient::PvaClientChannelStateChangeRequesterPtr(new ChannelStateRequesterImpl(isConnected));
@@ -56,7 +57,7 @@ Channel::Channel(const std::string& channelName, PvProvider::ProviderType provid
 }
     
 Channel::Channel(const Channel& c) :
-    pvaClientChannelPtr(c.pvaClientChannelPtr),
+    pvaClientChannelPtr(pvaClientPtr->createChannel(c.pvaClientChannelPtr->getChannelName(),PvProvider::getProviderName(c.providerType))),
     monitorActive(false),
     processingThreadRunning(false),
     pvObjectQueue(DefaultMaxPvObjectQueueLength),
@@ -66,9 +67,11 @@ Channel::Channel(const Channel& c) :
     processingThreadMutex(),
     processingThreadExitEvent(),
     timeout(DefaultTimeout),
+    providerType(c.providerType),
     isConnected(false)
 {
     stateRequester = epics::pvaClient::PvaClientChannelStateChangeRequesterPtr(new ChannelStateRequesterImpl(isConnected));
+    pvaClientChannelPtr->setStateChangeRequester(stateRequester);
 }
 
 Channel::~Channel()
