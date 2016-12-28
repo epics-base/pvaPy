@@ -72,6 +72,12 @@ AC_ARG_WITH([boost-libdir],
         [ac_boost_lib_path=""]
 )
 
+# use $BOOST_ROOT to initialize ac_boost_path
+if test "x$ac_boost_path" = "x"; then
+    ac_boost_path=$BOOST_ROOT
+    AC_MSG_NOTICE([BOOST_ROOT is defined as $BOOST_ROOT])
+fi
+
 if test "x$want_boost" = "xyes"; then
     boost_lib_version_req=ifelse([$1], ,1.20.0,$1)
     boost_lib_version_req_shorten=`expr $boost_lib_version_req : '\([[0-9]]*\.[[0-9]]*\)'`
@@ -92,9 +98,10 @@ if test "x$want_boost" = "xyes"; then
     dnl are found, e.g. when only header-only libraries are installed!
     libsubdirs="lib"
     ax_arch=`uname -m`
+    ax_host_arch=`uname | tr [A-Z] [a-z]`-$ax_arch
     case $ax_arch in
       x86_64|ppc64|s390x|sparc64|aarch64)
-        libsubdirs="lib64 lib lib64"
+        libsubdirs="lib/$ax_host_arch lib/$ax_arch lib64 lib"
         ;;
     esac
 
@@ -202,19 +209,21 @@ if test "x$want_boost" = "xyes"; then
             fi
 
             if test "x$BOOST_ROOT" != "x"; then
+                boost_stage=stage
                 for libsubdir in $libsubdirs ; do
                     if ls "$BOOST_ROOT/stage/$libsubdir/libboost_"* >/dev/null 2>&1 ; then break; fi
+                    if ls "$BOOST_ROOT/$libsubdir/libboost_"* >/dev/null 2>&1 ; then boost_stage=""; break; fi
                 done
-                if test -d "$BOOST_ROOT" && test -r "$BOOST_ROOT" && test -d "$BOOST_ROOT/stage/$libsubdir" && test -r "$BOOST_ROOT/stage/$libsubdir"; then
+                if test -d "$BOOST_ROOT" && test -r "$BOOST_ROOT" && test -d "$BOOST_ROOT/$boost_stage/$libsubdir" && test -r "$BOOST_ROOT/$boost_stage/$libsubdir"; then
                     version_dir=`expr //$BOOST_ROOT : '.*/\(.*\)'`
                     stage_version=`echo $version_dir | sed 's/boost_//' | sed 's/_/./g'`
                         stage_version_shorten=`expr $stage_version : '\([[0-9]]*\.[[0-9]]*\)'`
                     V_CHECK=`expr $stage_version_shorten \>\= $_version`
                     if test "$V_CHECK" = "1" -a "$ac_boost_lib_path" = "" ; then
-                        AC_MSG_NOTICE(We will use a staged boost library from $BOOST_ROOT)
+                        AC_MSG_NOTICE(We will use a boost library from $BOOST_ROOT)
                         BOOST_DIR=$BOOST_ROOT
                         BOOST_CPPFLAGS="-I$BOOST_ROOT"
-                        BOOST_LDFLAGS="-L$BOOST_ROOT/stage/$libsubdir"
+                        BOOST_LDFLAGS="-L$BOOST_ROOT/$boost_stage/$libsubdir"
                     fi
                 fi
             fi
@@ -260,6 +269,8 @@ if test "x$want_boost" = "xyes"; then
         AC_DEFINE(BOOST_CPPFLAGS, $BOOST_CPPFLAGS, [define Boost CPPFLAGS])
         AC_DEFINE(BOOST_LDFLAGS, $BOOST_LDFLAGS, [define Boost LDFLAGS])
         AC_MSG_NOTICE([Using boost version $BOOST_VERSION])
+        AC_MSG_NOTICE([Using BOOST_CPPFLAGS: $BOOST_CPPFLAGS])
+        AC_MSG_NOTICE([Using BOOST_LDFLAGS: $BOOST_LDFLAGS])
         # execute ACTION-IF-FOUND (if present):
         ifelse([$2], , :, [$2])
     fi
