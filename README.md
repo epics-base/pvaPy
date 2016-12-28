@@ -39,7 +39,7 @@ For manual configuration: Read the comments in both the `configure/RELEASE` and
 For automatic configuration: In the top level directory run
 
 ```sh
-  $ make configure EPICS_BASE=/epics/base/path EPICS4_DIR=/epics/v4/path [BOOST_NUM_PY_DIR=/boost.numpy/path]
+  $ make configure EPICS_BASE=/epics/base/path EPICS4_DIR=/epics/v4/path [BOOST_NUM_PY_DIR=/boost.numpy/path] [BOOST_ROOT=/boost/path]
 ```
 
 In the above command replace `/epics/base/path` with the full path to your
@@ -47,7 +47,11 @@ EPICS Base directory, and `/epics/v4/path` with the full path to your top level
 directory containing the v4 modules pvDataCPP, pvAccessCPP, etc. 
 Note that the optional `BOOST_NUM_PY_DIR` argument enables NumPy array support,
 and that you can only use the automatic configuration if the v4 modules have
-not been renamed.
+not been renamed. The optional BOOST_ROOT argument is typically used
+for custom boost installation directory. In case you are using custom 
+python installation that uses shared object libraries, you may need to
+set PATH and LD_LIBRARY_PATH environment variables before running the above
+`make configure` command.
 
 The `make configure` command will check for your Boost/Python libraries, and
 create suitable `configure/RELEASE.local` and `configure/CONFIG_SITE.local` files.
