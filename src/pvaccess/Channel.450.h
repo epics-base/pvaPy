@@ -8,7 +8,6 @@
 #include <vector>
 #include <map>
 
-#include "boost/python.hpp"
 #include "boost/python/list.hpp"
 #include "pv/pvaClient.h"
 

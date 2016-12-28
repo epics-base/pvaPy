@@ -2,6 +2,7 @@
 // found in the file LICENSE that is included with the distribution
 
 
+#include "boost/python.hpp"
 #include <iostream>
 
 #include "Channel.h"
