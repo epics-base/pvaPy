@@ -1,8 +1,8 @@
 // Copyright information and license terms for this software can be
 // found in the file LICENSE that is included with the distribution
 
-#include "PvaExceptionTranslator.h"
 #include "boost/python.hpp"
+#include "PvaExceptionTranslator.h"
 
 std::map<std::string,PyObject*> PvaExceptionTranslator::exceptionClassMap;
 

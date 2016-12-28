@@ -1,6 +1,12 @@
 // Copyright information and license terms for this software can be
 // found in the file LICENSE that is included with the distribution
 
+#include "boost/python.hpp"
+#include "boost/python/object.hpp"
+#include "boost/python/tuple.hpp"
+#include "boost/python/extract.hpp"
+#include "boost/python/stl_iterator.hpp"
+
 #include "PvObject.h"
 #include "PvType.h"
 #include "PvaConstants.h"
@@ -10,10 +16,6 @@
 #include "InvalidArgument.h"
 #include "InvalidRequest.h"
 #include "FieldNotFound.h"
-#include "boost/python/object.hpp"
-#include "boost/python/tuple.hpp"
-#include "boost/python/extract.hpp"
-#include "boost/python/stl_iterator.hpp"
 
 #if defined HAVE_BOOST_NUM_PY && HAVE_BOOST_NUM_PY == 1
 #include "boost/numpy.hpp"
