@@ -38,7 +38,7 @@ epics::pvaClient::PvaClientPtr Channel::pvaClientPtr(epics::pvaClient::PvaClient
 
 
 Channel::Channel(const std::string& channelName, PvProvider::ProviderType providerType_) :
-    pvaClientChannelPtr(pvaClientPtr->createChannel(channelName,PvProvider::getProviderName(providerType))),
+    pvaClientChannelPtr(pvaClientPtr->createChannel(channelName,PvProvider::getProviderName(providerType_))),
     monitorActive(false),
     processingThreadRunning(false),
     pvObjectQueue(DefaultMaxPvObjectQueueLength),
