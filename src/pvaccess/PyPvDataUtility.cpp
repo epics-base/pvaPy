@@ -536,7 +536,7 @@ void booleanArrayToPyList(const epics::pvData::PVScalarArrayPtr& pvScalarArrayPt
 {
     int nDataElements = pvScalarArrayPtr->getLength();
     epics::pvData::PVBooleanArray::const_svector data;
-    pvScalarArrayPtr->PVScalarArray::template getAs<epics::pvData::boolean>(data);
+    pvScalarArrayPtr->PVScalarArray::getAs<epics::pvData::boolean>(data);
     for (int i = 0; i < nDataElements; ++i) {
         pyList.append(static_cast<bool>(data[i]));
     }
