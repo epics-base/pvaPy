@@ -530,6 +530,19 @@ void pyObjectToUnionArrayField(const boost::python::object& pyObject, const std:
 }
 
 //
+// Special method for boolean array => PY List
+//
+void booleanArrayToPyList(const epics::pvData::PVScalarArrayPtr& pvScalarArrayPtr, boost::python::list& pyList)
+{
+    int nDataElements = pvScalarArrayPtr->getLength();
+    epics::pvData::PVBooleanArray::const_svector data;
+    pvScalarArrayPtr->PVScalarArray::template getAs<epics::pvData::boolean>(data);
+    for (int i = 0; i < nDataElements; ++i) {
+        pyList.append(static_cast<bool>(data[i]));
+    }
+}
+
+//
 // Conversion PV Scalar Array => PY List
 //
 void scalarArrayFieldToPyList(const std::string& fieldName, const epics::pvData::PVStructurePtr& pvStructurePtr, boost::python::list& pyList)
@@ -539,7 +552,7 @@ void scalarArrayFieldToPyList(const std::string& fieldName, const epics::pvData:
 
     switch (scalarType) {
         case epics::pvData::pvBoolean: {
-            scalarArrayToPyList<epics::pvData::PVBooleanArray, epics::pvData::boolean>(pvScalarArrayPtr, pyList);
+            booleanArrayToPyList(pvScalarArrayPtr, pyList);
             break;
         }
         case epics::pvData::pvByte: {

@@ -3,6 +3,7 @@
 - added initial version of PvaServer class: PvObject exposed via instance of
   this class can be retrieved and manipulated using standard PVA command line 
   tools and APIs
+- fixed boolean array conversion to python list
 
 ## Release 0.6 (2016/09/15)
 

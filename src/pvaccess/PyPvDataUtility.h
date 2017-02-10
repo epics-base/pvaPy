@@ -341,6 +341,9 @@ void pyListToScalarArrayField(const boost::python::list& pyList, const std::stri
     valueArray->replace(freeze(v));
 }
 
+// Use special function for booleans, where template method fails
+void booleanArrayToPyList(const epics::pvData::PVScalarArrayPtr& pvScalarArrayPtr, boost::python::list& pyList);
+
 template<typename PvArrayType, typename CppType>
 void scalarArrayToPyList(const epics::pvData::PVScalarArrayPtr& pvScalarArrayPtr, boost::python::list& pyList) 
 {
