@@ -1,10 +1,11 @@
 TOP = .
 
-RELEASE_LOCAL = configure/RELEASE.local
-CONFIG_SITE_LOCAL = configure/CONFIG_SITE.local
-
 AC_DIR = tools/autoconf
 DOC_DIR = documentation
+CONFIGURE_DIR = configure
+
+RELEASE_LOCAL = $(CONFIGURE_DIR)/RELEASE.local
+CONFIG_SITE_LOCAL = $(CONFIGURE_DIR)/CONFIG_SITE.local
 
 ifeq ($(filter $(MAKECMDGOALS),configure distclean),)
   # Command-line goal is neither configure nor distclean
@@ -56,6 +57,7 @@ else
 	$(RM) $(AC_DIR)/config.status $(AC_DIR)/install-sh $(AC_DIR)/missing
 	$(RM) $(AC_DIR)/Makefile $(AC_DIR)/Makefile.in config.log
 	$(MAKE) -C $(DOC_DIR) distclean
+	$(RMDIR) $(CONFIGURE_DIR)/O.*
 
 endif # Command-line goal
 
