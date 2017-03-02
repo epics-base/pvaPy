@@ -56,6 +56,7 @@ else
 	$(RM) $(AC_DIR)/aclocal.m4 $(AC_DIR)/configure $(AC_DIR)/config.log
 	$(RM) $(AC_DIR)/config.status $(AC_DIR)/install-sh $(AC_DIR)/missing
 	$(RM) $(AC_DIR)/Makefile $(AC_DIR)/Makefile.in config.log
+	$(RMDIR) $(AC_DIR)/compile
 	$(MAKE) -C $(DOC_DIR) distclean
 	$(RMDIR) $(CONFIGURE_DIR)/O.*
 
