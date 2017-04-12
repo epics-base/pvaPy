@@ -7,10 +7,6 @@
 
 #include "Channel.h"
 #include "epicsThread.h"
-#include "ChannelGetRequesterImpl.h"
-#include "ChannelPutRequesterImpl.h"
-#include "GetFieldRequesterImpl.h"
-#include "RequesterImpl.h"
 #include "pv/clientFactory.h"
 #include "pv/logger.h"
 #include "pv/convert.h"
