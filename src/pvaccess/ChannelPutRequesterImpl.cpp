@@ -61,7 +61,6 @@ void ChannelPutRequesterImpl::getDone(const epics::pvData::Status& status, const
 
         {
             epics::pvData::Lock lock(pointerMutex);
-            this->channelPut = channelPut;
             this->pvStructure = pvStructure;
             this->bitSet = bitSet;
         }

@@ -31,7 +31,6 @@ public:
 private:
     static PvaClient pvaClient;
 
-    epics::pvAccess::ChannelPut::shared_pointer channelPut;
     epics::pvData::PVStructure::shared_pointer pvStructure;
     epics::pvData::BitSet::shared_pointer bitSet;
     epics::pvData::Mutex pointerMutex;
