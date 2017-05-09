@@ -142,6 +142,14 @@ Channel
     :members:
     :inherited-members:
 
+PvaServer
+---------
+
+.. autoclass:: pvaccess.PvaServer()
+    :show-inheritance: 
+    :members:
+    :inherited-members:
+
 RpcServer
 ---------
 
