@@ -135,9 +135,9 @@ pvaccess_1_LIBS += pvaClient
 pvaccess_1_LIBS += nt
 pvaccess_LIBS += $(pvaccess_$(with_pvaClient)_LIBS)
 
+pvaccess_LIBS += pvDatabase
 pvaccess_LIBS += pvAccess
 pvaccess_LIBS += pvData
-pvaccess_LIBS += pvDatabase
 pvaccess_LIBS += Com
 
 
