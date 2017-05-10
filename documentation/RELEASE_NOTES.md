@@ -1,4 +1,4 @@
-## Release 0.7 ()
+## Release 0.7 (2017/05/10)
 
 - added initial version of PvaServer class: PvObject exposed via instance of
   this class can be retrieved and manipulated using standard PVA command line 
