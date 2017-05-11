@@ -341,3 +341,29 @@ that processes PvObject instance):
       string hash 0a380e7375d8c3f68d1bbe068141d6ce
       string value
 ```
+
+## Advanced Usage: PVA Server Class
+
+1) In terminal 1, create a simple 'pair' channel:
+
+```
+  $ python 
+  >>> pv = PvObject({'x': INT, 'y' : INT})
+  >>> pvaServer = PvaServer('pair', pv)
+```
+
+2) In terminal 2, start monitoring this channel:
+
+```
+  $ pvget -m pair
+```
+
+3) In terminal 1, update one of the object's fields:
+
+```
+  >>> pv['x'] = 1
+```
+
+This change should appear in terminal 2.
+
+
