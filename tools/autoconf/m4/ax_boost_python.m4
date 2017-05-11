@@ -62,9 +62,20 @@ ac_cv_boost_python,
 [AC_LANG_SAVE
  AC_LANG_CPLUSPLUS
  CPPFLAGS_SAVE="$CPPFLAGS"
- if test x$PYTHON_CPPFLAGS != x; then
+ LDFLAGS_SAVE="$LDFLAGS"
+ if test "x$PYTHON_CPPFLAGS" != x; then
    CPPFLAGS="$PYTHON_CPPFLAGS $CPPFLAGS"
  fi
+ if test "x$PYTHON_LDFLAGS" != x; then
+   LDFLAGS="$PYTHON_LDFLAGS $LDFLAGS"
+ fi
+ if test "x$BOOST_CPPFLAGS" != x; then
+   CPPFLAGS="$BOOST_CPPFLAGS $CPPFLAGS"
+ fi
+ if test "x$BOOST_LDFLAGS" != x; then
+   LDFLAGS="$BOOST_LDFLAGS $LDFLAGS"
+ fi
+
  AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
  #include <boost/python/module.hpp>
  using namespace boost::python;
@@ -73,6 +84,7 @@ ac_cv_boost_python,
 	ac_cv_boost_python=yes, ac_cv_boost_python=no)
  AC_LANG_RESTORE
  CPPFLAGS="$CPPFLAGS_SAVE"
+ LDFLAGS="$LDFLAGS_SAVE"
 ])
 if test "$ac_cv_boost_python" = "yes"; then
   AC_DEFINE(HAVE_BOOST_PYTHON,,[define if the Boost::Python library is available])
