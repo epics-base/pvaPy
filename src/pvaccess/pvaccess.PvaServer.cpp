@@ -31,7 +31,7 @@ class_<PvaServer>("PvaServer",
         "The following code works with the above PVA server example:\n\n"
         "::\n\n"
         "    pv2 = PvObject({'x' : INT, 'y' : INT}, {'x' : 3, 'y' : 5})\n\n"
-        "    pvServer.update(pv2)\n\n")
+        "    pvaServer.update(pv2)\n\n")
 ;
 
 } // wrapPvaServer()
