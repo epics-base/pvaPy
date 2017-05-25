@@ -26,7 +26,7 @@ const char* Channel::DefaultRequestDescriptor("field(value)");
 const char* Channel::DefaultPutGetRequestDescriptor("putField(value)getField(value)");
 const double Channel::DefaultTimeout(3.0);
 const int Channel::DefaultMaxPvObjectQueueLength(0);
-const double Channel::ShutdownWaitTime(1.0);
+const double Channel::ShutdownWaitTime(0.1);
 const double Channel::MonitorStartWaitTime(0.1);
 
 PvaPyLogger Channel::logger("Channel");
@@ -666,7 +666,7 @@ void Channel::callSubscriber(const std::string& pySubscriberName, boost::python:
     // most likely crash while invoking python from c++, or while
     // attempting to release GIL.
     // PyGILState_STATE gilState = PyGILState_Ensure();
-    logger.trace("Acquiring python GIL for subscriber " + pySubscriberName);
+    // logger.trace("Acquiring python GIL for subscriber " + pySubscriberName);
     PyGilManager::gilStateEnsure();
 
     // Call python code
@@ -684,7 +684,7 @@ void Channel::callSubscriber(const std::string& pySubscriberName, boost::python:
 
     // Release GIL. 
     // PyGILState_Release(gilState);
-    logger.trace("Releasing python GIL after processing monitor data with " + pySubscriberName);
+    // logger.trace("Releasing python GIL after processing monitor data with " + pySubscriberName);
     PyGilManager::gilStateRelease();
 }
 
