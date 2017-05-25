@@ -135,17 +135,26 @@ pvaccess_1_LIBS += pvaClient
 pvaccess_1_LIBS += nt
 pvaccess_LIBS += $(pvaccess_$(with_pvaClient)_LIBS)
 
-pvaccess_LIBS += pvDatabase
 pvaccess_LIBS += pvAccess
 pvaccess_LIBS += pvData
+pvaccess_LIBS += pvDatabase
 pvaccess_LIBS += Com
 
 
-# Build the testClient on Linux
+# Build test clients on Linux
 
-#TESTPROD_HOST_Linux += testClient
+#TESTPROD_HOST_Linux += testPvaPyClient
 #LIBRARY_HOST += pvaccess
-#testClient_LIBS += pvaccess
+#testPvaPyClient_LIBS += pvaccess
+#testPvaPyClient_LIBS += pvAccess
+#testPvaPyClient_LIBS += pvData
+#testPvaPyClient_LIBS += Com
+
+#TESTPROD_HOST_Linux += testPvaClient
+#testPvaClient_LIBS += pvaClient
+#testPvaClient_LIBS += pvAccess
+#testPvaClient_LIBS += pvData
+#testPvaClient_LIBS += Com
 
 include $(TOP)/configure/RULES
 #----------------------------------------
