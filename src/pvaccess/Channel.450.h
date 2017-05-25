@@ -130,29 +130,40 @@ public:
 
 private:
     static const double ShutdownWaitTime;
+    static const double MonitorStartWaitTime;
 
     static PvaPyLogger logger;
     static PvaClient pvaClient;
     static CaClient caClient;
 
     static void processingThread(Channel* channel);
+    static void monitorStartThread(Channel* channel);
     void startProcessingThread();
     void waitForProcessingThreadExit(double timeout);
     void notifyProcessingThreadExit();
 
     void connect();
 
+    void callSubscriber(const std::string& pySubscriberName, boost::python::object& pySubscriber, PvObject& pvObject);
+
     static epics::pvaClient::PvaClientPtr pvaClientPtr;
-    epics::pvaClient::PvaClientChannelPtr  pvaClientChannelPtr;
+    epics::pvaClient::PvaClientChannelPtr pvaClientChannelPtr;
     epics::pvaClient::PvaClientMonitorRequesterPtr monitorRequester;
     epics::pvaClient::PvaClientMonitorPtr monitor;
+    std::string monitorRequestDescriptor;
 
     bool monitorActive;
     bool processingThreadRunning;
     SynchronizedQueue<PvObject> pvObjectQueue;
 
+    // Use for single subscriber only
+    std::string subscriberName;
+    boost::python::object subscriber;
+
+    // Use for multiple subscribers
     std::map<std::string, boost::python::object> subscriberMap;
     epics::pvData::Mutex subscriberMutex;
+
     epics::pvData::Mutex monitorMutex;
     epics::pvData::Mutex processingThreadMutex;
     epicsEvent processingThreadExitEvent;
