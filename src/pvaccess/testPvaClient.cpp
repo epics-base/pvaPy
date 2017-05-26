@@ -47,13 +47,12 @@ public:
                     break;
                 }
                 nReceived++;
-                //printf("Got data %u\n", nReceived);
                 if (nReceived % 100000 == 0) {
                     struct timeval currentTime;
                     gettimeofday(&currentTime, NULL);
                     double deltaT = (currentTime.tv_sec - startTime.tv_sec) + (currentTime.tv_usec - startTime.tv_usec)/1000000.0;
                     double receiveRate = nReceived/deltaT/1000.0;
-                    printf("%s: Received: %u (%.2f [kHz])\n", channelName.c_str(), nReceived, receiveRate);
+                    printf("%s: Received: %lu (%.2f [kHz])\n", channelName.c_str(), nReceived, receiveRate);
                 }
                 monitor->releaseEvent();
             }
