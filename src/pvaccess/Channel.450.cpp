@@ -80,7 +80,7 @@ Channel::~Channel()
     stopMonitor();
     pvaClientChannelPtr.reset();
     waitForProcessingThreadExit(ShutdownWaitTime);
-    epicsThreadSleep(ShutdownWaitTime);
+    //epicsThreadSleep(ShutdownWaitTime);
 }
 
 void Channel::connect() 
@@ -92,7 +92,7 @@ void Channel::connect()
         pvaClientChannelPtr->connect(timeout);
     } 
     catch (std::runtime_error&) {
-        throw ChannelTimeout("Channel %s get request timed out", pvaClientChannelPtr->getChannelName().c_str());
+        throw ChannelTimeout("Channel %s timed out.", pvaClientChannelPtr->getChannelName().c_str());
     }
 }
 
@@ -709,7 +709,6 @@ void Channel::startMonitor()
 
 void Channel::startMonitor(const std::string& requestDescriptor)
 {
-    connect();
     epics::pvData::Lock lock(monitorMutex);
     if (monitorActive) {
         logger.warn("Monitor is already active.");
@@ -727,7 +726,7 @@ void Channel::startMonitor(const std::string& requestDescriptor)
     // Use separate thread to start monitor; in this way main thread is not
     // affected if there is a problem with the channel monitor
     epicsThreadCreate("MonitorStartThread", epicsThreadPriorityHigh, epicsThreadGetStackSize(epicsThreadStackSmall), (EPICSTHREADFUNC)monitorStartThread, this);
-    epicsThreadSleep(MonitorStartWaitTime);
+    // epicsThreadSleep(MonitorStartWaitTime);
         
     // If queue length is zero, there is no need for processing thread.
     if (pvObjectQueue.getMaxLength() != 0) {
@@ -739,10 +738,14 @@ void Channel::monitorStartThread(Channel* channel)
 {
     logger.debug("Starting monitor for %s", channel->getName().c_str());
     try {
+        channel->connect();
         channel->monitorRequester = epics::pvaClient::PvaClientMonitorRequesterPtr(new ChannelMonitorRequesterImpl(channel->getName(), channel));
 
         channel->monitor = channel->pvaClientChannelPtr->monitor(channel->monitorRequestDescriptor, channel->monitorRequester);
     } 
+    catch (PvaException& ex) {
+        logger.error(ex.what());
+    }
     catch (std::runtime_error& ex) {
         logger.error(ex.what());
     }
@@ -761,8 +764,10 @@ void Channel::startProcessingThread()
 
 void Channel::waitForProcessingThreadExit(double timeout) 
 {
-    logger.debug("Waiting on processing thread exit, timeout in %f seconds", timeout);
-    processingThreadExitEvent.wait(timeout);
+    if (processingThreadRunning) {
+        logger.debug("Waiting on processing thread exit, timeout in %f seconds", timeout);
+        processingThreadExitEvent.wait(timeout);
+    }
 }
 
 void Channel::stopMonitor()
