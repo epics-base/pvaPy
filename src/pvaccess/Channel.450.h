@@ -29,6 +29,7 @@ public:
 
     static const char* DefaultRequestDescriptor;
     static const char* DefaultPutGetRequestDescriptor;
+    static const char* DefaultSubscriberName;
     static const double DefaultTimeout;
     static const int DefaultMaxPvObjectQueueLength;
         
@@ -118,6 +119,8 @@ public:
 
     virtual void callSubscribers(PvObject& pvObject);
     virtual void startMonitor(const std::string& requestDescriptor);
+    virtual void startMonitor(const std::string& requestDescriptor, const boost::python::object& pySubscriber);
+    virtual void startMonitor(const boost::python::object& pySubscriber);
     virtual void startMonitor();
     virtual void stopMonitor();
     virtual void setTimeout(double timeout);

@@ -1113,6 +1113,25 @@ class_<Channel>("Channel",
         "    channel.startMonitor('field(value.index)')\n\n")
 
     .def("startMonitor", 
+        static_cast<void(Channel::*)(const std::string&, const boost::python::object&)>(&Channel::startMonitor), args("requestDescriptor", "subscriber"), 
+        "Subscribes python object to notifications of changes in PV value and starts channel monitor. This method is appropriate when there is only one subscriber.\n\n"
+        ":Parameter: *requestDescriptor* (str) - describes what PV data should be sent to subscribed channel clients\n\n"
+        ":Parameter: *subscriber* (object) - reference to python subscriber object (e.g., python function) that will be executed when PV value changes\n\n"
+        "::\n\n"
+        "    def echo(x):\n\n"
+        "        print 'New PV value: ', x\n\n"
+        "    channel.startMonitor('field(value.index)', echo)\n\n")
+
+    .def("startMonitor", 
+        static_cast<void(Channel::*)(const boost::python::object&)>(&Channel::startMonitor), args("subscriber"), 
+        "Subscribes python object to notifications of changes in PV value and starts channel monitor using the default request descriptor 'field(value)'. This method is appropriate when there is only one subscriber.\n\n"
+        ":Parameter: *subscriber* (object) - reference to python subscriber object (e.g., python function) that will be executed when PV value changes\n\n"
+        "::\n\n"
+        "    def echo(x):\n\n"
+        "        print 'New PV value: ', x\n\n"
+        "    channel.startMonitor(echo)\n\n")
+
+    .def("startMonitor", 
         static_cast<void(Channel::*)()>(&Channel::startMonitor), 
         "Starts channel monitor for PV value changes using the default request descriptor 'field(value)'.\n\n"
         "::\n\n"

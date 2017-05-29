@@ -25,6 +25,7 @@ class Channel
 public:
 
     static const char* DefaultRequestDescriptor;
+    static const char* DefaultSubscriberName;
     static const double DefaultTimeout;
         
     Channel(const std::string& channelName, PvProvider::ProviderType providerType=PvProvider::PvaProviderType);
@@ -106,6 +107,8 @@ public:
     virtual void unsubscribe(const std::string& subscriberName);
     virtual void callSubscribers(PvObject& pvObject);
     virtual void startMonitor(const std::string& requestDescriptor);
+    virtual void startMonitor(const std::string& requestDescriptor, const boost::python::object& pySubscriber);
+    virtual void startMonitor(const boost::python::object& pySubscriber);
     virtual void startMonitor();
     virtual void stopMonitor();
     virtual bool isMonitorThreadDone() const;
