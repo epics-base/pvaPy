@@ -22,6 +22,7 @@
 #include "PyUtility.h"
 
 const char* Channel::DefaultRequestDescriptor("field(value)");
+const char* Channel::DefaultSubscriberName("defaultSubscriber");
 const double Channel::DefaultTimeout(3.0);
 const double Channel::ShutdownWaitTime(0.1);
 
@@ -563,6 +564,18 @@ void Channel::startMonitor(const std::string& requestDescriptor)
         monitor = channel->createMonitor(monitorRequester, pvRequest);
         epicsThreadCreate("ChannelMonitorThread", epicsThreadPriorityLow, epicsThreadGetStackSize(epicsThreadStackSmall), (EPICSTHREADFUNC)monitorThread, this);
     }
+}
+
+void Channel::startMonitor(const std::string& requestDescriptor, const boost::python::object& pySubscriber)
+{
+    subscribe(DefaultSubscriberName, pySubscriber);
+    startMonitor(requestDescriptor);
+}
+
+void Channel::startMonitor(const boost::python::object& pySubscriber)
+{
+    subscribe(DefaultSubscriberName, pySubscriber);
+    startMonitor();
 }
 
 void Channel::stopMonitor()
