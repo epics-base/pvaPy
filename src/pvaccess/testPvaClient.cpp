@@ -52,7 +52,7 @@ public:
                     gettimeofday(&currentTime, NULL);
                     double deltaT = (currentTime.tv_sec - startTime.tv_sec) + (currentTime.tv_usec - startTime.tv_usec)/1000000.0;
                     double receiveRate = nReceived/deltaT/1000.0;
-                    printf("%s: Received: %lu (%.2f [kHz])\n", channelName.c_str(), nReceived, receiveRate);
+                    printf("%s: Received: %lu (%.2f [kHz]); Runtime: %.2f [s]\n", channelName.c_str(), nReceived, receiveRate, deltaT);
                 }
                 monitor->releaseEvent();
             }
@@ -75,6 +75,11 @@ private:
 
 int main(int argc, char** argv)
 {
+    int runtime = 60;
+    if(argc >= 2) {
+        runtime = atoi(argv[1]);
+    }
+
     epics::pvaClient::PvaClientPtr pvaClientPtr(epics::pvaClient::PvaClient::create());
 
     std::string channelName = "X1";
@@ -86,7 +91,7 @@ int main(int argc, char** argv)
     epics::pvaClient::PvaClientMonitorRequesterPtr monitorRequester(new ChannelMonitorRequesterImpl(channelName));
     epics::pvaClient::PvaClientMonitorPtr monitor = pvaClientChannelPtr->monitor("field(value)", monitorRequester);
     std::cout << "STARTED MONITOR for " << channelName << std::endl;
-    sleep(60);
+    sleep(runtime);
     monitor->stop();
     std::cout << "STOPPED MONITOR for " << channelName << std::endl;
     sleep(1);
