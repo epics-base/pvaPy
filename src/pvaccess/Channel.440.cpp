@@ -36,8 +36,8 @@ Channel::Channel(const std::string& channelName, PvProvider::ProviderType provid
     channelGetRequester(channelName),
     provider(epics::pvAccess::getChannelProviderRegistry()->getProvider(PvProvider::getProviderName(providerType))),
     channel(provider->createChannel(channelName, requesterImpl)),
-    monitorRequester(new ChannelMonitorRequesterImpl(channelName)),
-    monitor(),
+    monitorRequesterPtr(new ChannelMonitorRequesterImpl(channelName)),
+    monitorPtr(),
     monitorThreadDone(true),
     subscriberMap(),
     subscriberMutex(),
@@ -51,7 +51,7 @@ Channel::Channel(const std::string& channelName, PvProvider::ProviderType provid
 Channel::Channel(const Channel& c) :
     channelGetRequester(c.channelGetRequester),
     channel(c.channel),
-    monitorRequester(c.monitorRequester),
+    monitorRequesterPtr(c.monitorRequesterPtr),
     monitorThreadDone(true),
     subscriberMap(),
     subscriberMutex(),
@@ -475,7 +475,7 @@ PvObject* Channel::getPut(const std::string& requestDescriptor)
 
 ChannelMonitorRequesterImpl* Channel::getMonitorRequester()
 {
-    return static_cast<ChannelMonitorRequesterImpl*>(monitorRequester.get());
+    return static_cast<ChannelMonitorRequesterImpl*>(monitorRequesterPtr.get());
 }
 
 void Channel::subscribe(const std::string& subscriberName, const boost::python::object& pySubscriber)
@@ -552,7 +552,7 @@ void Channel::startMonitor(const std::string& requestDescriptor)
     if (monitorThreadDone) {
         monitorThreadDone = false;
         int maxQueueLength = getMonitorRequester()->getPvObjectQueueMaxLength(); 
-        monitorRequester = epics::pvData::MonitorRequester::shared_pointer(new ChannelMonitorRequesterImpl(getName()));
+        monitorRequesterPtr = epics::pvData::MonitorRequester::shared_pointer(new ChannelMonitorRequesterImpl(getName()));
         getMonitorRequester()->setPvObjectQueueMaxLength(maxQueueLength); 
 
         // One must call PyEval_InitThreads() in the main thread
@@ -561,21 +561,15 @@ void Channel::startMonitor(const std::string& requestDescriptor)
         // PyEval_InitThreads();
         PyGilManager::evalInitThreads();
         epics::pvData::PVStructure::shared_pointer pvRequest = epics::pvData::CreateRequest::create()->createRequest(requestDescriptor);
-        monitor = channel->createMonitor(monitorRequester, pvRequest);
+        monitorPtr = channel->createMonitor(monitorRequesterPtr, pvRequest);
         epicsThreadCreate("ChannelMonitorThread", epicsThreadPriorityLow, epicsThreadGetStackSize(epicsThreadStackSmall), (EPICSTHREADFUNC)monitorThread, this);
     }
 }
 
-void Channel::startMonitor(const std::string& requestDescriptor, const boost::python::object& pySubscriber)
+void Channel::monitor(const boost::python::object& pySubscriber, const std::string& requestDescriptor)
 {
     subscribe(DefaultSubscriberName, pySubscriber);
     startMonitor(requestDescriptor);
-}
-
-void Channel::startMonitor(const boost::python::object& pySubscriber)
-{
-    subscribe(DefaultSubscriberName, pySubscriber);
-    startMonitor();
 }
 
 void Channel::stopMonitor()
@@ -587,7 +581,7 @@ void Channel::stopMonitor()
     }
     monitorThreadDone = true;
     logger.debug("Stopping monitor");
-    monitor->stop();
+    monitorPtr->stop();
     logger.debug("Monitor stopped, waiting for thread exit");
     ChannelMonitorRequesterImpl* monitorRequester = getMonitorRequester();
     logger.debug("Stopping requester");

@@ -119,9 +119,8 @@ public:
 
     virtual void callSubscribers(PvObject& pvObject);
     virtual void startMonitor(const std::string& requestDescriptor);
-    virtual void startMonitor(const std::string& requestDescriptor, const boost::python::object& pySubscriber);
-    virtual void startMonitor(const boost::python::object& pySubscriber);
     virtual void startMonitor();
+    virtual void monitor(const boost::python::object& pySubscriber, const std::string& requestDescriptor=DefaultRequestDescriptor);
     virtual void stopMonitor();
     virtual void setTimeout(double timeout);
     virtual double getTimeout() const;
@@ -152,8 +151,8 @@ private:
 
     static epics::pvaClient::PvaClientPtr pvaClientPtr;
     epics::pvaClient::PvaClientChannelPtr pvaClientChannelPtr;
-    epics::pvaClient::PvaClientMonitorRequesterPtr monitorRequester;
-    epics::pvaClient::PvaClientMonitorPtr monitor;
+    epics::pvaClient::PvaClientMonitorRequesterPtr pvaClientMonitorRequesterPtr;
+    epics::pvaClient::PvaClientMonitorPtr pvaClientMonitorPtr;
     std::string monitorRequestDescriptor;
 
     bool monitorActive;

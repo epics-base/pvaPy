@@ -1,9 +1,11 @@
 #include "boost/python/class.hpp"
+#include "boost/python/overloads.hpp"
 #include "boost/python/manage_new_object.hpp"
 #include "Channel.h"
 
 using namespace boost::python;
 
+BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(ChannelMonitor, Channel::monitor, 1, 2)
 
 //
 // Channel class
@@ -1113,29 +1115,21 @@ class_<Channel>("Channel",
         "    channel.startMonitor('field(value.index)')\n\n")
 
     .def("startMonitor", 
-        static_cast<void(Channel::*)(const std::string&, const boost::python::object&)>(&Channel::startMonitor), args("requestDescriptor", "subscriber"), 
-        "Subscribes python object to notifications of changes in PV value and starts channel monitor. This method is appropriate when there is only one subscriber.\n\n"
-        ":Parameter: *requestDescriptor* (str) - describes what PV data should be sent to subscribed channel clients\n\n"
-        ":Parameter: *subscriber* (object) - reference to python subscriber object (e.g., python function) that will be executed when PV value changes\n\n"
-        "::\n\n"
-        "    def echo(x):\n\n"
-        "        print 'New PV value: ', x\n\n"
-        "    channel.startMonitor('field(value.index)', echo)\n\n")
-
-    .def("startMonitor", 
-        static_cast<void(Channel::*)(const boost::python::object&)>(&Channel::startMonitor), args("subscriber"), 
-        "Subscribes python object to notifications of changes in PV value and starts channel monitor using the default request descriptor 'field(value)'. This method is appropriate when there is only one subscriber.\n\n"
-        ":Parameter: *subscriber* (object) - reference to python subscriber object (e.g., python function) that will be executed when PV value changes\n\n"
-        "::\n\n"
-        "    def echo(x):\n\n"
-        "        print 'New PV value: ', x\n\n"
-        "    channel.startMonitor(echo)\n\n")
-
-    .def("startMonitor", 
         static_cast<void(Channel::*)()>(&Channel::startMonitor), 
         "Starts channel monitor for PV value changes using the default request descriptor 'field(value)'.\n\n"
         "::\n\n"
         "    channel.startMonitor()\n\n")
+
+    .def("monitor",
+        static_cast<void(Channel::*)(const boost::python::object&, const std::string&)>(&Channel::monitor),
+        ChannelMonitor(args("subscriber", "requestDescriptor=field(value)"),
+        "Subscribes python object to notifications of changes in PV value and starts channel monitor. This method is appropriate when there is only one subscriber.\n\n"
+        ":Parameter: *subscriber* (object) - reference to python subscriber object (e.g., python function) that will be executed when PV value changes\n\n"
+        ":Parameter: *requestDescriptor* (str) - describes what PV data should be sent to subscribed channel clients\n\n"
+        "::\n\n"
+        "    def echo(x):\n\n"
+        "        print 'New PV value: ', x\n\n"
+        "    channel.monitor(echo, 'field(value.index)')\n\n"))
 
     .def("stopMonitor", 
         &Channel::stopMonitor, 

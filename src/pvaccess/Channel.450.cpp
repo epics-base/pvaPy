@@ -736,16 +736,10 @@ void Channel::startMonitor(const std::string& requestDescriptor)
     }
 }
 
-void Channel::startMonitor(const std::string& requestDescriptor, const boost::python::object& pySubscriber)
+void Channel::monitor(const boost::python::object& pySubscriber, const std::string& requestDescriptor)
 {
     subscribe(DefaultSubscriberName, pySubscriber);
     startMonitor(requestDescriptor);
-}
-
-void Channel::startMonitor(const boost::python::object& pySubscriber)
-{
-    subscribe(DefaultSubscriberName, pySubscriber);
-    startMonitor();
 }
 
 void Channel::monitorStartThread(Channel* channel)
@@ -753,9 +747,9 @@ void Channel::monitorStartThread(Channel* channel)
     logger.debug("Starting monitor for %s", channel->getName().c_str());
     try {
         channel->connect();
-        channel->monitorRequester = epics::pvaClient::PvaClientMonitorRequesterPtr(new ChannelMonitorRequesterImpl(channel->getName(), channel));
+        channel->pvaClientMonitorRequesterPtr = epics::pvaClient::PvaClientMonitorRequesterPtr(new ChannelMonitorRequesterImpl(channel->getName(), channel));
 
-        channel->monitor = channel->pvaClientChannelPtr->monitor(channel->monitorRequestDescriptor, channel->monitorRequester);
+        channel->pvaClientMonitorPtr = channel->pvaClientChannelPtr->monitor(channel->monitorRequestDescriptor, channel->pvaClientMonitorRequesterPtr);
     } 
     catch (PvaException& ex) {
         logger.error(ex.what());
@@ -795,9 +789,9 @@ void Channel::stopMonitor()
     // Processing thread should exit after monitorActive is set to false
     monitorActive = false;
     logger.debug("Stopping monitor");
-    monitorRequester->unlisten();
+    pvaClientMonitorRequesterPtr->unlisten();
     try {
-        monitor->stop();
+        pvaClientMonitorPtr->stop();
     } 
     catch (std::runtime_error& ex) {
         logger.error("Caught exception while trying to stop monitor: %s", ex.what());

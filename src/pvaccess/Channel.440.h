@@ -107,9 +107,8 @@ public:
     virtual void unsubscribe(const std::string& subscriberName);
     virtual void callSubscribers(PvObject& pvObject);
     virtual void startMonitor(const std::string& requestDescriptor);
-    virtual void startMonitor(const std::string& requestDescriptor, const boost::python::object& pySubscriber);
-    virtual void startMonitor(const boost::python::object& pySubscriber);
     virtual void startMonitor();
+    virtual void monitor(const boost::python::object& pySubscriber, const std::string& requestDescriptor=DefaultRequestDescriptor);
     virtual void stopMonitor();
     virtual bool isMonitorThreadDone() const;
     virtual void setTimeout(double timeout);
@@ -134,8 +133,8 @@ private:
     ChannelGetRequesterImpl channelGetRequester;
     epics::pvAccess::ChannelProvider::shared_pointer provider;
     epics::pvAccess::Channel::shared_pointer channel;
-    epics::pvData::MonitorRequester::shared_pointer monitorRequester;
-    epics::pvData::Monitor::shared_pointer monitor;
+    epics::pvData::MonitorRequester::shared_pointer monitorRequesterPtr;
+    epics::pvData::Monitor::shared_pointer monitorPtr;
     bool monitorThreadDone;
     std::map<std::string, boost::python::object> subscriberMap;
     epics::pvData::Mutex subscriberMutex;
