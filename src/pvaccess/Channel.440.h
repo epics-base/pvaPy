@@ -110,6 +110,7 @@ public:
     virtual void startMonitor();
     virtual void monitor(const boost::python::object& pySubscriber, const std::string& requestDescriptor=DefaultRequestDescriptor);
     virtual void stopMonitor();
+    virtual bool isMonitorActive() const;
     virtual bool isMonitorThreadDone() const;
     virtual void setTimeout(double timeout);
     virtual double getTimeout() const;

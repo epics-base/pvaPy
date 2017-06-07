@@ -1137,6 +1137,13 @@ class_<Channel>("Channel",
         "::\n\n"
         "    channel.stopMonitor()\n\n")
 
+    .def("isMonitorActive", 
+        &Channel::isMonitorActive, 
+        "Determines whether or not channel monitor is active.\n\n"
+        ":Returns: True if monitor is active, false otherwise\n\n"
+        "::\n\n"
+        "    monitorActive = channel.isMonitorActive()\n\n")
+
     .def("getTimeout", 
         &Channel::getTimeout, 
         "Retrieves channel timeout.\n\n"

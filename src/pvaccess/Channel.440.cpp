@@ -594,6 +594,11 @@ bool Channel::isMonitorThreadDone() const
     return monitorThreadDone;
 }
 
+inline bool Channel::isMonitorActive() const
+{
+    return !monitorThreadDone;
+}
+
 bool Channel::processMonitorElement() 
 {
     //epics::pvData::Lock lock(monitorElementProcessingMutex);

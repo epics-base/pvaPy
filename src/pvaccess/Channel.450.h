@@ -122,6 +122,7 @@ public:
     virtual void startMonitor();
     virtual void monitor(const boost::python::object& pySubscriber, const std::string& requestDescriptor=DefaultRequestDescriptor);
     virtual void stopMonitor();
+    virtual bool isMonitorActive() const;
     virtual void setTimeout(double timeout);
     virtual double getTimeout() const;
     virtual void setMonitorMaxQueueLength(int maxLength);
@@ -180,6 +181,11 @@ private:
 inline std::string Channel::getName() const
 {
     return pvaClientChannelPtr->getChannelName();
+}
+
+inline bool Channel::isMonitorActive() const
+{
+    return monitorActive;
 }
 
 inline void Channel::setTimeout(double timeout) 
