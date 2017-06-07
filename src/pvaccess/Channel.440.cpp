@@ -1,9 +1,9 @@
 // Copyright information and license terms for this software can be
 // found in the file LICENSE that is included with the distribution
 
-#include <iostream>
-
+#include "boost/python.hpp"
 #include "boost/python/extract.hpp"
+#include <iostream>
 
 #include "Channel.h"
 #include "epicsThread.h"
