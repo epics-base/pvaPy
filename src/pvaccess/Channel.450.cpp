@@ -738,6 +738,13 @@ void Channel::startMonitor(const std::string& requestDescriptor)
 
 void Channel::monitor(const boost::python::object& pySubscriber, const std::string& requestDescriptor)
 {
+    // Unsubscribe default subscriber.
+    try {
+        unsubscribe(DefaultSubscriberName);
+    }
+    catch (ObjectNotFound&) {
+        // ok
+    }
     subscribe(DefaultSubscriberName, pySubscriber);
     startMonitor(requestDescriptor);
 }
@@ -752,9 +759,11 @@ void Channel::monitorStartThread(Channel* channel)
         channel->pvaClientMonitorPtr = channel->pvaClientChannelPtr->monitor(channel->monitorRequestDescriptor, channel->pvaClientMonitorRequesterPtr);
     } 
     catch (PvaException& ex) {
+        channel->monitorActive = false;
         logger.error(ex.what());
     }
     catch (std::runtime_error& ex) {
+        channel->monitorActive = false;
         logger.error(ex.what());
     }
 }
