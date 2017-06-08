@@ -32,7 +32,15 @@ class_<PvaServer>("PvaServer",
         "::\n\n"
         "    pv2 = PvObject({'x' : INT, 'y' : INT}, {'x' : 3, 'y' : 5})\n\n"
         "    pvaServer.update(pv2)\n\n")
+
+    .def("addRecord",
+        static_cast<void(PvaServer::*)(const std::string&,const PvObject&)>(&PvaServer::addRecord),
+        args("pvName","pvObject"),
+        "adds pv to server.\n\n"
+        ":Parameters: pvname, *pvObject* (PvObject) -\n\n"
+        )
 ;
 
+    //virtual void addRecord(const std::string& channelName, const PvObject& pvObject);
 } // wrapPvaServer()
 

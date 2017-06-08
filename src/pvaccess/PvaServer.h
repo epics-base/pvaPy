@@ -18,6 +18,7 @@ public:
     PvaServer(const std::string& channelName, const PvObject& pvObject);
     virtual ~PvaServer();
     virtual void update(const PvObject& pvObject);
+    virtual void addRecord(const std::string& channelName, const PvObject& pvObject);
 private:
     static PvaPyLogger logger;
     epics::pvAccess::ServerContext::shared_pointer server;

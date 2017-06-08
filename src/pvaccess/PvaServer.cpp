@@ -32,3 +32,18 @@ void PvaServer::update(const PvObject& pvObject)
 {
     record->update(pvObject);
 }
+
+void PvaServer::addRecord(const std::string& channelName, const PvObject& pvObject)
+{
+
+    epics::pvDatabase::PVDatabasePtr master = epics::pvDatabase::PVDatabase::getMaster();
+    PyPvRecordPtr myrecord(PyPvRecord::create(channelName, pvObject));
+    
+    if(!master->addRecord(myrecord)) {
+        throw PvaException("Cannot add record to master database for channel: " + channelName);
+    }
+
+}
+
+
+
