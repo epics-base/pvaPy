@@ -25,8 +25,8 @@ class_<PvaServer>("PvaServer",
     "\t:Parameter: *pvObject* (PvObject) - PV object that will be exposed on the specified channel. Any changes to object's field values will be reflected on the channel.\n\n"
     "\t:Raises: *PvaException* - in case of any errors\n\n"
     "\t::\n\n"
-    "\t\tpv = PvObject({'x': INT, 'y' : INT})  # Initializes server with first record\n\n" 
-    "\t\tpvaServer = PvaServer('pair', pv)\n\n" 
+    "\t\tpv = PvObject({'x': INT, 'y' : INT})\n\n" 
+    "\t\tpvaServer = PvaServer('pair', pv)  # Initializes server with first record\n\n" 
     "\t\tpv['x'] = 3  # The 'pair' channel will now have field 'x' value set to 3\n\n", 
     init<>())
 
