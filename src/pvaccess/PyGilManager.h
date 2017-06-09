@@ -13,6 +13,7 @@ public:
     static void gilStateEnsure();
     static void gilStateRelease();
 private:
+    static bool initThreads();
     static bool threadsInitialized;
     static PyGILState_STATE gilState;
 };

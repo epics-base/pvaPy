@@ -3,8 +3,14 @@
 
 #include "PyGilManager.h"
 
-bool PyGilManager::threadsInitialized(false);
+bool PyGilManager::threadsInitialized(initThreads());
 PyGILState_STATE PyGilManager::gilState;
+
+bool PyGilManager::initThreads()
+{
+    PyEval_InitThreads();
+    return true;
+}
 
 void PyGilManager::evalInitThreads()
 {
