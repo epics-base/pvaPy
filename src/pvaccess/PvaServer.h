@@ -19,15 +19,17 @@ class PvaServer
 public:
     PvaServer();
     PvaServer(const std::string& channelName, const PvObject& pvObject);
+    PvaServer(const std::string& channelName, const PvObject& pvObject, const boost::python::object& onWriteCallback);
     virtual ~PvaServer();
     virtual void update(const PvObject& pvObject);
     virtual void update(const std::string& channelName, const PvObject& pvObject);
-    virtual void addRecord(const std::string& channelName, const PvObject& pvObject);
+    virtual void addRecord(const std::string& channelName, const PvObject& pvObject, const boost::python::object& onWriteCallback = boost::python::object());
     virtual void removeRecord(const std::string& channelName);
     virtual bool hasRecord(const std::string& channelName);
     virtual boost::python::list getRecordNames();
 
 private:
+    void initRecord(const std::string& channelName, const PvObject& pvObject, const boost::python::object& onWriteCallback = boost::python::object());
     static PvaPyLogger logger;
     epics::pvAccess::ServerContext::shared_pointer server;
     std::map<std::string, PyPvRecordPtr> recordMap;

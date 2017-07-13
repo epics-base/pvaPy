@@ -18,6 +18,7 @@ namespace PyUtility
 {
 
 std::string extractStringFromPyObject(const boost::python::object& pyObject);
+bool isPyNone(const boost::python::object& pyObject);
 
 template<typename PyType>
 PyType extractValueFromPyObject(const boost::python::object& pyObject)
