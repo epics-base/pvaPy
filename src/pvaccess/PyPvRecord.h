@@ -5,6 +5,9 @@
 #define PY_PV_RECORD_H
 
 #include <string>
+
+#include "boost/python/object.hpp"
+
 #include "pv/pvData.h"
 #include "pv/pvDatabase.h"
 #include "PvObject.h"
@@ -16,7 +19,7 @@ typedef std::tr1::shared_ptr<PyPvRecord> PyPvRecordPtr;
 class PyPvRecord : public epics::pvDatabase::PVRecord
 {
 public:
-    static PyPvRecordPtr create(const std::string& name, const PvObject& pvObject);
+    static PyPvRecordPtr create(const std::string& name, const PvObject& pvObject, const boost::python::object& onWriteCallback = boost::python::object());
     POINTER_DEFINITIONS(PyPvRecord);
     virtual ~PyPvRecord(); 
     virtual bool init();
@@ -25,7 +28,10 @@ public:
     void update (const PvObject& pvObject);
 private:
     static PvaPyLogger logger;
-    PyPvRecord(const std::string& name, const PvObject& pvObject);
+    PyPvRecord(const std::string& name, const PvObject& pvObject, const boost::python::object& onWriteCallback = boost::python::object());
+
+    boost::python::object onWriteCallback;
+
 };
 
 #endif

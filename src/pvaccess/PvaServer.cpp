@@ -21,24 +21,35 @@ PvaServer::PvaServer() :
 PvaServer::PvaServer(const std::string& channelName, const PvObject& pvObject) :
     recordMap()
 {
-    PyPvRecordPtr record(PyPvRecord::create(channelName, pvObject));
-
-    if(!record.get()) {
-        throw PvaException("Failed to create PyPvRecord: " + channelName);
-    }
-    recordMap[channelName] = record;
-
-    epics::pvDatabase::PVDatabasePtr master = epics::pvDatabase::PVDatabase::getMaster();
+    initRecord(channelName, pvObject);
     epics::pvDatabase::ChannelProviderLocalPtr channelProvider = epics::pvDatabase::getChannelProviderLocal();
+    server = epics::pvAccess::startPVAServer(epics::pvAccess::PVACCESS_ALL_PROVIDERS, 0, true, true);
+}
 
-    if(!master->addRecord(record)) {
-        throw PvaException("Cannot add record to master database for channel: " + channelName);
-    }
+PvaServer::PvaServer(const std::string& channelName, const PvObject& pvObject, const boost::python::object& onWriteCallback) :
+    recordMap()
+{
+    initRecord(channelName, pvObject, onWriteCallback);
+    epics::pvDatabase::ChannelProviderLocalPtr channelProvider = epics::pvDatabase::getChannelProviderLocal();
     server = epics::pvAccess::startPVAServer(epics::pvAccess::PVACCESS_ALL_PROVIDERS, 0, true, true);
 }
 
 PvaServer::~PvaServer() 
 {
+}
+
+void PvaServer::initRecord(const std::string& channelName, const PvObject& pvObject, const boost::python::object& onWriteCallback) 
+{
+    PyPvRecordPtr record(PyPvRecord::create(channelName, pvObject, onWriteCallback));
+    if(!record.get()) {
+        throw PvaException("Failed to create PyPvRecord: " + channelName);
+    }
+    
+    epics::pvDatabase::PVDatabasePtr master = epics::pvDatabase::PVDatabase::getMaster();
+    if(!master->addRecord(record)) {
+        throw PvaException("Cannot add record to master database for channel: " + channelName);
+    }
+    recordMap[channelName] = record;
 }
 
 void PvaServer::update(const PvObject& pvObject) 
@@ -63,20 +74,14 @@ void PvaServer::update(const std::string& channelName, const PvObject& pvObject)
     it->second->update(pvObject);
 }
 
-void PvaServer::addRecord(const std::string& channelName, const PvObject& pvObject)
+void PvaServer::addRecord(const std::string& channelName, const PvObject& pvObject, const boost::python::object& onWriteCallback)
 {
     std::map<std::string, PyPvRecordPtr>::iterator it = recordMap.find(channelName);
     if (it != recordMap.end()) {
         throw ObjectAlreadyExists("Master database already has record for channel: " + channelName);
     }
 
-    epics::pvDatabase::PVDatabasePtr master = epics::pvDatabase::PVDatabase::getMaster();
-    PyPvRecordPtr record(PyPvRecord::create(channelName, pvObject));
-    
-    if(!master->addRecord(record)) {
-        throw PvaException("Cannot add record to master database for channel: " + channelName);
-    }
-    recordMap[channelName] = record;
+    initRecord(channelName, pvObject, onWriteCallback);
 }
 
 void PvaServer::removeRecord(const std::string& channelName)

@@ -8,6 +8,8 @@
 
 using namespace boost::python;
 
+BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(PvaServerAddRecord, PvaServer::addRecord, 2, 3)
+
 //
 // PVA Server class
 //
@@ -27,10 +29,23 @@ class_<PvaServer>("PvaServer",
     "\t::\n\n"
     "\t\tpv = PvObject({'x': INT, 'y' : INT})\n\n" 
     "\t\tpvaServer = PvaServer('pair', pv)  # Initializes server with first record\n\n" 
-    "\t\tpv['x'] = 3  # The 'pair' channel will now have field 'x' value set to 3\n\n", 
+    "\t\tpv['x'] = 3  # The 'pair' channel will now have field 'x' value set to 3\n\n" 
+    "**PvaServer(channelName, pvObject, onWriteCallback)**:\n\n"
+    "\t:Parameter: *channelName* (str) - channel name\n\n"
+    "\t:Parameter: *pvObject* (PvObject) - PV object that will be exposed on the specified channel. Any changes to object's field values will be reflected on the channel.\n\n"
+    "\t:Parameter: *onWriteCallback* (object) - reference to python object (e.g., python function) that will be executed on channel write.\n\n"
+    "\t:Raises: *PvaException* - in case of any errors\n\n"
+    "\t::\n\n"
+    "\t\t# Server will call echo() any time clients write new value to the pair channel\n\n"
+    "\t\tpv = PvObject({'x': INT, 'y' : INT})\n\n" 
+    "\t\tdef echo(x):\n\n"
+    "\t\t    print('New PV value was written: %s' % x)\n\n"
+    "\t\tpvaServer = PvaServer('pair', pv, echo)\n\n",
     init<>())
 
     .def(init<std::string, const PvObject&>(args("channelName", "pvObject")))
+
+    .def(init<std::string, const PvObject&, const boost::python::object&>(args("channelName", "pvObject", "onWriteCallback")))
 
     .def("update",
         static_cast<void(PvaServer::*)(const PvObject&)>(&PvaServer::update),
@@ -55,16 +70,19 @@ class_<PvaServer>("PvaServer",
         "    pvaServer.update('myChannel', pv)\n\n")
 
     .def("addRecord",
-        static_cast<void(PvaServer::*)(const std::string&,const PvObject&)>(&PvaServer::addRecord),
-        args("channelName","pvObject"),
+        static_cast<void(PvaServer::*)(const std::string&,const PvObject&,const boost::python::object&)>(&PvaServer::addRecord),
+        PvaServerAddRecord(args("channelName","pvObject","onWriteCallback=None"),
         "Adds PV record to the server database.\n\n"
         ":Parameter: *channelName* (str) - channel name\n\n"
         ":Parameter: *pvObject* (PvObject) - PV object that will be exposed on the specified channel. Any changes to object's field values will be reflected on the channel.\n\n"
+        ":Parameter: *onWriteCallback* (object) - reference to python object (e.g., python function) that will be executed on channel write.\n\n"
         ":Raises: *ObjectAlreadyExists* - when database already contains record associated with a given channel name\n\n"
         ":Raises: *PvaException* - in case of any other errors\n\n"
         "::\n\n"
         "    pv = PvObject({'x' : INT, 'y' : INT}, {'x' : 3, 'y' : 5})\n\n"
-        "    pvaServer.addRecord('pair', pv)\n\n")
+        "    def echo(x):\n\n"
+        "        print('New PV value was written: %s' % x)\n\n"
+        "    pvaServer.addRecord('pair', pv, echo)\n\n"))
 
     .def("removeRecord",
         static_cast<void(PvaServer::*)(const std::string&)>(&PvaServer::removeRecord),
@@ -83,7 +101,7 @@ class_<PvaServer>("PvaServer",
         ":Parameter: *channelName* (str) - channel name\n\n"
         ":Returns: True if record exists, false otherwise\n\n"
         "::\n\n"
-        "    if pvaServer.hasRecord('pair'): print 'Server contains the pair channel.'\n\n")
+        "    if pvaServer.hasRecord('pair'): print('Server contains the pair channel.)'\n\n")
 
     .def("getRecordNames",
         static_cast<boost::python::list(PvaServer::*)()>(&PvaServer::getRecordNames),

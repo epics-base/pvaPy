@@ -75,6 +75,13 @@ std::string extractStringFromPyObject(const boost::python::object& pyObject)
     throw InvalidArgument("Unable to convert object to string.");
 }
 
+bool isPyNone(const boost::python::object& pyObject)
+{
+    if (pyObject.is_none()) {
+        return true;
+    }
+    return false;
+}
 
 } // namespace PyUtility
 
