@@ -77,7 +77,9 @@ std::string extractStringFromPyObject(const boost::python::object& pyObject)
 
 bool isPyNone(const boost::python::object& pyObject)
 {
-    if (pyObject.is_none()) {
+    // RHEL 6 version of boost does not have is_none()
+    //if (pyObject.is_none()) {
+    if (pyObject.ptr() == boost::python::object().ptr()) {
         return true;
     }
     return false;
