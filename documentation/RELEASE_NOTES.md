@@ -1,4 +1,4 @@
-## Release 0.8 ()
+## Release 0.8 (2017/07/17)
 
 - added new Channel monitor() method that can be used instead of 
   subscribe()/startMonitor() sequence in case when there is only one 
