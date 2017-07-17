@@ -4,7 +4,8 @@
   subscribe()/startMonitor() sequence in case when there is only one 
   subscriber 
 - enhanced PvaServer functionality: single server instance can serve multiple
-  channels; channels can be added and removed dynamically
+  channels; channels can be added and removed dynamically; added (optional) 
+  callback for channel writes
 
 ## Release 0.7 (2017/05/10)
 
