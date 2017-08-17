@@ -40,6 +40,7 @@ epics::pvaClient::PvaClientPtr Channel::pvaClientPtr(epics::pvaClient::PvaClient
 Channel::Channel(const std::string& channelName, PvProvider::ProviderType providerType_) :
     pvaClientChannelPtr(pvaClientPtr->createChannel(channelName,PvProvider::getProviderName(providerType_))),
     monitorActive(false),
+    monitorThreadRunning(false),
     processingThreadRunning(false),
     pvObjectQueue(DefaultMaxPvObjectQueueLength),
     subscriberName(),
@@ -49,6 +50,7 @@ Channel::Channel(const std::string& channelName, PvProvider::ProviderType provid
     monitorMutex(),
     processingThreadMutex(),
     processingThreadExitEvent(),
+    monitorThreadExitEvent(),
     timeout(DefaultTimeout),
     providerType(providerType_),
     isConnected(false)
@@ -60,6 +62,7 @@ Channel::Channel(const std::string& channelName, PvProvider::ProviderType provid
 Channel::Channel(const Channel& c) :
     pvaClientChannelPtr(pvaClientPtr->createChannel(c.pvaClientChannelPtr->getChannelName(),PvProvider::getProviderName(c.providerType))),
     monitorActive(false),
+    monitorThreadRunning(false),
     processingThreadRunning(false),
     pvObjectQueue(DefaultMaxPvObjectQueueLength),
     subscriberName(),
@@ -69,6 +72,7 @@ Channel::Channel(const Channel& c) :
     monitorMutex(),
     processingThreadMutex(),
     processingThreadExitEvent(),
+    monitorThreadExitEvent(),
     timeout(DefaultTimeout),
     providerType(c.providerType),
     isConnected(false)
@@ -727,7 +731,9 @@ void Channel::startMonitor(const std::string& requestDescriptor)
 
     // Use separate thread to start monitor; in this way main thread is not
     // affected if there is a problem with the channel monitor
-    epicsThreadCreate("MonitorStartThread", epicsThreadPriorityHigh, epicsThreadGetStackSize(epicsThreadStackSmall), (EPICSTHREADFUNC)monitorStartThread, this);
+    if (epicsThreadCreate("MonitorStartThread", epicsThreadPriorityHigh, epicsThreadGetStackSize(epicsThreadStackSmall), (EPICSTHREADFUNC)monitorStartThread, this) != 0) {
+        monitorThreadRunning = true;
+    }
     // epicsThreadSleep(MonitorStartWaitTime);
         
     // If queue length is zero, there is no need for processing thread.
@@ -766,6 +772,7 @@ void Channel::monitorStartThread(Channel* channel)
         channel->monitorActive = false;
         logger.error(ex.what());
     }
+    channel->monitorThreadExitEvent.signal();
 }
 
 void Channel::startProcessingThread() 
@@ -790,6 +797,12 @@ void Channel::waitForProcessingThreadExit(double timeout)
 void Channel::stopMonitor()
 {
     epics::pvData::Lock lock(monitorMutex);
+    if (monitorThreadRunning) {
+        logger.debug("Waiting on monitor thread exit");
+        monitorThreadExitEvent.wait();
+        monitorThreadRunning = false;
+    }
+
     if (!monitorActive) {
         logger.trace("Monitor is not active.");
         return;
@@ -798,12 +811,14 @@ void Channel::stopMonitor()
     // Processing thread should exit after monitorActive is set to false
     monitorActive = false;
     logger.debug("Stopping monitor");
-    pvaClientMonitorRequesterPtr->unlisten();
-    try {
-        pvaClientMonitorPtr->stop();
-    } 
-    catch (std::runtime_error& ex) {
-        logger.error("Caught exception while trying to stop monitor: %s", ex.what());
+    if (pvaClientMonitorRequesterPtr) {
+        pvaClientMonitorRequesterPtr->unlisten();
+        try {
+            pvaClientMonitorPtr->stop();
+        } 
+        catch (std::runtime_error& ex) {
+            logger.error("Caught exception while trying to stop monitor: %s", ex.what());
+        }
     }
     pvObjectQueue.cancelWaitForItemPushed();
 }
