@@ -9,23 +9,33 @@
 #include <string>
 
 #include "PvaClient.h"
+#include "ChannelMonitorDataProcessor.h"
 
 class ChannelStateRequesterImpl : public epics::pvaClient::PvaClientChannelStateChangeRequester
 {
 public:
     POINTER_DEFINITIONS(ChannelStateRequesterImpl);
 
-    ChannelStateRequesterImpl(bool& connected_) : connected(connected_) {}
+    ChannelStateRequesterImpl(bool& connected_, ChannelMonitorDataProcessor* dataProcessor_) : connected(connected_), dataProcessor(dataProcessor_) {}
     virtual ~ChannelStateRequesterImpl() {}
 
     bool isConnected() const {return connected;}
 
     // PvaClientChannelStateChangeRequester interface
-    virtual void channelStateChange(const epics::pvaClient::PvaClientChannelPtr& channel, bool isConnected) {connected=isConnected;}
+    virtual void channelStateChange(const epics::pvaClient::PvaClientChannelPtr& channel, bool isConnected) {
+        connected=isConnected;
+        if (connected) {
+            dataProcessor->onChannelConnect();
+        }
+        else {
+            dataProcessor->onChannelDisconnect();
+        }
+    }
 
 private:
     bool& connected;
+    ChannelMonitorDataProcessor* dataProcessor;
 };
 
 #endif // CHANNEL_STATE_REQUESTER_IMPL_H
-#endif
+#endif // if PVA_API_VERSION >= 450

@@ -11,6 +11,8 @@ class ChannelMonitorDataProcessor
 {
 public:
     virtual void processMonitorData(epics::pvData::PVStructurePtr pvStructurePtr)=0;
+    virtual void onChannelConnect()=0;
+    virtual void onChannelDisconnect()=0;
 };
 
 #endif // CHANNEL_MONITOR_DATA_PROCESSOR_H

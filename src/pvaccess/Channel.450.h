@@ -130,6 +130,8 @@ public:
 
     // Monitor data processing interface
     virtual void processMonitorData(epics::pvData::PVStructurePtr pvStructurePtr);
+    virtual void onChannelConnect() {}
+    virtual void onChannelDisconnect() {}
 
 private:
     static const double ShutdownWaitTime;

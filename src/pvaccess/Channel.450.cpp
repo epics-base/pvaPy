@@ -55,7 +55,7 @@ Channel::Channel(const std::string& channelName, PvProvider::ProviderType provid
     providerType(providerType_),
     isConnected(false)
 {
-    stateRequester = epics::pvaClient::PvaClientChannelStateChangeRequesterPtr(new ChannelStateRequesterImpl(isConnected));
+    stateRequester = epics::pvaClient::PvaClientChannelStateChangeRequesterPtr(new ChannelStateRequesterImpl(isConnected, this));
     pvaClientChannelPtr->setStateChangeRequester(stateRequester);
 }
     
@@ -77,7 +77,7 @@ Channel::Channel(const Channel& c) :
     providerType(c.providerType),
     isConnected(false)
 {
-    stateRequester = epics::pvaClient::PvaClientChannelStateChangeRequesterPtr(new ChannelStateRequesterImpl(isConnected));
+    stateRequester = epics::pvaClient::PvaClientChannelStateChangeRequesterPtr(new ChannelStateRequesterImpl(isConnected, this));
     pvaClientChannelPtr->setStateChangeRequester(stateRequester);
 }
 

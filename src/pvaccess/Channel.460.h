@@ -130,6 +130,8 @@ public:
 
     // Monitor data processing interface
     virtual void processMonitorData(epics::pvData::PVStructurePtr pvStructurePtr);
+    virtual void onChannelConnect();
+    virtual void onChannelDisconnect();
 
 private:
     static const double ShutdownWaitTime;
@@ -147,6 +149,8 @@ private:
     void notifyProcessingThreadExit();
 
     void connect();
+    void issueConnect();
+    bool isChannelConnected();
 
     void callSubscriber(const std::string& pySubscriberName, boost::python::object& pySubscriber, PvObject& pvObject);
 
@@ -157,6 +161,7 @@ private:
     std::string monitorRequestDescriptor;
 
     bool monitorActive;
+    bool monitorRunning;
     bool processingThreadRunning;
     SynchronizedQueue<PvObject> pvObjectQueue;
 
