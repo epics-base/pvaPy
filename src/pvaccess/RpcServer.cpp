@@ -2,6 +2,7 @@
 // found in the file LICENSE that is included with the distribution
 
 #include "boost/python.hpp"
+#include "epicsThread.h"
 #include "RpcServer.h"
 #include "PyGilManager.h"
 #include "InvalidState.h"

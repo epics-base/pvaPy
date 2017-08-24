@@ -27,7 +27,7 @@
 #   and this notice are preserved. This file is offered as-is, without any
 #   warranty.
 
-#serial 1
+#serial 2
 
 DEFAULT_PVA_VERSION=4.0.4
 
@@ -169,6 +169,7 @@ AC_DEFUN([AX_EPICS4],
     export CPPFLAGS="$PVAC_CPPFLAGS $PVA_CPPFLAGS $EPICS_CPPFLAGS"
     export LDFLAGS="$PVAC_LDFLAGS $PVA_LDFLAGS $EPICS_LDFLAGS"
     export LIBS="$PVAC_LIBS $PVA_LIBS"
+
     AC_LINK_IFELSE([AC_LANG_PROGRAM(
         [[
         #include "pv/pvaClient.h"
@@ -177,18 +178,28 @@ AC_DEFUN([AX_EPICS4],
         epics::pvaClient::PvaClientChannelPtr pvaClientChannel;
         ]])
     ],[pva_client_cpp=yes],[pva_client_cpp=no])
+    AC_MSG_RESULT([$pva_client_cpp])
+
+    # We got pvaClientCPP, must determine version
+    if test "$pva_client_cpp" == "yes" ; then
+        pva_api_version=450
+        AC_SUBST(NORMATIVETYPESCPP_DIR, $normativetypescpp_dir)
+        AC_SUBST(PVACLIENTCPP_DIR, $pvaclientcpp_dir)
+        AC_MSG_CHECKING(for EPICS4 pvaClient version)
+        AC_LINK_IFELSE([AC_LANG_PROGRAM(
+            [[
+            #include "pv/pvaClient.h"
+            ]],
+            [[
+            epics::pvaClient::PvaClientPtr Channel::pvaClientPtr(epics::pvaClient::PvaClient::create());
+            ]])
+        ],[pva_api_version=450],[pva_api_version=460])
+    fi
 
     if test "$succeeded" != "yes" ; then
         AC_MSG_RESULT([no])
         AC_MSG_FAILURE(could not compile and link EPICS4 test code: check your EPICS4 installation)
     else
-        AC_SUBST(NORMATIVETYPESCPP_DIR, "")
-        AC_SUBST(PVACLIENTCPP_DIR, "")
-        if test "$pva_client_cpp" == "yes" ; then
-            pva_api_version=450
-            AC_SUBST(NORMATIVETYPESCPP_DIR, $normativetypescpp_dir)
-            AC_SUBST(PVACLIENTCPP_DIR, $pvaclientcpp_dir)
-        fi
         AC_MSG_RESULT([yes (pva api version: $pva_api_version)])
         AC_DEFINE(HAVE_EPICS4,,[define if the EPICS4 libraries are available])
         AC_DEFINE(PVA_API_VERSION,$pva_api_version,[define PVA API version])

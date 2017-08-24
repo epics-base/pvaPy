@@ -3,7 +3,9 @@
 
 #if PVA_API_VERSION <= 440
 #include "Channel.440.cpp"
-#elif PVA_API_VERSION >= 450
+#elif PVA_API_VERSION <= 450
 #include "Channel.450.cpp"
+#elif PVA_API_VERSION >= 650
+#include "Channel.460.cpp"
 #endif // if PVA_API_VERSION <= 440
 

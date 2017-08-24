@@ -1,4 +1,4 @@
-AC_INIT([pvaPy], [0.2], [epics-pvdata-devel@lists.sourceforge.net])
+AC_INIT([pvaPy], [0.8], [epics-pvdata-devel@lists.sourceforge.net])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 AC_CONFIG_FILES([Makefile])
 AC_CONFIG_MACRO_DIR([m4])
