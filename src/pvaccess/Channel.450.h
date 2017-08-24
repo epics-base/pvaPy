@@ -157,6 +157,7 @@ private:
     std::string monitorRequestDescriptor;
 
     bool monitorActive;
+    bool monitorThreadRunning;
     bool processingThreadRunning;
     SynchronizedQueue<PvObject> pvObjectQueue;
 
@@ -171,6 +172,7 @@ private:
     epics::pvData::Mutex monitorMutex;
     epics::pvData::Mutex processingThreadMutex;
     epicsEvent processingThreadExitEvent;
+    epicsEvent monitorThreadExitEvent;
     double timeout;
     PvProvider::ProviderType providerType;
 
