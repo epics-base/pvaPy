@@ -143,8 +143,8 @@ AC_DEFUN([AX_PVA_PY],
     if ! test -z $NORMATIVETYPESCPP_DIR; then
         echo "NORMATIVETYPES = $NORMATIVETYPESCPP_DIR" >> $release_local
     fi
-    echo "PVDATA = $PVDATACPP_DIR" >> $release_local
     echo "PVACCESS = $PVACCESSCPP_DIR" >> $release_local
+    echo "PVDATA = $PVDATACPP_DIR" >> $release_local
     echo "EPICS_BASE = $EPICS_BASE" >> $release_local
     AC_MSG_NOTICE([created $release_local file])
 
