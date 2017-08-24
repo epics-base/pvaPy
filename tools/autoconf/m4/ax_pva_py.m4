@@ -134,11 +134,17 @@ AC_DEFUN([AX_PVA_PY],
     fi
 
     # create RELEASE.local
-    echo "PVACLIENT = $PVACLIENTCPP_DIR" >> $release_local
-    echo "PVACCESS = $PVACCESSCPP_DIR" >> $release_local
-    echo "NORMATIVETYPES = $NORMATIVETYPESCPP_DIR" >> $release_local
+    if ! test -z $PVACLIENTCPP_DIR; then
+        echo "PVACLIENT = $PVACLIENTCPP_DIR" >> $release_local
+    fi
+    if ! test -z $PVDATABASECPP_DIR; then
+        echo "PVDATABASE = $PVDATABASECPP_DIR" >> $release_local
+    fi
+    if ! test -z $NORMATIVETYPESCPP_DIR; then
+        echo "NORMATIVETYPES = $NORMATIVETYPESCPP_DIR" >> $release_local
+    fi
     echo "PVDATA = $PVDATACPP_DIR" >> $release_local
-    echo "PVDATABASE = $PVDATABASECPP_DIR" >> $release_local
+    echo "PVACCESS = $PVACCESSCPP_DIR" >> $release_local
     echo "EPICS_BASE = $EPICS_BASE" >> $release_local
     AC_MSG_NOTICE([created $release_local file])
 

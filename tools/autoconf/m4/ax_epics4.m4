@@ -185,13 +185,14 @@ AC_DEFUN([AX_EPICS4],
         pva_api_version=450
         AC_SUBST(NORMATIVETYPESCPP_DIR, $normativetypescpp_dir)
         AC_SUBST(PVACLIENTCPP_DIR, $pvaclientcpp_dir)
+        AC_SUBST(PVDATABASECPP_DIR, $pvdatabasecpp_dir)
         AC_MSG_CHECKING(for EPICS4 pvaClient version)
         AC_LINK_IFELSE([AC_LANG_PROGRAM(
             [[
             #include "pv/pvaClient.h"
             ]],
             [[
-            epics::pvaClient::PvaClientPtr Channel::pvaClientPtr(epics::pvaClient::PvaClient::create());
+            epics::pvaClient::PvaClientPtr pvaClientPtr(epics::pvaClient::PvaClient::create());
             ]])
         ],[pva_api_version=450],[pva_api_version=460])
     fi
@@ -207,7 +208,6 @@ AC_DEFUN([AX_EPICS4],
         AC_SUBST(EPICS4_DIR)
         AC_SUBST(PVDATACPP_DIR, $pvdatacpp_dir)
         AC_SUBST(PVACCESSCPP_DIR, $pvaccesscpp_dir)
-        AC_SUBST(PVDATABASECPP_DIR, $pvdatabasecpp_dir)
     fi
 
     export CPPFLAGS="$PVA_CPPFLAGS $EPICS_CPPFLAGS"
