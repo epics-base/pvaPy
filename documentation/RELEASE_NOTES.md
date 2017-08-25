@@ -4,6 +4,7 @@
   faster initial connections; monitors connect automatically when channels 
   come online 
 - fixed support for older EPICS v4 releases (4.4, 4.5 and 4.6)
+- added build support for numpy included with boost releases 1.63.0 and later
 
 ## Release 0.8 (2017/07/17)
 

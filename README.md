@@ -8,9 +8,10 @@ software:
 1. EPICS Base (v3.14.12.3 or 3.15.2)
 2. EPICS4 CPP release (v4.4.0 or higher)
 3. Python development header files/libraries (v2.6.6 or higher)
-4. Boost (v1.41.0); must have the boost_python library built.
+4. Boost (v1.41.0); must have the boost_python library built
 5. Standard development tools (gcc, make, autoconf, etc.)
-6. Boost.NumPy (optional, for retrieving numeric scalar arrays as numpy arrays)
+6. Boost.NumPy (optional, for retrieving numeric scalar arrays as numpy
+arrays; this is not needed for Boost v1.63.0 and later)
 7. Sphinx (optional, for generating documentation)
 
 The Software versions listed above were used for prototype development and
@@ -42,16 +43,17 @@ For automatic configuration: In the top level directory run
   $ make configure EPICS_BASE=/epics/base/path EPICS4_DIR=/epics/v4/path [BOOST_NUM_PY_DIR=/boost.numpy/path] [BOOST_ROOT=/boost/path]
 ```
 
-In the above command replace `/epics/base/path` with the full path to your
-EPICS Base directory, and `/epics/v4/path` with the full path to your top level
-directory containing the v4 modules pvDataCPP, pvAccessCPP, etc. 
-Note that the optional `BOOST_NUM_PY_DIR` argument enables NumPy array support,
-and that you can only use the automatic configuration if the v4 modules have
-not been renamed. The optional BOOST_ROOT argument is typically used
-for custom boost installation directory. In case you are using custom 
-python installation that uses shared object libraries, you may need to
-set PATH and LD_LIBRARY_PATH environment variables before running the above
-`make configure` command.
+Note that you can only use the automatic configuration if the v4 modules have
+not been renamed. In the above command replace `/epics/base/path` with the full
+path to your EPICS Base directory, and `/epics/v4/path` with the full path to 
+your top level directory containing the v4 modules pvDataCPP, pvAccessCPP, etc. 
+
+The optional `BOOST_NUM_PY_DIR` argument enables NumPy array support for older
+Boost versions, as v1.63.0 and later releases already include NumPy libraries.
+The optional `BOOST_ROOT` argument is typically used for custom Boost 
+installation directory. In case you are using custom python installation that 
+uses shared object libraries, you may need to set PATH and LD_LIBRARY_PATH 
+environment variables before running the above `make configure` command.
 
 The `make configure` command will check for your Boost/Python libraries, and
 create suitable `configure/RELEASE.local` and `configure/CONFIG_SITE.local` files.
