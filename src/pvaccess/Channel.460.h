@@ -142,7 +142,6 @@ private:
     static CaClient caClient;
 
     static void processingThread(Channel* channel);
-    static void monitorStartThread(Channel* channel);
 
     void startProcessingThread();
     void waitForProcessingThreadExit(double timeout);

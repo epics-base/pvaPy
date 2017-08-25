@@ -744,11 +744,6 @@ void Channel::startMonitor(const std::string& requestDescriptor)
     PyGilManager::evalInitThreads();
     this->monitorRequestDescriptor = requestDescriptor;
 
-    // Use separate thread to start monitor; in this way main thread is not
-    // affected if there is a problem with the channel monitor
-    // epicsThreadCreate("MonitorStartThread", epicsThreadPriorityHigh, epicsThreadGetStackSize(epicsThreadStackSmall), (EPICSTHREADFUNC)monitorStartThread, this);
-    // epicsThreadSleep(MonitorStartWaitTime);
-        
     // If queue length is zero, there is no need for processing thread.
     if (pvObjectQueue.getMaxLength() != 0) {
         startProcessingThread();
@@ -777,25 +772,6 @@ void Channel::monitor(const boost::python::object& pySubscriber, const std::stri
     }
     subscribe(DefaultSubscriberName, pySubscriber);
     startMonitor(requestDescriptor);
-}
-
-void Channel::monitorStartThread(Channel* channel)
-{
-    logger.debug("Starting monitor for %s", channel->getName().c_str());
-    try {
-        channel->connect();
-        channel->pvaClientMonitorRequesterPtr = epics::pvaClient::PvaClientMonitorRequesterPtr(new ChannelMonitorRequesterImpl(channel->getName(), channel));
-
-        channel->pvaClientMonitorPtr = channel->pvaClientChannelPtr->monitor(channel->monitorRequestDescriptor, channel->pvaClientMonitorRequesterPtr);
-    } 
-    catch (PvaException& ex) {
-        channel->monitorActive = false;
-        logger.error(ex.what());
-    }
-    catch (std::runtime_error& ex) {
-        channel->monitorActive = false;
-        logger.error(ex.what());
-    }
 }
 
 void Channel::startProcessingThread() 
