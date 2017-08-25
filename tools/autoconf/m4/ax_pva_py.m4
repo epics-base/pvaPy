@@ -93,6 +93,14 @@ AC_DEFUN([AX_PVA_PY],
         AC_MSG_RESULT([yes])
     fi
 
+    # check for boost python numpy library
+    AC_MSG_CHECKING(for boost python numpy)
+    if test $HAVE_BOOST_PYTHON_NUM_PY -eq 1 ; then
+        AC_MSG_RESULT([yes])
+    else
+        AC_MSG_RESULT([no])
+    fi
+
     # check for boost numpy library
     AC_MSG_CHECKING(for boost numpy)
     if test $HAVE_BOOST_NUM_PY -eq 1 ; then
