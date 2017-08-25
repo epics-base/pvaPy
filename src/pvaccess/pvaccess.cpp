@@ -53,7 +53,9 @@ void wrapChannel();
 void wrapRpcServer();
 void wrapRpcClient();
 
+#if PVA_API_VERSION >= 450
 void wrapPvaServer();
+#endif // if PVA_API_VERSION >= 450
 
 // Exceptions
 PyObject* pvaException = NULL;
@@ -117,5 +119,7 @@ BOOST_PYTHON_MODULE(pvaccess)
     wrapRpcClient();
     wrapRpcServer(); 
 
-    wrapPvaServer(); 
+#if PVA_API_VERSION >= 450
+    wrapPvaServer();
+#endif // if PVA_API_VERSION >= 450
 }

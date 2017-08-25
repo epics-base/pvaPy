@@ -1,3 +1,10 @@
+## Release 0.9 ()
+
+- improved support for channel monitors: no monitor startup thread results in
+  faster initial connections; monitors connect automatically when channels 
+  come online 
+- fixed support for older EPICS v4 releases (4.4, 4.5 and 4.6)
+
 ## Release 0.8 (2017/07/17)
 
 - added new Channel monitor() method that can be used instead of 
