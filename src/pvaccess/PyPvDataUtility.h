@@ -13,9 +13,11 @@
 #include "boost/python/dict.hpp"
 #include "boost/python/tuple.hpp"
 
-#if defined HAVE_BOOST_NUM_PY && HAVE_BOOST_NUM_PY == 1
-#include "boost/numpy.hpp"
-#endif // if defined HAVE_BOOST_NUM_PY && HAVE_BOOST_NUM_PY == 1
+#include "pvapy.environment.h"
+
+#if defined HAVE_NUM_PY_SUPPORT && HAVE_NUM_PY_SUPPORT == 1
+#include NUM_PY_HEADER_FILE
+#endif // if defined HAVE_NUM_PY_SUPPORT && HAVE_NUM_PY_SUPPORT == 1
 
 #include "PyUtility.h"
 #include "InvalidDataType.h"
@@ -306,17 +308,17 @@ void setPyObjectToFieldPath(const boost::python::object& pyObject, const std::st
 //
 // Boost NumPy Support
 //
-#if defined HAVE_BOOST_NUM_PY && HAVE_BOOST_NUM_PY == 1
+#if defined HAVE_NUM_PY_SUPPORT && HAVE_NUM_PY_SUPPORT == 1
 
 //
 // Conversion PV Scalar Array => NumPy Array
 //
-boost::numpy::ndarray getScalarArrayFieldAsNumPyArray(const std::string& fieldName, const epics::pvData::PVStructurePtr& pvStructurePtr);
+numpy_::ndarray getScalarArrayFieldAsNumPyArray(const std::string& fieldName, const epics::pvData::PVStructurePtr& pvStructurePtr);
 
 template<typename PvArrayType, typename CppType>
-boost::numpy::ndarray getScalarArrayAsNumPyArray(const epics::pvData::PVScalarArrayPtr& pvScalarArrayPtr);
+numpy_::ndarray getScalarArrayAsNumPyArray(const epics::pvData::PVScalarArrayPtr& pvScalarArrayPtr);
 
-#endif // if defined HAVE_BOOST_NUM_PY && HAVE_BOOST_NUM_PY == 1
+#endif // if defined HAVE_NUM_PY_SUPPORT && HAVE_NUM_PY_SUPPORT == 1
 
 //
 // Template implementations
@@ -367,22 +369,21 @@ void copyScalarArrayToScalarArray(const epics::pvData::PVScalarArrayPtr& srcPvSc
     destPvScalarArrayPtr->putFrom(data);
 }
 
-#if defined HAVE_BOOST_NUM_PY && HAVE_BOOST_NUM_PY == 1
+#if defined HAVE_NUM_PY_SUPPORT && HAVE_NUM_PY_SUPPORT == 1
 template<typename PvArrayType, typename CppType>
-boost::numpy::ndarray getScalarArrayAsNumPyArray(const epics::pvData::PVScalarArrayPtr& pvScalarArrayPtr)
+numpy_::ndarray getScalarArrayAsNumPyArray(const epics::pvData::PVScalarArrayPtr& pvScalarArrayPtr)
 {
     int nDataElements = pvScalarArrayPtr->getLength();
     typename PvArrayType::const_svector data;
     pvScalarArrayPtr->PVScalarArray::template getAs<CppType>(data);
     const CppType* arrayData = data.data();
-    boost::numpy::dtype dataType = boost::numpy::dtype::get_builtin<CppType>();
+    numpy_::dtype dataType = numpy_::dtype::get_builtin<CppType>();
     boost::python::tuple shape = boost::python::make_tuple(nDataElements);
     boost::python::object arrayOwner;
     boost::python::tuple stride = boost::python::make_tuple(sizeof(CppType));
-    return boost::numpy::from_data(arrayData, dataType, shape, stride, arrayOwner);
+    return numpy_::from_data(arrayData, dataType, shape, stride, arrayOwner);
 }
-
-#endif // if defined HAVE_BOOST_NUM_PY && HAVE_BOOST_NUM_PY == 1
+#endif // if defined HAVE_NUM_PY_SUPPORT && HAVE_NUM_PY_SUPPORT == 1
 
 } // namespace PyPvDataUtility
 

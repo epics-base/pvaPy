@@ -4,6 +4,7 @@
 #include "boost/python/class.hpp"
 #include "boost/python/self.hpp"
 #include "boost/python/operators.hpp"
+#include "pvapy.environment.h"
 #include "PvObject.h"
 #include "PvObjectPickleSuite.h"
 
@@ -1168,9 +1169,9 @@ class_<PvObject>("PvObject",
         &PvObject::getStructureDict,
         "Retrieves PV structure definition as python dictionary.\n\n:Returns: python key:value dictionary representing PV structure definition in terms of field names and their types\n\n::\n\n    structureDict = pv.getStructureDict()\n\n")
 
-#if defined HAVE_BOOST_NUM_PY && HAVE_BOOST_NUM_PY == 1
+#if defined HAVE_NUM_PY_SUPPORT && HAVE_NUM_PY_SUPPORT == 1
     .add_property("useNumPyArrays", &PvObject::getUseNumPyArraysFlag, &PvObject::setUseNumPyArraysFlag)
-#endif // if defined HAVE_BOOST_NUM_PY && HAVE_BOOST_NUM_PY == 1
+#endif // if defined HAVE_NUM_PY_SUPPORT && HAVE_NUM_PY_SUPPORT == 1
 
 ;
 

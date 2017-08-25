@@ -9,6 +9,7 @@ include $(TOP)/configure/CONFIG
 USR_CXXFLAGS += -DPVA_API_VERSION=$(PVA_API_VERSION)
 USR_CXXFLAGS += -DPVA_RPC_API_VERSION=$(PVA_RPC_API_VERSION)
 USR_CXXFLAGS += -DHAVE_BOOST_NUM_PY=$(HAVE_BOOST_NUM_PY)
+USR_CXXFLAGS += -DHAVE_BOOST_PYTHON_NUM_PY=$(HAVE_BOOST_PYTHON_NUM_PY)
 
 USR_CXXFLAGS += $(PVA_PY_CPPFLAGS)
 USR_LDFLAGS  += $(PVA_PY_LDFLAGS)
@@ -67,7 +68,6 @@ pvaccess_SRCS += pvaccess.NtType.cpp
 pvaccess_SRCS += pvaccess.NtTable.cpp
 
 pvaccess_SRCS += pvaccess.Channel.cpp
-pvaccess_SRCS += pvaccess.PvaServer.cpp
 pvaccess_SRCS += pvaccess.RpcClient.cpp
 pvaccess_SRCS += pvaccess.RpcServer.cpp
 
@@ -94,7 +94,6 @@ pvaccess_SRCS += PvaConstants.cpp
 pvaccess_SRCS += PvaException.cpp
 pvaccess_SRCS += PvaExceptionTranslator.cpp
 pvaccess_SRCS += PvaPyLogger.cpp
-pvaccess_SRCS += PvaServer.cpp
 pvaccess_SRCS += PvAlarm.cpp
 pvaccess_SRCS += PvBoolean.cpp
 pvaccess_SRCS += PvByte.cpp
@@ -117,7 +116,6 @@ pvaccess_SRCS += PvUShort.cpp
 pvaccess_SRCS += PvUtility.cpp
 pvaccess_SRCS += PyGilManager.cpp
 pvaccess_SRCS += PyPvDataUtility.cpp
-pvaccess_SRCS += PyPvRecord.cpp
 pvaccess_SRCS += PyUtility.cpp
 pvaccess_SRCS += RequesterImpl.cpp
 #pvaccess_SRCS += RpcChannelImpl.cpp
@@ -131,13 +129,18 @@ pvaccess_SRCS += RpcTimeout.cpp
 pvaccess_SRCS += StringUtility.cpp
 
 with_pvaClient := $(shell $(PERL) -e "print $(PVA_API_VERSION) >= 450")
+pvaccess_1_SRCS += pvaccess.PvaServer.cpp
+pvaccess_1_SRCS += PvaServer.cpp
+pvaccess_1_SRCS += PyPvRecord.cpp
+pvaccess_SRCS += $(pvaccess_$(with_pvaClient)_SRCS)
+
 pvaccess_1_LIBS += pvaClient
 pvaccess_1_LIBS += nt
+pvaccess_1_LIBS += pvDatabase
 pvaccess_LIBS += $(pvaccess_$(with_pvaClient)_LIBS)
 
 pvaccess_LIBS += pvAccess
 pvaccess_LIBS += pvData
-pvaccess_LIBS += pvDatabase
 pvaccess_LIBS += Com
 
 

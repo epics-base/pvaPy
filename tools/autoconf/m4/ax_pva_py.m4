@@ -134,21 +134,28 @@ AC_DEFUN([AX_PVA_PY],
     fi
 
     # create RELEASE.local
-    echo "PVACLIENT = $PVACLIENTCPP_DIR" >> $release_local
+    if ! test -z $PVACLIENTCPP_DIR; then
+        echo "PVACLIENT = $PVACLIENTCPP_DIR" >> $release_local
+    fi
+    if ! test -z $PVDATABASECPP_DIR; then
+        echo "PVDATABASE = $PVDATABASECPP_DIR" >> $release_local
+    fi
+    if ! test -z $NORMATIVETYPESCPP_DIR; then
+        echo "NORMATIVETYPES = $NORMATIVETYPESCPP_DIR" >> $release_local
+    fi
     echo "PVACCESS = $PVACCESSCPP_DIR" >> $release_local
-    echo "NORMATIVETYPES = $NORMATIVETYPESCPP_DIR" >> $release_local
     echo "PVDATA = $PVDATACPP_DIR" >> $release_local
-    echo "PVDATABASE = $PVDATABASECPP_DIR" >> $release_local
     echo "EPICS_BASE = $EPICS_BASE" >> $release_local
     AC_MSG_NOTICE([created $release_local file])
 
     # create CONFIG_SITE.local
-    echo "PVA_PY_CPPFLAGS = $BOOST_CPPFLAGS $PYTHON_CPPFLAGS $BOOST_NUM_PY_CPPFLAGS" >> $config_site_local
-    echo "PVA_PY_LDFLAGS = $BOOST_LDFLAGS $PYTHON_LDFLAGS $BOOST_NUM_PY_LDFLAGS" >> $config_site_local
-    echo "PVA_PY_SYS_LIBS = $BOOST_PYTHON_LIB $BOOST_NUM_PY_LIBS" >> $config_site_local
+    echo "PVA_PY_CPPFLAGS = $BOOST_CPPFLAGS $PYTHON_CPPFLAGS $BOOST_NUM_PY_CPPFLAGS $BOOST_PYTHON_NUM_PY_CPPFLAGS" >> $config_site_local
+    echo "PVA_PY_LDFLAGS = $BOOST_LDFLAGS $PYTHON_LDFLAGS $BOOST_NUM_PY_LDFLAGS $BOOST_PYTHON_NUM_PY_LDFLAGS" >> $config_site_local
+    echo "PVA_PY_SYS_LIBS = $BOOST_PYTHON_LIB $BOOST_NUM_PY_LIBS $BOOST_PYTHON_NUM_PY_LIBS" >> $config_site_local
     echo "PVA_API_VERSION = $PVA_API_VERSION" >> $config_site_local
     echo "PVA_RPC_API_VERSION = $PVA_RPC_API_VERSION" >> $config_site_local
     echo "HAVE_BOOST_NUM_PY = $HAVE_BOOST_NUM_PY" >> $config_site_local
+    echo "HAVE_BOOST_PYTHON_NUM_PY = $HAVE_BOOST_PYTHON_NUM_PY" >> $config_site_local
     echo "PYTHON_VERSION := \$(shell python -c 'import sys; print(sys.version[[:3]])')" >> $config_site_local
     AC_MSG_NOTICE([created $config_site_local file])
 ])
