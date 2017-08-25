@@ -997,7 +997,7 @@ boost::python::object getScalarArrayFieldAsPyObject(const std::string& fieldName
 
 // Only use NumPy arrays if support is compiled in and the corresponding
 // flag is set 
-#if defined HAVE_BOOST_NUM_PY && HAVE_BOOST_NUM_PY == 1
+#if defined HAVE_NUM_PY_SUPPORT && HAVE_NUM_PY_SUPPORT == 1
     if (useNumPyArrays && scalarType != epics::pvData::pvString) {
         return getScalarArrayFieldAsNumPyArray(fieldName, pvStructurePtr);
     }
@@ -1006,7 +1006,7 @@ boost::python::object getScalarArrayFieldAsPyObject(const std::string& fieldName
     }
 #else
     return getScalarArrayFieldAsPyList(fieldName, pvStructurePtr);
-#endif // if defined HAVE_BOOST_NUM_PY && HAVE_BOOST_NUM_PY == 1
+#endif // if defined HAVE_NUM_PY_SUPPORT && HAVE_NUM_PY_SUPPORT == 1
 }
 
 
@@ -1960,12 +1960,12 @@ void setPyObjectToFieldPath(const boost::python::object& pyObject, const std::st
     pyObjectToField(pyObject, fieldName, pvStructurePtr2);
 }
 
-#if defined HAVE_BOOST_NUM_PY && HAVE_BOOST_NUM_PY == 1
+#if defined HAVE_NUM_PY_SUPPORT && HAVE_NUM_PY_SUPPORT == 1
 
 //
 // Conversion PV Scalar Array => NumPy Array
 //
-boost::numpy::ndarray getScalarArrayFieldAsNumPyArray(const std::string& fieldName, const epics::pvData::PVStructurePtr& pvStructurePtr)
+numpy_::ndarray getScalarArrayFieldAsNumPyArray(const std::string& fieldName, const epics::pvData::PVStructurePtr& pvStructurePtr)
 {
     epics::pvData::ScalarType scalarType = getScalarArrayType(fieldName, pvStructurePtr);
     epics::pvData::PVScalarArrayPtr pvScalarArrayPtr = pvStructurePtr->getSubField<epics::pvData::PVScalarArray>(fieldName);
@@ -2013,7 +2013,7 @@ boost::numpy::ndarray getScalarArrayFieldAsNumPyArray(const std::string& fieldNa
     }
 }
 
-#endif // if defined HAVE_BOOST_NUM_PY && HAVE_BOOST_NUM_PY == 1
+#endif // if defined HAVE_NUM_PY_SUPPORT && HAVE_NUM_PY_SUPPORT == 1
 
 } // namespace PyPvDataUtility
 

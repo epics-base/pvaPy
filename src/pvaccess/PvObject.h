@@ -6,10 +6,12 @@
 
 #include <iostream>
 #include "pv/pvData.h"
+#include "pvapy.environment.h"
 #include "boost/python/dict.hpp"
 #include "boost/python/list.hpp"
 
 #include "PvType.h"
+
 
 class PvObject 
 {
@@ -176,10 +178,10 @@ public:
     PvObject createUnionArrayElementField(const std::string& key, const std::string& fieldName) const;
     PvObject createUnionArrayElementField(const std::string& fieldName) const;
 
-#if defined HAVE_BOOST_NUM_PY && HAVE_BOOST_NUM_PY == 1
+#if defined HAVE_NUM_PY_SUPPORT && HAVE_NUM_PY_SUPPORT == 1
     void setUseNumPyArraysFlag(bool useNumPyArrays);
     bool getUseNumPyArraysFlag() const;
-#endif // if defined HAVE_BOOST_NUM_PY && HAVE_BOOST_NUM_PY == 1
+#endif // if defined HAVE_NUM_PY_SUPPORT && HAVE_NUM_PY_SUPPORT == 1
 
 protected:
     epics::pvData::PVStructurePtr pvStructurePtr;
@@ -188,10 +190,10 @@ protected:
 
 private:
 
-#if defined HAVE_BOOST_NUM_PY && HAVE_BOOST_NUM_PY == 1
+#if defined HAVE_NUM_PY_SUPPORT && HAVE_NUM_PY_SUPPORT == 1
     static bool initializeBoostNumPy();
     static bool boostNumPyInitialized;
-#endif // if defined HAVE_BOOST_NUM_PY && HAVE_BOOST_NUM_PY == 1
+#endif // if defined HAVE_NUM_PY_SUPPORT && HAVE_NUM_PY_SUPPORT == 1
 
  
 };

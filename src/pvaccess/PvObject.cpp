@@ -17,12 +17,12 @@
 #include "InvalidRequest.h"
 #include "FieldNotFound.h"
 
-#if defined HAVE_BOOST_NUM_PY && HAVE_BOOST_NUM_PY == 1
-#include "boost/numpy.hpp"
+#if defined HAVE_NUM_PY_SUPPORT && HAVE_NUM_PY_SUPPORT == 1
+#include NUM_PY_HEADER_FILE
 const bool PvObject::UseNumPyArraysDefault(true);
 #else
 const bool PvObject::UseNumPyArraysDefault(false);
-#endif // if defined HAVE_BOOST_NUM_PY && HAVE_BOOST_NUM_PY == 1
+#endif // if defined HAVE_NUM_PY_SUPPORT && HAVE_NUM_PY_SUPPORT == 1
 
 // Constants
 const char* PvObject::ValueFieldKey(PvaConstants::ValueFieldKey);
@@ -749,11 +749,11 @@ PvObject PvObject::createUnionArrayElementField(const std::string& fieldName) co
 }
 
 // Methods specific to Boost NumPy 
-#if defined HAVE_BOOST_NUM_PY && HAVE_BOOST_NUM_PY == 1
+#if defined HAVE_NUM_PY_SUPPORT && HAVE_NUM_PY_SUPPORT == 1
 bool PvObject::boostNumPyInitialized(initializeBoostNumPy());
 bool PvObject::initializeBoostNumPy() 
 {
-    boost::numpy::initialize();
+    numpy_::initialize();
     return true;
 }
 
@@ -767,6 +767,6 @@ bool PvObject::getUseNumPyArraysFlag() const
     return useNumPyArrays;
 }
 
-#endif // if defined HAVE_BOOST_NUM_PY && HAVE_BOOST_NUM_PY == 1
+#endif // if defined HAVE_NUM_PY_SUPPORT && HAVE_NUM_PY_SUPPORT == 1
 
 
