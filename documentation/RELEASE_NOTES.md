@@ -1,4 +1,4 @@
-## Release 0.9 ()
+## Release 0.9 (2017/09/17)
 
 - improved support for channel monitors: no monitor startup thread results in
   faster initial connections; monitors connect automatically when channels 
