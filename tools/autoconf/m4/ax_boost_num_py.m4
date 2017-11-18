@@ -90,13 +90,6 @@ AC_DEFUN([AX_BOOST_NUM_PY],
     ],[succeeded=yes],[succeeded=no])
 
     if test "$succeeded" != "yes" ; then
-        AC_MSG_RESULT([no])
-        AC_SUBST(HAVE_BOOST_NUM_PY,0)
-        AC_SUBST(BOOST_NUM_PY_DIR,'')
-        AC_SUBST(BOOST_NUM_PY_CPPFLAGS,'')
-        AC_SUBST(BOOST_NUM_PY_LDFLAGS,'')
-        AC_SUBST(BOOST_NUM_PY_LIBS,'')
-    else
         if test "$HAVE_BOOST_PYTHON_NUM_PY" = "1" ; then
             AC_MSG_RESULT([skipping, Boost.Python.NumPy already found])
             AC_SUBST(HAVE_BOOST_NUM_PY,0)
@@ -105,13 +98,20 @@ AC_DEFUN([AX_BOOST_NUM_PY],
             AC_SUBST(BOOST_NUM_PY_LDFLAGS,'')
             AC_SUBST(BOOST_NUM_PY_LIBS,'')
         else
-            AC_MSG_RESULT([yes])
-            AC_SUBST(HAVE_BOOST_NUM_PY,1)
-            AC_SUBST(BOOST_NUM_PY_DIR)
-            AC_SUBST(BOOST_NUM_PY_CPPFLAGS)
-            AC_SUBST(BOOST_NUM_PY_LDFLAGS)
-            AC_SUBST(BOOST_NUM_PY_LIBS,boost_numpy)
+            AC_MSG_RESULT([no])
+            AC_SUBST(HAVE_BOOST_NUM_PY,0)
+            AC_SUBST(BOOST_NUM_PY_DIR,'')
+            AC_SUBST(BOOST_NUM_PY_CPPFLAGS,'')
+            AC_SUBST(BOOST_NUM_PY_LDFLAGS,'')
+            AC_SUBST(BOOST_NUM_PY_LIBS,'')
         fi
+    else
+        AC_MSG_RESULT([yes])
+        AC_SUBST(HAVE_BOOST_NUM_PY,1)
+        AC_SUBST(BOOST_NUM_PY_DIR)
+        AC_SUBST(BOOST_NUM_PY_CPPFLAGS)
+        AC_SUBST(BOOST_NUM_PY_LDFLAGS)
+        AC_SUBST(BOOST_NUM_PY_LIBS,boost_numpy)
     fi
 
     # restore compile/link flags
