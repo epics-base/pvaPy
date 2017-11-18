@@ -53,12 +53,28 @@ if [ ! -f $PYTHON_DIR/bin/pip ]; then
     wget https://bootstrap.pypa.io/get-pip.py -O - | python
 fi
 #easy_install pip || exit 1
-pip install sphinx || exit 1
-pip install numpy || exit 1
+pip install bqplot || exit 1
+pip install cdb_api|| exit 1
+pip install cherrypy || exit 1
+pip install decorator || exit 1
 pip install jupyter || exit 1
 pip install matplotlib || exit 1
+pip install numpy || exit 1
+pip install pymongo || exit 1
+pip install pysftp || exit 1
+pip install python_ldap || exit 1
+pip install pytest || exit 1
+pip install pytz || exit 1
+pip install pyzmq || exit 1
+pip install routes || exit 1
 pip install scipy || exit 1
-pip install bqplot || exit 1
+pip install sphinx || exit 1
+pip install sqlalchemy || exit 1
+pip install suds || exit 1
+pip install tzlocal || exit 1
+pip install watchdog || exit 1
+
+jupyter nbextension enable --py --sys-prefix widgetsnbextension || exit 1
 jupyter nbextension enable --py --sys-prefix bqplot || exit 1
 
 # Create python link

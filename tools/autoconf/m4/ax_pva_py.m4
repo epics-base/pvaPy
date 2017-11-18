@@ -164,6 +164,6 @@ AC_DEFUN([AX_PVA_PY],
     echo "PVA_RPC_API_VERSION = $PVA_RPC_API_VERSION" >> $config_site_local
     echo "HAVE_BOOST_NUM_PY = $HAVE_BOOST_NUM_PY" >> $config_site_local
     echo "HAVE_BOOST_PYTHON_NUM_PY = $HAVE_BOOST_PYTHON_NUM_PY" >> $config_site_local
-    echo "PYTHON_VERSION := \$(shell python -c 'import sys; print(sys.version[[:3]])')" >> $config_site_local
+    echo "PYTHON_VERSION := \$(shell python$PYTHON_VERSION -c 'import sys; print(sys.version[[:3]])')" >> $config_site_local
     AC_MSG_NOTICE([created $config_site_local file])
 ])
