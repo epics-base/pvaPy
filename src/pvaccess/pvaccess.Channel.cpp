@@ -1112,7 +1112,7 @@ class_<Channel>("Channel",
         "Starts channel monitor for PV value changes.\n\n"
         ":Parameter: *requestDescriptor* (str) - describes what PV data should be sent to subscribed channel clients\n\n"
         "::\n\n"
-        "    channel.startMonitor('field(value.index)')\n\n")
+        "    channel.startMonitor('field(value,alarm,timeStamp)')\n\n")
 
     .def("startMonitor", 
         static_cast<void(Channel::*)()>(&Channel::startMonitor), 
@@ -1129,7 +1129,7 @@ class_<Channel>("Channel",
         "::\n\n"
         "    def echo(x):\n\n"
         "        print 'New PV value: ', x\n\n"
-        "    channel.monitor(echo, 'field(value.index)')\n\n"))
+        "    channel.monitor(echo, 'field(value,alarm,timeStamp)')\n\n"))
 
     .def("stopMonitor", 
         &Channel::stopMonitor, 
