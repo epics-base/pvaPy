@@ -27,7 +27,7 @@
 #   and this notice are preserved. This file is offered as-is, without any
 #   warranty.
 
-#serial 2
+#serial 3
 
 DEFAULT_PVA_VERSION=4.0.4
 
@@ -48,7 +48,11 @@ AC_DEFUN([AX_EPICS4],
 
     if test -z "$ac_epics4_dir_path"; then
         if test -z "$EPICS4_DIR"; then
-            ac_epics4_dir_path="/usr/local/epics4"
+            if test -z "$EPICS_BASE"; then
+                ac_epics4_dir_path="/usr/local/epics4"
+            else
+                ac_epics4_dir_path=$EPICS_BASE
+            fi
         else
             ac_epics4_dir_path=$EPICS4_DIR
         fi
