@@ -1,3 +1,8 @@
+## Release 1.0.0 (2018/01/04)
+
+- added build support for python3 
+- added build support for EPICS7 releases
+
 ## Release 0.9 (2017/09/17)
 
 - improved support for channel monitors: no monitor startup thread results in

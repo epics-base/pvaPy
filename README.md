@@ -6,7 +6,8 @@ The pvAccess for Python package requires recent versions of the following
 software:
 
 1. EPICS Base (v3.14.12.3 or 3.15.2)
-2. EPICS4 CPP release (v4.4.0 or higher)
+2. EPICS4 CPP release (v4.4.0 or higher); note that EPICS7 release includes 
+all needed v4 modules
 3. Python development header files/libraries (v2.6.6 or higher)
 4. Boost (v1.41.0); must have the boost_python library built
 5. Standard development tools (gcc, make, autoconf, etc.)
@@ -40,13 +41,16 @@ For manual configuration: Read the comments in both the `configure/RELEASE` and
 For automatic configuration: In the top level directory run
 
 ```sh
-  $ make configure EPICS_BASE=/epics/base/path EPICS4_DIR=/epics/v4/path [BOOST_NUM_PY_DIR=/boost.numpy/path] [BOOST_ROOT=/boost/path] [PYTHON_VERSION=3]
+  $ make configure EPICS_BASE=/epics/base/path [EPICS4_DIR=/epics/v4/path] [BOOST_NUM_PY_DIR=/boost.numpy/path] [BOOST_ROOT=/boost/path] [PYTHON_VERSION=3]
 ```
 
 Note that you can only use the automatic configuration if the v4 modules have
 not been renamed. In the above command replace `/epics/base/path` with the full
 path to your EPICS Base directory, and `/epics/v4/path` with the full path to 
 your top level directory containing the v4 modules pvDataCPP, pvAccessCPP, etc. 
+If you are using EPICS7 release, you can omit EPICS4_DIR argument, as 
+configuration scripts will find the required v4 libraries and header files in 
+the EPICS Base directory. 
 
 The optional `BOOST_NUM_PY_DIR` argument enables NumPy array support for older
 Boost versions, as v1.63.0 and later releases already include NumPy libraries.
