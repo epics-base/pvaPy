@@ -80,7 +80,7 @@ int main(int argc, char** argv)
         runtime = atoi(argv[1]);
     }
 
-    epics::pvaClient::PvaClientPtr pvaClientPtr(epics::pvaClient::PvaClient::create());
+    epics::pvaClient::PvaClientPtr pvaClientPtr(epics::pvaClient::PvaClient::get());
 
     std::string channelName = "X1";
     epics::pvaClient::PvaClientChannelPtr pvaClientChannelPtr(pvaClientPtr->createChannel(channelName, "pva"));

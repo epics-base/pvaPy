@@ -34,7 +34,7 @@ const double Channel::MonitorStartWaitTime(0.1);
 PvaPyLogger Channel::logger("Channel");
 PvaClient Channel::pvaClient;
 CaClient Channel::caClient;
-epics::pvaClient::PvaClientPtr Channel::pvaClientPtr(epics::pvaClient::PvaClient::create());
+epics::pvaClient::PvaClientPtr Channel::pvaClientPtr(epics::pvaClient::PvaClient::get());
 
 
 Channel::Channel(const std::string& channelName, PvProvider::ProviderType providerType_) :

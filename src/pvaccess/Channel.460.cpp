@@ -905,7 +905,9 @@ void Channel::onChannelConnect()
         pvaClientMonitorRequesterPtr = epics::pvaClient::PvaClientMonitorRequesterPtr(new ChannelMonitorRequesterImpl(getName(), this));
 
         //pvaClientMonitorPtr = pvaClientChannelPtr->monitor(monitorRequestDescriptor, pvaClientMonitorRequesterPtr);
-        pvaClientMonitorPtr = epics::pvaClient::PvaClientMonitor::create(pvaClientPtr, getName(), PvProvider::getProviderName(providerType), monitorRequestDescriptor, epics::pvaClient::PvaClientChannelStateChangeRequesterPtr(), pvaClientMonitorRequesterPtr);
+       pvaClientMonitorPtr =  pvaClientChannelPtr->createMonitor(monitorRequestDescriptor);
+       pvaClientMonitorPtr->setRequester(pvaClientMonitorRequesterPtr);
+       pvaClientMonitorPtr->issueConnect();
         monitorRunning = true;
     } 
     catch (PvaException& ex) {
