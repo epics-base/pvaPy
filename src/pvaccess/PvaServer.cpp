@@ -9,13 +9,14 @@
 #include "InvalidRequest.h"
 #include "PvaServer.h"
 
+const char* PvaServer::AllProviders("<all>");
 PvaPyLogger PvaServer::logger("PvaServer");
 
 PvaServer::PvaServer() :
     recordMap()
 {
     epics::pvDatabase::ChannelProviderLocalPtr channelProvider = epics::pvDatabase::getChannelProviderLocal();
-    server = epics::pvAccess::startPVAServer(epics::pvAccess::PVACCESS_ALL_PROVIDERS, 0, true, true);
+    server = epics::pvAccess::startPVAServer(AllProviders, 0, true, true);
 }
 
 PvaServer::PvaServer(const std::string& channelName, const PvObject& pvObject) :
@@ -23,7 +24,7 @@ PvaServer::PvaServer(const std::string& channelName, const PvObject& pvObject) :
 {
     initRecord(channelName, pvObject);
     epics::pvDatabase::ChannelProviderLocalPtr channelProvider = epics::pvDatabase::getChannelProviderLocal();
-    server = epics::pvAccess::startPVAServer(epics::pvAccess::PVACCESS_ALL_PROVIDERS, 0, true, true);
+    server = epics::pvAccess::startPVAServer(AllProviders, 0, true, true);
 }
 
 PvaServer::PvaServer(const std::string& channelName, const PvObject& pvObject, const boost::python::object& onWriteCallback) :
@@ -31,7 +32,7 @@ PvaServer::PvaServer(const std::string& channelName, const PvObject& pvObject, c
 {
     initRecord(channelName, pvObject, onWriteCallback);
     epics::pvDatabase::ChannelProviderLocalPtr channelProvider = epics::pvDatabase::getChannelProviderLocal();
-    server = epics::pvAccess::startPVAServer(epics::pvAccess::PVACCESS_ALL_PROVIDERS, 0, true, true);
+    server = epics::pvAccess::startPVAServer(AllProviders, 0, true, true);
 }
 
 PvaServer::~PvaServer() 
