@@ -40,7 +40,7 @@ epics::pvaClient::PvaClientPtr Channel::pvaClientPtr(epics::pvaClient::PvaClient
 Channel::Channel(const std::string& channelName, PvProvider::ProviderType providerType_) :
     pvaClientChannelPtr(pvaClientPtr->createChannel(channelName,PvProvider::getProviderName(providerType_))),
     monitorActive(false),
-    monitorRunning(false),
+    monitorThreadRunning(false),
     processingThreadRunning(false),
     pvObjectQueue(DefaultMaxPvObjectQueueLength),
     subscriberName(),
@@ -50,6 +50,7 @@ Channel::Channel(const std::string& channelName, PvProvider::ProviderType provid
     monitorMutex(),
     processingThreadMutex(),
     processingThreadExitEvent(),
+    monitorThreadExitEvent(),
     timeout(DefaultTimeout),
     providerType(providerType_),
     isConnected(false)
@@ -61,7 +62,7 @@ Channel::Channel(const std::string& channelName, PvProvider::ProviderType provid
 Channel::Channel(const Channel& c) :
     pvaClientChannelPtr(pvaClientPtr->createChannel(c.pvaClientChannelPtr->getChannelName(),PvProvider::getProviderName(c.providerType))),
     monitorActive(false),
-    monitorRunning(false),
+    monitorThreadRunning(false),
     processingThreadRunning(false),
     pvObjectQueue(DefaultMaxPvObjectQueueLength),
     subscriberName(),
@@ -71,6 +72,7 @@ Channel::Channel(const Channel& c) :
     monitorMutex(),
     processingThreadMutex(),
     processingThreadExitEvent(),
+    monitorThreadExitEvent(),
     timeout(DefaultTimeout),
     providerType(c.providerType),
     isConnected(false)
@@ -89,7 +91,7 @@ Channel::~Channel()
 
 void Channel::connect() 
 {
-    if (isChannelConnected()) {
+    if (isConnected) {
         return;
     }
     try {
@@ -98,24 +100,6 @@ void Channel::connect()
     catch (std::runtime_error&) {
         throw ChannelTimeout("Channel %s timed out.", pvaClientChannelPtr->getChannelName().c_str());
     }
-}
-
-void Channel::issueConnect() 
-{
-    if (isChannelConnected()) {
-        return;
-    }
-    try {
-        pvaClientChannelPtr->issueConnect();
-    } 
-    catch (std::runtime_error& ex) {
-        throw PvaException("Could not issue connect for channel %s: %s.", pvaClientChannelPtr->getChannelName().c_str(), ex.what());
-    }
-}
-
-bool Channel::isChannelConnected() 
-{
-    return isConnected;
 }
 
 PvObject* Channel::get()
@@ -736,6 +720,7 @@ void Channel::startMonitor(const std::string& requestDescriptor)
         logger.warn("Monitor is already active.");
         return;
     }
+    monitorActive = true;
 
     // One must call PyEval_InitThreads() in the main thread
     // to initialize thread state, which is needed for proper functioning
@@ -744,20 +729,16 @@ void Channel::startMonitor(const std::string& requestDescriptor)
     PyGilManager::evalInitThreads();
     this->monitorRequestDescriptor = requestDescriptor;
 
+    // Use separate thread to start monitor; in this way main thread is not
+    // affected if there is a problem with the channel monitor
+    if (epicsThreadCreate("MonitorStartThread", epicsThreadPriorityHigh, epicsThreadGetStackSize(epicsThreadStackSmall), (EPICSTHREADFUNC)monitorStartThread, this) != 0) {
+        monitorThreadRunning = true;
+    }
+    // epicsThreadSleep(MonitorStartWaitTime);
+        
     // If queue length is zero, there is no need for processing thread.
     if (pvObjectQueue.getMaxLength() != 0) {
         startProcessingThread();
-    }
-
-    // Issue connect if channel is not connected and onChannelConnect() will
-    // be called when channel gets connected; otherwise, 
-    // call onChannelConnect()
-    monitorActive = true;
-    if (isChannelConnected()) {
-        onChannelConnect();
-    }
-    else {
-        issueConnect();
     }
 }
 
@@ -772,6 +753,26 @@ void Channel::monitor(const boost::python::object& pySubscriber, const std::stri
     }
     subscribe(DefaultSubscriberName, pySubscriber);
     startMonitor(requestDescriptor);
+}
+
+void Channel::monitorStartThread(Channel* channel)
+{
+    logger.debug("Starting monitor for %s", channel->getName().c_str());
+    try {
+        channel->connect();
+        channel->pvaClientMonitorRequesterPtr = epics::pvaClient::PvaClientMonitorRequesterPtr(new ChannelMonitorRequesterImpl(channel->getName(), channel));
+
+        channel->pvaClientMonitorPtr = channel->pvaClientChannelPtr->monitor(channel->monitorRequestDescriptor, channel->pvaClientMonitorRequesterPtr);
+    } 
+    catch (PvaException& ex) {
+        channel->monitorActive = false;
+        logger.error(ex.what());
+    }
+    catch (std::runtime_error& ex) {
+        channel->monitorActive = false;
+        logger.error(ex.what());
+    }
+    channel->monitorThreadExitEvent.signal();
 }
 
 void Channel::startProcessingThread() 
@@ -796,6 +797,12 @@ void Channel::waitForProcessingThreadExit(double timeout)
 void Channel::stopMonitor()
 {
     epics::pvData::Lock lock(monitorMutex);
+    if (monitorThreadRunning) {
+        logger.debug("Waiting on monitor thread exit");
+        monitorThreadExitEvent.wait();
+        monitorThreadRunning = false;
+    }
+
     if (!monitorActive) {
         logger.trace("Monitor is not active.");
         return;
@@ -803,15 +810,12 @@ void Channel::stopMonitor()
 
     // Processing thread should exit after monitorActive is set to false
     monitorActive = false;
-    monitorRunning = false;
     logger.debug("Stopping monitor");
     if (pvaClientMonitorRequesterPtr) {
         pvaClientMonitorRequesterPtr->unlisten();
-    }
-    if (pvaClientMonitorPtr) {
         try {
             pvaClientMonitorPtr->stop();
-        }
+        } 
         catch (std::runtime_error& ex) {
             logger.error("Caught exception while trying to stop monitor: %s", ex.what());
         }
@@ -891,35 +895,4 @@ void Channel::processMonitorData(epics::pvData::PVStructurePtr pvStructurePtr)
     }
 }
 
-void Channel::onChannelConnect()
-{
-    logger.debug("On channel connect called for %s", getName().c_str());
-    if (!monitorActive) {
-        return;
-    }
-    if (monitorRunning) {
-        return;
-    }
-
-    try {
-        pvaClientMonitorRequesterPtr = epics::pvaClient::PvaClientMonitorRequesterPtr(new ChannelMonitorRequesterImpl(getName(), this));
-
-        //pvaClientMonitorPtr = pvaClientChannelPtr->monitor(monitorRequestDescriptor, pvaClientMonitorRequesterPtr);
-        pvaClientMonitorPtr = epics::pvaClient::PvaClientMonitor::create(pvaClientPtr, getName(), PvProvider::getProviderName(providerType), monitorRequestDescriptor, epics::pvaClient::PvaClientChannelStateChangeRequesterPtr(), pvaClientMonitorRequesterPtr);
-        monitorRunning = true;
-    } 
-    catch (PvaException& ex) {
-        monitorActive = false;
-        logger.error(ex.what());
-    }
-    catch (std::runtime_error& ex) {
-        monitorActive = false;
-        logger.error(ex.what());
-    }
-}
-
-void Channel::onChannelDisconnect()
-{
-    logger.debug("On channel disconnect called for %s", getName().c_str());
-}
 

@@ -26,7 +26,7 @@ ChannelMonitorRequesterImpl::~ChannelMonitorRequesterImpl()
 {
 }
 
-void ChannelMonitorRequesterImpl::event(PvaClientMonitorPtr monitor)
+void ChannelMonitorRequesterImpl::event(const PvaClientMonitorPtr& monitor)
 {
     try {
         while (isActive) {

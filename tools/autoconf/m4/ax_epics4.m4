@@ -147,6 +147,13 @@ AC_DEFUN([AX_EPICS4],
         epics::pvData::FieldConstPtrArray fields;
         ]])
     ],[succeeded=yes],[succeeded=no])
+    AC_MSG_RESULT([$succeeded])
+    if test "$succeeded" != "yes" ; then
+        AC_MSG_RESULT([no])
+        AC_MSG_FAILURE(could not compile and link EPICS4 test code: check your EPICS4 installation)
+    fi
+
+    # test for pvaClientCPP and pva api version
     AC_LINK_IFELSE([AC_LANG_PROGRAM(
         [[
         #include "pv/pvAccess.h"
@@ -166,6 +173,7 @@ AC_DEFUN([AX_EPICS4],
     ],[pva_api_version=430],[pva_api_version=440])
 
     # options for building with normativeTypes & pvaClient
+    AC_MSG_CHECKING(for EPICS4 pvaClient)
     PVAC_CPPFLAGS="-I$normativetypescpp_dir/include -I$pvaclientcpp_dir/include"
     PVAC_LDFLAGS="-L$pvaclientcpp_dir/lib/$EPICS_HOST_ARCH -L$normativetypescpp_dir/lib/$EPICS_HOST_ARCH"
     PVAC_LIBS="-lpvaClient -lnt"
@@ -185,34 +193,51 @@ AC_DEFUN([AX_EPICS4],
     AC_MSG_RESULT([$pva_client_cpp])
 
     # We got pvaClientCPP, must determine version
+    AC_MSG_CHECKING(EPICS4 pva api version)
     if test "$pva_client_cpp" == "yes" ; then
         pva_api_version=450
         AC_SUBST(NORMATIVETYPESCPP_DIR, $normativetypescpp_dir)
         AC_SUBST(PVACLIENTCPP_DIR, $pvaclientcpp_dir)
         AC_SUBST(PVDATABASECPP_DIR, $pvdatabasecpp_dir)
-        AC_MSG_CHECKING(for EPICS4 pvaClient version)
         AC_LINK_IFELSE([AC_LANG_PROGRAM(
             [[
             #include "pv/pvaClient.h"
             ]],
             [[
-            epics::pvaClient::PvaClientPtr pvaClientPtr(epics::pvaClient::PvaClient::create());
+            epics::pvaClient::PvaClientPtr pvaClientPtr(epics::pvaClient::PvaClient::get());
             ]])
-        ],[pva_api_version=450],[pva_api_version=460])
+        ],[pva_api_version=460],[pva_api_version=$pva_api_version])
+        AC_LINK_IFELSE([AC_LANG_PROGRAM(
+            [[
+            #include "pv/pvaClient.h"
+            ]],
+            [[
+            epics::pvaClient::PvaClientGetRequester::shared_pointer getRequesterPtr;
+            ]])
+        ],[pva_api_version=470],[pva_api_version=$pva_api_version])
+
+        # Detect deprecated monitor method
+        export CPPFLAGS_SAVE=$CPPFLAGS
+        export CPPFLAGS="$CPPFLAGS -Werror"
+        AC_LINK_IFELSE([AC_LANG_PROGRAM(
+            [[
+            #include "pv/pvaClient.h"
+            ]],
+            [[
+            epics::pvaClient::PvaClientPtr pvaClientPtr(epics::pvaClient::PvaClient::get());
+            epics::pvaClient::PvaClientMonitorPtr pvaClientMonitorPtr = epics::pvaClient::PvaClientMonitor::create(pvaClientPtr, "myChannel", "pva", "field(value)");
+            ]])
+        ],[pva_api_version=$pva_api_version],[pva_api_version=480])
+        export CPPFLAGS=$CPPFLAGS_SAVE
     fi
 
-    if test "$succeeded" != "yes" ; then
-        AC_MSG_RESULT([no])
-        AC_MSG_FAILURE(could not compile and link EPICS4 test code: check your EPICS4 installation)
-    else
-        AC_MSG_RESULT([yes (pva api version: $pva_api_version)])
-        AC_DEFINE(HAVE_EPICS4,,[define if the EPICS4 libraries are available])
-        AC_DEFINE(PVA_API_VERSION,$pva_api_version,[define PVA API version])
-        AC_SUBST(PVA_API_VERSION, $pva_api_version)
-        AC_SUBST(EPICS4_DIR)
-        AC_SUBST(PVDATACPP_DIR, $pvdatacpp_dir)
-        AC_SUBST(PVACCESSCPP_DIR, $pvaccesscpp_dir)
-    fi
+    AC_MSG_RESULT([$pva_api_version])
+    AC_DEFINE(HAVE_EPICS4,,[define if the EPICS4 libraries are available])
+    AC_DEFINE(PVA_API_VERSION,$pva_api_version,[define PVA API version])
+    AC_SUBST(PVA_API_VERSION, $pva_api_version)
+    AC_SUBST(EPICS4_DIR)
+    AC_SUBST(PVDATACPP_DIR, $pvdatacpp_dir)
+    AC_SUBST(PVACCESSCPP_DIR, $pvaccesscpp_dir)
 
     export CPPFLAGS="$PVA_CPPFLAGS $EPICS_CPPFLAGS"
     export LDFLAGS="$PVA_LDFLAGS $EPICS_LDFLAGS"
@@ -255,7 +280,7 @@ AC_DEFUN([AX_EPICS4],
         epics::pvAccess::RPCClient::create("Channel",
             epics::pvData::CreateRequest::create()->createRequest(""));
         ]])
-    ],[pva_rpc_api_version4=460],[pva_rpc_api_version4=undefined])
+    ],[pva_rpc_api_version4=$pva_api_version],[pva_rpc_api_version4=undefined])
 
     pva_rpc_api_version="undefined"
     if test "$pva_rpc_api_version1" != "undefined" ; then

@@ -130,8 +130,8 @@ public:
 
     // Monitor data processing interface
     virtual void processMonitorData(epics::pvData::PVStructurePtr pvStructurePtr);
-    virtual void onChannelConnect();
-    virtual void onChannelDisconnect();
+    virtual void onChannelConnect() {}
+    virtual void onChannelDisconnect() {}
 
 private:
     static const double ShutdownWaitTime;
@@ -142,14 +142,13 @@ private:
     static CaClient caClient;
 
     static void processingThread(Channel* channel);
+    static void monitorStartThread(Channel* channel);
 
     void startProcessingThread();
     void waitForProcessingThreadExit(double timeout);
     void notifyProcessingThreadExit();
 
     void connect();
-    void issueConnect();
-    bool isChannelConnected();
 
     void callSubscriber(const std::string& pySubscriberName, boost::python::object& pySubscriber, PvObject& pvObject);
 
@@ -160,7 +159,7 @@ private:
     std::string monitorRequestDescriptor;
 
     bool monitorActive;
-    bool monitorRunning;
+    bool monitorThreadRunning;
     bool processingThreadRunning;
     SynchronizedQueue<PvObject> pvObjectQueue;
 
@@ -175,6 +174,7 @@ private:
     epics::pvData::Mutex monitorMutex;
     epics::pvData::Mutex processingThreadMutex;
     epicsEvent processingThreadExitEvent;
+    epicsEvent monitorThreadExitEvent;
     double timeout;
     PvProvider::ProviderType providerType;
 

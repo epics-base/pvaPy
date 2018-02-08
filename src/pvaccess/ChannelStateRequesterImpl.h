@@ -1,7 +1,7 @@
 // Copyright information and license terms for this software can be
 // found in the file LICENSE that is included with the distribution
 
-#if PVA_API_VERSION >= 450
+#if PVA_API_VERSION >= 460
 #ifndef CHANNEL_STATE_REQUESTER_IMPL_H
 #define CHANNEL_STATE_REQUESTER_IMPL_H
 
@@ -38,4 +38,4 @@ private:
 };
 
 #endif // CHANNEL_STATE_REQUESTER_IMPL_H
-#endif // if PVA_API_VERSION >= 450
+#endif // if PVA_API_VERSION >= 460

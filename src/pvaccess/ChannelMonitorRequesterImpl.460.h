@@ -17,7 +17,7 @@ public:
     ChannelMonitorRequesterImpl(const std::string& channelName, ChannelMonitorDataProcessor* processor);
     ChannelMonitorRequesterImpl(const ChannelMonitorRequesterImpl& channelMonitor);
     virtual ~ChannelMonitorRequesterImpl();
-    virtual void event(epics::pvaClient::PvaClientMonitorPtr monitor);
+    virtual void event(const epics::pvaClient::PvaClientMonitorPtr& monitor);
     virtual void unlisten();
 
 private:

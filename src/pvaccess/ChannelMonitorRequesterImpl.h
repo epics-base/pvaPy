@@ -3,7 +3,9 @@
 
 #if PVA_API_VERSION <= 440
 #include "ChannelMonitorRequesterImpl.440.h"
-#elif PVA_API_VERSION >= 450
+#elif PVA_API_VERSION <= 450
 #include "ChannelMonitorRequesterImpl.450.h"
+#elif PVA_API_VERSION >= 460
+#include "ChannelMonitorRequesterImpl.460.h"
 #endif // if PVA_API_VERSION <= 440
 
