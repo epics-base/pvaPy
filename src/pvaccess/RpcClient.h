@@ -20,7 +20,7 @@ public:
     static const int DefaultTimeout;
 
     RpcClient(const std::string& channelName);
-#if defined PVA_RPC_API_VERSION && PVA_RPC_API_VERSION == 460
+#if defined PVA_RPC_API_VERSION && PVA_RPC_API_VERSION >= 460
     RpcClient(const std::string& channelName, const PvObject& pvRequestObject);
 #endif
     RpcClient(const RpcClient& pvaRpcClient);

@@ -18,7 +18,7 @@ RpcClient::RpcClient(const std::string& channelName_) :
     pvRequest = epics::pvData::CreateRequest::create()->createRequest("");
 }
 
-#if defined PVA_RPC_API_VERSION && PVA_RPC_API_VERSION == 460
+#if defined PVA_RPC_API_VERSION && PVA_RPC_API_VERSION >= 460
 RpcClient::RpcClient(const std::string& channelName_, const PvObject& pvRequestObject) :
     PvaClient(),
     rpcClientInitialized(false),
@@ -48,11 +48,11 @@ RpcClient::~RpcClient()
 
 epics::pvAccess::RPCClient::shared_pointer RpcClient::createRpcClient(const std::string& channelName, const epics::pvData::PVStructurePtr& pvRequest, double timeout) 
 {
-#if defined PVA_RPC_API_VERSION && PVA_RPC_API_VERSION == 440
-    return epics::pvAccess::RPCClient::create(channelName);
-#elif defined PVA_RPC_API_VERSION && PVA_RPC_API_VERSION == 460
+#if defined PVA_RPC_API_VERSION && PVA_RPC_API_VERSION >= 460
     return epics::pvAccess::RPCClient::create(channelName, pvRequest);
-#endif // if defined PVA_RPC_API_VERSION && PVA_RPC_API_VERSION == 440
+#else
+    return epics::pvAccess::RPCClient::create(channelName);
+#endif // if defined PVA_RPC_API_VERSION && PVA_RPC_API_VERSION >= 460
 }
 
 epics::pvAccess::RPCClient::shared_pointer RpcClient::getRpcClient(const epics::pvData::PVStructurePtr& pvRequest, double timeout) 
