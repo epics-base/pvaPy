@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "boost/python/list.hpp"
+#include "boost/python/dict.hpp"
 
 #include "ChannelGetRequesterImpl.h"
 #include "ChannelMonitorRequesterImpl.h"
@@ -116,6 +117,9 @@ public:
     virtual double getTimeout() const;
     virtual void setMonitorMaxQueueLength(int maxLength);
     virtual int getMonitorMaxQueueLength();
+
+    // Introspection
+    virtual boost::python::dict getIntrospectionDict();
 
 private:
     static const double ShutdownWaitTime;

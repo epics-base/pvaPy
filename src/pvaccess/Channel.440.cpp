@@ -20,6 +20,7 @@
 #include "PyGilManager.h"
 #include "PvUtility.h"
 #include "PyUtility.h"
+#include "PyPvDataUtility.h"
 
 const char* Channel::DefaultRequestDescriptor("field(value)");
 const char* Channel::DefaultSubscriberName("defaultSubscriber");
@@ -633,4 +634,34 @@ void Channel::monitorThread(Channel* channel)
     channel->notifyMonitorThreadExit();
 }
 
+// Introspection
+boost::python::dict Channel::getIntrospectionDict()
+{
+    std::tr1::shared_ptr<ChannelRequesterImpl> channelRequesterImpl = std::tr1::dynamic_pointer_cast<ChannelRequesterImpl>(channel->getChannelRequester());
+
+    if (channel->getConnectionState() != epics::pvAccess::Channel::CONNECTED) {
+        if (!channelRequesterImpl->waitUntilConnected(timeout)) {
+            throw ChannelTimeout("Channel %s timed out", channel->getChannelName().c_str());
+        }
+    }
+
+    std::tr1::shared_ptr<GetFieldRequesterImpl> getFieldRequesterImpl;
+    getFieldRequesterImpl.reset(new GetFieldRequesterImpl(channel));
+    channel->getField(getFieldRequesterImpl, "");
+
+    if (!getFieldRequesterImpl->waitUntilFieldGet(timeout)) {
+        throw ChannelTimeout("Channel %s field get timed out", getName().c_str());
+    }
+
+    if (!getFieldRequesterImpl.get()) {
+        throw PvaException("Failed to get introspection data for channel %s", getName().c_str());
+    }
+
+    epics::pvData::Structure::const_shared_pointer structurePtr =
+        std::tr1::dynamic_pointer_cast<const epics::pvData::Structure>(getFieldRequesterImpl->getField());
+
+    boost::python::dict pyDict;
+    PyPvDataUtility::structureToPyDict(structurePtr, pyDict);
+    return pyDict;
+}
 
