@@ -41,6 +41,7 @@ endif
 
 pvaccess_SRCS += pvaccess.cpp
 
+pvaccess_SRCS += pvaccess.constants.cpp
 pvaccess_SRCS += pvaccess.PvType.cpp
 pvaccess_SRCS += pvaccess.PvProvider.cpp
 
