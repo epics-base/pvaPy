@@ -10,6 +10,9 @@
 #include "InvalidArgument.h"
 #include "InvalidRequest.h"
 #include "PvObject.h"
+#if PVA_API_VERSION == 440
+#include "pv/convert.h"
+#endif // if PVA_API_VERSION == 440
 
 // Scalar array utilities
 namespace PyPvDataUtility
@@ -1072,7 +1075,11 @@ void addUnionFieldToDict(const std::string& fieldName, const epics::pvData::PVSt
     if(pvField) {
         epics::pvData::StructureConstPtr unionStructurePtr = epics::pvData::getFieldCreate()->createFieldBuilder()->add(unionFieldName, pvField->getField())->createStructure();
         unionPvStructurePtr = epics::pvData::getPVDataCreate()->createPVStructure(unionStructurePtr);
+#if PVA_API_VERSION == 440
+        epics::pvData::Convert::getConvert()->copy(pvField, unionPvStructurePtr->getSubField(unionFieldName));
+#else
         unionPvStructurePtr->getSubField(unionFieldName)->copy(*pvField);
+#endif // if PVA_API_VERSION == 440
     }
     else {
         unionPvStructurePtr = epics::pvData::getPVDataCreate()->createPVStructure(
@@ -1115,7 +1122,11 @@ void addUnionArrayFieldToDict(const std::string& fieldName, const epics::pvData:
         epics::pvData::PVStructurePtr unionPvStructurePtr;
         epics::pvData::StructureConstPtr unionStructurePtr = epics::pvData::getFieldCreate()->createFieldBuilder()->add(fieldName, pvField->getField())->createStructure();
         unionPvStructurePtr = epics::pvData::getPVDataCreate()->createPVStructure(unionStructurePtr);
+#if PVA_API_VERSION == 440
+        epics::pvData::Convert::getConvert()->copy(pvField, unionPvStructurePtr->getSubField(fieldName));
+#else
         unionPvStructurePtr->getSubField(fieldName)->copy(*pvField);
+#endif // if PVA_API_VERSION == 440
 
         boost::python::dict pyDict2;
         structureToPyDict(unionPvStructurePtr, pyDict2, useNumPyArrays);
@@ -1260,7 +1271,11 @@ void copyStructureToStructure(const epics::pvData::PVStructurePtr& srcPvStructur
             case epics::pvData::union_: {
                 epics::pvData::PVUnionPtr pvFrom = srcPvStructurePtr->getSubField<epics::pvData::PVUnion>(fieldName);
                 epics::pvData::PVUnionPtr pvTo = destPvStructurePtr->getSubField<epics::pvData::PVUnion>(fieldName);
+#if PVA_API_VERSION == 440
+                epics::pvData::Convert::getConvert()->copyUnion(pvFrom, pvTo);
+#else
                 pvTo->copy(*pvFrom);
+#endif // if PVA_API_VERSION == 440
                 break;
             }
             case epics::pvData::unionArray: {
