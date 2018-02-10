@@ -24,6 +24,7 @@
 // These functions are defined in pvaccess.<class>.cpp files, and
 // are used to make code more readable and to avoid issues with
 // compiler running out of memory 
+void wrapConstants();
 void wrapPvProvider();
 void wrapPvType();
 
@@ -87,6 +88,9 @@ BOOST_PYTHON_MODULE(pvaccess)
     invalidRequestException = PvaExceptionTranslator::createExceptionClass(InvalidRequest::PyExceptionClassName, pvaException);
     invalidStateException = PvaExceptionTranslator::createExceptionClass(InvalidState::PyExceptionClassName, pvaException);
     channelTimeoutException = PvaExceptionTranslator::createExceptionClass(ChannelTimeout::PyExceptionClassName, pvaException);
+
+    // Constants
+    wrapConstants();
 
     // Enum wrappers
     wrapPvType();
