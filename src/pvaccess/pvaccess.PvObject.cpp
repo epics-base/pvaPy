@@ -1163,11 +1163,24 @@ class_<PvObject>("PvObject",
 
     .def("toDict", 
         &PvObject::toDict,
-        "Converts PV structure to python dictionary.\n\n:Returns: python key:value dictionary representing current PV structure in terms of field names and their values\n\n::\n\n    valueDict = pv.toDict()\n\n")
+        "Converts PV structure to python dictionary.\n\n"
+        ":Returns: python key:value dictionary representing current PV structure in terms of field names and their values\n\n"
+        "::\n\n"
+        "    valueDict = pv.toDict()\n\n")
 
     .def("getStructureDict", 
         &PvObject::getStructureDict,
-        "Retrieves PV structure definition as python dictionary.\n\n:Returns: python key:value dictionary representing PV structure definition in terms of field names and their types\n\n::\n\n    structureDict = pv.getStructureDict()\n\n")
+        "Retrieves PV structure definition as python dictionary.\n\n"
+        ":Returns: python key:value dictionary representing PV structure definition in terms of field names and their types (introspection dictionary)\n\n"
+        "::\n\n"
+        "    structureDict = pv.getStructureDict()\n\n")
+
+    .def("getIntrospectionDict",
+        &PvObject::getStructureDict,
+        "Retrieves PV structure definition as python dictionary (same as getStructureDict() method).\n\n"
+        ":Returns: python key:value dictionary representing PV structure definition in terms of field names and their types (introspection dictionary)\n\n"
+        "::\n\n"
+        "    introspectionDict = pv.getIntrospectionDict()\n\n")
 
 #if defined HAVE_NUM_PY_SUPPORT && HAVE_NUM_PY_SUPPORT == 1
     .add_property("useNumPyArrays", &PvObject::getUseNumPyArraysFlag, &PvObject::setUseNumPyArraysFlag)
