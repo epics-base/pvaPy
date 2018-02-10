@@ -9,6 +9,8 @@
 #include <map>
 
 #include "boost/python/list.hpp"
+#include "boost/python/dict.hpp"
+
 #include "pv/pvaClient.h"
 
 #include "ChannelGetRequesterImpl.h"
@@ -132,6 +134,9 @@ public:
     virtual void processMonitorData(epics::pvData::PVStructurePtr pvStructurePtr);
     virtual void onChannelConnect();
     virtual void onChannelDisconnect();
+
+    // Introspection
+    virtual boost::python::dict getIntrospectionDict();
 
 private:
     static const double ShutdownWaitTime;

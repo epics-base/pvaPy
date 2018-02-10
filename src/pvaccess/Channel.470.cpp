@@ -22,6 +22,8 @@
 #include "PvaConstants.h"
 #include "PvaClientUtility.h"
 
+#include "GetFieldRequesterImpl.h"
+
 const char* Channel::DefaultRequestDescriptor("field(value)");
 const char* Channel::DefaultPutGetRequestDescriptor("putField(value)getField(value)");
 const char* Channel::DefaultSubscriberName("defaultSubscriber");
@@ -921,5 +923,30 @@ void Channel::onChannelConnect()
 void Channel::onChannelDisconnect()
 {
     logger.debug("On channel disconnect called for %s", getName().c_str());
+}
+
+// Introspection
+boost::python::dict Channel::getIntrospectionDict()
+{
+    connect();
+    epics::pvAccess::Channel::shared_pointer channelPtr = pvaClientChannelPtr->getChannel();
+    std::tr1::shared_ptr<GetFieldRequesterImpl> getFieldRequesterImpl;
+    getFieldRequesterImpl.reset(new GetFieldRequesterImpl(channelPtr));
+    channelPtr->getField(getFieldRequesterImpl, "");
+
+    if (!getFieldRequesterImpl->waitUntilFieldGet(timeout)) {
+        throw ChannelTimeout("Channel %s field get timed out", getName().c_str());
+    }
+
+    if (!getFieldRequesterImpl.get()) {
+        throw PvaException("Failed to get introspection data for channel %s", getName().c_str());
+    }
+
+    epics::pvData::Structure::const_shared_pointer structurePtr =
+        std::tr1::dynamic_pointer_cast<const epics::pvData::Structure>(getFieldRequesterImpl->getField());
+
+    boost::python::dict pyDict;
+    PyPvDataUtility::structureToPyDict(structurePtr, pyDict);
+    return pyDict;
 }
 
