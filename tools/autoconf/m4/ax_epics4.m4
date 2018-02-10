@@ -27,9 +27,9 @@
 #   and this notice are preserved. This file is offered as-is, without any
 #   warranty.
 
-#serial 3
+#serial 4
 
-DEFAULT_PVA_VERSION=4.0.4
+DEFAULT_PVA_VERSION=4.0.3
 
 AC_DEFUN([AX_EPICS4],
 
@@ -216,19 +216,21 @@ AC_DEFUN([AX_EPICS4],
             ]])
         ],[pva_api_version=470],[pva_api_version=$pva_api_version])
 
-        # Detect deprecated monitor method
-        export CPPFLAGS_SAVE=$CPPFLAGS
-        export CPPFLAGS="$CPPFLAGS -Werror"
-        AC_LINK_IFELSE([AC_LANG_PROGRAM(
-            [[
-            #include "pv/pvaClient.h"
-            ]],
-            [[
-            epics::pvaClient::PvaClientPtr pvaClientPtr(epics::pvaClient::PvaClient::get());
-            epics::pvaClient::PvaClientMonitorPtr pvaClientMonitorPtr = epics::pvaClient::PvaClientMonitor::create(pvaClientPtr, "myChannel", "pva", "field(value)");
-            ]])
-        ],[pva_api_version=$pva_api_version],[pva_api_version=480])
-        export CPPFLAGS=$CPPFLAGS_SAVE
+        if test "$pva_api_version" == "470" ; then
+            # Detect deprecated monitor method
+            export CPPFLAGS_SAVE=$CPPFLAGS
+            export CPPFLAGS="$CPPFLAGS -Werror"
+            AC_LINK_IFELSE([AC_LANG_PROGRAM(
+                [[
+                #include "pv/pvaClient.h"
+                ]],
+                [[
+                epics::pvaClient::PvaClientPtr pvaClientPtr(epics::pvaClient::PvaClient::get());
+                epics::pvaClient::PvaClientMonitorPtr pvaClientMonitorPtr = epics::pvaClient::PvaClientMonitor::create(pvaClientPtr, "myChannel", "pva", "field(value)");
+                ]])
+            ],[pva_api_version=$pva_api_version],[pva_api_version=480])
+            export CPPFLAGS=$CPPFLAGS_SAVE
+        fi
     fi
 
     AC_MSG_RESULT([$pva_api_version])
