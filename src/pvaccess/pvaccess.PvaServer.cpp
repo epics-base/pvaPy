@@ -54,8 +54,6 @@ class_<PvaServer>("PvaServer",
         ":Parameter: *pvObject* (PvObject) - PV object with a structure equivalent to the structure of the object registered on the server's PV channel.\n\n"
         ":Raises: *InvalidRequest* - when there is none or more than one record in the database\n\n"
         "::\n\n"
-        "The following code works with the above PVA server example:\n\n"
-        "::\n\n"
         "    pv2 = PvObject({'x' : INT, 'y' : INT}, {'x' : 3, 'y' : 5})\n\n"
         "    pvaServer.update(pv2)\n\n")
 
