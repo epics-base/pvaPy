@@ -177,6 +177,17 @@ AC_DEFUN([AX_EPICS4],
     PVAC_CPPFLAGS="-I$normativetypescpp_dir/include -I$pvaclientcpp_dir/include"
     PVAC_LDFLAGS="-L$pvaclientcpp_dir/lib/$EPICS_HOST_ARCH -L$normativetypescpp_dir/lib/$EPICS_HOST_ARCH"
     PVAC_LIBS="-lpvaClient -lnt"
+    for libFile in pvAccessCA pvAccessIOC ca dbRecStd dbCore; do
+        soLib=`find $EPICS4_DIR/lib -name "lib$libFile.so*" | head -1`
+        if ! test -z "$soLib"; then 
+            PVAC_LIBS="$PVAC_LIBS -l$libFile"
+        else
+            soLib=`find $EPICS_DIR/lib -name "lib$libFile.so*" | head -1`
+            if ! test -z "$soLib"; then 
+                PVAC_LIBS="$PVAC_LIBS -l$libFile"
+            fi
+        fi
+    done
 
     export CPPFLAGS="$PVAC_CPPFLAGS $PVA_CPPFLAGS $EPICS_CPPFLAGS"
     export LDFLAGS="$PVAC_LDFLAGS $PVA_LDFLAGS $EPICS_LDFLAGS"
