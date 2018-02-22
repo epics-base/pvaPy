@@ -34,7 +34,7 @@
 #   warranty.
 #
 #   Modifications for pvaPy: 
-#     - boost must be present, so require --with-bost to bi given path
+#     - boost must be present, so require --with-boost to be given path
 #     - define BOOST_DIR
 #     - define BOOST_CPPFLAGS
 #     - define BOOST_LDFLAGS
