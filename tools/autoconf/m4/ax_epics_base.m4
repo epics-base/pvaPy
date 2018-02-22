@@ -29,7 +29,7 @@
 #   and this notice are preserved. This file is offered as-is, without any
 #   warranty.
 
-#serial 1
+#serial 2
 
 DEFAULT_EPICS_VERSION=3.14.12
 
@@ -80,9 +80,11 @@ AC_DEFUN([AX_EPICS_BASE],
     if test -z "$EPICS_HOST_ARCH"; then
         AC_MSG_ERROR(could not determine EPICS host architecture)
     fi
+    AC_MSG_NOTICE([EPICS_HOST_ARCH is defined as: $EPICS_HOST_ARCH])
 
     # define EPICS_BASE
     EPICS_BASE=$ac_epics_base_path
+    AC_MSG_NOTICE([EPICS_BASE is defined as: $EPICS_BASE])
 
     # determine required version
     epics_version_req=ifelse([$1], , $DEFAULT_EPICS_VERSION, $1)
@@ -151,7 +153,7 @@ AC_DEFUN([AX_EPICS_BASE],
 
     if test "$succeeded" != "yes" ; then
         AC_MSG_RESULT([no])
-        AC_MSG_FAILURE(could not compile and link EPICS test code: check your EPICS base installation)
+        AC_MSG_FAILURE(could not compile and link EPICS test code: check your EPICS base installation in $EPICS_BASE for EPICS_HOST_ARCH=$EPICS_HOST_ARCH)
     else
         AC_MSG_RESULT([yes])
         AC_DEFINE(HAVE_EPICS, , [define if the EPICS base is available])
