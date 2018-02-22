@@ -21,7 +21,7 @@
 #   and this notice are preserved. This file is offered as-is, without any
 #   warranty.
 
-#serial 1
+#serial 2
 
 AC_DEFUN([AX_BOOST_PYTHON_NUM_PY],
 
@@ -60,10 +60,12 @@ AC_DEFUN([AX_BOOST_PYTHON_NUM_PY],
 
     # options for building with Boost.Python.NumPy
     if test -z "$EPICS_HOST_ARCH"; then
-        EPICS_HOST_ARCH=`uname | tr [A-Z] [a-z]`-`uname -m`
+        BOOST_HOST_ARCH=`uname | tr [A-Z] [a-z]`-`uname -m`
+    else
+        BOOST_HOST_ARCH=$EPICS_HOST_ARCH
     fi
     BOOST_PYTHON_NUM_PY_CPPFLAGS="-I$BOOST_PYTHON_NUM_PY_DIR/include"
-    BOOST_PYTHON_NUM_PY_LDFLAGS="-L$BOOST_PYTHON_NUM_PY_DIR/lib -L$BOOST_PYTHON_NUM_PY_DIR/lib/$EPICS_HOST_ARCH"
+    BOOST_PYTHON_NUM_PY_LDFLAGS="-L$BOOST_PYTHON_NUM_PY_DIR/lib -L$BOOST_PYTHON_NUM_PY_DIR/lib/$BOOST_HOST_ARCH"
     # Use the same ending for boost_numpy as it it for boost_python
     BOOST_PYTHON_NUM_PY_LIB="boost_numpy"`echo $BOOST_PYTHON_LIB | sed 's?boost_python??'`
     BOOST_PYTHON_NUM_PY_LIBS="-l$BOOST_PYTHON_NUM_PY_LIB -l$BOOST_PYTHON_LIB"
