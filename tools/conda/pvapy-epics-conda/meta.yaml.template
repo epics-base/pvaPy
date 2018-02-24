@@ -1,0 +1,22 @@
+package:
+  name: pvapy-epics 
+  version: EPICS_BASE_VERSION
+
+source:
+  url: https://epics.anl.gov/download/base/base-EPICS_BASE_VERSION.tar.gz
+
+build:
+  number: 1
+
+requirements:
+  build:
+    - python
+    - perl
+
+  run:
+    - perl
+
+about:
+  home: https://epics.anl.gov/index.php
+  license: EPICS Open License
+

@@ -1,0 +1,23 @@
+package:
+  name: pvapy-boost
+  version: BOOST_VERSION
+
+source:
+  url: https://sourceforge.net/projects/boost/files/boost/BOOST_VERSION/boost_BOOST_DOWNLOAD_VERSION.tar.gz
+
+build:
+  number: 1
+
+requirements:
+  build:
+    - python
+    - numpy
+
+  run:
+    - python
+    - numpy
+
+about:
+  home: http://www.boost.org
+  license: Boost Software License
+

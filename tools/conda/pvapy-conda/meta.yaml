@@ -1,0 +1,28 @@
+package:
+  name: pvapy
+  version: master
+
+source:
+  git_rev: master
+  git_url: https://github.com/epics-base/pvaPy
+
+build:
+  number: 1
+
+requirements:
+  build:
+    - pvapy-epics
+    - python
+    - numpy 
+    - pvapy-boost
+
+  run:
+    - pvapy-epics
+    - python
+    - numpy 
+    - pvapy-boost
+
+about:
+  home: https://github.com/epics-base/pvaPy
+  license: EPICS Open License
+

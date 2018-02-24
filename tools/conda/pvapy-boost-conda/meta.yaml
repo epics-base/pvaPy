@@ -1,0 +1,23 @@
+package:
+  name: pvapy-boost
+  version: 1.66.0
+
+source:
+  url: https://sourceforge.net/projects/boost/files/boost/1.66.0/boost_1_66_0.tar.gz
+
+build:
+  number: 1
+
+requirements:
+  build:
+    - python
+    - numpy
+
+  run:
+    - python
+    - numpy
+
+about:
+  home: http://www.boost.org
+  license: Boost Software License
+
