@@ -5,7 +5,7 @@ BUILD_DIR = _build
 STATIC_DIR = _static
 TEMPLATES_DIR = _templates
 
-SPHINX_BUILD_PATH = $(shell which $(SPHINX_BUILD))
+SPHINX_BUILD_PATH = $(shell which $(SPHINX_BUILD) 2> /dev/null)
 ifeq ($(wildcard $(SPHINX_BUILD_PATH)),)
     DOC_TARGETS = skip_doc_build
 else
