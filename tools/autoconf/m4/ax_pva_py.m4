@@ -17,7 +17,7 @@
 #   and this notice are preserved. This file is offered as-is, without any
 #   warranty.
 
-#serial 1
+#serial 3
 
 AC_DEFUN([AX_PVA_PY],
 
@@ -141,6 +141,15 @@ AC_DEFUN([AX_PVA_PY],
         AC_MSG_RESULT([yes])
     fi
 
+    PVA_PY_LDFLAGS="$BOOST_LDFLAGS $PYTHON_LDFLAGS $BOOST_NUM_PY_LDFLAGS $BOOST_PYTHON_NUM_PY_LDFLAGS"
+    PVA_PY_LD_LIBRARY_PATH=`echo $PVA_PY_LDFLAGS | sed 's?-L??g' | sed 's? ?:?g' | sed 's?:-l.*:?:?g' | sed 's?:-l.*??g'`
+    AC_MSG_NOTICE([Determined BOOST_PYTHON_NUM_PY_LDFLAGS: $BOOST_PYTHON_NUM_PY_LDFLAGS])
+    AC_MSG_NOTICE([Determined BOOST_NUM_PY_LDFLAGS: $BOOST_NUM_PY_LDFLAGS])
+    AC_MSG_NOTICE([Determined BOOST_LDFLAGS: $BOOST_LDFLAGS])
+    AC_MSG_NOTICE([Determined PYTHON_LDFLAGS: $PYTHON_LDFLAGS])
+    AC_MSG_NOTICE([Determined PVA_PY_LDFLAGS: $PVA_PY_LDFLAGS])
+    AC_MSG_NOTICE([Determined PVA_PY_LD_LIBRARY_PATH: $PVA_PY_LD_LIBRARY_PATH])
+
     # create RELEASE.local
     if ! test -z $PVACLIENTCPP_DIR; then
         echo "PVACLIENT = $PVACLIENTCPP_DIR" >> $release_local
@@ -154,9 +163,15 @@ AC_DEFUN([AX_PVA_PY],
     echo "PVACCESS = $PVACCESSCPP_DIR" >> $release_local
     echo "PVDATA = $PVDATACPP_DIR" >> $release_local
     echo "EPICS_BASE = $EPICS_BASE" >> $release_local
-    AC_MSG_NOTICE([created $release_local file])
+    AC_MSG_NOTICE([Created $release_local file])
 
     # create CONFIG_SITE.local
+    PVA_PY_MAJOR_MINOR_VERSION=`python$PYTHON_VERSION -c 'import sys; print(sys.version[[:3]])'`
+    PVA_PY_PYTHON=`which python$PYTHON_VERSION`
+    PVA_PY_PYTHON_DIR=`dirname $PVA_PY_PYTHON`
+    PVA_PY_HOST_ARCH=`$EPICS_BASE/startup/EpicsHostArch.pl`
+    PVA_PY_PYTHONPATH=$PVA_PY_TOP/lib/python/$PVA_PY_MAJOR_MINOR_VERSION/$PVA_PY_HOST_ARCH
+
     echo "PVA_PY_CPPFLAGS = $BOOST_CPPFLAGS $PYTHON_CPPFLAGS $BOOST_NUM_PY_CPPFLAGS $BOOST_PYTHON_NUM_PY_CPPFLAGS" >> $config_site_local
     echo "PVA_PY_LDFLAGS = $BOOST_LDFLAGS $PYTHON_LDFLAGS $BOOST_NUM_PY_LDFLAGS $BOOST_PYTHON_NUM_PY_LDFLAGS" >> $config_site_local
     echo "PVA_PY_SYS_LIBS = $BOOST_PYTHON_LIB $BOOST_NUM_PY_LIBS $BOOST_PYTHON_NUM_PY_LIBS" >> $config_site_local
@@ -164,6 +179,41 @@ AC_DEFUN([AX_PVA_PY],
     echo "PVA_RPC_API_VERSION = $PVA_RPC_API_VERSION" >> $config_site_local
     echo "HAVE_BOOST_NUM_PY = $HAVE_BOOST_NUM_PY" >> $config_site_local
     echo "HAVE_BOOST_PYTHON_NUM_PY = $HAVE_BOOST_PYTHON_NUM_PY" >> $config_site_local
-    echo "PYTHON_VERSION := \$(shell python$PYTHON_VERSION -c 'import sys; print(sys.version[[:3]])')" >> $config_site_local
-    AC_MSG_NOTICE([created $config_site_local file])
+    echo "PYTHON_VERSION = $PVA_PY_MAJOR_MINOR_VERSION" >> $config_site_local
+    echo "PVA_PY_PYTHON = $PVA_PY_PYTHON" >> $config_site_local
+    echo "PVA_PY_PYTHONPATH = $PVA_PY_PYTHONPATH" >> $config_site_local
+    echo "PVA_PY_LD_LIBRARY_PATH = $PVA_PY_LD_LIBRARY_PATH" >> $config_site_local
+    echo "PVA_PY_EPICS_BASE = $EPICS_BASE" >> $config_site_local
+    echo "PVA_PY_EPICS4_DIR = $EPICS4_DIR" >> $config_site_local
+    echo "PVA_PY_HOST_ARCH = $PVA_PY_HOST_ARCH" >> $config_site_local
+    echo "PVA_PY_SETUP_SH = $PWD/bin/$PVA_PY_HOST_ARCH/pvapy_setup_full.$PVA_PY_MAJOR_MINOR_VERSION.sh" >> $config_site_local
+    AC_MSG_NOTICE([Created $config_site_local file])
+
+    # create setup files
+    LOCAL_SETUP_DIR=$PVA_PY_TOP/bin/$PVA_PY_HOST_ARCH
+    mkdir -p $LOCAL_SETUP_DIR
+
+    # create SETUP_PYTHONPATH.SH
+    setup_sh=$PVA_PY_TOP/configure/SETUP_PYTHONPATH.SH
+    setup_sh_local=$LOCAL_SETUP_DIR/pvapy_setup_pythonpath.$PVA_PY_MAJOR_MINOR_VERSION.sh
+    eval "cat $setup_sh | sed 's?PVA_PY_PYTHON_DIR?$PVA_PY_PYTHON_DIR?g' | sed 's?PVA_PY_PYTHONPATH?$PVA_PY_PYTHONPATH?g' | sed 's?PVA_PY_LD_LIBRARY_PATH?$PVA_PY_LD_LIBRARY_PATH?g' > $setup_sh_local"
+    AC_MSG_NOTICE([Created $setup_sh_local file])
+    
+    # create SETUP_FULL.SH
+    setup_sh=$PVA_PY_TOP/configure/SETUP_FULL.SH
+    setup_sh_local=$LOCAL_SETUP_DIR/pvapy_setup_full.$PVA_PY_MAJOR_MINOR_VERSION.sh
+    eval "cat $setup_sh | sed 's?PVA_PY_PYTHON_DIR?$PVA_PY_PYTHON_DIR?g' | sed 's?PVA_PY_PYTHONPATH?$PVA_PY_PYTHONPATH?g' | sed 's?PVA_PY_LD_LIBRARY_PATH?$PVA_PY_LD_LIBRARY_PATH?g' > $setup_sh_local"
+    AC_MSG_NOTICE([Created $setup_sh_local file])
+    
+    # create SETUP_PYTHONPATH.CSH
+    setup_csh=$PVA_PY_TOP/configure/SETUP_PYTHONPATH.CSH
+    setup_csh_local=$LOCAL_SETUP_DIR/pvapy_setup.pythonpath.$PVA_PY_MAJOR_MINOR_VERSION.csh
+    eval "cat $setup_csh | sed 's?PVA_PY_PYTHON_DIR?$PVA_PY_PYTHON_DIR?g' | sed 's?PVA_PY_PYTHONPATH?$PVA_PY_PYTHONPATH?g' | sed 's?PVA_PY_LD_LIBRARY_PATH?$PVA_PY_LD_LIBRARY_PATH?g' > $setup_csh_local"
+    AC_MSG_NOTICE([Created $setup_csh_local file])
+    
+    # create SETUP_FULL.CSH
+    setup_csh=$PVA_PY_TOP/configure/SETUP_FULL.CSH
+    setup_csh_local=$LOCAL_SETUP_DIR/pvapy_setup_full.$PVA_PY_MAJOR_MINOR_VERSION.csh
+    eval "cat $setup_csh | sed 's?PVA_PY_PYTHON_DIR?$PVA_PY_PYTHON_DIR?g' | sed 's?PVA_PY_PYTHONPATH?$PVA_PY_PYTHONPATH?g' | sed 's?PVA_PY_LD_LIBRARY_PATH?$PVA_PY_LD_LIBRARY_PATH?g' > $setup_csh_local"
+    AC_MSG_NOTICE([Created $setup_csh_local file])
 ])
