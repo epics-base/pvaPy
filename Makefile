@@ -3,6 +3,8 @@ TOP = .
 AC_DIR = tools/autoconf
 DOC_DIR = documentation
 CONFIGURE_DIR = configure
+PVACCESS_DIR = src/pvaccess
+CONDA_DIR = tools/conda
 
 RELEASE_LOCAL = $(CONFIGURE_DIR)/RELEASE.local
 CONFIG_SITE_LOCAL = $(CONFIGURE_DIR)/CONFIG_SITE.local
@@ -51,8 +53,8 @@ else
 	autoreconf --install $(AC_DIR)
 
   distclean:
-	$(RM) setup.sh setup.csh $(RELEASE_LOCAL) $(CONFIG_SITE_LOCAL)
-	$(RMDIR) lib src/pvaccess/O.* $(AC_DIR)/autom4te.cache
+	$(RM) config.log $(RELEASE_LOCAL) $(CONFIG_SITE_LOCAL)
+	$(RMDIR) bin lib $(PVACCESS_DIR)/O.* $(AC_DIR)/autom4te.cache
 	$(RM) $(AC_DIR)/aclocal.m4 $(AC_DIR)/configure $(AC_DIR)/config.log
 	$(RM) $(AC_DIR)/config.status $(AC_DIR)/install-sh $(AC_DIR)/missing
 	$(RM) $(AC_DIR)/Makefile $(AC_DIR)/Makefile.in config.log
@@ -68,9 +70,38 @@ doc:
 docclean:
 	$(MAKE) -C $(DOC_DIR) clean
 
+srcclean:
+	$(MAKE) -C $(PVACCESS_DIR) clean
+
+install-conda: install-pvapy-epics-conda install-pvapy-boost-conda install-pvapy-conda
+	
+install-pvapy-epics-conda:
+	$(MAKE) -C $(CONDA_DIR)/pvapy-epics-conda install
+
+install-pvapy-boost-conda:
+	$(MAKE) -C $(CONDA_DIR)/pvapy-boost-conda install
+
+install-pvapy-conda:
+	$(MAKE) -C $(CONDA_DIR)/pvapy-conda install
+
+uninstall-conda: uninstall-pvapy-conda uninstall-pvapy-boost-conda uninstall-pvapy-epics-conda 
+
+uninstall-pvapy-epics-conda:
+	$(MAKE) -C $(CONDA_DIR)/pvapy-epics-conda uninstall
+
+uninstall-pvapy-boost-conda:
+	$(MAKE) -C $(CONDA_DIR)/pvapy-boost-conda uninstall
+
+uninstall-pvapy-conda:
+	$(MAKE) -C $(CONDA_DIR)/pvapy-conda uninstall
+
+clean: srcclean docclean
+
 tidy: distclean
+	$(RM) config.log $(RELEASE_LOCAL) $(CONFIG_SITE_LOCAL)
 	$(MAKE) -C $(DOC_DIR) tidy
 
 .PHONY: configure distclean
-.PHONY: doc docclean tidy
+.PHONY: doc docclean srcclean clean tidy
+.PHONY: install-conda uninstall-conda
 
