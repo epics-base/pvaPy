@@ -21,10 +21,10 @@ INSTALL_LOCATION_LIB = $(INSTALL_LOCATION)/lib/python/$(PYTHON_VERSION)
 
 # Expand and install the setup shell scripts
 
-SCRIPTS_HOST = setup.sh setup.csh
-EXPANDFLAGS += -DPYLIB=$(abspath $(INSTALL_LOCATION_LIB))
-EXPAND += $(SCRIPTS:%=%@)
-
+#SCRIPTS_HOST = setup.sh setup.csh setup.full.sh setup.full.csh setup.pythonpath.sh setup.pythonpath.csh 
+#SCRIPTS_HOST += $(patsubst ../%@, %, $(wildcard ../setup.*@))
+#EXPANDFLAGS += -DPYLIB=$(abspath $(INSTALL_LOCATION_LIB))
+#EXPAND += $(SCRIPTS:%=%@)
 
 # Build the Python pvaccess loadable library
 
