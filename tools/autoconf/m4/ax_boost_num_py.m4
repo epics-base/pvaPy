@@ -29,7 +29,7 @@
 #   and this notice are preserved. This file is offered as-is, without any
 #   warranty.
 
-#serial 1
+#serial 2
 
 AC_DEFUN([AX_BOOST_NUM_PY],
 
@@ -67,11 +67,12 @@ AC_DEFUN([AX_BOOST_NUM_PY],
     BOOST_NUM_PY_DIR=$ac_boost_numpy_dir_path
 
     # options for building with Boost.NumPy
-    if test -z "$EPICS_HOST_ARCH"; then
-        EPICS_HOST_ARCH=`uname | tr [A-Z] [a-z]`-`uname -m`
+    BOOST_HOST_ARCH=$EPICS_HOST_ARCH
+    if test -z "$BOOST_HOST_ARCH"; then
+        BOOST_HOST_ARCH=`uname | tr [A-Z] [a-z]`-`uname -m`
     fi
     BOOST_NUM_PY_CPPFLAGS="-I$BOOST_NUM_PY_DIR/include"
-    BOOST_NUM_PY_LDFLAGS="-L$BOOST_NUM_PY_DIR/lib -L$BOOST_NUM_PY_DIR/lib/$EPICS_HOST_ARCH"
+    BOOST_NUM_PY_LDFLAGS="-L$BOOST_NUM_PY_DIR/lib -L$BOOST_NUM_PY_DIR/lib/$BOOST_HOST_ARCH"
     BOOST_NUM_PY_LIBS="-lboost_numpy"
 
     export CPPFLAGS="$BOOST_CPPFLAGS $PYTHON_CPPFLAGS $BOOST_NUM_PY_CPPFLAGS"
