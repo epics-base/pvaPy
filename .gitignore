@@ -13,3 +13,4 @@ tools/autoconf/Makefile.in
 tools/autoconf/Makefile
 tools/autoconf/aclocal.m4
 tools/autoconf/autom4te.cache/
+documentation/sphinx/_build/
