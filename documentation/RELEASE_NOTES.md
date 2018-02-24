@@ -1,6 +1,13 @@
-## Release 1.0.1 (2018/02/XX)
+## Release 1.1.0 (2018/02/XX)
 
 - added introspection interface to Channel class
+- fixed configuration issue for OSX
+- introduced support for building pvapy conda packages
+- replaced old (c)sh setup files with new PYTHONPATH-only and and full (PATH,
+  PYTHONPATH, LD_LIBRARY_PATH) file
+- updated doc build so that it uses information in CONFIG_SITE.local; users
+  should not be required to configure python-related variables before
+  building documentation 
 
 ## Release 1.0.0 (2018/01/04)
 
