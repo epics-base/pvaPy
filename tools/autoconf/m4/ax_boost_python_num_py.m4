@@ -69,6 +69,7 @@ AC_DEFUN([AX_BOOST_PYTHON_NUM_PY],
         BOOST_PYTHON_NUM_PY_CPPFLAGS="-I$BOOST_PYTHON_NUM_PY_DIR/include"
         BOOST_PYTHON_NUM_PY_LDFLAGS="-L$BOOST_PYTHON_NUM_PY_DIR/lib -L$BOOST_PYTHON_NUM_PY_DIR/lib/$BOOST_HOST_ARCH"
     fi
+
     # Use the same ending for boost_numpy as it it for boost_python
     BOOST_PYTHON_NUM_PY_LIB="boost_numpy"`echo $BOOST_PYTHON_LIB | sed 's?boost_python??'`
     BOOST_PYTHON_NUM_PY_LIBS="-l$BOOST_PYTHON_NUM_PY_LIB -l$BOOST_PYTHON_LIB"

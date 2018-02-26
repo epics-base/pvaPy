@@ -27,7 +27,7 @@
 #   and this notice are preserved. This file is offered as-is, without any
 #   warranty.
 
-#serial 4
+#serial 5
 
 DEFAULT_PVA_VERSION=4.0.3
 
@@ -99,6 +99,7 @@ AC_DEFUN([AX_EPICS4],
 
     # define EPICS4_DIR
     EPICS4_DIR=$ac_epics4_dir_path
+    AC_MSG_NOTICE([EPICS4_DIR is defined as: $EPICS4_DIR])
 
     # determine required version
     pva_version_req=ifelse([$1], , $DEFAULT_PVA_VERSION, $1)
@@ -173,7 +174,6 @@ AC_DEFUN([AX_EPICS4],
     ],[pva_api_version=430],[pva_api_version=440])
 
     # options for building with normativeTypes & pvaClient
-    AC_MSG_CHECKING(for EPICS4 pvaClient)
     PVAC_CPPFLAGS="-I$normativetypescpp_dir/include -I$pvaclientcpp_dir/include"
     PVAC_LDFLAGS="-L$pvaclientcpp_dir/lib/$EPICS_HOST_ARCH -L$normativetypescpp_dir/lib/$EPICS_HOST_ARCH"
     PVAC_LIBS="-lpvaClient -lnt"
@@ -185,12 +185,14 @@ AC_DEFUN([AX_EPICS4],
         if ! test -z "$soLib"; then 
             PVAC_LIBS="$PVAC_LIBS -l$libFile"
         else
-            soLib=`find $EPICS_DIR/lib -name "lib$libFile.so*" | head -1`
+            soLib=`find $ac_epics4_dir_path/lib -name "lib$libFile.*" | head -1`
             if ! test -z "$soLib"; then 
                 PVAC_LIBS="$PVAC_LIBS -l$libFile"
             fi
         fi
     done
+    AC_MSG_NOTICE([Using following libraries for pvaClient tests: $PVAC_LIBS])
+    AC_MSG_CHECKING(for EPICS4 pvaClient)
 
     export CPPFLAGS="$PVAC_CPPFLAGS $PVA_CPPFLAGS $EPICS_CPPFLAGS"
     export LDFLAGS="$PVAC_LDFLAGS $PVA_LDFLAGS $EPICS_LDFLAGS"
