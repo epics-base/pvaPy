@@ -20,4 +20,7 @@ requirements:
 about:
   home: http://www.boost.org
   license: Boost Software License
+  license_file: LICENSE_1_0.txt
+  summary: Boost python libraries needed by PvaPy 
+
 

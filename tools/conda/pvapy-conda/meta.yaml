@@ -25,4 +25,7 @@ requirements:
 about:
   home: https://github.com/epics-base/pvaPy
   license: EPICS Open License
+  summary: Python library for EPICS PV Access 
+
+
 

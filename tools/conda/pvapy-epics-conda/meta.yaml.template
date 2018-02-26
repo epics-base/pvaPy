@@ -19,4 +19,6 @@ requirements:
 about:
   home: https://epics.anl.gov/index.php
   license: EPICS Open License
+  license_file: LICENSE
+  summary: EPICS Base software required by PvaPy 
 
