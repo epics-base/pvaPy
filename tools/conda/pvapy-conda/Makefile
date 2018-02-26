@@ -2,11 +2,17 @@
 TOP = ../../..
 DEPLOY_CONF = $(TOP)/configure/DEPLOY.conf
 PVA_PY_VERSION=$(shell cat $(DEPLOY_CONF) | grep PVA_PY_VERSION | cut -f2 -d'=')
+ifeq ($(PVA_PY_VERSION),)
+    PVA_PY_VERSION=$(shell git rev-parse --short HEAD)
+endif
+PVA_PY_GIT_VERSION=$(shell cat $(DEPLOY_CONF) | grep PVA_PY_GIT_VERSION | cut -f2 -d'=')
+  
+
 PACKAGE = pvapy
 CONDA_ENV_FLAGS += -y
 
 configure:
-	eval "cat meta.yaml.template | sed 's?PVA_PY_VERSION?${PVA_PY_VERSION}?g' > meta.yaml"
+	eval "cat meta.yaml.template | sed 's?PVA_PY_VERSION?${PVA_PY_VERSION}?g' | sed 's?PVA_PY_GIT_VERSION?${PVA_PY_GIT_VERSION}?g' > meta.yaml"
 
 build: configure
 	conda build .

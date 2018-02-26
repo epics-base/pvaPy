@@ -1,6 +1,6 @@
 package:
   name: pvapy
-  version: master
+  version: 34da703
 
 source:
   git_rev: master
