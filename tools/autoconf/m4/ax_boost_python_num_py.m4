@@ -40,7 +40,7 @@ AC_DEFUN([AX_BOOST_PYTHON_NUM_PY],
 
     if test -z "$ac_boost_python_numpy_dir_path"; then
         if test -z "$BOOST_PYTHON_NUM_PY_DIR"; then
-            ac_boost_python_numpy_dir_path=$BOOST_ROOT
+            ac_boost_python_numpy_dir_path=$BOOST_DIR
         else
             ac_boost_python_numpy_dir_path=$BOOST_PYTHON_NUM_PY_DIR
         fi

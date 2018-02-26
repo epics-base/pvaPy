@@ -29,7 +29,7 @@
 #   and this notice are preserved. This file is offered as-is, without any
 #   warranty.
 
-#serial 2
+#serial 3
 
 AC_DEFUN([AX_BOOST_NUM_PY],
 
@@ -48,7 +48,7 @@ AC_DEFUN([AX_BOOST_NUM_PY],
 
     if test -z "$ac_boost_numpy_dir_path"; then
         if test -z "$BOOST_NUM_PY_DIR"; then
-            ac_boost_numpy_dir_path="/usr/local"
+            ac_boost_numpy_dir_path=$BOOST_DIR
         else
             ac_boost_numpy_dir_path=$BOOST_NUM_PY_DIR
         fi

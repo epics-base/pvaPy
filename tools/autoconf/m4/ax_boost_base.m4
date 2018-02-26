@@ -269,6 +269,7 @@ if test "x$want_boost" = "xyes"; then
         AC_DEFINE(BOOST_CPPFLAGS, $BOOST_CPPFLAGS, [define Boost CPPFLAGS])
         AC_DEFINE(BOOST_LDFLAGS, $BOOST_LDFLAGS, [define Boost LDFLAGS])
         AC_MSG_NOTICE([Using boost version $BOOST_VERSION])
+        AC_MSG_NOTICE([Using BOOST_DIR: $BOOST_DIR])
         AC_MSG_NOTICE([Using BOOST_CPPFLAGS: $BOOST_CPPFLAGS])
         AC_MSG_NOTICE([Using BOOST_LDFLAGS: $BOOST_LDFLAGS])
         # execute ACTION-IF-FOUND (if present):
