@@ -1,4 +1,4 @@
-## Release 1.1.0 (2018/02/XX)
+## Release 1.1.0 (2018/03/XX)
 
 - added introspection interface to Channel class
 - fixed configuration issue for OSX
@@ -8,6 +8,7 @@
 - updated doc build so that it uses information in CONFIG_SITE.local; users
   should not be required to configure python-related variables before
   building documentation 
+- fixed issue with accessing NumPy arrays from temporary objects
 
 ## Release 1.0.0 (2018/01/04)
 
