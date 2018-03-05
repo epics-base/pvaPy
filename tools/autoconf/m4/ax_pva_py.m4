@@ -207,7 +207,7 @@ AC_DEFUN([AX_PVA_PY],
     
     # create SETUP_PYTHONPATH.CSH
     setup_csh=$PVA_PY_TOP/configure/SETUP_PYTHONPATH.CSH
-    setup_csh_local=$LOCAL_SETUP_DIR/pvapy_setup.pythonpath.$PVA_PY_MAJOR_MINOR_VERSION.csh
+    setup_csh_local=$LOCAL_SETUP_DIR/pvapy_setup_pythonpath.$PVA_PY_MAJOR_MINOR_VERSION.csh
     eval "cat $setup_csh | sed 's?PVA_PY_PYTHON_DIR?$PVA_PY_PYTHON_DIR?g' | sed 's?PVA_PY_PYTHONPATH?$PVA_PY_PYTHONPATH?g' | sed 's?PVA_PY_LD_LIBRARY_PATH?$PVA_PY_LD_LIBRARY_PATH?g' > $setup_csh_local"
     AC_MSG_NOTICE([Created $setup_csh_local file])
     
