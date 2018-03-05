@@ -1986,7 +1986,6 @@ numpy_::ndarray getScalarArrayFieldAsNumPyArray(const std::string& fieldName, co
     epics::pvData::PVScalarArrayPtr pvScalarArrayPtr = pvStructurePtr->getSubField<epics::pvData::PVScalarArray>(fieldName);
     int nDataElements = pvScalarArrayPtr->getLength();
     boost::python::tuple shape = boost::python::make_tuple(nDataElements);
-    boost::python::object arrayOwner;
 
     switch (scalarType) {
         case epics::pvData::pvBoolean: {

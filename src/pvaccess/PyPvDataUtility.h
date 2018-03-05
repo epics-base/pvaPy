@@ -12,6 +12,7 @@
 #include "boost/python/list.hpp"
 #include "boost/python/dict.hpp"
 #include "boost/python/tuple.hpp"
+#include "boost/shared_ptr.hpp"
 
 #include "pvapy.environment.h"
 
@@ -20,6 +21,7 @@
 #endif // if defined HAVE_NUM_PY_SUPPORT && HAVE_NUM_PY_SUPPORT == 1
 
 #include "PyUtility.h"
+#include "ScalarArrayPyOwner.h"
 #include "InvalidDataType.h"
 
 class PvObject;
@@ -379,8 +381,8 @@ numpy_::ndarray getScalarArrayAsNumPyArray(const epics::pvData::PVScalarArrayPtr
     const CppType* arrayData = data.data();
     numpy_::dtype dataType = numpy_::dtype::get_builtin<CppType>();
     boost::python::tuple shape = boost::python::make_tuple(nDataElements);
-    boost::python::object arrayOwner;
     boost::python::tuple stride = boost::python::make_tuple(sizeof(CppType));
+    boost::python::object arrayOwner = boost::python::object(boost::shared_ptr<ScalarArrayPyOwner>(new ScalarArrayPyOwner(pvScalarArrayPtr)));
     return numpy_::from_data(arrayData, dataType, shape, stride, arrayOwner);
 }
 #endif // if defined HAVE_NUM_PY_SUPPORT && HAVE_NUM_PY_SUPPORT == 1

@@ -58,6 +58,8 @@ void wrapRpcClient();
 void wrapPvaServer();
 #endif // if PVA_API_VERSION >= 450
 
+void wrapScalarArrayPyOwner();
+
 // Exceptions
 PyObject* pvaException = NULL;
 PyObject* fieldNotFoundException = NULL;
@@ -126,4 +128,6 @@ BOOST_PYTHON_MODULE(pvaccess)
 #if PVA_API_VERSION >= 450
     wrapPvaServer();
 #endif // if PVA_API_VERSION >= 450
+
+    wrapScalarArrayPyOwner(); 
 }

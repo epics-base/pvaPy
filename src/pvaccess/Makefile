@@ -72,6 +72,8 @@ pvaccess_SRCS += pvaccess.Channel.cpp
 pvaccess_SRCS += pvaccess.RpcClient.cpp
 pvaccess_SRCS += pvaccess.RpcServer.cpp
 
+pvaccess_SRCS += pvaccess.ScalarArrayPyOwner.cpp
+
 pvaccess_SRCS += CaClient.cpp
 pvaccess_SRCS += Channel.cpp
 pvaccess_SRCS += ChannelGetRequesterImpl.cpp
