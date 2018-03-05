@@ -184,11 +184,6 @@ AC_DEFUN([AX_EPICS4],
         fi
         if ! test -z "$soLib"; then 
             PVAC_LIBS="$PVAC_LIBS -l$libFile"
-        else
-            soLib=`find $ac_epics4_dir_path/lib -name "lib$libFile.*" | head -1`
-            if ! test -z "$soLib"; then 
-                PVAC_LIBS="$PVAC_LIBS -l$libFile"
-            fi
         fi
     done
     AC_MSG_NOTICE([Using following libraries for pvaClient tests: $PVAC_LIBS])
