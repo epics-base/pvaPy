@@ -2,20 +2,33 @@
 
 # Builds epics for conda
 
-echo "Building epics"
+OPT_EPICS_DIR=opt/epics
+CONDA_EPICS_DIR=$PREFIX/$OPT_EPICS_DIR
 EPICS_HOST_ARCH=`./startup/EpicsHostArch`
-eval "cat configure/CONFIG_SITE | sed 's?#INSTALL_LOCATION=.*?INSTALL_LOCATION=$PREFIX?' > configure/CONFIG_SITE.2 && mv configure/CONFIG_SITE.2 configure/CONFIG_SITE" 
+EPICS_EXECUTABLES="caget cainfo camonitor caput caRepeater eget pvget pvinfo pvlist pvput softIoc softIocPVA"
+
+echo "Building epics"
+eval "cat configure/CONFIG_SITE | sed 's?#INSTALL_LOCATION=.*?INSTALL_LOCATION=$CONDA_EPICS_DIR?' > configure/CONFIG_SITE.2 && mv configure/CONFIG_SITE.2 configure/CONFIG_SITE" 
 make -j
 make install 
 
-echo "Preparing epics installation"
-rsync -arvlP startup $PREFIX/
+echo "Copying startup files"
+rsync -arvlP startup $CONDA_EPICS_DIR/
+
+echo "Creating executable symlinks"
+TOP_DIR=..
 cd $PREFIX/bin
-for f in `ls -c1 ./$EPICS_HOST_ARCH/*`; do 
-    ln -s $f .
+for f in $EPICS_EXECUTABLES; do
+    echo "Linking executable file: $f"
+    ln -s $TOP_DIR/$OPT_EPICS_DIR/bin/$EPICS_HOST_ARCH/$f .
 done
 
-
-
-
+echo "Creating library symlinks"
+cd $PREFIX/lib
+EPICS_LIBRARIES=`find $CONDA_EPICS_DIR/lib/$EPICS_HOST_ARCH -name '*.so*' -o -name '*.dylib*'`
+for f in $EPICS_LIBRARIES; do
+    libFile=`basename $f`
+    echo "Linking library file: $libFile"
+    ln -s $TOP_DIR/$OPT_EPICS_DIR/lib/$EPICS_HOST_ARCH/$libFile .
+done
 
