@@ -17,8 +17,6 @@
 class PvaServer 
 {
 public:
-    static const char* AllProviders;
-
     PvaServer();
     PvaServer(const std::string& channelName, const PvObject& pvObject);
     PvaServer(const std::string& channelName, const PvObject& pvObject, const boost::python::object& onWriteCallback);
