@@ -9,6 +9,8 @@
   should not be required to configure python-related variables before
   building documentation 
 - fixed issue with accessing NumPy arrays from temporary objects
+- fixed issue with RPC service segfaulting while returning result
+- fixed issue with RPC service non-interactive mode (listen() method call)
 
 ## Release 1.0.0 (2018/01/04)
 
