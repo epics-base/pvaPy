@@ -60,7 +60,7 @@ void RpcServer::listenerThread(RpcServer* server)
         server->run();
     }
     catch (const std::exception& ex) {
-    // Not good.
+        // Not good.
         logger.error("Exception caught in listener thread %s: %s", epicsThreadGetNameSelf(), ex.what());
     }
 }
@@ -71,7 +71,16 @@ void RpcServer::listen(int seconds)
         throw InvalidState("Invalid state: server has been shutdown and cannot be restarted.");
     }
     printInfo();
+
+    // Macros below are equivalent to
+    // PyThreadState *_save;
+    // _save = PyEval_SaveThread();
+    // ...Do some blocking I/O operation...
+    // PyEval_RestoreThread(_save);
+
+    Py_BEGIN_ALLOW_THREADS
     run(seconds);
+    Py_END_ALLOW_THREADS
     destroyed = true;
 }
 
