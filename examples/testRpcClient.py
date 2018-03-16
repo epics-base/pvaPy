@@ -14,9 +14,11 @@ print(request)
 print("Got response:")
 response = rpc.invoke(request)
 print(response)
+response.useNumPyArrays=False
 
-print("Converting to NtTable:")
+print("Converting to NtTable")
 ntTable = pvaccess.NtTable(response)
+print("Converted to NtTable:")
 print(ntTable)
 print("Get column 3:")
 print(ntTable.getColumn(3))
