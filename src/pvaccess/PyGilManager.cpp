@@ -12,12 +12,13 @@ bool PyGilManager::initThreads()
     return true;
 }
 
-void PyGilManager::evalInitThreads()
+bool PyGilManager::evalInitThreads()
 {
     if (!threadsInitialized) {
         threadsInitialized = true;
         PyEval_InitThreads();
     }
+    return threadsInitialized;
 }
 
 void PyGilManager::gilStateEnsure()

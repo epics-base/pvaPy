@@ -9,7 +9,7 @@
 class PyGilManager
 {
 public:
-    static void evalInitThreads();
+    static bool evalInitThreads();
     static void gilStateEnsure();
     static void gilStateRelease();
 private:
