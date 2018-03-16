@@ -7,12 +7,16 @@
 #include "PyGilManager.h"
 
 RpcServiceImpl::RpcServiceImpl(const boost::python::object& pyService_) : 
-    pyService(pyService_)
+    pyService(pyService_),
+    pyObject()
 {
 }
 
 RpcServiceImpl::~RpcServiceImpl()
 {
+    // This prevents response object destruction that is causing segfault
+    // with older versions of v4 libraries.
+    //boost::python::incref(pyObject.ptr());
 }
 
 epics::pvData::PVStructurePtr RpcServiceImpl::request(const epics::pvData::PVStructurePtr& args)
@@ -23,7 +27,7 @@ epics::pvData::PVStructurePtr RpcServiceImpl::request(const epics::pvData::PVStr
     PyGilManager::gilStateEnsure();
 
     // Process request.
-    boost::python::object pyObject = pyService(pyRequest);
+    pyObject = pyService(pyRequest);
     
     // Release GIL. 
     PyGilManager::gilStateRelease();

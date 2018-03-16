@@ -8,6 +8,7 @@
 #include "pv/pvAccess.h"
 #include "pv/rpcServer.h"
 #include "boost/python/object.hpp"
+#include "PvObject.h"
 
 class RpcServiceImpl : public epics::pvAccess::RPCService
 {
@@ -19,6 +20,10 @@ public:
         throw (epics::pvAccess::RPCRequestException);
 private:
     boost::python::object pyService;
+    // Keeping python response object in scope prevents problem with
+    // service segfaulting while returning RPC result; this issue seems to have
+    // appeared in recent boost versions 
+    boost::python::object pyObject;
 };
 
 #endif
