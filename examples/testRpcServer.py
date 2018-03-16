@@ -4,7 +4,6 @@ from __future__ import print_function
 
 import pvaccess
 import random
-
 srv = pvaccess.RpcServer()
 def createNtTable(x):
     nRows = x.getInt('nRows')
@@ -27,5 +26,6 @@ def createNtTable(x):
     return ntTable
 
 srv.registerService('createNtTable', createNtTable)
-srv.listen()
+#srv.listen()
+srv.listen(60)
 
