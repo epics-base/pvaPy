@@ -1,4 +1,6 @@
-TOP=../..
+TOP = ../..
+DEPLOY_CONF := $(TOP)/configure/DEPLOY.conf
+PVACCESS_CONSTANTS_CPP_TEMPLATE := $(TOP)/src/pvaccess/pvaccess.constants.cpp.template
 
 include $(TOP)/configure/CONFIG
 #----------------------------------------
@@ -17,6 +19,11 @@ USR_SYS_LIBS += $(PVA_PY_SYS_LIBS)
 
 # Set our library install location; /$(T_A) will be added
 INSTALL_LOCATION_LIB = $(INSTALL_LOCATION)/lib/python/$(PYTHON_VERSION)
+
+PVA_PY_VERSION=$(shell cat $(DEPLOY_CONF) | grep PVA_PY_VERSION | cut -f2 -d'=')
+ifeq ($(PVA_PY_VERSION),)
+    PVA_PY_VERSION=$(shell git rev-parse --short HEAD)
+endif
 
 
 # Expand and install the setup shell scripts
@@ -165,3 +172,8 @@ pvaccess_LIBS += Com
 include $(TOP)/configure/RULES
 #----------------------------------------
 #  ADD RULES AFTER THIS LINE
+
+pvaccess.constants.cpp: $(PVACCESS_CONSTANTS_CPP_TEMPLATE) $(DEPLOY_CONF)
+	eval "cat ${PVACCESS_CONSTANTS_CPP_TEMPLATE} | sed 's?PVA_PY_VERSION?${PVA_PY_VERSION}?g' > pvaccess.constants.cpp"
+
+
