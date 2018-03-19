@@ -97,11 +97,12 @@ if test "$ac_cv_boost_python" = "yes"; then
   BOOSTLIBDIR=`echo $BOOST_LDFLAGS | sed -e 's/@<:@^\/@:>@*//'`
   AC_MSG_NOTICE([Using boost lib dir: $BOOSTLIBDIR])
   AC_MSG_NOTICE([Using PYTHON_LDFLAGS: $PYTHON_LDFLAGS])
+  boost_python_lib=boost_python
   for ax_lib in `ls $BOOSTLIBDIR/libboost_python*.so* $BOOSTLIBDIR/libboost_python*.dylib* $BOOSTLIBDIR/libboost_python*.a* 2>/dev/null | sed 's,.*/,,' | sed -e 's;^lib\(boost_python.*\)\.so.*$;\1;' -e 's;^lib\(boost_python.*\)\.dylib.*$;\1;' -e 's;^lib\(boost_python.*\)\.a.*$;\1;' ` $ax_python_lib $ax_boost_python_lib boost_python; do
-    boost_lib=`echo $ax_lib | sed 's?libboost?boost?g'`
-    AC_CHECK_LIB($boost_lib, exit, [BOOST_PYTHON_LIB=$boost_lib break], , [$PYTHON_LDFLAGS $BOOST_LDFLAGS])
+    AC_CHECK_LIB($ax_lib, exit, [boost_python_lib=$ax_lib break], , [$BOOST_LDFLAGS $PYTHON_LDFLAGS])
   done
+  BOOST_PYTHON_LIB=`echo $boost_python_lib | sed 's?libboost?boost?g'`
   AC_SUBST(BOOST_PYTHON_LIB)
-  AC_MSG_NOTICE([BOOST_PYTHON_LIB: $BOOST_PYTHON_LIB])
+  AC_MSG_NOTICE([Using BOOST_PYTHON_LIB: $BOOST_PYTHON_LIB])
 fi
 ])dnl
