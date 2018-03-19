@@ -111,11 +111,17 @@ if test "x$want_boost" = "xyes"; then
     if test "$ac_boost_path" != ""; then
         BOOST_DIR=$ac_boost_path
         BOOST_CPPFLAGS="-I$ac_boost_path/include"
+        BOOST_LIB_DIR=""
         for ac_boost_path_tmp in $libsubdirs; do
-                if test -d "$ac_boost_path"/"$ac_boost_path_tmp" ; then
-                        BOOST_LDFLAGS="-L$ac_boost_path/$ac_boost_path_tmp"
-                        break
+            if test -d "$ac_boost_path"/"$ac_boost_path_tmp" ; then
+                if ls "$ac_boost_path"/"$ac_boost_path_tmp/libboost_"* >/dev/null 2>&1 ; then 
+                    BOOST_LIB_DIR="$ac_boost_path/$ac_boost_path_tmp"
+                    BOOST_LDFLAGS="-L$ac_boost_path/$ac_boost_path_tmp"
                 fi
+            fi
+            if ! test -z "$BOOST_LIB_DIR"; then
+                break;
+            fi
         done
     elif test "$cross_compiling" != yes; then
         for ac_boost_path_tmp in /usr /usr/local /opt /opt/local ; do
@@ -270,6 +276,7 @@ if test "x$want_boost" = "xyes"; then
         AC_DEFINE(BOOST_LDFLAGS, $BOOST_LDFLAGS, [define Boost LDFLAGS])
         AC_MSG_NOTICE([Using boost version $BOOST_VERSION])
         AC_MSG_NOTICE([Using BOOST_DIR: $BOOST_DIR])
+        AC_MSG_NOTICE([Using BOOST_LIB_DIR: $BOOST_LIB_DIR])
         AC_MSG_NOTICE([Using BOOST_CPPFLAGS: $BOOST_CPPFLAGS])
         AC_MSG_NOTICE([Using BOOST_LDFLAGS: $BOOST_LDFLAGS])
         # execute ACTION-IF-FOUND (if present):
