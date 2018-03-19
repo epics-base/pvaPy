@@ -11,6 +11,7 @@
 - fixed issue with accessing NumPy arrays from temporary objects
 - fixed issue with RPC service segfaulting while returning result
 - fixed issue with RPC service non-interactive mode (listen() method call)
+- added version string to pvaccess module
 
 ## Release 1.0.0 (2018/01/04)
 
