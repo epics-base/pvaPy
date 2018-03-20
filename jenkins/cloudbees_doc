@@ -76,7 +76,8 @@ DEV/bin/pip install Sphinx
 source DEV/bin/activate
 
 export PYTHON_VERSION=`python -c 'import sys; print sys.version[:3]'`
-export PYTHONPATH=${WORKSPACE}/lib/python/${PYTHON_VERSION}/${EPICS_HOST_ARCH}
+source bin/${EPICS_HOST_ARCH}/pvapy_setup_full.${PYTHON_VERSION}.sh
+
 make doc
 
 ###########################################
