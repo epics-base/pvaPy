@@ -24,13 +24,12 @@
 #include "PvObject.h"
 #include "PvProvider.h"
 #include "PvaPyLogger.h"
+#include "PvaConstants.h"
 
 class Channel : public ChannelMonitorDataProcessor
 {
 public:
 
-    static const char* DefaultRequestDescriptor;
-    static const char* DefaultPutGetRequestDescriptor;
     static const char* DefaultSubscriberName;
     static const double DefaultTimeout;
     static const int DefaultMaxPvObjectQueueLength;
@@ -122,11 +121,15 @@ public:
     virtual void callSubscribers(PvObject& pvObject);
     virtual void startMonitor(const std::string& requestDescriptor);
     virtual void startMonitor();
-    virtual void monitor(const boost::python::object& pySubscriber, const std::string& requestDescriptor=DefaultRequestDescriptor);
+    virtual void monitor(const boost::python::object& pySubscriber, const std::string& requestDescriptor=PvaConstants::DefaultKey);
     virtual void stopMonitor();
     virtual bool isMonitorActive() const;
     virtual void setTimeout(double timeout);
     virtual double getTimeout() const;
+    virtual void setDefaultRequestDescriptor(const std::string& requestDescriptor);
+    virtual std::string getDefaultRequestDescriptor() const;
+    virtual void setDefaultPutGetRequestDescriptor(const std::string& requestDescriptor);
+    virtual std::string getDefaultPutGetRequestDescriptor() const;
     virtual void setMonitorMaxQueueLength(int maxLength);
     virtual int getMonitorMaxQueueLength();
 
@@ -155,6 +158,7 @@ private:
     void connect();
     void issueConnect();
     bool isChannelConnected();
+    void determineDefaultRequestDescriptor();
 
     void callSubscriber(const std::string& pySubscriberName, boost::python::object& pySubscriber, PvObject& pvObject);
 
@@ -182,6 +186,8 @@ private:
     epicsEvent processingThreadExitEvent;
     double timeout;
     PvProvider::ProviderType providerType;
+    std::string defaultRequestDescriptor;
+    std::string defaultPutGetRequestDescriptor;
 
     bool isConnected;
     epics::pvaClient::PvaClientChannelStateChangeRequesterPtr stateRequester;
@@ -205,6 +211,26 @@ inline void Channel::setTimeout(double timeout)
 inline double Channel::getTimeout() const
 {
     return timeout;
+}
+
+inline void Channel::setDefaultRequestDescriptor(const std::string& requestDescriptor) 
+{
+    this->defaultRequestDescriptor = requestDescriptor;
+}
+
+inline std::string Channel::getDefaultRequestDescriptor() const
+{
+    return defaultRequestDescriptor;
+}
+
+inline void Channel::setDefaultPutGetRequestDescriptor(const std::string& requestDescriptor) 
+{
+    this->defaultPutGetRequestDescriptor = requestDescriptor;
+}
+
+inline std::string Channel::getDefaultPutGetRequestDescriptor() const
+{
+    return defaultPutGetRequestDescriptor;
 }
 
 inline void Channel::notifyProcessingThreadExit()
