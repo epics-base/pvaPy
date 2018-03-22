@@ -1,6 +1,7 @@
 TOP = ../..
 DEPLOY_CONF := $(TOP)/configure/DEPLOY.conf
 PVACCESS_CONSTANTS_CPP_TEMPLATE := $(TOP)/src/pvaccess/pvaccess.constants.cpp.template
+SPHINX_CONF := $(TOP)/documentation/sphinx/conf.py
 
 include $(TOP)/configure/CONFIG
 #----------------------------------------
@@ -175,5 +176,5 @@ include $(TOP)/configure/RULES
 
 pvaccess.constants.cpp: $(PVACCESS_CONSTANTS_CPP_TEMPLATE) $(DEPLOY_CONF)
 	eval "cat ${PVACCESS_CONSTANTS_CPP_TEMPLATE} | sed 's?PVA_PY_VERSION?${PVA_PY_VERSION}?g' > pvaccess.constants.cpp"
-
+	eval "cat ${SPHINX_CONF} | sed 's?version =.*?version = \"${PVA_PY_VERSION}\"?g' | sed 's?release =.*?release = \"${PVA_PY_VERSION}\"?g' > ${SPHINX_CONF}.2 && mv ${SPHINX_CONF}.2 ${SPHINX_CONF}"
 
