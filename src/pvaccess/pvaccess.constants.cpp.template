@@ -2,6 +2,7 @@
 // found in the file LICENSE that is included with the distribution
 
 #include "boost/python/scope.hpp"
+#include "PvaConstants.h"
 
 using namespace boost::python;
 
@@ -12,8 +13,8 @@ void wrapConstants()
 {
 
 scope().attr("__version__") = "PVA_PY_VERSION";
-scope().attr("ALL_FIELDS_REQUEST") = "field()";
-scope().attr("FIELD_VALUE_REQUEST") = "field(value)";
+scope().attr("ALL_FIELDS_REQUEST") = PVA_ALL_FIELDS_REQUEST;
+scope().attr("FIELD_VALUE_REQUEST") = PVA_FIELD_VALUE_REQUEST;
 
 } // wrapConstants()
 

@@ -3,4 +3,7 @@
 
 #include "PvaConstants.h"
 
-const char* PvaConstants::ValueFieldKey("value");
+const char* PvaConstants::AllFieldsRequest(PVA_ALL_FIELDS_REQUEST);
+const char* PvaConstants::FieldValueRequest(PVA_FIELD_VALUE_REQUEST);
+const char* PvaConstants::PutGetFieldValueRequest(PVA_PUT_GET_FIELD_VALUE_REQUEST);
+const char* PvaConstants::ValueFieldKey(PVA_VALUE_FIELD_KEY);
