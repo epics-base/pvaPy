@@ -55,7 +55,7 @@ std::string getValueOrSingleFieldName(const epics::pvData::PVStructurePtr& pvStr
         }
     }
     if (fieldNames.size() > 1) {
-        throw InvalidRequest("Ambiguous request: object has multiple fields, but no %s field", PvaConstants::ValueFieldKey);
+        throw InvalidRequest("Ambiguous request: object has multiple fields, but no %s field", PVA_VALUE_FIELD_KEY);
     }
     // Structure has only one field key.
     return fieldNames[0];

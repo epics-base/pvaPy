@@ -25,8 +25,8 @@ const bool PvObject::UseNumPyArraysDefault(false);
 #endif // if defined HAVE_NUM_PY_SUPPORT && HAVE_NUM_PY_SUPPORT == 1
 
 // Constants
-const char* PvObject::ValueFieldKey(PvaConstants::ValueFieldKey);
-const char* PvObject::StructureId("structure");
+const char* PvObject::ValueFieldKey(PVA_VALUE_FIELD_KEY);
+const char* PvObject::StructureId(PVA_STRUCTURE_ID);
 
 // Constructors
 PvObject::PvObject(const epics::pvData::PVStructurePtr& pvStructurePtr_)
