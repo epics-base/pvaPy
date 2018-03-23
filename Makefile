@@ -73,10 +73,10 @@ docclean:
 srcclean:
 	$(MAKE) -C $(PVACCESS_DIR) clean
 
-install-conda: install-pvapy-epics-conda install-pvapy-boost-conda install-pvapy-conda
+install-conda: install-epics-base-conda install-pvapy-boost-conda install-pvapy-conda
 	
-install-pvapy-epics-conda:
-	$(MAKE) -C $(CONDA_DIR)/pvapy-epics-conda install
+install-epics-base-conda:
+	$(MAKE) -C $(CONDA_DIR)/epics-base-conda install
 
 install-pvapy-boost-conda:
 	$(MAKE) -C $(CONDA_DIR)/pvapy-boost-conda install
@@ -84,10 +84,10 @@ install-pvapy-boost-conda:
 install-pvapy-conda:
 	$(MAKE) -C $(CONDA_DIR)/pvapy-conda install
 
-uninstall-conda: uninstall-pvapy-conda uninstall-pvapy-boost-conda uninstall-pvapy-epics-conda 
+uninstall-conda: uninstall-pvapy-conda uninstall-pvapy-boost-conda uninstall-epics-base-conda 
 
-uninstall-pvapy-epics-conda:
-	$(MAKE) -C $(CONDA_DIR)/pvapy-epics-conda uninstall
+uninstall-epics-base-conda:
+	$(MAKE) -C $(CONDA_DIR)/epics-base-conda uninstall
 
 uninstall-pvapy-boost-conda:
 	$(MAKE) -C $(CONDA_DIR)/pvapy-boost-conda uninstall
