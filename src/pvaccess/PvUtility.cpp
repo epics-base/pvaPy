@@ -89,6 +89,9 @@ size_t fromString(const epics::pvData::PVStructurePtr& pvStructure, const epics:
     if (fieldsData.size() != 0) {
         size_t length = pvStructure->getStructure()->getNumberFields();
         for(size_t i = 0; i < length; i++) {
+            if (fromStartIndex >= fromValueCount) {
+                break;
+            }
             epics::pvData::PVFieldPtr fieldField = fieldsData[i];
 
             try {
