@@ -159,6 +159,9 @@ private:
     void issueConnect();
     bool isChannelConnected();
     void determineDefaultRequestDescriptor();
+    epics::pvaClient::PvaClientGetPtr createGetPtr(const std::string& requestDescriptor);
+    epics::pvaClient::PvaClientPutPtr createPutPtr(const std::string& requestDescriptor);
+    epics::pvaClient::PvaClientPutGetPtr createPutGetPtr(const std::string& requestDescriptor);
 
     void callSubscriber(const std::string& pySubscriberName, boost::python::object& pySubscriber, PvObject& pvObject);
 

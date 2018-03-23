@@ -124,14 +124,14 @@ bool Channel::isChannelConnected()
 
 PvObject* Channel::get()
 {
-    return get(defaultRequestDescriptor);
+    return get(PvaConstants::DefaultKey);
 }
 
 PvObject* Channel::get(const std::string& requestDescriptor) 
 {
     connect();
     try {
-        epics::pvaClient::PvaClientGetPtr pvaGet = pvaClientChannelPtr->createGet(requestDescriptor);
+        epics::pvaClient::PvaClientGetPtr pvaGet = createGetPtr(requestDescriptor);
         pvaGet->get();
         epics::pvData::PVStructurePtr pvStructure = pvaGet->getData()->getPVStructure();
         return new PvObject(pvStructure);
@@ -143,14 +143,14 @@ PvObject* Channel::get(const std::string& requestDescriptor)
 
 void Channel::put(const PvObject& pvObject)
 {
-    put(pvObject, defaultRequestDescriptor);
+    put(pvObject, PvaConstants::DefaultKey);
 }
 
 void Channel::put(const PvObject& pvObject, const std::string& requestDescriptor) 
 {
     connect();
     try {
-        epics::pvaClient::PvaClientPutPtr pvaPut = pvaClientChannelPtr->put(requestDescriptor);
+        epics::pvaClient::PvaClientPutPtr pvaPut = createPutPtr(requestDescriptor);
         epics::pvData::PVStructurePtr pvSend = pvaPut->getData()->getPVStructure();
         pvSend << pvObject;
         pvaPut->put();
@@ -162,14 +162,14 @@ void Channel::put(const PvObject& pvObject, const std::string& requestDescriptor
 
 void Channel::put(const std::vector<std::string>& values)
 {
-    put(values, defaultRequestDescriptor);
+    put(values, PvaConstants::DefaultKey);
 }
 
 void Channel::put(const std::vector<std::string>& values, const std::string& requestDescriptor) 
 {
     connect();
     try {
-        epics::pvaClient::PvaClientPutPtr pvaPut = pvaClientChannelPtr->put(requestDescriptor);
+        epics::pvaClient::PvaClientPutPtr pvaPut = createPutPtr(requestDescriptor);
         epics::pvaClient::PvaClientPutDataPtr pvaData = pvaPut->getData();
         pvaData->putStringArray(values);
         pvaPut->put();
@@ -181,14 +181,14 @@ void Channel::put(const std::vector<std::string>& values, const std::string& req
 
 void Channel::put(const std::string& value)
 {
-    put(value, defaultRequestDescriptor);
+    put(value, PvaConstants::DefaultKey);
 }
 
 void Channel::put(const std::string& value, const std::string& requestDescriptor) 
 {
     connect();
     try {
-        epics::pvaClient::PvaClientPutPtr pvaPut = pvaClientChannelPtr->put(requestDescriptor);
+        epics::pvaClient::PvaClientPutPtr pvaPut = createPutPtr(requestDescriptor);
         epics::pvaClient::PvaClientPutDataPtr pvaData = pvaPut->getData();
         if (pvaData->isValueScalar()) {
             // value is scalar
@@ -221,7 +221,7 @@ void Channel::put(const boost::python::list& pyList, const std::string& requestD
 
 void Channel::put(const boost::python::list& pyList)
 {
-    put(pyList, defaultRequestDescriptor);
+    put(pyList, PvaConstants::DefaultKey);
 }
 
 //
@@ -238,7 +238,7 @@ void Channel::put(bool value, const std::string& requestDescriptor)
 
 void Channel::put(bool value)
 {
-    put(value, defaultRequestDescriptor);
+    put(value, PvaConstants::DefaultKey);
 }
 
 void Channel::put(char value, const std::string& requestDescriptor)
@@ -249,7 +249,7 @@ void Channel::put(char value, const std::string& requestDescriptor)
 
 void Channel::put(char value)
 {
-    put(value, defaultRequestDescriptor);
+    put(value, PvaConstants::DefaultKey);
 }
 
 void Channel::put(unsigned char value, const std::string& requestDescriptor)
@@ -260,7 +260,7 @@ void Channel::put(unsigned char value, const std::string& requestDescriptor)
 
 void Channel::put(unsigned char value)
 {
-    put(value, defaultRequestDescriptor);
+    put(value, PvaConstants::DefaultKey);
 }
 
 void Channel::put(short value, const std::string& requestDescriptor)
@@ -271,7 +271,7 @@ void Channel::put(short value, const std::string& requestDescriptor)
 
 void Channel::put(short value)
 {
-    put(value, defaultRequestDescriptor);
+    put(value, PvaConstants::DefaultKey);
 }
 
 void Channel::put(unsigned short value, const std::string& requestDescriptor)
@@ -282,7 +282,7 @@ void Channel::put(unsigned short value, const std::string& requestDescriptor)
 
 void Channel::put(unsigned short value)
 {
-    put(value, defaultRequestDescriptor);
+    put(value, PvaConstants::DefaultKey);
 }
 
 void Channel::put(long int value, const std::string& requestDescriptor)
@@ -293,7 +293,7 @@ void Channel::put(long int value, const std::string& requestDescriptor)
 
 void Channel::put(long int value)
 {
-    put(value, defaultRequestDescriptor);
+    put(value, PvaConstants::DefaultKey);
 }
 
 void Channel::put(unsigned long int value, const std::string& requestDescriptor)
@@ -304,7 +304,7 @@ void Channel::put(unsigned long int value, const std::string& requestDescriptor)
 
 void Channel::put(unsigned long int value)
 {
-    put(value, defaultRequestDescriptor);
+    put(value, PvaConstants::DefaultKey);
 }
 
 void Channel::put(long long value, const std::string& requestDescriptor)
@@ -315,7 +315,7 @@ void Channel::put(long long value, const std::string& requestDescriptor)
 
 void Channel::put(long long value)
 {
-    put(value, defaultRequestDescriptor);
+    put(value, PvaConstants::DefaultKey);
 }
 
 void Channel::put(unsigned long long value, const std::string& requestDescriptor)
@@ -326,7 +326,7 @@ void Channel::put(unsigned long long value, const std::string& requestDescriptor
 
 void Channel::put(unsigned long long value)
 {
-    put(value, defaultRequestDescriptor);
+    put(value, PvaConstants::DefaultKey);
 }
 
 void Channel::put(float value, const std::string& requestDescriptor)
@@ -337,7 +337,7 @@ void Channel::put(float value, const std::string& requestDescriptor)
 
 void Channel::put(float value)
 {
-    put(value, defaultRequestDescriptor);
+    put(value, PvaConstants::DefaultKey);
 }
 
 void Channel::put(double value, const std::string& requestDescriptor)
@@ -348,7 +348,7 @@ void Channel::put(double value, const std::string& requestDescriptor)
 
 void Channel::put(double value)
 {
-    put(value, defaultRequestDescriptor);
+    put(value, PvaConstants::DefaultKey);
 }
 
 // PutGet methods
@@ -357,7 +357,7 @@ PvObject* Channel::putGet(const PvObject& pvObject, const std::string& requestDe
 {
     connect();
     try {
-        epics::pvaClient::PvaClientPutGetPtr pvaPutGet = pvaClientChannelPtr->createPutGet(requestDescriptor);
+        epics::pvaClient::PvaClientPutGetPtr pvaPutGet = createPutGetPtr(requestDescriptor);
         epics::pvData::PVStructurePtr pvPut = pvaPutGet->getPutData()->getPVStructure();
         pvPut << pvObject;
         pvaPutGet->putGet();
@@ -371,14 +371,14 @@ PvObject* Channel::putGet(const PvObject& pvObject, const std::string& requestDe
 
 PvObject* Channel::putGet(const PvObject& pvObject)
 {
-    return putGet(pvObject, defaultPutGetRequestDescriptor);
+    return putGet(pvObject, PvaConstants::DefaultKey);
 }
 
 PvObject* Channel::putGet(const std::vector<std::string>& values, const std::string& requestDescriptor) 
 {
     connect();
     try {
-        epics::pvaClient::PvaClientPutGetPtr pvaPutGet = pvaClientChannelPtr->createPutGet(requestDescriptor);
+        epics::pvaClient::PvaClientPutGetPtr pvaPutGet = createPutGetPtr(requestDescriptor);
         epics::pvaClient::PvaClientPutDataPtr pvaData = pvaPutGet->getPutData();
         pvaData->putStringArray(values);
         pvaPutGet->putGet();
@@ -391,14 +391,14 @@ PvObject* Channel::putGet(const std::vector<std::string>& values, const std::str
 
 PvObject* Channel::putGet(const std::vector<std::string>& values)
 {
-    return putGet(values, defaultPutGetRequestDescriptor);
+    return putGet(values, PvaConstants::DefaultKey);
 }
 
 PvObject* Channel::putGet(const std::string& value, const std::string& requestDescriptor) 
 {
     connect();
     try {
-        epics::pvaClient::PvaClientPutGetPtr pvaPutGet = pvaClientChannelPtr->createPutGet(requestDescriptor);
+        epics::pvaClient::PvaClientPutGetPtr pvaPutGet = createPutGetPtr(requestDescriptor);
         epics::pvaClient::PvaClientPutDataPtr pvaData = pvaPutGet->getPutData();
         if (pvaData->isValueScalar()) {
             // value is scalar
@@ -422,7 +422,7 @@ PvObject* Channel::putGet(const std::string& value, const std::string& requestDe
 
 PvObject* Channel::putGet(const std::string& value)
 {
-    return putGet(value, defaultPutGetRequestDescriptor);
+    return putGet(value, PvaConstants::DefaultKey);
 }
 
 PvObject* Channel::putGet(const boost::python::list& pyList, const std::string& requestDescriptor) 
@@ -437,7 +437,7 @@ PvObject* Channel::putGet(const boost::python::list& pyList, const std::string& 
 
 PvObject* Channel::putGet(const boost::python::list& pyList)
 {
-    return putGet(pyList, defaultPutGetRequestDescriptor);
+    return putGet(pyList, PvaConstants::DefaultKey);
 }
 
 PvObject* Channel::putGet(bool value, const std::string& requestDescriptor)
@@ -448,7 +448,7 @@ PvObject* Channel::putGet(bool value, const std::string& requestDescriptor)
 
 PvObject* Channel::putGet(bool value)
 {
-    return putGet(value, defaultPutGetRequestDescriptor);
+    return putGet(value, PvaConstants::DefaultKey);
 }
 
 PvObject* Channel::putGet(char value, const std::string& requestDescriptor)
@@ -459,7 +459,7 @@ PvObject* Channel::putGet(char value, const std::string& requestDescriptor)
 
 PvObject* Channel::putGet(char value)
 {
-    return putGet(value, defaultPutGetRequestDescriptor);
+    return putGet(value, PvaConstants::DefaultKey);
 }
 
 PvObject* Channel::putGet(unsigned char value, const std::string& requestDescriptor)
@@ -470,7 +470,7 @@ PvObject* Channel::putGet(unsigned char value, const std::string& requestDescrip
 
 PvObject* Channel::putGet(unsigned char value)
 {
-    return putGet(value, defaultPutGetRequestDescriptor);
+    return putGet(value, PvaConstants::DefaultKey);
 }
 
 PvObject* Channel::putGet(short value, const std::string& requestDescriptor)
@@ -481,7 +481,7 @@ PvObject* Channel::putGet(short value, const std::string& requestDescriptor)
 
 PvObject* Channel::putGet(short value)
 {
-    return putGet(value, defaultPutGetRequestDescriptor);
+    return putGet(value, PvaConstants::DefaultKey);
 }
 
 PvObject* Channel::putGet(unsigned short value, const std::string& requestDescriptor)
@@ -492,7 +492,7 @@ PvObject* Channel::putGet(unsigned short value, const std::string& requestDescri
 
 PvObject* Channel::putGet(unsigned short value)
 {
-    return putGet(value, defaultPutGetRequestDescriptor);
+    return putGet(value, PvaConstants::DefaultKey);
 }
 
 PvObject* Channel::putGet(long int value, const std::string& requestDescriptor)
@@ -503,7 +503,7 @@ PvObject* Channel::putGet(long int value, const std::string& requestDescriptor)
 
 PvObject* Channel::putGet(long int value)
 {
-    return putGet(value, defaultPutGetRequestDescriptor);
+    return putGet(value, PvaConstants::DefaultKey);
 }
 
 PvObject* Channel::putGet(unsigned long int value, const std::string& requestDescriptor)
@@ -514,7 +514,7 @@ PvObject* Channel::putGet(unsigned long int value, const std::string& requestDes
 
 PvObject* Channel::putGet(unsigned long int value)
 {
-    return putGet(value, defaultPutGetRequestDescriptor);
+    return putGet(value, PvaConstants::DefaultKey);
 }
 
 PvObject* Channel::putGet(long long value, const std::string& requestDescriptor)
@@ -525,7 +525,7 @@ PvObject* Channel::putGet(long long value, const std::string& requestDescriptor)
 
 PvObject* Channel::putGet(long long value)
 {
-    return putGet(value, defaultPutGetRequestDescriptor);
+    return putGet(value, PvaConstants::DefaultKey);
 }
 
 PvObject* Channel::putGet(unsigned long long value, const std::string& requestDescriptor)
@@ -536,7 +536,7 @@ PvObject* Channel::putGet(unsigned long long value, const std::string& requestDe
 
 PvObject* Channel::putGet(unsigned long long value)
 {
-    return putGet(value, defaultPutGetRequestDescriptor);
+    return putGet(value, PvaConstants::DefaultKey);
 }
 
 PvObject* Channel::putGet(float value, const std::string& requestDescriptor)
@@ -547,7 +547,7 @@ PvObject* Channel::putGet(float value, const std::string& requestDescriptor)
 
 PvObject* Channel::putGet(float value)
 {
-    return putGet(value, defaultPutGetRequestDescriptor);
+    return putGet(value, PvaConstants::DefaultKey);
 }
 
 PvObject* Channel::putGet(double value, const std::string& requestDescriptor)
@@ -558,7 +558,7 @@ PvObject* Channel::putGet(double value, const std::string& requestDescriptor)
 
 PvObject* Channel::putGet(double value)
 {
-    return putGet(value, defaultPutGetRequestDescriptor);
+    return putGet(value, PvaConstants::DefaultKey);
 }
 
 //
@@ -566,14 +566,14 @@ PvObject* Channel::putGet(double value)
 //
 PvObject* Channel::getPut()
 {
-    return getPut(defaultRequestDescriptor);
+    return getPut(PvaConstants::DefaultKey);
 }
 
 PvObject* Channel::getPut(const std::string& requestDescriptor) 
 {
     connect();
     try {
-        epics::pvaClient::PvaClientPutGetPtr pvaPutGet = pvaClientChannelPtr->createPutGet(requestDescriptor);
+        epics::pvaClient::PvaClientPutGetPtr pvaPutGet = createPutGetPtr(requestDescriptor);
         pvaPutGet->getPut();
         return new PvObject(pvaPutGet->getPutData()->getPVStructure());
     } 
@@ -990,4 +990,35 @@ void Channel::determineDefaultRequestDescriptor()
         defaultPutGetRequestDescriptor = PvaConstants::PutGetFieldValueRequest;
     }
 }
+
+epics::pvaClient::PvaClientGetPtr Channel::createGetPtr(const std::string& requestDescriptor)
+{
+    if (requestDescriptor == PvaConstants::DefaultKey) {
+        return pvaClientChannelPtr->createGet(defaultRequestDescriptor);
+    }
+    else {
+        return pvaClientChannelPtr->createGet(requestDescriptor);
+    }
+}
+
+epics::pvaClient::PvaClientPutPtr Channel::createPutPtr(const std::string& requestDescriptor)
+{
+    if (requestDescriptor == PvaConstants::DefaultKey) {
+        return pvaClientChannelPtr->createPut(defaultRequestDescriptor);
+    }
+    else {
+        return pvaClientChannelPtr->createPut(requestDescriptor);
+    }
+}
+
+epics::pvaClient::PvaClientPutGetPtr Channel::createPutGetPtr(const std::string& requestDescriptor)
+{
+    if (requestDescriptor == PvaConstants::DefaultKey) {
+        return pvaClientChannelPtr->createPutGet(defaultRequestDescriptor);
+    }
+    else {
+        return pvaClientChannelPtr->createPutGet(requestDescriptor);
+    }
+}
+
 
