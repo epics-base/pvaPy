@@ -2,7 +2,7 @@
 TOP = ../../..
 DEPLOY_CONF = $(TOP)/configure/DEPLOY.conf
 EPICS_BASE_VERSION=$(shell cat $(DEPLOY_CONF) | grep EPICS_BASE_VERSION | cut -f2 -d'=')
-PACKAGE = pvapy-epics
+PACKAGE = epics-base
 CONDA_LIST_FLAGS := $(CONDA_ENV_FLAGS)
 CONDA_ENV_FLAGS += -y
 

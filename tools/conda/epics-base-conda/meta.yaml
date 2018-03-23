@@ -1,9 +1,9 @@
 package:
-  name: pvapy-epics 
-  version: EPICS_BASE_VERSION
+  name: epics-base
+  version: 7.0.1.1
 
 source:
-  url: https://epics.anl.gov/download/base/base-EPICS_BASE_VERSION.tar.gz
+  url: https://epics.anl.gov/download/base/base-7.0.1.1.tar.gz
 
 build:
   number: 1
@@ -20,5 +20,5 @@ about:
   home: https://epics.anl.gov/index.php
   license: EPICS Open License
   license_file: LICENSE
-  summary: EPICS Base software required by PvaPy 
+  summary: EPICS Base software 
 

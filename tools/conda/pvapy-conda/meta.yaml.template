@@ -11,16 +11,16 @@ build:
 
 requirements:
   build:
-    - pvapy-epics
     - python
     - sphinx
     - numpy 
+    - epics-base
     - pvapy-boost
 
   run:
-    - pvapy-epics
     - python
     - numpy 
+    - epics-base
     - pvapy-boost
 
 about:
