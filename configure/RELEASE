@@ -28,8 +28,9 @@
 # EPICS4_DIR is used here for convenience only
 #EPICS4_DIR = /path/to/epics4/modules
 #PVACLIENT = $(EPICS4_DIR)/pvaClientCPP
-#PVACCESS = $(EPICS4_DIR)/pvAccessCPP
+#PVDATABASE = $(EPICS4_DIR)/pvDatabaseCPP
 #NORMATIVE = $(EPICS4_DIR)/normativeTypesCPP
+#PVACCESS = $(EPICS4_DIR)/pvAccessCPP
 #PVDATA = $(EPICS4_DIR)/pvDataCPP
 # NB: Do NOT link to pvCommonCPP, its copy of Boost may be
 #     incompatible with the Boost Python one.
