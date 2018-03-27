@@ -1,4 +1,4 @@
-## Release 1.1.0 (2018/03/XX)
+## Release 1.1.0 (2018/03/27)
 
 - added introspection interface to Channel class
 - fixed configuration issue for OSX
@@ -6,7 +6,7 @@
 - replaced old (c)sh setup files with new PYTHONPATH-only and and full (PATH,
   PYTHONPATH, LD_LIBRARY_PATH) file
 - updated doc build so that it uses information in CONFIG_SITE.local; users
-  should not be required to configure python-related variables before
+  are no longer required to configure python-related variables before
   building documentation 
 - fixed issue with accessing NumPy arrays from temporary objects
 - fixed issue with RPC service segfaulting while returning result
