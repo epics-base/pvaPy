@@ -1,4 +1,4 @@
-## Release 1.1.0 (2018/03/27)
+## Release 1.1.0 (2018/04/DD)
 
 - added introspection interface to Channel class
 - fixed configuration issue for OSX
