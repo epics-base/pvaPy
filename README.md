@@ -1,9 +1,32 @@
-# pvaPy - pvAccess for Python
+# PvaPy - PvAccess for Python
 
-## Prerequisites
+The PvaPy package is a Python API for EPICS4. It supports both PVA and CA
+providers, all standard EPICS4 types (structures, scalars, unions, etc), 
+standard set of channel operations (put/get, monitor), RPC client/server, 
+PVA server, etc. It uses Boost/Python to wrap EPICS4 C++ libraries and APIs, 
+and is currently supported on the Unix-like operating systems (Linux, OSX).
 
-The pvAccess for Python package requires recent versions of the following
-software:
+## Installation 
+
+### Conda 
+
+- Supported platforms: Linux (64-bit), OSX 
+- Supported Python versions: Python2, Python3
+
+Make sure `conda` command is in your path, and execute the following command:
+
+```sh
+  $ conda install -c epics pvapy
+```
+
+This should result in installation of pvapy, pvapy-boost and epics-base 
+packages.
+
+## Build 
+
+### Prerequisites
+
+Building PvaPy from source requires recent versions of the following software:
 
 1. EPICS Base (v3.14.12.3 or 3.15.2)
 2. EPICS4 CPP release (v4.4.0 or higher); note that EPICS7 release includes 
@@ -28,10 +51,7 @@ was used to build the EPICS4 modules.
 This module has not been adapted for use on Microsoft Windows. Only Unix-like
 operating systems (e.g. Linux, MacOS, Solaris) are currently supported.
 
-
-## Build
-
-### 1. Configure pvaPy.
+#### 1. Configure PvaPy.
 
 This can be done manually, or using autoconf.
 
@@ -61,36 +81,82 @@ environment variables before running the above `make configure` command.
 Also, note that building with python 3.x requires PYTHON_VERSION=3 argument.
 
 The `make configure` command will check for your Boost/Python libraries, and
-create suitable `configure/RELEASE.local` and `configure/CONFIG_SITE.local` files.
-They should look roughly like the examples below:
+create suitable `configure/RELEASE.local` and `configure/CONFIG_SITE.local` 
+files that are used by the build process. They should look roughly like the 
+examples below:
 
 ```sh
   $ cat RELEASE.local
   PVACLIENT = /home/epics/v4/pvaClientCPP
-  PVACCESS = /home/epics/v4/pvAccessCPP
+  PVDATABASE = /home/epics/v4/pvDatabaseCPP
   NORMATIVETYPES = /home/epics/v4/normativeTypesCPP
+  PVACCESS = /home/epics/v4/pvAccessCPP
   PVDATA = /home/epics/v4/pvDataCPP
-  EPICS_BASE = /home/epics/base-3.14.12.5
+  EPICS_BASE = /home/epics/base-3.15.5
 
   $ cat CONFIG_SITE.local
-  PVA_PY_CPPFLAGS = -I/usr/include -I/usr/include/python2.6
-  PVA_PY_LDFLAGS = -L/usr/lib64 -L/usr/lib64 -lpython2.6
-  PVA_PY_SYS_LIBS = boost_python-mt
-  PVA_API_VERSION = 450
-  PVA_RPC_API_VERSION = 440
+  PVA_PY_CPPFLAGS = -I/usr/include -I/usr/include/python2.7
+  PVA_PY_LDFLAGS = -L/usr/lib64 -lpython2.7
+  PVA_PY_SYS_LIBS = boost_python  
+  PVA_API_VERSION = 480
+  PVA_RPC_API_VERSION = 480
   HAVE_BOOST_NUM_PY = 0
+  HAVE_BOOST_PYTHON_NUM_PY = 0
+  PYTHON_VERSION = 2.7
+  PVA_PY_PYTHON = /bin/python
+  PVA_PY_PYTHONPATH = /home/epics/v4/pvaPy/lib/python/2.7/linux-x86_64
+  PVA_PY_LD_LIBRARY_PATH = /usr/lib64
+  PVA_PY_EPICS_BASE = /home/epics/base-3.15.5
+  PVA_PY_EPICS4_DIR = /home/epics/v4
+  PVA_PY_HOST_ARCH = linux-x86_64
+  PVA_PY_SETUP_SH = /home/epics/pvaPy/bin/linux-x86_64/pvapy_setup_full.2.7.sh
 ```
 
-The above files were created automatically on a 64-bit RHEL 6.6 machine, with
+The above files were created automatically on a 64-bit RHEL 7.4 machine, with
 the following boost/python packages installed:
 
 ```sh
   $ rpm -q boost-python python-devel
-  boost-python-1.41.0-25.el6.x86_64
-  python-devel-2.6.6-52.el6.x86_64
+  boost-python-1.53.0-27.el7.x86_64
+  python-devel-2.7.5-58.el7.x86_64
 ```
 
-### 2. Compile the pvaPy source.
+Note that the automatic configuration process also creates 
+`pvapy_setup_full.$PYTHON_VERSION.(c)sh` and 
+`pvapy_setup_pythonpath.$PYTHON_VERSION.(c)sh` files in the 
+`bin/$EPICS_HOST_ARCH` directory. The full setup files modify PATH, 
+LD_LIBRARY_PATH and PYTHONPATH environment variables, while the pythonpath
+setup files modify only PYTHONPATH variable. For example,
+
+```sh
+  $ cat pvapy_setup_pythonpath.2.7.sh
+  #!/bin/sh
+  #
+  # modifies PYTHONPATH environment variable
+  #
+  if test -z "$PYTHONPATH" ; then
+      export PYTHONPATH=/home/epics/v4/pvaPy/lib/python/2.7/linux-x86_64
+  else
+      export PYTHONPATH=/home/epics/v4/pvaPy/lib/python/2.7/linux-x86_64:$PYTHONPATH
+  fi
+```
+
+After building pvaPy, the environment setup files can be sourced to use
+the built python module, e.g.:
+
+```sh
+  $ . /home/epics/v4/pvaPy/bin/linux-x86_64/pvapy_setup_pythonpath.2.7.sh
+  $ echo $PYTHONPATH
+  /home/epics/v4/pvaPy/lib/python/2.7/linux-x86_64
+```
+or for csh users:
+
+```sh
+  % source /home/epics/v4/pvaPy/bin/linux-x86_64/pvapy_setup_pythonpath.2.7.csh
+  % echo $PYTHONPATH
+  /home/epics/v4/pvaPy/lib/python/2.7/linux-x86_64
+```
+#### 2. Compile the pvaPy source.
 
 In the top level package directory run:
 
@@ -98,43 +164,10 @@ In the top level package directory run:
   $ make
 ```
 
-This will create and install a loadable library named `pvaccess.so` under the
-`lib/python` directory which can be imported directly by Python.
+The above command will create and install a loadable library `pvaccess.so`
+under the `lib/python` directory which can be imported directly by Python.
 
-This also creates `setup.sh` and `setup.csh` files in the `bin/$EPICS_HOST_ARCH`
-directory that configure PYTHONPATH for using the pvaccess Python module, e.g.:
-
-```sh
-  $ cat setup.sh
-  #!/bin/sh
-  #
-  # pvaPy sh setup script
-  #
-  # modifies PYTHONPATH environment variable
-  #
-  if test -z "$PYTHONPATH" ; then
-      export PYTHONPATH=/home/epics/v4/pvaPy/lib/python/2.6/linux-x86_64
-  else
-      export PYTHONPATH=/home/epics/v4/pvaPy/lib/python/2.6/linux-x86_64:$PYTHONPATH
-  fi
-```
-
-These files must be sourced to use, e.g.:
-
-```sh
-  $ . /home/epics/v4/pvaPy/bin/linux-x86_64/setup.sh
-  $ echo $PYTHONPATH
-  /home/epics/v4/pvaPy/lib/python/2.6/linux-x86_64
-```
-or for csh users:
-
-```sh
-  % source /home/epics/v4/pvaPy/bin/linux-x86_64/setup.csh
-  % echo $PYTHONPATH
-  /home/epics/v4/pvaPy/lib/python/2.6/linux-x86_64
-```
-
-### 3. Generate documentation.
+#### 3. Generate documentation.
 
 This step is optional and requires Sphinx to be installed:
 
@@ -144,7 +177,6 @@ This step is optional and requires Sphinx to be installed:
 
 If a `sphinx-build` script is present on the system, html pages will be
 generated in the `documentation/sphinx/_build/html` directory.
-
 
 ## Basic Usage: PV put/get
 
