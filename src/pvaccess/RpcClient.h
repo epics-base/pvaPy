@@ -27,9 +27,10 @@ public:
     std::string getChannelName() const;
 
     virtual ~RpcClient();
-    virtual epics::pvData::PVStructurePtr request(const epics::pvData::PVStructurePtr& pvRequest, double timeout=DefaultTimeout);
-    //virtual PvObject* request(const PvObject& pvObject, double timeout=DefaultTimeout);
-    virtual PvObject* invoke(const PvObject& pvArgumentObject);
+    epics::pvData::PVStructurePtr request(const epics::pvData::PVStructurePtr& pvRequest, double timeout=DefaultTimeout);
+    // For some reason default argument does not work with boost overloading.
+    PvObject* invoke(const PvObject& pvArgumentObject, double timeout);
+    PvObject* invoke(const PvObject& pvArgumentObject);
 
 private:
     static epics::pvAccess::RPCClient::shared_pointer createRpcClient(const std::string& channelName, const epics::pvData::PVStructurePtr& pvRequest, double timeout=DefaultTimeout);

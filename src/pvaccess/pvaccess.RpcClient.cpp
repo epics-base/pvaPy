@@ -2,10 +2,13 @@
 // found in the file LICENSE that is included with the distribution
 
 #include "boost/python/class.hpp"
+#include "boost/python/overloads.hpp"
 #include "boost/python/manage_new_object.hpp"
 #include "RpcClient.h"
 
 using namespace boost::python;
+
+BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(RpcClientInvoke, RpcClient::invoke, 1, 2)
 
 // 
 // RPC Client class
@@ -31,18 +34,26 @@ class_<RpcClient>("RpcClient",
     .def(init<std::string, const PvObject&>())
 #endif
     .def("invoke", 
-        &RpcClient::invoke, 
+        static_cast<PvObject*(RpcClient::*)(const PvObject&, double)>(&RpcClient::invoke),
         return_value_policy<manage_new_object>(), 
-        args("pvArgument"), 
+        RpcClientInvoke(args("pvArgument", "timeout=1.0"),
         "Invokes RPC call against service registered on the PV specified channel.\n\n"
         ":Parameter: *pvArgument* (PvObject) - PV argument object with a structure conforming to requirements of the RPC service registered on the given PV channel\n\n"
+        ":Parameter: *timeout* (float) - RPC client timeout in seconds\n\n"
         ":Returns: PV response object\n\n"
         "The following code works with the above RPC service example:\n\n"
         "::\n\n"
         "    pvArgument = PvObject({'nRows' : INT, 'nColumns' : INT})\n\n"
         "    pvArgument.set({'nRows' : 10, 'nColumns' : 10})\n\n"
         "    pvResponse = rpcClient(pvArgument)\n\n"
-        "    ntTable = NtTable(pvResponse)\n\n")
+        "    ntTable = NtTable(pvResponse)\n\n"))
+    .def("invoke", 
+        static_cast<PvObject*(RpcClient::*)(const PvObject&)>(&RpcClient::invoke),
+        return_value_policy<manage_new_object>(), 
+        RpcClientInvoke(args("pvArgument"),
+        "Invokes RPC call against service registered on the PV specified channel (with default timeout).\n\n"
+        ":Parameter: *pvArgument* (PvObject) - PV argument object with a structure conforming to requirements of the RPC service registered on the given PV channel\n\n"
+        ":Returns: PV response object\n\n"))
 ;
 
 } // wrapRpcClient()

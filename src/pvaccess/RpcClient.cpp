@@ -87,11 +87,15 @@ epics::pvData::PVStructure::shared_pointer RpcClient::request(const epics::pvDat
 }
 
 
-//PvObject* RpcClient::request(const PvObject& pvObject, double timeout) 
-PvObject* RpcClient::invoke(const PvObject& pvArgumentObject) 
+PvObject* RpcClient::invoke(const PvObject& pvArgumentObject, double timeout) 
 {
     epics::pvData::PVStructurePtr pvStructurePtr = pvArgumentObject.getPvStructurePtr();
 
-    PvObject* response = new PvObject(request(pvStructurePtr));
+    PvObject* response = new PvObject(request(pvStructurePtr, timeout));
     return response;
+}
+
+PvObject* RpcClient::invoke(const PvObject& pvArgumentObject) 
+{
+    return invoke(pvArgumentObject, DefaultTimeout);
 }
