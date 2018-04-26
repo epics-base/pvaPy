@@ -8,8 +8,6 @@
 
 using namespace boost::python;
 
-BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(RpcClientInvoke, RpcClient::invoke, 1, 2)
-
 // 
 // RPC Client class
 // 
@@ -33,11 +31,19 @@ class_<RpcClient>("RpcClient",
 #if defined PVA_RPC_API_VERSION && PVA_RPC_API_VERSION == 460
     .def(init<std::string, const PvObject&>())
 #endif
+
+    .def("getChannelName",
+        &RpcClient::getChannelName,
+        "Retrieves channel name.\n\n"
+        ":Returns: channel name\n\n"
+        "::\n\n"
+        "    channelName = rpcClient.getChannelName()\n\n")
+
     .def("invoke", 
         static_cast<PvObject*(RpcClient::*)(const PvObject&, double)>(&RpcClient::invoke),
         return_value_policy<manage_new_object>(), 
-        RpcClientInvoke(args("pvArgument", "timeout=1.0"),
-        "Invokes RPC call against service registered on the PV specified channel.\n\n"
+        args("pvArgument", "timeout"),
+        "Invokes RPC call against service registered on the PV specified channel, and with a specified timeout.\n\n"
         ":Parameter: *pvArgument* (PvObject) - PV argument object with a structure conforming to requirements of the RPC service registered on the given PV channel\n\n"
         ":Parameter: *timeout* (float) - RPC client timeout in seconds\n\n"
         ":Returns: PV response object\n\n"
@@ -45,15 +51,22 @@ class_<RpcClient>("RpcClient",
         "::\n\n"
         "    pvArgument = PvObject({'nRows' : INT, 'nColumns' : INT})\n\n"
         "    pvArgument.set({'nRows' : 10, 'nColumns' : 10})\n\n"
-        "    pvResponse = rpcClient(pvArgument)\n\n"
-        "    ntTable = NtTable(pvResponse)\n\n"))
+        "    pvResponse = rpcClient(pvArgument, 10)\n\n"
+        "    ntTable = NtTable(pvResponse)\n\n")
+
     .def("invoke", 
         static_cast<PvObject*(RpcClient::*)(const PvObject&)>(&RpcClient::invoke),
         return_value_policy<manage_new_object>(), 
-        RpcClientInvoke(args("pvArgument"),
-        "Invokes RPC call against service registered on the PV specified channel (with default timeout).\n\n"
+        args("pvArgument"),
+        "Invokes RPC call against service registered on the PV specified channel, with a default timeout (1 second).\n\n"
         ":Parameter: *pvArgument* (PvObject) - PV argument object with a structure conforming to requirements of the RPC service registered on the given PV channel\n\n"
-        ":Returns: PV response object\n\n"))
+        ":Returns: PV response object\n\n"
+        "The following code works with the above RPC service example:\n\n"
+        "::\n\n"
+        "    pvArgument = PvObject({'nRows' : INT, 'nColumns' : INT})\n\n"
+        "    pvArgument.set({'nRows' : 10, 'nColumns' : 10})\n\n"
+        "    pvResponse = rpcClient(pvArgument)\n\n"
+        "    ntTable = NtTable(pvResponse)\n\n")
 ;
 
 } // wrapRpcClient()
