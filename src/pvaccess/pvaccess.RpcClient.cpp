@@ -39,6 +39,21 @@ class_<RpcClient>("RpcClient",
         "::\n\n"
         "    channelName = rpcClient.getChannelName()\n\n")
 
+    .def("getTimeout",
+        &RpcClient::getTimeout,
+        "Retrieves client timeout.\n\n"
+        ":Returns: client timeout in seconds\n\n"
+        "::\n\n"
+        "    timeout = rpcClient.getTimeout()\n\n")
+
+    .def("setTimeout",
+        &RpcClient::setTimeout,
+        args("timeout"),
+        "Sets client timeout.\n\n"
+        ":Parameter: *timeout* (float) - client timeout in seconds\n\n"
+        "::\n\n"
+        "    client.setTimeout(10.0)\n\n")
+
     .def("invoke", 
         static_cast<PvObject*(RpcClient::*)(const PvObject&, double)>(&RpcClient::invoke),
         return_value_policy<manage_new_object>(), 
@@ -58,7 +73,7 @@ class_<RpcClient>("RpcClient",
         static_cast<PvObject*(RpcClient::*)(const PvObject&)>(&RpcClient::invoke),
         return_value_policy<manage_new_object>(), 
         args("pvArgument"),
-        "Invokes RPC call against service registered on the PV specified channel, with a default timeout (1 second).\n\n"
+        "Invokes RPC call against service registered on the PV specified channel, with a timeout set previously (if not set, default timeout of 1 second will be used).\n\n"
         ":Parameter: *pvArgument* (PvObject) - PV argument object with a structure conforming to requirements of the RPC service registered on the given PV channel\n\n"
         ":Returns: PV response object\n\n"
         "The following code works with the above RPC service example:\n\n"

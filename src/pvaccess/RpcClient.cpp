@@ -13,7 +13,8 @@ RpcClient::RpcClient(const std::string& channelName_) :
     PvaClient(),
     rpcClientInitialized(false),
     rpcClient(),
-    channelName(channelName_)
+    channelName(channelName_),
+    timeout(DefaultTimeout)
 {
     pvRequest = epics::pvData::CreateRequest::create()->createRequest("");
 }
@@ -23,7 +24,8 @@ RpcClient::RpcClient(const std::string& channelName_, const PvObject& pvRequestO
     PvaClient(),
     rpcClientInitialized(false),
     rpcClient(),
-    channelName(channelName_)
+    channelName(channelName_),
+    timeout(DefaultTimeout)
 {
     pvRequest = pvRequestObject.getPvStructurePtr();
 }
@@ -34,7 +36,8 @@ RpcClient::RpcClient(const RpcClient& pvaRpcClient) :
     rpcClientInitialized(pvaRpcClient.rpcClientInitialized),
     rpcClient(pvaRpcClient.rpcClient),
     channelName(pvaRpcClient.channelName),
-    pvRequest(pvaRpcClient.pvRequest)
+    pvRequest(pvaRpcClient.pvRequest),
+    timeout(pvaRpcClient.timeout)
 {
 }
 
@@ -97,5 +100,6 @@ PvObject* RpcClient::invoke(const PvObject& pvArgumentObject, double timeout)
 
 PvObject* RpcClient::invoke(const PvObject& pvArgumentObject) 
 {
-    return invoke(pvArgumentObject, DefaultTimeout);
+    return invoke(pvArgumentObject, timeout);
 }
+

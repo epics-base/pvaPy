@@ -25,6 +25,8 @@ public:
 #endif
     RpcClient(const RpcClient& pvaRpcClient);
     std::string getChannelName() const;
+    double getTimeout() const;
+    void setTimeout(double);
 
     virtual ~RpcClient();
     epics::pvData::PVStructurePtr request(const epics::pvData::PVStructurePtr& pvRequest, double timeout=DefaultTimeout);
@@ -40,11 +42,22 @@ private:
     epics::pvAccess::RPCClient::shared_pointer rpcClient;
     std::string channelName;
     epics::pvData::PVStructure::shared_pointer pvRequest;
+    double timeout;
 };
 
 inline std::string RpcClient::getChannelName() const
 {
     return channelName;
+}
+
+inline double RpcClient::getTimeout() const
+{
+    return timeout;
+}
+
+inline void RpcClient::setTimeout(double timeout) 
+{
+    this->timeout = timeout;
 }
 
 #endif
