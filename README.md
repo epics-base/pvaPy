@@ -8,6 +8,9 @@ and is currently supported on the Unix-like operating systems (Linux, OSX).
 
 ## Installation 
 
+At the moment prebuilt PvaPy packages exist only for the Conda package management system. If you do not use Conda, 
+or if you need 32-bit Linux Conda packages, you will have to build PvaPy from source.
+
 ### Conda 
 
 - Supported platforms: Linux (64-bit), OSX 
@@ -20,9 +23,11 @@ Make sure `conda` command is in your path, and execute the following command:
 ```
 
 This should result in installation of pvapy, pvapy-boost and epics-base 
-packages.
+Conda packages.
 
 ## Build 
+
+This section is intended for those users that would like to build PvaPy from source code.
 
 ### Prerequisites
 
