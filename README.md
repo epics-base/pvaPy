@@ -33,21 +33,20 @@ This section is intended for those users that would like to build PvaPy from the
 
 Building PvaPy from source requires recent versions of the following software:
 
-1. EPICS Base (v3.14.12.3 or 3.15.2)
-2. EPICS4 CPP release (v4.4.0 or higher); note that EPICS7 release includes 
+1. EPICS Base (>=v3.14.12.3)
+2. EPICS4 CPP release (>=v4.4.0); note that EPICS7 release includes 
 all needed v4 modules
-3. Python development header files/libraries (v2.6.6 or higher)
-4. Boost (v1.41.0); must have the boost_python library built
+3. Python development header files/libraries (>=v2.6.6)
+4. Boost (>=v1.41.0); must have the boost_python library built
 5. Standard development tools (gcc, make, autoconf, etc.)
 6. Boost.NumPy (optional, for retrieving numeric scalar arrays as numpy
 arrays; this is not needed for Boost v1.63.0 and later)
 7. Sphinx (optional, for generating documentation)
 
-The Software versions listed above were used for prototype development and
-testing. It is likely that any recent version of Python and the Boost libraries
-(such as those that come with current linux distributions) should work.
-Similarly, any recent version of EPICS Base that is supported by EPICS4 CPP
-should be fine. 
+The version numbers mentioned above are the earliest that PvaPy was tested with.
+Any recent version of Python and the Boost libraries (such as those that come 
+with current linux distributions) should work. Similarly, any recent version 
+of EPICS Base that is supported by EPICS4 CPP should be fine. 
 
 Nothing special needs to be done when building the EPICS4 CPP modules. Ensure
 that the EPICS Base installation you use for this module is the same one that
