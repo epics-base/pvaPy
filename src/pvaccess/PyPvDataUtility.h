@@ -320,6 +320,13 @@ numpy_::ndarray getScalarArrayFieldAsNumPyArray(const std::string& fieldName, co
 template<typename PvArrayType, typename CppType>
 numpy_::ndarray getScalarArrayAsNumPyArray(const epics::pvData::PVScalarArrayPtr& pvScalarArrayPtr);
 
+//
+// Conversion NumPy Array => PV Scalar Array 
+//
+void setScalarArrayFieldFromNumPyArray(const numpy_::ndarray& ndArray, const std::string& fieldName, epics::pvData::PVStructurePtr& pvStructurePtr);
+
+template<typename CppType>
+void setScalarArrayFieldFromNumPyArrayImpl(const numpy_::ndarray& ndArray, const std::string& fieldName, epics::pvData::PVStructurePtr& pvStructurePtr);
 #endif // if defined HAVE_NUM_PY_SUPPORT && HAVE_NUM_PY_SUPPORT == 1
 
 //
@@ -385,6 +392,32 @@ numpy_::ndarray getScalarArrayAsNumPyArray(const epics::pvData::PVScalarArrayPtr
     boost::python::object arrayOwner = boost::python::object(boost::shared_ptr<ScalarArrayPyOwner>(new ScalarArrayPyOwner(pvScalarArrayPtr)));
     return numpy_::from_data(arrayData, dataType, shape, stride, arrayOwner);
 }
+
+template<typename CppType, typename NumPyType>
+void setScalarArrayFieldFromNumPyArrayImpl(const numpy_::ndarray& ndArray, const std::string& fieldName, epics::pvData::PVStructurePtr& pvStructurePtr)
+{
+    int nDataElements = ndArray.shape(0);
+    numpy_::dtype dtype = ndArray.get_dtype();
+    numpy_::dtype expectedDtype = numpy_::dtype::get_builtin<NumPyType>();
+ 
+    if (dtype != expectedDtype) {
+        std::stringstream ss;
+        ss << "Inconsistent data type: expected " << boost::python::extract<const char*>(boost::python::str(expectedDtype)) << ", found " << boost::python::extract<const char*>(boost::python::str(dtype)) << ".";
+        throw InvalidDataType(ss.str());
+    }
+    char* cData = ndArray.get_data();
+    CppType* data = reinterpret_cast<CppType*>(cData);
+
+    std::tr1::shared_ptr<epics::pvData::PVValueArray<CppType> > valueArray =
+        pvStructurePtr->getSubField<epics::pvData::PVValueArray<CppType> >(fieldName);
+    epics::pvData::shared_vector<CppType> v(valueArray->reuse());
+    v.resize(nDataElements);
+    if (nDataElements) {
+        std::copy(data, data+nDataElements, v.begin());
+    }
+    valueArray->replace(freeze(v));
+}
+
 #endif // if defined HAVE_NUM_PY_SUPPORT && HAVE_NUM_PY_SUPPORT == 1
 
 } // namespace PyPvDataUtility

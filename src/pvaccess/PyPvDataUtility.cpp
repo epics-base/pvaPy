@@ -485,8 +485,19 @@ void pyObjectToScalarField(const boost::python::object& pyObject, const std::str
 //
 void pyObjectToScalarArrayField(const boost::python::object& pyObject, const std::string& fieldName, epics::pvData::PVStructurePtr& pvStructurePtr)
 {
-    boost::python::list pyList = PyUtility::extractValueFromPyObject<boost::python::list>(pyObject);
-    pyListToScalarArrayField(pyList, fieldName, pvStructurePtr);
+    if (PyUtility::isPyList(pyObject)) {
+        boost::python::list pyList = PyUtility::extractValueFromPyObject<boost::python::list>(pyObject);
+        pyListToScalarArrayField(pyList, fieldName, pvStructurePtr);
+    }
+#if defined HAVE_NUM_PY_SUPPORT && HAVE_NUM_PY_SUPPORT == 1
+    else if (PyUtility::isNumPyNDArray(pyObject)) {
+        numpy_::ndarray ndArray = PyUtility::extractValueFromPyObject<numpy_::ndarray>(pyObject);
+        setScalarArrayFieldFromNumPyArray(ndArray, fieldName, pvStructurePtr);
+    }
+#endif // if defined HAVE_NUM_PY_SUPPORT && HAVE_NUM_PY_SUPPORT == 1
+    else {
+        throw InvalidDataType("Dictionary key %s must be a list.", fieldName.c_str());
+    }
 }
 
 //
@@ -2020,6 +2031,63 @@ numpy_::ndarray getScalarArrayFieldAsNumPyArray(const std::string& fieldName, co
         }
         case epics::pvData::pvDouble: {
             return getScalarArrayAsNumPyArray<epics::pvData::PVDoubleArray, double>(pvScalarArrayPtr);
+        }
+        default: {
+            throw PvaException("Unrecognized scalar type: %d", scalarType);
+        }
+    }
+}
+
+//
+// Conversion NumPy Array => PV Scalar Array 
+//
+void setScalarArrayFieldFromNumPyArray(const numpy_::ndarray& ndArray, const std::string& fieldName, epics::pvData::PVStructurePtr& pvStructurePtr)
+{
+    epics::pvData::ScalarType scalarType = getScalarArrayType(fieldName, pvStructurePtr);
+    switch (scalarType) {
+        case epics::pvData::pvBoolean: {
+            setScalarArrayFieldFromNumPyArrayImpl<epics::pvData::boolean, bool>(ndArray, fieldName, pvStructurePtr);
+            break;
+        }
+        case epics::pvData::pvByte: {
+            setScalarArrayFieldFromNumPyArrayImpl<epics::pvData::int8, boost::int8_t>(ndArray, fieldName, pvStructurePtr);
+            break;
+        }
+        case epics::pvData::pvUByte: {
+            setScalarArrayFieldFromNumPyArrayImpl<epics::pvData::uint8, boost::uint8_t>(ndArray, fieldName, pvStructurePtr);
+            break;
+        }
+        case epics::pvData::pvShort: {
+            setScalarArrayFieldFromNumPyArrayImpl<epics::pvData::int16, boost::int16_t>(ndArray, fieldName, pvStructurePtr);
+            break;
+        }
+        case epics::pvData::pvUShort: {
+            setScalarArrayFieldFromNumPyArrayImpl<epics::pvData::uint16, boost::uint16_t>(ndArray, fieldName, pvStructurePtr);
+            break;
+        }
+        case epics::pvData::pvInt: {
+            setScalarArrayFieldFromNumPyArrayImpl<epics::pvData::int32, boost::int32_t>(ndArray, fieldName, pvStructurePtr);
+            break;
+        }
+        case epics::pvData::pvUInt: {
+            setScalarArrayFieldFromNumPyArrayImpl<epics::pvData::uint32, boost::uint32_t>(ndArray, fieldName, pvStructurePtr);
+            break;
+        }
+        case epics::pvData::pvLong: {
+            setScalarArrayFieldFromNumPyArrayImpl<epics::pvData::int64, boost::int64_t>(ndArray, fieldName, pvStructurePtr);
+            break;
+        }
+        case epics::pvData::pvULong: {
+            setScalarArrayFieldFromNumPyArrayImpl<epics::pvData::uint64, boost::uint64_t>(ndArray, fieldName, pvStructurePtr);
+            break;
+        }
+        case epics::pvData::pvFloat: {
+            setScalarArrayFieldFromNumPyArrayImpl<float, float>(ndArray, fieldName, pvStructurePtr);
+            break;
+        }
+        case epics::pvData::pvDouble: {
+            setScalarArrayFieldFromNumPyArrayImpl<double, double>(ndArray, fieldName, pvStructurePtr);
+            break;
         }
         default: {
             throw PvaException("Unrecognized scalar type: %d", scalarType);

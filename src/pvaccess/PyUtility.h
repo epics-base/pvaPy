@@ -14,11 +14,22 @@
 #include "InvalidArgument.h"
 #include "FieldNotFound.h"
 
+#include "pvapy.environment.h"
+
+#if defined HAVE_NUM_PY_SUPPORT && HAVE_NUM_PY_SUPPORT == 1
+#include NUM_PY_HEADER_FILE
+#endif // if defined HAVE_NUM_PY_SUPPORT && HAVE_NUM_PY_SUPPORT == 1
+
 namespace PyUtility
 {
 
 std::string extractStringFromPyObject(const boost::python::object& pyObject);
 bool isPyNone(const boost::python::object& pyObject);
+bool isPyList(const boost::python::object& pyObject);
+
+#if defined HAVE_NUM_PY_SUPPORT && HAVE_NUM_PY_SUPPORT == 1
+bool isNumPyNDArray(const boost::python::object& pyObject);
+#endif // if defined HAVE_NUM_PY_SUPPORT && HAVE_NUM_PY_SUPPORT == 1
 
 template<typename PyType>
 PyType extractValueFromPyObject(const boost::python::object& pyObject)

@@ -1,3 +1,7 @@
+## Release 1.1.1 (2018/06/XX)
+
+- added ability to set numeric scalar arrays using NumPy arrays directly
+
 ## Release 1.1.0 (2018/04/30)
 
 - added introspection interface to Channel class
