@@ -8,9 +8,9 @@ ifneq ($(CONFIG_SITE_LOCAL),)
 
     ifneq ($(PVA_PY_SETUP),)
     default: 
-	source $(PVA_PY_SETUP); $(MAKE) -C sphinx default
+	. $(PVA_PY_SETUP); $(MAKE) -C sphinx default
     %: 
-	source $(PVA_PY_SETUP); $(MAKE) -C sphinx $@
+	. $(PVA_PY_SETUP); $(MAKE) -C sphinx $@
     else
     default: 
 	$(MAKE) -C sphinx default
