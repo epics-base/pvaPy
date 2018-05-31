@@ -2,7 +2,8 @@
 #
 # pvaPy csh setup script
 #
-# modifies PATH, LD_LIBRARY_PATH and PYTHONPATH environment variables
+# sets or modifies PATH, LD_LIBRARY_PATH, PYTHONPATH and PVA_PY_SPHINX_BUILD 
+# environment variables
 #
 
 setenv PATH PVA_PY_PYTHON_DIR:${PATH}
@@ -18,4 +19,7 @@ if ( ! $?PYTHONPATH ) then
 else
     setenv PYTHONPATH PVA_PY_PYTHONPATH:${PYTHONPATH}
 endif
+
+setenv PVA_PY_SPHINX_BUILD PVA_PY_SPHINX_BUILD
+
 

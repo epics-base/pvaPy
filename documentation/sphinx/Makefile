@@ -1,11 +1,13 @@
-SPHINX_BUILD   = sphinx-build
-SPHINX_MAKEFILE   = Makefile.sphinx
-
 BUILD_DIR = _build
 STATIC_DIR = _static
 TEMPLATES_DIR = _templates
 
-SPHINX_BUILD_PATH = $(shell which $(SPHINX_BUILD) 2> /dev/null)
+SPHINX_MAKEFILE   = Makefile.sphinx
+SPHINX_BUILD_PATH = $(PVA_PY_SPHINX_BUILD)
+ifeq ($(wildcard $(SPHINX_BUILD_PATH)),)
+    SPHINX_BUILD_PATH = $(shell which sphinx-build 2> /dev/null)
+endif
+
 ifeq ($(wildcard $(SPHINX_BUILD_PATH)),)
     DOC_TARGETS = skip_doc_build
 else
@@ -21,7 +23,7 @@ default: $(DOC_TARGETS)
 help clean:
 	$(MAKE) -f $(SPHINX_MAKEFILE) $@
 html dirhtml pickle json htmlhelp qthelp latex changes linkcheck doctest: dirs
-	$(MAKE) -f $(SPHINX_MAKEFILE) $@
+	export PATH=`dirname $(SPHINX_BUILD_PATH)`:$(PATH) && $(MAKE) -f $(SPHINX_MAKEFILE) $@
 
 # Other targets
 configure:
@@ -40,7 +42,7 @@ skip_doc_build:
 	@echo 
 	@echo "*************************************"
 	@echo "Warning:"
-	@echo "    $(SPHINX_BUILD) executable is not in your path."
+	@echo "    The sphinx-build executable could not be found."
 	@echo "    Documentation will not be generated."
 	@echo "*************************************"
 	@echo 

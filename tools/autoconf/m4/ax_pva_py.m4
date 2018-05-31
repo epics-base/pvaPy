@@ -181,6 +181,7 @@ AC_DEFUN([AX_PVA_PY],
     PVA_PY_PYTHON_DIR=`dirname $PVA_PY_PYTHON`
     PVA_PY_HOST_ARCH=`$EPICS_BASE/startup/EpicsHostArch.pl`
     PVA_PY_PYTHONPATH=$PVA_PY_TOP/lib/python/$PVA_PY_MAJOR_MINOR_VERSION/$PVA_PY_HOST_ARCH
+    PVA_PY_SPHINX_BUILD=`which sphinx-build 2> /dev/null`
 
     echo "PVA_PY_CPPFLAGS = $PVA_PY_CPPFLAGS" >> $config_site_local
     echo "PVA_PY_LDFLAGS = $PVA_PY_LDFLAGS" >> $config_site_local
@@ -193,6 +194,7 @@ AC_DEFUN([AX_PVA_PY],
     echo "PVA_PY_PYTHON = $PVA_PY_PYTHON" >> $config_site_local
     echo "PVA_PY_PYTHONPATH = $PVA_PY_PYTHONPATH" >> $config_site_local
     echo "PVA_PY_LD_LIBRARY_PATH = $PVA_PY_LD_LIBRARY_PATH" >> $config_site_local
+    echo "PVA_PY_SPHINX_BUILD = $PVA_PY_SPHINX_BUILD" >> $config_site_local
     echo "PVA_PY_EPICS_BASE = $EPICS_BASE" >> $config_site_local
     echo "PVA_PY_EPICS4_DIR = $EPICS4_DIR" >> $config_site_local
     echo "PVA_PY_HOST_ARCH = $PVA_PY_HOST_ARCH" >> $config_site_local
@@ -212,7 +214,7 @@ AC_DEFUN([AX_PVA_PY],
     # create SETUP_FULL.SH
     setup_sh=$PVA_PY_TOP/configure/SETUP_FULL.SH
     setup_sh_local=$LOCAL_SETUP_DIR/pvapy_setup_full.$PVA_PY_MAJOR_MINOR_VERSION.sh
-    eval "cat $setup_sh | sed 's?PVA_PY_PYTHON_DIR?$PVA_PY_PYTHON_DIR?g' | sed 's?PVA_PY_PYTHONPATH?$PVA_PY_PYTHONPATH?g' | sed 's?PVA_PY_LD_LIBRARY_PATH?$PVA_PY_LD_LIBRARY_PATH?g' > $setup_sh_local"
+    eval "cat $setup_sh | sed 's?PVA_PY_PYTHON_DIR?$PVA_PY_PYTHON_DIR?g' | sed 's?PVA_PY_PYTHONPATH?$PVA_PY_PYTHONPATH?g' | sed 's?PVA_PY_LD_LIBRARY_PATH?$PVA_PY_LD_LIBRARY_PATH?g' | sed 's?export PVA_PY_SPHINX_BUILD.*?export PVA_PY_SPHINX_BUILD=$PVA_PY_SPHINX_BUILD?g' > $setup_sh_local"
     AC_MSG_NOTICE([Created $setup_sh_local file])
     
     # create SETUP_PYTHONPATH.CSH
@@ -224,6 +226,6 @@ AC_DEFUN([AX_PVA_PY],
     # create SETUP_FULL.CSH
     setup_csh=$PVA_PY_TOP/configure/SETUP_FULL.CSH
     setup_csh_local=$LOCAL_SETUP_DIR/pvapy_setup_full.$PVA_PY_MAJOR_MINOR_VERSION.csh
-    eval "cat $setup_csh | sed 's?PVA_PY_PYTHON_DIR?$PVA_PY_PYTHON_DIR?g' | sed 's?PVA_PY_PYTHONPATH?$PVA_PY_PYTHONPATH?g' | sed 's?PVA_PY_LD_LIBRARY_PATH?$PVA_PY_LD_LIBRARY_PATH?g' > $setup_csh_local"
+    eval "cat $setup_csh | sed 's?PVA_PY_PYTHON_DIR?$PVA_PY_PYTHON_DIR?g' | sed 's?PVA_PY_PYTHONPATH?$PVA_PY_PYTHONPATH?g' | sed 's?PVA_PY_LD_LIBRARY_PATH?$PVA_PY_LD_LIBRARY_PATH?g' | sed 's?setenv PVA_PY_SPHINX_BUILD.*?setenv PVA_PY_SPHINX_BUILD $PVA_PY_SPHINX_BUILD?g' > $setup_csh_local"
     AC_MSG_NOTICE([Created $setup_csh_local file])
 ])
