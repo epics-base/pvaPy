@@ -80,7 +80,7 @@ if [ "$PYTHON_MAJOR_VERSION" = "3" ]; then
     PVA_PY_FLAGS="PYTHON_VERSION=3"
 fi
 PVA_PY_FLAGS="EPICS_BASE=$EPICS_BASE_DIR BOOST_ROOT=$BOOST_DIR PVA_PY_ROOT=$PVA_PY_DIR $PVA_PY_FLAGS"
-PVACCESS_LIB_DIR=$PVA_PY_BUILD_DIR/lib/python/$PYTHON_MAJOR_MINOR_VERSION/$EPICS_HOST_ARCH
+PVACCESS_BUILD_LIB_DIR=$PVA_PY_BUILD_DIR/lib/python/$PYTHON_MAJOR_MINOR_VERSION/$EPICS_HOST_ARCH
 
 echo "Building pvapy"
 cd $PVA_PY_BUILD_DIR
@@ -94,7 +94,7 @@ mkdir -p $PVA_PY_DIR
 rsync -arvl documentation/sphinx/_build/html $PVACCESS_DOC_DIR/
 
 echo "Installing pvapy library"
-rsync -arv $PVACCESS_LIB_DIR/$PVACCESS_LIB $PVACCESS_DIR/
+rsync -arv $PVACCESS_BUILD_LIB_DIR/$PVACCESS_LIB $PVACCESS_DIR/
 
 echo "Generating python module init files"
 echo "from pvaccess import *" > $PVACCESS_DIR/__init__.py
