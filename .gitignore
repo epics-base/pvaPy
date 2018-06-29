@@ -5,6 +5,8 @@ include/
 config.log
 configure/*.local
 **/O.*
+**/dist
+tools/pip/**/build
 tools/autoconf/install-sh
 tools/autoconf/missing
 tools/autoconf/config.status
@@ -14,3 +16,8 @@ tools/autoconf/Makefile
 tools/autoconf/aclocal.m4
 tools/autoconf/autom4te.cache/
 documentation/sphinx/_build/
+tools/pip/epics-base-pip/epics-base
+tools/pip/pvapy-boost-pip/pvapy-boost
+tools/pip/pvapy-pip/pvapy
+tools/pip/pvapy-pip/pvaccess*
+
