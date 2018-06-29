@@ -19,9 +19,10 @@ if [ -z "$PYTHON_VERSION" ]; then
 fi
 
 BUILD_DIR=$TOP_DIR/build
-PVA_PY_DIR=$TOP_DIR/pvaccess
-PVA_PY_DOC_DIR=$PVA_PY_DIR/doc
-PVA_PY_LIB_DIR=$PVA_PY_DIR/lib
+PVA_PY_DIR=$TOP_DIR/pvapy
+PVACCESS_DIR=$TOP_DIR/pvaccess
+PVACCESS_DOC_DIR=$PVACCESS_DIR/doc
+PVACCESS_LIB_DIR=$PVACCESS_DIR/lib
 PVA_PY_BUILD_DIR=$BUILD_DIR/pvaPy-$PVA_PY_VERSION
 EPICS_BASE_DIR=$TOP_DIR/../epics-base-pip/epics-base
 EPICS_HOST_ARCH=`$EPICS_BASE_DIR/startup/EpicsHostArch`
@@ -88,25 +89,27 @@ make -j || exit 1
 
 echo "Building pvapy docs"
 make doc || exit 1
-mkdir -p $PVA_PY_DOC_DIR
-rsync -arvl documentation/sphinx/_build/html $PVA_PY_DOC_DIR/
+mkdir -p $PVACCESS_DOC_DIR
+mkdir -p $PVA_PY_DIR
+rsync -arvl documentation/sphinx/_build/html $PVACCESS_DOC_DIR/
 
 echo "Installing pvapy library"
-rsync -arv $PVACCESS_LIB_DIR/$PVACCESS_LIB $PVA_PY_DIR/
+rsync -arv $PVACCESS_LIB_DIR/$PVACCESS_LIB $PVACCESS_DIR/
 
-echo "Generating module init file"
+echo "Generating python module init files"
+echo "from pvaccess import *" > $PVACCESS_DIR/__init__.py
 echo "from pvaccess import *" > $PVA_PY_DIR/__init__.py
 
 echo "Copying dependencies"
 EPICS_LIBS=`ls -c1 $EPICS_BASE_DIR/lib/$EPICS_HOST_ARCH/*.so`
 BOOST_LIBS=`ls -c1 $BOOST_DIR/lib/$BOOST_HOST_ARCH/*.so`
-mkdir -p $PVA_PY_LIB_DIR/$EPICS_HOST_ARCH
+mkdir -p $PVACCESS_LIB_DIR/$EPICS_HOST_ARCH
 for lib in $EPICS_LIBS $BOOST_LIBS; do
-    rsync -arvl ${lib}* $PVA_PY_LIB_DIR/$EPICS_HOST_ARCH/
+    rsync -arvl ${lib}* $PVACCESS_LIB_DIR/$EPICS_HOST_ARCH/
 done
 
 # Fix rpath
-cd $PVA_PY_DIR
+cd $PVACCESS_DIR
 newRpath="\$ORIGIN/lib/$EPICS_HOST_ARCH"
 echo "Setting RPATH for file $PVACCESS_LIB to $newRpath"
 chmod u+w $PVACCESS_LIB
