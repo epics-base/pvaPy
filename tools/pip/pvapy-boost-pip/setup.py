@@ -8,7 +8,7 @@ DEFAULT_BOOST_VERSION = '1.67.0'
 MODULE_NAME = 'pvapy-boost'
 MODULE = Extension(MODULE_NAME, [])
 PLATFORM = platform.uname()[0].lower()
-BUILD_SCRIPT = 'build.%s.sh' % PLATFORM
+BUILD_SCRIPT = './build.%s.sh' % PLATFORM
 DEPLOY_CONF = os.environ.get('DEPLOY_CONF', 'non_existent_file')
 
 def get_env_var(name, default):
