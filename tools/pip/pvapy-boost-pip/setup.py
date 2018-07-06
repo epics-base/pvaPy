@@ -43,6 +43,9 @@ MODULE_FILES = map(lambda f: f.replace('%s/' % MODULE_NAME, ''), find_files(MODU
 setup(
   name = MODULE_NAME,
   version = MODULE_VERSION,
+  description = 'Boost python libraries needed by PvaPy',
+  url = 'http://www.boost.org',
+  license = 'Boost Software License',
   packages = [MODULE_NAME],
   package_data = {
     MODULE_NAME : MODULE_FILES, 

@@ -10,6 +10,7 @@ MODULE = Extension(MODULE_NAME, [])
 PLATFORM = platform.uname()[0].lower()
 BUILD_SCRIPT = './build.%s.sh' % PLATFORM
 DEPLOY_CONF = os.environ.get('DEPLOY_CONF', 'non_existent_file')
+EXECUTABLES=['caget', 'cainfo', 'camonitor', 'caput', 'caRepeater', 'eget', 'pvget', 'pvinfo', 'pvlist', 'pvput', 'softIoc', 'softIocPVA']
 
 def get_env_var(name, default):
     value = os.environ.get(name)
@@ -39,14 +40,19 @@ class BuildExt(build_ext):
 
 MODULE_VERSION = get_env_var('EPICS_BASE_VERSION', DEFAULT_EPICS_BASE_VERSION) 
 MODULE_FILES = map(lambda f: f.replace('%s/' % MODULE_NAME, ''), find_files(MODULE_NAME))
+MODULE_SCRIPTS = [f for f in find_files('%s/bin' % MODULE_NAME) if os.path.basename(f) in EXECUTABLES]
 
 setup(
   name = MODULE_NAME,
   version = MODULE_VERSION,
+  description = 'EPICS Base software',
+  url = 'https://epics.anl.gov/index.php',
+  license = 'EPICS Open License',
   packages = [MODULE_NAME],
   package_data = {
     MODULE_NAME : MODULE_FILES,
   },
+  scripts = MODULE_SCRIPTS,
   ext_modules=[MODULE],
   cmdclass = {'build_ext': BuildExt}
 )

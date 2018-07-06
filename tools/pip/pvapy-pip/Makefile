@@ -6,7 +6,7 @@ BUILD_DIR = build
 PACKAGE_DIRS = pvapy pvaccess
 
 package: build
-	DEPLOY_CONF=$(DEPLOY_CONF) pip wheel . -w $(DIST_DIR) 
+	DEPLOY_CONF=$(DEPLOY_CONF) pip wheel . -w $(DIST_DIR) -r requirements.txt
 
 configure:
 

@@ -44,6 +44,9 @@ MODULE_FILES = map(lambda f: f.replace('%s/' % MODULE_NAME, ''), find_files(MODU
 setup(
   name = PACKAGE_NAME,
   version = MODULE_VERSION,
+  description = 'Python library for EPICS PV Access',
+  url = 'https://github.com/epics-base/pvaPy',
+  license = 'EPICS Open License',
   packages = [PACKAGE_NAME, MODULE_NAME],
   package_data = {
     MODULE_NAME :  MODULE_FILES,
