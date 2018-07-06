@@ -12,6 +12,8 @@ configure:
 build: configure
 	conda build .
 
+package: build
+
 install: build
 	conda install $(CONDA_ENV_FLAGS) $(PACKAGE) --use-local
 

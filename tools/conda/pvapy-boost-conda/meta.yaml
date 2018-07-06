@@ -1,9 +1,9 @@
 package:
   name: pvapy-boost
-  version: 1.66.0
+  version: 1.67.0
 
 source:
-  url: https://sourceforge.net/projects/boost/files/boost/1.66.0/boost_1_66_0.tar.gz
+  url: https://sourceforge.net/projects/boost/files/boost/1.67.0/boost_1_67_0.tar.gz
 
 build:
   number: 1
