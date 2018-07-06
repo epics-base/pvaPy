@@ -1,8 +1,9 @@
-## Release 1.2.0 (2018/06/XX)
+## Release 1.2.0 (2018/07/XX)
 
 - added ability to set numeric scalar arrays using NumPy arrays directly
 - fixed issue with building documentation when multiple versions of python
   are present
+- introduced support for building pvapy pip packages
 
 ## Release 1.1.0 (2018/04/30)
 
