@@ -5,6 +5,8 @@ DOC_DIR = documentation
 CONFIGURE_DIR = configure
 PVACCESS_DIR = src/pvaccess
 CONDA_DIR = tools/conda
+PIP_DIR = tools/pip
+DIST_DIR = dist
 
 RELEASE_LOCAL = $(CONFIGURE_DIR)/RELEASE.local
 CONFIG_SITE_LOCAL = $(CONFIGURE_DIR)/CONFIG_SITE.local
@@ -54,7 +56,7 @@ else
 
   distclean:
 	$(RM) config.log $(RELEASE_LOCAL) $(CONFIG_SITE_LOCAL)
-	$(RMDIR) bin lib $(PVACCESS_DIR)/O.* $(AC_DIR)/autom4te.cache
+	$(RMDIR) bin lib dist $(PVACCESS_DIR)/O.* $(AC_DIR)/autom4te.cache
 	$(RM) $(AC_DIR)/aclocal.m4 $(AC_DIR)/configure $(AC_DIR)/config.log
 	$(RM) $(AC_DIR)/config.status $(AC_DIR)/install-sh $(AC_DIR)/missing
 	$(RM) $(AC_DIR)/Makefile $(AC_DIR)/Makefile.in config.log
@@ -67,11 +69,38 @@ endif # Command-line goal
 doc:
 	$(MAKE) -C $(DOC_DIR)
 
-docclean:
+doc-clean:
 	$(MAKE) -C $(DOC_DIR) clean
 
-srcclean:
+src-clean:
 	$(MAKE) -C $(PVACCESS_DIR) clean
+
+package-pip pip: package-epics-base-pip package-pvapy-boost-pip package-pvapy-pip
+	
+package-epics-base-pip:
+	$(MAKE) -C $(PIP_DIR)/epics-base-pip package
+
+package-pvapy-boost-pip:
+	$(MAKE) -C $(PIP_DIR)/pvapy-boost-pip package
+
+package-pvapy-pip:
+	$(MAKE) -C $(PIP_DIR)/pvapy-pip package
+
+pip-clean:
+	$(MAKE) -C $(PIP_DIR)/epics-base-pip clean
+	$(MAKE) -C $(PIP_DIR)/pvapy-boost-pip clean
+	$(MAKE) -C $(PIP_DIR)/pvapy-pip clean
+
+package-conda conda: package-epics-base-conda package-pvapy-boost-conda package-pvapy-conda
+	
+package-epics-base-conda:
+	$(MAKE) -C $(CONDA_DIR)/epics-base-conda package
+
+package-pvapy-boost-conda:
+	$(MAKE) -C $(CONDA_DIR)/pvapy-boost-conda package
+
+package-pvapy-conda:
+	$(MAKE) -C $(CONDA_DIR)/pvapy-conda package
 
 install-conda: install-epics-base-conda install-pvapy-boost-conda install-pvapy-conda
 	
@@ -95,13 +124,18 @@ uninstall-pvapy-boost-conda:
 uninstall-pvapy-conda:
 	$(MAKE) -C $(CONDA_DIR)/pvapy-conda uninstall
 
-clean: srcclean docclean
+conda-clean: 
+	$(MAKE) -C $(CONDA_DIR)/pvapy-conda clean || /bin/true
+	$(MAKE) -C $(CONDA_DIR)/pvapy-boost-conda clean || /bin/true
+	$(MAKE) -C $(CONDA_DIR)/epics-base-conda clean || /bin/true
+
+clean: src-clean doc-clean pip-clean conda-clean
 
 tidy: distclean
 	$(RM) config.log $(RELEASE_LOCAL) $(CONFIG_SITE_LOCAL)
 	$(MAKE) -C $(DOC_DIR) tidy
 
 .PHONY: configure distclean
-.PHONY: doc docclean srcclean clean tidy
-.PHONY: install-conda uninstall-conda
+.PHONY: doc doc-clean src-clean pip-clean conda-clean clean tidy
+.PHONY: package-pip pip package-conda conda install-conda uninstall-conda
 
