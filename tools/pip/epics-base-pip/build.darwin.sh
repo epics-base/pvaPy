@@ -32,7 +32,8 @@ tar zxf $EPICS_BASE_TAR_FILE
 cd base-${EPICS_BASE_VERSION}
 EPICS_HOST_ARCH=`./startup/EpicsHostArch`
 eval "cat configure/CONFIG_SITE | sed 's?#INSTALL_LOCATION=.*?INSTALL_LOCATION=$EPICS_BASE_DIR?' > configure/CONFIG_SITE.2 && mv configure/CONFIG_SITE.2 configure/CONFIG_SITE"
-make -j
+echo "Using BUILD_FLAGS: $BUILD_FLAGS"
+make $BUILD_FLAGS
 make install 
 
 echo "Copying startup files"

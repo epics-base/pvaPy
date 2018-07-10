@@ -9,7 +9,9 @@ EPICS_EXECUTABLES="caget cainfo camonitor caput caRepeater eget pvget pvinfo pvl
 
 echo "Building epics"
 eval "cat configure/CONFIG_SITE | sed 's?#INSTALL_LOCATION=.*?INSTALL_LOCATION=$CONDA_EPICS_DIR?' > configure/CONFIG_SITE.2 && mv configure/CONFIG_SITE.2 configure/CONFIG_SITE" 
-make -j
+
+echo "Using BUILD_FLAGS: $BUILD_FLAGS"
+make $BUILD_FLAGS
 make install 
 
 echo "Copying startup files"

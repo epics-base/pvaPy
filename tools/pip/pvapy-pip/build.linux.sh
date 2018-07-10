@@ -83,9 +83,10 @@ PVA_PY_FLAGS="EPICS_BASE=$EPICS_BASE_DIR BOOST_ROOT=$BOOST_DIR PVA_PY_ROOT=$PVA_
 PVACCESS_BUILD_LIB_DIR=$PVA_PY_BUILD_DIR/lib/python/$PYTHON_MAJOR_MINOR_VERSION/$EPICS_HOST_ARCH
 
 echo "Building pvapy"
+echo "Using BUILD_FLAGS: $BUILD_FLAGS"
 cd $PVA_PY_BUILD_DIR
 make configure $PVA_PY_FLAGS || exit 1
-make -j || exit 1
+make $BUILD_FLAGS || exit 1
 
 echo "Building pvapy docs"
 make doc || exit 1

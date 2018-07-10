@@ -23,7 +23,8 @@ PVACCESS_LIB_DIR=lib/python/$PYTHON_MAJOR_MINOR_VERSION/$EPICS_HOST_ARCH
 
 echo "Building pvapy"
 make configure EPICS_BASE=$CONDA_EPICS_DIR BOOST_ROOT=$CONDA_BOOST_DIR $PYTHON_FLAGS
-make -j
+echo "Using BUILD_FLAGS: $BUILD_FLAGS"
+make $BUILD_FLAGS
 
 echo "Building pvapy docs"
 make doc
