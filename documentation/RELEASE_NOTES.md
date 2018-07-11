@@ -1,4 +1,4 @@
-## Release 1.2.0 (2018/07/XX)
+## Release 1.2.0 (2018/07/11)
 
 - added ability to set numeric scalar arrays using NumPy arrays directly
 - fixed issue with building documentation when multiple versions of python
