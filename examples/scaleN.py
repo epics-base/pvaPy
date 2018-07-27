@@ -27,7 +27,7 @@
 
 import sys
 import time
-from pvaccess import Channel
+from pvaccess import Channel, CA
 from collections import OrderedDict
 
 class ScaleMonitor:
@@ -40,6 +40,7 @@ class ScaleMonitor:
         self.percentageMissed = 0
         self.startTime = 0
         self.receiveRate = 0
+        self.receiveRateHz = 0
         self.outputMark = outputMark
 
     def toString(self):
@@ -76,6 +77,7 @@ if __name__ == '__main__':
     channelMap = OrderedDict()
     for channelCnt in range(1,nChannels+1):
         channelName = 'X%s' % channelCnt
+        #c = Channel(channelName, CA)
         c = Channel(channelName)
         #print('CONNECT TO %s:\n%s\n' % (channelName, c.get()))
         m = ScaleMonitor(channelName, outputMark)
@@ -111,7 +113,9 @@ if __name__ == '__main__':
         totalReceived += m.nReceived
         totalMissed += m.nMissed
     receiveRateHz = totalReceived/deltaT
-    percentageMissed = totalMissed/(totalReceived+totalMissed)*100.0
+    percentageMissed = 0.0
+    if totalReceived+totalMissed > 0:
+        percentageMissed = totalMissed/(totalReceived+totalMissed)*100.0
     print('')
     print('RUNTIME: %.2f [s]' % (deltaT))
     print('CHANNELS: %9d' % (nChannels))
