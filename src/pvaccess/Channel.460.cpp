@@ -24,7 +24,7 @@
 
 #include "GetFieldRequesterImpl.h"
 
-const char* Channel::DefaultRequestDescriptor("field(value)");
+const char* Channel::DefaultRequestDescriptor("");
 const char* Channel::DefaultPutGetRequestDescriptor("putField(value)getField(value)");
 const char* Channel::DefaultSubscriberName("defaultSubscriber");
 
