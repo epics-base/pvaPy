@@ -8,7 +8,7 @@ CaClient::ClientFactoryController CaClient::clientFactoryController;
 
 CaClient::ClientFactoryController::ClientFactoryController() 
 {
-    epics::pvAccess::ca::CAClientFactory::start();
+    //epics::pvAccess::ca::CAClientFactory::start();
 }
 
 CaClient::ClientFactoryController::~ClientFactoryController() 

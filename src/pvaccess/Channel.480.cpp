@@ -33,7 +33,7 @@ const double Channel::MonitorStartWaitTime(0.1);
 PvaPyLogger Channel::logger("Channel");
 PvaClient Channel::pvaClient;
 CaClient Channel::caClient;
-epics::pvaClient::PvaClientPtr Channel::pvaClientPtr(epics::pvaClient::PvaClient::get());
+epics::pvaClient::PvaClientPtr Channel::pvaClientPtr(epics::pvaClient::PvaClient::get("pva ca"));
 
 
 Channel::Channel(const std::string& channelName, PvProvider::ProviderType providerType_) :
@@ -96,7 +96,13 @@ void Channel::connect()
         return;
     }
     try {
-        pvaClientChannelPtr->connect(timeout);
+        //pvaClientChannelPtr->connect(timeout);
+        issueConnect();
+        epics::pvData::Status status = pvaClientChannelPtr->waitConnect(timeout);
+        if(!status.isOK()) {
+            throw ChannelTimeout("Channel %s timed out.", pvaClientChannelPtr->getChannelName().c_str());
+        }
+
         determineDefaultRequestDescriptor();
     } 
     catch (std::runtime_error&) {
