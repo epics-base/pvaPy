@@ -75,7 +75,13 @@ AC_DEFUN([AX_EPICS_BASE],
 
     # determine epics host arch
     if test -z "$EPICS_HOST_ARCH"; then
-        EPICS_HOST_ARCH=`$ac_epics_base_path/startup/EpicsHostArch`
+        if test -f $ac_epics_base_path/startup/EpicsHostArch.pl; then 
+            EPICS_HOST_ARCH=`$ac_epics_base_path/startup/EpicsHostArch.pl`
+        elif test -f $ac_epics_base_path/lib/perl/EpicsHostArch.pl; then 
+            EPICS_HOST_ARCH=`$ac_epics_base_path/lib/perl/EpicsHostArch.pl`
+        else 
+            EPICS_HOST_ARCH=`$ac_epics_base_path/src/tools/EpicsHostArch.pl`
+        fi
     fi
     if test -z "$EPICS_HOST_ARCH"; then
         AC_MSG_ERROR(could not determine EPICS host architecture)

@@ -17,7 +17,7 @@
 #   and this notice are preserved. This file is offered as-is, without any
 #   warranty.
 
-#serial 3
+#serial 4
 
 AC_DEFUN([AX_PVA_PY],
 
@@ -179,7 +179,7 @@ AC_DEFUN([AX_PVA_PY],
     PVA_PY_MAJOR_MINOR_VERSION=`python$PYTHON_VERSION -c 'import sys; print(sys.version[[:3]])'`
     PVA_PY_PYTHON=`which python$PYTHON_VERSION`
     PVA_PY_PYTHON_DIR=`dirname $PVA_PY_PYTHON`
-    PVA_PY_HOST_ARCH=`$EPICS_BASE/startup/EpicsHostArch.pl`
+    PVA_PY_HOST_ARCH=$EPICS_HOST_ARCH
     PVA_PY_PYTHONPATH=$PVA_PY_TOP/lib/python/$PVA_PY_MAJOR_MINOR_VERSION/$PVA_PY_HOST_ARCH
     PVA_PY_SPHINX_BUILD=`which sphinx-build 2> /dev/null`
 
