@@ -11,11 +11,11 @@ build:
 requirements:
   build:
     - python
-    - numpy
+    - numpy>1.15
 
   run:
     - python
-    - numpy
+    - numpy>1.15
 
 about:
   home: http://www.boost.org

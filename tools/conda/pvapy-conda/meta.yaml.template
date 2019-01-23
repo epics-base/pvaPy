@@ -16,15 +16,15 @@ requirements:
   build:
     - python
     - sphinx
-    - numpy 
-    - epics-base
-    - pvapy-boost
+    - numpy>1.15
+    - epics-base=EPICS_BASE_VERSION
+    - pvapy-boost=BOOST_VERSION
 
   run:
     - python
-    - numpy 
-    - epics-base
-    - pvapy-boost
+    - numpy>1.15
+    - epics-base=EPICS_BASE_VERSION
+    - pvapy-boost=BOOST_VERSION
 
 about:
   home: https://github.com/epics-base/pvaPy
