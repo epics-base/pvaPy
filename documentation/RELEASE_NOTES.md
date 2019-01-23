@@ -1,3 +1,9 @@
+## Release 1.3.0 (2018/01/24)
+
+- fixed build issues related to EpicsHostArch script location
+- updated code to reflect changes in CA provider 
+- updated conda build scripts for EPICS 7.0.2
+
 ## Release 1.2.0 (2018/07/11)
 
 - added ability to set numeric scalar arrays using NumPy arrays directly
