@@ -8,7 +8,9 @@ CaClient::ClientFactoryController CaClient::clientFactoryController;
 
 CaClient::ClientFactoryController::ClientFactoryController() 
 {
-    //epics::pvAccess::ca::CAClientFactory::start();
+#if PVA_API_VERSION < 480
+    epics::pvAccess::ca::CAClientFactory::start();
+#endif // PVA_API_VERSION < 480
 }
 
 CaClient::ClientFactoryController::~ClientFactoryController() 
