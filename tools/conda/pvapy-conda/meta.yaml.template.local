@@ -1,0 +1,34 @@
+package:
+  name: pvapy
+  version: PVA_PY_VERSION
+
+source:
+  path: ../../..
+
+build:
+  number: 1
+
+  script_env:
+    - BUILD_FLAGS
+
+requirements:
+  build:
+    - python
+    - sphinx
+    - numpy>1.15
+    - epics-base=EPICS_BASE_VERSION
+    - pvapy-boost=BOOST_VERSION
+
+  run:
+    - python
+    - numpy>1.15
+    - epics-base=EPICS_BASE_VERSION
+    - pvapy-boost=BOOST_VERSION
+
+about:
+  home: https://github.com/epics-base/pvaPy
+  license: EPICS Open License
+  summary: Python library for EPICS PV Access 
+
+
+
