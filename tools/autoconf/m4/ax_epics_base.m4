@@ -29,7 +29,7 @@
 #   and this notice are preserved. This file is offered as-is, without any
 #   warranty.
 
-#serial 2
+#serial 3
 
 DEFAULT_EPICS_VERSION=3.14.12
 
@@ -75,7 +75,9 @@ AC_DEFUN([AX_EPICS_BASE],
 
     # determine epics host arch
     if test -z "$EPICS_HOST_ARCH"; then
-        if test -f $ac_epics_base_path/startup/EpicsHostArch.pl; then 
+        if test -f $ac_epics_base_path/startup/EpicsHostArch; then 
+            EPICS_HOST_ARCH=`$ac_epics_base_path/startup/EpicsHostArch`
+        elif test -f $ac_epics_base_path/startup/EpicsHostArch.pl; then 
             EPICS_HOST_ARCH=`$ac_epics_base_path/startup/EpicsHostArch.pl`
         elif test -f $ac_epics_base_path/lib/perl/EpicsHostArch.pl; then 
             EPICS_HOST_ARCH=`$ac_epics_base_path/lib/perl/EpicsHostArch.pl`
