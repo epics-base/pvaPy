@@ -3,8 +3,10 @@ package:
   version: PVA_PY_VERSION
 
 source:
-  git_rev: PVA_PY_GIT_VERSION
-  git_url: https://github.com/epics-base/pvaPy
+#  git_rev: PVA_PY_GIT_VERSION
+#  git_url: https://github.com/epics-base/pvaPy
+  path: ../../..
+
 
 build:
   number: 1
