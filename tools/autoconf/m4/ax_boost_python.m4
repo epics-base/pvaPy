@@ -57,7 +57,7 @@
 #     - Print out several variables for easier debugging
 #     - Make sure that macro fails if correct library cannot be found
 
-#serial 22.1
+#serial 22.2
 
 AC_DEFUN([AX_BOOST_PYTHON],
 [AC_REQUIRE([AX_PYTHON_DEVEL])dnl
@@ -109,7 +109,7 @@ if test "$ac_cv_boost_python" = "yes"; then
   AC_MSG_NOTICE([Using PYTHON_LDFLAGS: $PYTHON_LDFLAGS])
   AC_MSG_NOTICE([Verifying boost python library])
   boost_python_lib=""
-  for ax_lib in $ax_python_lib $ax_boost_python_lib `ls $BOOSTLIBDIR/libboost_python*.so* $BOOSTLIBDIR/libboost_python*.dylib* $BOOSTLIBDIR/libboost_python*.a* 2>/dev/null | sed 's,.*/,,' | sed -e 's;^lib\(boost_python.*\)\.so.*$;\1;' -e 's;^lib\(boost_python.*\)\.dylib.*$;\1;' -e 's;^lib\(boost_python.*\)\.a.*$;\1;' ` boost_python boost_python3; do
+  for ax_lib in `ls $BOOSTLIBDIR/libboost_python*.so* $BOOSTLIBDIR/libboost_python*.dylib* $BOOSTLIBDIR/libboost_python*.a* 2>/dev/null | sed 's,.*/,,' | sed -e 's;^lib\(boost_python.*\)\.so.*$;\1;' -e 's;^lib\(boost_python.*\)\.dylib.*$;\1;' -e 's;^lib\(boost_python.*\)\.a.*$;\1;' ` $ax_python_lib $ax_boost_python_lib boost_python boost_python3; do
     AS_VAR_PUSHDEF([ax_Lib], [ax_cv_lib_$ax_lib''_BOOST_PYTHON_MODULE])dnl
     AC_CACHE_CHECK([whether $ax_lib is the correct library], [ax_Lib],
     [LIBS="-l$ax_lib $ax_boost_python_save_LIBS $PYTHON_LIBS"
