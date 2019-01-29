@@ -5,7 +5,7 @@
 OPT_EPICS_DIR=opt/epics
 CONDA_EPICS_DIR=$PREFIX/$OPT_EPICS_DIR
 EPICS_HOST_ARCH=`./startup/EpicsHostArch`
-EPICS_EXECUTABLES="acctst antelope ascheck caConnTest caEventRate caget cainfo camonitor caput caRepeater casw ca_test catime check_consist e_flex iocLogServer makeBpt p2p pvcall pvget pvinfo pvlist pvmonitor pvput softIoc softIocPVA"
+EPICS_EXECUTABLES="caget cainfo camonitor caput caRepeater p2p pvcall pvget pvinfo pvlist pvmonitor pvput softIoc softIocPVA"
 
 echo "Building epics"
 eval "cat configure/CONFIG_SITE | sed 's?#INSTALL_LOCATION=.*?INSTALL_LOCATION=$CONDA_EPICS_DIR?' > configure/CONFIG_SITE.2 && mv configure/CONFIG_SITE.2 configure/CONFIG_SITE" 
