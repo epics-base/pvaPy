@@ -18,6 +18,10 @@ USR_CXXFLAGS += $(PVA_PY_CPPFLAGS)
 USR_LDFLAGS  += $(PVA_PY_LDFLAGS)
 USR_SYS_LIBS += $(PVA_PY_SYS_LIBS)
 
+# -flat_namespace seems to be needed for OSX/Python 3
+USR_LDFLAGS_darwin-x86  += -flat_namespace
+USR_LDFLAGS  += $(USR_LDFLAGS_$(T_A))
+
 # Set our library install location; /$(T_A) will be added
 INSTALL_LOCATION_LIB = $(INSTALL_LOCATION)/lib/python/$(PYTHON_VERSION)
 

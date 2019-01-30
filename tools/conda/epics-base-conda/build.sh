@@ -8,7 +8,8 @@ EPICS_HOST_ARCH=`./startup/EpicsHostArch`
 EPICS_EXECUTABLES="caget cainfo camonitor caput caRepeater p2p pvcall pvget pvinfo pvlist pvmonitor pvput softIoc softIocPVA"
 
 echo "Building epics"
-eval "cat configure/CONFIG_SITE | sed 's?#INSTALL_LOCATION=.*?INSTALL_LOCATION=$CONDA_EPICS_DIR?' > configure/CONFIG_SITE.2 && mv configure/CONFIG_SITE.2 configure/CONFIG_SITE" 
+#eval "cat configure/CONFIG_SITE | sed 's?#INSTALL_LOCATION=.*?INSTALL_LOCATION=$CONDA_EPICS_DIR?' > configure/CONFIG_SITE.2 && mv configure/CONFIG_SITE.2 configure/CONFIG_SITE" 
+echo "INSTALL_LOCATION=$CONDA_EPICS_DIR" > configure/CONFIG_SITE.local
 
 echo "Using BUILD_FLAGS: $BUILD_FLAGS"
 make $BUILD_FLAGS
