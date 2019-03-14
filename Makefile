@@ -7,9 +7,13 @@ PVACCESS_DIR = src/pvaccess
 CONDA_DIR = tools/conda
 PIP_DIR = tools/pip
 DIST_DIR = dist
+WHEEL_DIR = wheelhouse
 
 RELEASE_LOCAL = $(CONFIGURE_DIR)/RELEASE.local
 CONFIG_SITE_LOCAL = $(CONFIGURE_DIR)/CONFIG_SITE.local
+
+RM ?= rm -f
+RMDIR ?= rm -rf
 
 ifeq ($(filter $(MAKECMDGOALS),configure distclean),)
   # Command-line goal is neither configure nor distclean
@@ -44,9 +48,6 @@ ifeq ($(filter $(MAKECMDGOALS),configure distclean),)
 else
   # Command-line goal is configure or distclean
 
-  RM ?= rm -f
-  RMDIR ?= rm -rf
-
   configure: $(AC_DIR)/configure
 	@$(RM) $(RELEASE_LOCAL) $(CONFIG_SITE_LOCAL)
 	$(AC_DIR)/configure --with-top=$(TOP)
@@ -62,6 +63,8 @@ else
 	$(RM) $(AC_DIR)/Makefile $(AC_DIR)/Makefile.in config.log
 	$(RMDIR) $(AC_DIR)/compile
 	$(MAKE) -C $(DOC_DIR) distclean
+	$(MAKE) -C $(CONDA_DIR) distclean
+	$(MAKE) -C $(PIP_DIR) distclean
 	$(RMDIR) $(CONFIGURE_DIR)/O.*
 
 endif # Command-line goal
@@ -133,6 +136,7 @@ clean: src-clean doc-clean pip-clean conda-clean
 
 tidy: distclean
 	$(RM) config.log $(RELEASE_LOCAL) $(CONFIG_SITE_LOCAL)
+	$(RMDIR) $(WHEEL_DIR)
 	$(MAKE) -C $(DOC_DIR) tidy
 
 .PHONY: configure distclean
