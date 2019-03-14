@@ -39,7 +39,7 @@ PVA_PY_TAR_FILE=pvaPy-$PVA_PY_VERSION.tar.gz
 PVA_PY_DOWNLOAD_URL=https://github.com/epics-base/pvaPy/archive/$PVA_PY_VERSION.tar.gz
 if [ ! -f $PVA_PY_TAR_FILE ]; then
     echo "Downloading $PVA_PY_TAR_FILE"
-    wget -q $PVA_PY_DOWNLOAD_URL && mv $PVA_PY_VERSION.tar.gz $PVA_PY_TAR_FILE 
+    curl -Ls -o $PVA_PY_TAR_FILE -w %{url_effective} $PVA_PY_DOWNLOAD_URL
     if [ $? -ne 0 ]; then
         PVA_PY_GIT_URL=https://github.com/epics-base/pvaPy
         echo "$PVA_PY_TAR_FILE does not exist, using git repository $PVA_PY_GIT_URLi, branch $PVA_PY_GIT_VERSION"

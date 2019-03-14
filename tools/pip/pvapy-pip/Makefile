@@ -14,6 +14,6 @@ build: configure
 	python setup.py build_ext 
 
 clean: 
-	rm -rf $(BUILD_DIR) $(DIST_DIR) $(PACKAGE_DIRS)
+	rm -rf $(BUILD_DIR) $(DIST_DIR) $(PACKAGE_DIRS) MANIFEST
 
 distclean: clean

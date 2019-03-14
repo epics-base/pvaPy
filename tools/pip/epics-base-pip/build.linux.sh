@@ -23,7 +23,7 @@ cd $EPICS_BUILD_DIR
 echo "Building epics base $EPICS_BASE_VERSION"
 EPICS_BASE_TAR_FILE=`basename $EPICS_BASE_DOWNLOAD_URL`
 if [ ! -f $EPICS_BASE_TAR_FILE ]; then
-    wget $EPICS_BASE_DOWNLOAD_URL || exit 1
+    curl $EPICS_BASE_DOWNLOAD_URL -o $EPICS_BASE_TAR_FILE || exit 1
 fi
 tar zxf $EPICS_BASE_TAR_FILE
 
@@ -31,13 +31,21 @@ tar zxf $EPICS_BASE_TAR_FILE
 # Build
 cd base-${EPICS_BASE_VERSION}
 EPICS_HOST_ARCH=`./startup/EpicsHostArch`
-eval "cat configure/CONFIG_SITE | sed 's?#INSTALL_LOCATION=.*?INSTALL_LOCATION=$EPICS_BASE_DIR?' > configure/CONFIG_SITE.2 && mv configure/CONFIG_SITE.2 configure/CONFIG_SITE"
+CONFIG_FILE=configure/CONFIG_SITE
+eval "cat $CONFIG_FILE | sed 's?#INSTALL_LOCATION=.*?INSTALL_LOCATION=$EPICS_BASE_DIR?' > $CONFIG_FILE.2 && mv $CONFIG_FILE.2 $CONFIG_FILE"
+CONFIG_FILE=configure/os/CONFIG_SITE.Common.linux-x86_64
+eval "cat $CONFIG_FILE | sed 's?COMMANDLINE_LIBRARY.*?COMMANDLINE_LIBRARY=EPICS?' > $CONFIG_FILE.2 && mv $CONFIG_FILE.2 $CONFIG_FILE"
+CONFIG_FILE=configure/os/CONFIG_SITE.Common.linux-x86
+eval "cat $CONFIG_FILE | sed 's?COMMANDLINE_LIBRARY.*?COMMANDLINE_LIBRARY=EPICS?' > $CONFIG_FILE.2 && mv $CONFIG_FILE.2 $CONFIG_FILE"
 echo "Using BUILD_FLAGS: $BUILD_FLAGS"
 make $BUILD_FLAGS
 make install 
 
 echo "Copying startup files"
 rsync -arvlP startup $EPICS_BASE_DIR/
+
+# Make sure permissions are correct for perl script
+chmod a+x $EPICS_BASE_DIR/lib/perl/EpicsHostArch.pl
 
 # Fix rpath
 cd $EPICS_BASE_DIR/lib/$EPICS_HOST_ARCH
