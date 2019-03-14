@@ -19,9 +19,10 @@ install: build
 	conda install $(CONDA_ENV_FLAGS) $(PACKAGE) --use-local
 
 uninstall: 
-	conda remove $(CONDA_ENV_FLAGS) $(PACKAGE)
+	conda remove $(CONDA_ENV_FLAGS) $(PACKAGE) || echo "Cannot uninstall $(PACKAGE)"
 
-clean: uninstall
+clean: 
+	rm -rf build dist
 
 distclean: clean
 
