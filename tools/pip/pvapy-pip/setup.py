@@ -14,8 +14,11 @@ PACKAGE_NAME = 'pvapy'
 MODULE_NAME = 'pvaccess'
 MODULE = Extension(MODULE_NAME, [])
 PLATFORM = platform.uname()[0].lower()
+MY_DIR = os.path.abspath(os.path.dirname(__file__))
 BUILD_SCRIPT = './build.%s.sh' % PLATFORM
-README_FILE = '../../../README.md'
+README_FILE = 'README.md'
+if not os.path.exists(README_FILE):
+    README_FILE = os.path.join(MY_DIR, '../../../README.md')
 DEPLOY_CONF = os.environ.get('DEPLOY_CONF', 'non_existent_file')
 
 def get_env_var(name, default):
