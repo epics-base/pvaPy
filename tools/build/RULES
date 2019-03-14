@@ -1,0 +1,17 @@
+default:
+	for d in $(SUBDIRS); do $(MAKE) -C $$d; done
+
+all:
+	for d in $(SUBDIRS); do $(MAKE) -C $$d all $(ARCH); done
+
+deploy:
+	for d in $(SUBDIRS); do $(MAKE) -C $$d deploy; done
+
+clean:
+	for d in $(SUBDIRS); do $(MAKE) -C $$d clean; done
+
+distclean:
+	for d in $(SUBDIRS); do $(MAKE) -C $$d distclean; done
+	for d in $(SUBDIRS); do rm -f `find $$d -name 'RELEASE.local'`; done
+
+tidy: distclean
