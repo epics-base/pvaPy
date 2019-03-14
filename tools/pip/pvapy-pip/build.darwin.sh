@@ -96,6 +96,9 @@ mkdir -p $PVACCESS_DOC_DIR
 mkdir -p $PVA_PY_DIR
 rsync -ar $PVACCESS_BUILD_LIB_DIR/$PVACCESS_LIB $PVACCESS_DIR/
 
+echo "Copying data files"
+rsync -arvl README.md $TOP_DIR/
+
 echo "Generating python module init files"
 echo "from pvaccess import *" > $PVACCESS_DIR/__init__.py
 echo "from pvaccess import *" > $PVA_PY_DIR/__init__.py

@@ -94,6 +94,9 @@ mkdir -p $PVACCESS_DOC_DIR
 mkdir -p $PVA_PY_DIR
 rsync -arvl documentation/sphinx/_build/html $PVACCESS_DOC_DIR/
 
+echo "Copying data files"
+rsync -arvl README.md $TOP_DIR/
+
 echo "Installing pvapy library"
 rsync -arv $PVACCESS_BUILD_LIB_DIR/$PVACCESS_LIB $PVACCESS_DIR/
 

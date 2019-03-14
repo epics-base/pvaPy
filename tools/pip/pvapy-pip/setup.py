@@ -40,17 +40,24 @@ class BuildExt(build_ext):
 
 MODULE_VERSION = get_env_var('PVA_PY_VERSION', DEFAULT_PVA_PY_VERSION)
 MODULE_FILES = map(lambda f: f.replace('%s/' % MODULE_NAME, ''), find_files(MODULE_NAME))
-
+DATA_FILES = [
+    ('', ['README.md']),
+]
+LONG_DESCRIPTION = open('README.md').read()
+    
 setup(
   name = PACKAGE_NAME,
   version = MODULE_VERSION,
   description = 'Python library for EPICS PV Access',
+  long_description = LONG_DESCRIPTION,
+  long_description_content_type='text/markdown',
   url = 'https://github.com/epics-base/pvaPy',
   license = 'EPICS Open License',
   packages = [PACKAGE_NAME, MODULE_NAME],
   package_data = {
     MODULE_NAME :  MODULE_FILES,
   },
+  data_files=DATA_FILES,
   ext_modules=[MODULE],
   cmdclass = {'build_ext': BuildExt}
 )
