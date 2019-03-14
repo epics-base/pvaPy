@@ -1,8 +1,10 @@
 
 TOP = ../../..
 DEPLOY_CONF = ${CURDIR}/../../../configure/DEPLOY.conf
+PVA_PY_VERSION=$(shell cat $(DEPLOY_CONF) | grep PVA_PY_VERSION | cut -f2 -d'=')
 DIST_DIR = dist
 BUILD_DIR = build
+
 PACKAGE_DIRS = pvapy pvaccess
 
 package: build
@@ -11,7 +13,7 @@ package: build
 configure:
 
 build: configure
-	python setup.py build_ext 
+	PVA_PY_VERSION=$(PVA_PY_VERSION) python setup.py build_ext 
 
 clean: 
 	rm -rf $(BUILD_DIR) $(DIST_DIR) $(PACKAGE_DIRS) MANIFEST

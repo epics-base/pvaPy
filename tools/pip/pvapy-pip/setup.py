@@ -1,5 +1,10 @@
-from distutils.core import setup, Extension
+try:
+    from setuptools import setup
+except ImportError:
+    from distutils.core import setup
+from distutils.core import Extension
 from distutils.command.build_ext import build_ext
+
 import os
 import platform
 import fnmatch
