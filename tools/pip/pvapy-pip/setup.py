@@ -10,6 +10,7 @@ MODULE_NAME = 'pvaccess'
 MODULE = Extension(MODULE_NAME, [])
 PLATFORM = platform.uname()[0].lower()
 BUILD_SCRIPT = './build.%s.sh' % PLATFORM
+README_FILE = '../../../README.md'
 DEPLOY_CONF = os.environ.get('DEPLOY_CONF', 'non_existent_file')
 
 def get_env_var(name, default):
@@ -43,7 +44,7 @@ MODULE_FILES = map(lambda f: f.replace('%s/' % MODULE_NAME, ''), find_files(MODU
 DATA_FILES = [
     ('', ['README.md']),
 ]
-LONG_DESCRIPTION = open('README.md').read()
+LONG_DESCRIPTION = open(README_FILE).read()
     
 setup(
   name = PACKAGE_NAME,
