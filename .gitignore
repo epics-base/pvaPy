@@ -7,6 +7,7 @@ configure/*.local
 **/O.*
 **/dist
 tools/pip/**/build
+tools/local/**/build
 tools/autoconf/install-sh
 tools/autoconf/missing
 tools/autoconf/config.status
