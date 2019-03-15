@@ -79,6 +79,8 @@ export LD_LIBRARY_PATH=$PYTHON_DIR/lib:$LD_LIBRARY_PATH:$BOOST_DIR/lib/$EPICS_HO
 
 PYTHON_MAJOR_MINOR_VERSION=`$PYTHON_BIN --version 2>&1 | cut -f2 -d ' ' | cut -f1,2 -d '.'`
 PYTHON_MAJOR_VERSION=`echo $PYTHON_MAJOR_MINOR_VERSION | cut -f1 -d '.'`
+PYTHON_LIB=`ls -c1 $PYTHON_DIR/lib/libpython${PYTHON_MAJOR_MINOR_VERSION}*.so.* 2> /dev/null` 
+
 PVA_PY_FLAGS=""
 if [ "$PYTHON_MAJOR_VERSION" = "3" ]; then
     PVA_PY_FLAGS="PYTHON_VERSION=3"
@@ -97,10 +99,10 @@ mkdir -p $PVA_PY_DIR
 rsync -ar $PVACCESS_BUILD_LIB_DIR/$PVACCESS_LIB $PVACCESS_DIR/
 
 echo "Copying data files"
-rsync -arvl README.md $TOP_DIR/
+rsync -arvl README.md $PVACCESS_DOC_DIR/
 
 echo "Generating python module init files"
-echo "from pvaccess import *" > $PVACCESS_DIR/__init__.py
+echo "from .pvaccess import *" > $PVACCESS_DIR/__init__.py
 echo "from pvaccess import *" > $PVA_PY_DIR/__init__.py
 
 echo "Copying dependencies"
