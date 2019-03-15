@@ -98,18 +98,18 @@ pip-clean:
 package-local local: package-epics-base-local package-pvapy-boost-local package-pvapy-local
 	
 package-epics-base-local:
-	$(MAKE) -C $(PIP_DIR)/epics-base-local package
+	$(MAKE) -C $(LOCAL_DIR)/epics-base-local package
 
 package-pvapy-boost-local:
-	$(MAKE) -C $(PIP_DIR)/pvapy-boost-local package
+	$(MAKE) -C $(LOCAL_DIR)/pvapy-boost-local package
 
 package-pvapy-local:
-	$(MAKE) -C $(PIP_DIR)/pvapy-local package
+	$(MAKE) -C $(LOCAL_DIR)/pvapy-local package
 
 local-clean:
-	$(MAKE) -C $(PIP_DIR)/epics-base-local clean
-	$(MAKE) -C $(PIP_DIR)/pvapy-boost-local clean
-	$(MAKE) -C $(PIP_DIR)/pvapy-local clean
+	$(MAKE) -C $(LOCAL_DIR)/epics-base-local clean
+	$(MAKE) -C $(LOCAL_DIR)/pvapy-boost-local clean
+	$(MAKE) -C $(LOCAL_DIR)/pvapy-local clean
 
 package-conda conda: package-epics-base-conda package-pvapy-boost-conda package-pvapy-conda
 	
