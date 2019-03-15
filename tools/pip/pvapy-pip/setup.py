@@ -16,7 +16,7 @@ MODULE = Extension(MODULE_NAME, [])
 PLATFORM = platform.uname()[0].lower()
 MY_DIR = os.path.abspath(os.path.dirname(__file__))
 BUILD_SCRIPT = './build.%s.sh' % PLATFORM
-README_FILE = 'README.md'
+README_FILE = 'pvaccess/doc/README.md'
 if not os.path.exists(README_FILE):
     README_FILE = os.path.join(MY_DIR, '../../../README.md')
 DEPLOY_CONF = os.environ.get('DEPLOY_CONF', 'non_existent_file')
@@ -43,30 +43,29 @@ def find_files(rootDir='.', pattern='*'):
     return result
 
 class BuildExt(build_ext):
-  def build_extension(self, ext):
-    print('Building %s' % MODULE_NAME)
-    os.system(BUILD_SCRIPT)
+    def build_extension(self, ext):
+        print('Building %s' % MODULE_NAME)
+        os.system(BUILD_SCRIPT)
 
 MODULE_VERSION = get_env_var('PVA_PY_VERSION', DEFAULT_PVA_PY_VERSION)
 MODULE_FILES = map(lambda f: f.replace('%s/' % MODULE_NAME, ''), find_files(MODULE_NAME))
-DATA_FILES = [
-    ('', ['README.md']),
-]
 LONG_DESCRIPTION = open(README_FILE).read()
     
 setup(
-  name = PACKAGE_NAME,
-  version = MODULE_VERSION,
-  description = 'Python library for EPICS PV Access',
-  long_description = LONG_DESCRIPTION,
-  long_description_content_type='text/markdown',
-  url = 'https://github.com/epics-base/pvaPy',
-  license = 'EPICS Open License',
-  packages = [PACKAGE_NAME, MODULE_NAME],
-  package_data = {
-    MODULE_NAME :  MODULE_FILES,
-  },
-  data_files=DATA_FILES,
-  ext_modules=[MODULE],
-  cmdclass = {'build_ext': BuildExt}
+    name = PACKAGE_NAME,
+    version = MODULE_VERSION,
+    description = 'Python library for EPICS PV Access',
+    long_description = LONG_DESCRIPTION,
+    long_description_content_type='text/markdown',
+    url = 'https://github.com/epics-base/pvaPy',
+    license = 'EPICS Open License',
+    packages = [PACKAGE_NAME, MODULE_NAME],
+    package_data = {
+        MODULE_NAME :  MODULE_FILES,
+    },
+    install_requires=[
+        'numpy>1.15',
+    ],
+    ext_modules=[MODULE],
+    cmdclass = {'build_ext': BuildExt}
 )
