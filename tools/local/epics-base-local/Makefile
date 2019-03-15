@@ -1,0 +1,23 @@
+
+TOP = ../../..
+DEPLOY_CONF = $(TOP)/configure/DEPLOY.conf
+EPICS_BASE_VERSION=$(shell cat $(DEPLOY_CONF) | grep EPICS_BASE_VERSION | cut -f2 -d'=')
+
+default: install
+
+configure:
+
+build: configure
+	./build.linux.sh
+
+package: build
+
+install: build
+
+uninstall: 
+
+clean: 
+	rm -rf build dist
+
+distclean: clean
+

@@ -6,6 +6,7 @@ CONFIGURE_DIR = configure
 PVACCESS_DIR = src/pvaccess
 CONDA_DIR = tools/conda
 PIP_DIR = tools/pip
+LOCAL_DIR = tools/local
 DIST_DIR = dist
 WHEEL_DIR = wheelhouse
 
@@ -93,6 +94,22 @@ pip-clean:
 	$(MAKE) -C $(PIP_DIR)/epics-base-pip clean
 	$(MAKE) -C $(PIP_DIR)/pvapy-boost-pip clean
 	$(MAKE) -C $(PIP_DIR)/pvapy-pip clean
+
+package-local local: package-epics-base-local package-pvapy-boost-local package-pvapy-local
+	
+package-epics-base-local:
+	$(MAKE) -C $(PIP_DIR)/epics-base-local package
+
+package-pvapy-boost-local:
+	$(MAKE) -C $(PIP_DIR)/pvapy-boost-local package
+
+package-pvapy-local:
+	$(MAKE) -C $(PIP_DIR)/pvapy-local package
+
+local-clean:
+	$(MAKE) -C $(PIP_DIR)/epics-base-local clean
+	$(MAKE) -C $(PIP_DIR)/pvapy-boost-local clean
+	$(MAKE) -C $(PIP_DIR)/pvapy-local clean
 
 package-conda conda: package-epics-base-conda package-pvapy-boost-conda package-pvapy-conda
 	

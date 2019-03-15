@@ -1,5 +1,5 @@
 TOP = ..
-SUBDIRS = conda pip
+SUBDIRS = conda pip local
 
 include $(TOP)/tools/build/RULES
 
