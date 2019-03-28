@@ -6,6 +6,16 @@ import math
 import types
 
 from pvaccess import Channel
+from testServer import TestServer
+
+try:
+    LONG = long
+    STRING_TYPE = types.StringType
+    INT_TYPE = types.IntType 
+except:
+    LONG = int
+    STRING_TYPE = type(str('test'))
+    INT_TYPE = type(int(10))
 
 class TestUtility:
 
@@ -18,9 +28,9 @@ class TestUtility:
 
     @classmethod
     def convertToChar(cls, value):
-        if type(value) == types.StringType:
+        if type(value) == STRING_TYPE:
             return value
-        if type(value) == types.IntType and value < 0:
+        if type(value) == INT_TYPE and value < 0:
             value += 256
         return chr(value)
 
@@ -48,11 +58,11 @@ class TestUtility:
 
     @classmethod
     def getRandomByte(cls):
-        return int(random.uniform(-128,128))
+        return int(random.uniform(0,128))
 
     @classmethod
     def getRandomUByte(cls):
-        return int(random.uniform(0,256))
+        return int(random.uniform(0,128))
 
     @classmethod
     def getRandomShort(cls):
@@ -74,12 +84,12 @@ class TestUtility:
 
     @classmethod
     def getRandomLong(cls):
-        return long(random.uniform(-9223372036854775806,9223372036854775806))
+        return LONG(random.uniform(-9223372036854775806,9223372036854775806))
 
     @classmethod
     def getRandomULong(cls):
-        #return long(random.uniform(0,18446744073709551616))
-        return long(random.uniform(0,10000))
+        #return LONG(random.uniform(0,18446744073709551616))
+        return LONG(random.uniform(0,10000))
 
     @classmethod
     def getRandomFloat(cls):
@@ -99,50 +109,50 @@ class TestUtility:
 
     @classmethod
     def getBooleanChannel(cls):
-        return Channel('exampleBoolean')
+        return Channel(TestServer.BOOLEAN_CHANNEL_NAME)
 
     @classmethod
     def getByteChannel(cls):
-        return Channel('exampleByte')
+        return Channel(TestServer.BYTE_CHANNEL_NAME)
 
     @classmethod
     def getUByteChannel(cls):
-        return Channel('exampleUByte')
+        return Channel(TestServer.UBYTE_CHANNEL_NAME)
 
     @classmethod
     def getShortChannel(cls):
-        return Channel('exampleShort')
+        return Channel(TestServer.SHORT_CHANNEL_NAME)
 
     @classmethod
     def getUShortChannel(cls):
-        return Channel('exampleUShort')
+        return Channel(TestServer.USHORT_CHANNEL_NAME)
 
     @classmethod
     def getIntChannel(cls):
-        return Channel('exampleInt')
+        return Channel(TestServer.INT_CHANNEL_NAME)
 
     @classmethod
     def getUIntChannel(cls):
-        return Channel('exampleUInt')
+        return Channel(TestServer.UINT_CHANNEL_NAME)
 
     @classmethod
     def getLongChannel(cls):
-        return Channel('exampleLong')
+        return Channel(TestServer.LONG_CHANNEL_NAME)
 
     @classmethod
     def getULongChannel(cls):
-        return Channel('exampleULong')
+        return Channel(TestServer.ULONG_CHANNEL_NAME)
 
     @classmethod
     def getFloatChannel(cls):
-        return Channel('exampleFloat')
+        return Channel(TestServer.FLOAT_CHANNEL_NAME)
 
     @classmethod
     def getDoubleChannel(cls):
-        return Channel('exampleDouble')
+        return Channel(TestServer.DOUBLE_CHANNEL_NAME)
 
     @classmethod
     def getStringChannel(cls):
-        return Channel('exampleString')
+        return Channel(TestServer.STRING_CHANNEL_NAME)
 
 
