@@ -13,6 +13,10 @@ if [ ! -f $DEPLOY_CONF ]; then
 fi
 . $DEPLOY_CONF
 
+if [ -z "$PVA_PY_VERSION" ]; then
+    PVA_PY_VERSION=local
+fi
+
 OPT_EPICS_DIR=opt/epics-${EPICS_BASE_VERSION}
 LOCAL_EPICS_DIR=$PREFIX/$OPT_EPICS_DIR
 EPICS_HOST_ARCH=`$LOCAL_EPICS_DIR/startup/EpicsHostArch`
@@ -32,6 +36,15 @@ mkdir -p $BUILD_DIR
 cd $BUILD_DIR
 
 PVA_PY_TAR_FILE=pvaPy-$PVA_PY_VERSION.tar.gz
+if [ "$PVA_PY_VERSION" = "local" ]; then
+    echo "Creating $PVA_PY_TAR_FILE from local sources"
+    rm -rf pvaPy-local
+    mkdir -p pvaPy-local
+    SRC_TOP=$TOP/../../..
+    rsync -arl $SRC_TOP/* --exclude "O.*" --exclude "build" pvaPy-local/
+    tar zcvf $PVA_PY_TAR_FILE pvaPy-local
+fi
+
 PVA_PY_DOWNLOAD_URL=https://github.com/epics-base/pvaPy/archive/$PVA_PY_VERSION.tar.gz
 if [ ! -f $PVA_PY_TAR_FILE ]; then
     echo "Downloading $PVA_PY_TAR_FILE"
