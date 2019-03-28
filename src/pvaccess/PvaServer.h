@@ -25,6 +25,7 @@ public:
     virtual void update(const std::string& channelName, const PvObject& pvObject);
     virtual void addRecord(const std::string& channelName, const PvObject& pvObject, const boost::python::object& onWriteCallback = boost::python::object());
     virtual void removeRecord(const std::string& channelName);
+    virtual void removeAllRecords();
     virtual bool hasRecord(const std::string& channelName);
     virtual boost::python::list getRecordNames();
 

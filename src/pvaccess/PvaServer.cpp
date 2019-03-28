@@ -2,6 +2,8 @@
 // found in the file LICENSE that is included with the distribution
 
 #include "boost/python.hpp"
+#include <list>
+
 #include "pv/channelProviderLocal.h"
 #include "PvaException.h"
 #include "ObjectAlreadyExists.h"
@@ -36,6 +38,7 @@ PvaServer::PvaServer(const std::string& channelName, const PvObject& pvObject, c
 
 PvaServer::~PvaServer() 
 {
+    removeAllRecords();
 }
 
 void PvaServer::initRecord(const std::string& channelName, const PvObject& pvObject, const boost::python::object& onWriteCallback) 
@@ -96,6 +99,20 @@ void PvaServer::removeRecord(const std::string& channelName)
         throw PvaException("Cannot remove record to master database for channel: " + channelName);
     }
     recordMap.erase(it);
+}
+
+void PvaServer::removeAllRecords() 
+{
+    std::list<std::string> recordNames;
+    typedef std::map<std::string, PyPvRecordPtr>::iterator MI;
+    for (MI it = recordMap.begin(); it != recordMap.end(); it++) {
+        recordNames.push_back(it->first);
+    }
+
+    typedef std::list<std::string>::iterator LI;
+    for (LI it = recordNames.begin(); it != recordNames.end(); ++it) {
+        removeRecord(*it);
+    }
 }
 
 bool PvaServer::hasRecord(const std::string& channelName)

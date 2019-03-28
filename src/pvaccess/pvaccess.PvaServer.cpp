@@ -92,6 +92,13 @@ class_<PvaServer>("PvaServer",
         "::\n\n"
         "    pvaServer.removeRecord('pair')\n\n")
 
+    .def("removeAllRecords",
+        static_cast<void(PvaServer::*)()>(&PvaServer::removeAllRecords),
+        "Removes all PV records from the server database.\n\n"
+        ":Raises: *PvaException* - in case of any errors\n\n"
+        "::\n\n"
+        "    pvaServer.removeAllRecords()\n\n")
+
     .def("hasRecord",
         static_cast<bool(PvaServer::*)(const std::string&)>(&PvaServer::hasRecord),
         args("channelName"),
