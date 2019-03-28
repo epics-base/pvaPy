@@ -16,7 +16,7 @@ boost::python::dict PvString::createStructureDict()
 PvString::PvString()
     : PvScalar(createStructureDict())
 {
-    set(0);
+    set("");
 }
 
 PvString::PvString(const std::string& s)
