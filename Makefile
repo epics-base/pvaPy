@@ -66,6 +66,7 @@ else
 	$(MAKE) -C $(DOC_DIR) distclean
 	$(MAKE) -C $(CONDA_DIR) distclean
 	$(MAKE) -C $(PIP_DIR) distclean
+	$(MAKE) -C $(LOCAL_DIR) distclean
 	$(RMDIR) $(CONFIGURE_DIR)/O.*
 
 endif # Command-line goal
@@ -157,6 +158,6 @@ tidy: distclean
 	$(MAKE) -C $(DOC_DIR) tidy
 
 .PHONY: configure distclean
-.PHONY: doc doc-clean src-clean pip-clean conda-clean clean tidy
+.PHONY: doc doc-clean src-clean pip-clean conda-clean local-clean clean tidy
 .PHONY: package-pip pip package-conda conda install-conda uninstall-conda
 
