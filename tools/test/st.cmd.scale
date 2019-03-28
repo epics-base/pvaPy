@@ -1,0 +1,17 @@
+## Load record instances
+dbLoadRecords("scale.db","N=X1");
+dbLoadRecords("scale.db","N=X2");
+dbLoadRecords("scale.db","N=X3");
+dbLoadRecords("scale.db","N=X4");
+dbLoadRecords("scale.db","N=X5");
+dbLoadRecords("scale.db","N=X6");
+dbLoadRecords("scale.db","N=X7");
+dbLoadRecords("scale.db","N=X8");
+dbLoadRecords("scale.db","N=X9");
+dbLoadRecords("scale.db","N=X10");
+
+
+## Start CA Server; PVA Server should already be running
+iocInit()
+epicsThreadSleep(2.0)
+casr

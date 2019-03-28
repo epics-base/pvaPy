@@ -1,0 +1,20 @@
+## Load record instances
+dbLoadRecords("integer.db","name=int01,type=longout")
+dbLoadRecords("scalar.db","name=double01,type=ai")
+dbLoadRecords("array.db","name=byteArray01,type=CHAR")
+dbLoadRecords("array.db","name=shortArray01,type=SHORT")
+dbLoadRecords("array.db","name=intArray01,type=LONG")
+dbLoadRecords("array.db","name=ubyteArray01,type=UCHAR")
+dbLoadRecords("array.db","name=ushortArray01,type=USHORT")
+dbLoadRecords("array.db","name=uintArray01,type=ULONG")
+dbLoadRecords("array.db","name=floatArray01,type=FLOAT")
+dbLoadRecords("array.db","name=doubleArray01,type=DOUBLE")
+dbLoadRecords("string.db","name=string01")
+dbLoadRecords("stringArray.db","name=stringArray01")
+dbLoadRecords("enum.db","name=enum01")
+dbLoadRecords("counter.db","name=counter01");
+
+## Start IOC
+iocInit()
+epicsThreadSleep(2.0)
+casr

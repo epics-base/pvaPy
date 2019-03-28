@@ -1,0 +1,15 @@
+record($(type), "$(name)")
+{
+	field(PREC, "1")
+	field(EGU, "Counts")
+	field(HOPR, "10")
+	field(LOPR, "0")
+	field(HIHI, "8")
+	field(HIGH, "6")
+	field(LOW, "4")
+	field(LOLO, "2")
+	field(HHSV, "MAJOR")
+	field(HSV, "MINOR")
+	field(LSV, "MINOR")
+	field(LLSV, "MAJOR")
+}

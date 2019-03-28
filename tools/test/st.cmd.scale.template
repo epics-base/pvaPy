@@ -1,0 +1,7 @@
+## Load record instances
+DB_LOAD_RECORDS
+
+## Start CA Server; PVA Server should already be running
+iocInit()
+epicsThreadSleep(2.0)
+casr

@@ -1,0 +1,4 @@
+record(calc, "$(N)") {
+  field(INPA, "$(N).VAL CP")
+  field(CALC, "A+1")
+}
