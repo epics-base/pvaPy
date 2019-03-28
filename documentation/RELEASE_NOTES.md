@@ -1,8 +1,21 @@
+## Release 1.4.0 (2019/03/29)
+
+- added method for removing all records from PvaServer
+- added support for building local installation of epics/boost/pvapy
+- resolved several issues with pip packaging
+- conda/pip package dependencies: 
+  - EPICS BASE = 7.0.2.1
+  - BOOST      = 1.69.0
+  - NUMPY      > 1.15
+
 ## Release 1.3.0 (2019/01/24)
 
 - fixed build issues related to EpicsHostArch script location
 - updated code to reflect changes in CA provider 
-- updated conda build scripts for EPICS 7.0.2
+- conda/pip package dependencies: 
+  - EPICS BASE = 7.0.2
+  - BOOST      = 1.69.0
+  - NUMPY      > 1.15
 
 ## Release 1.2.0 (2018/07/11)
 
