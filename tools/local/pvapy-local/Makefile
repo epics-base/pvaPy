@@ -16,6 +16,9 @@ install: build
 
 uninstall:
 
+test: 
+	./test.sh
+
 clean:
 	rm -rf build dist
 
