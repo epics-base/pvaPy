@@ -8,8 +8,10 @@ and is currently supported on the Unix-like operating systems (Linux, OSX).
 
 ## Installation 
 
-At the moment prebuilt PvaPy packages exist only for the Conda package management system. If you do not use Conda, 
-or if you need 32-bit Linux Conda packages, you will have to build PvaPy from sources.
+At the moment prebuilt PvaPy packages exist for the Conda and 
+PyPI package management system. If none of the prebuilt packages
+work for you, or if you need 32-bit Linux packages, you will have to build 
+PvaPy from sources.
 
 ### Conda 
 
@@ -25,23 +27,61 @@ Make sure `conda` command is in your path, and execute the following command:
 This should result in installation of pvapy, pvapy-boost and epics-base 
 Conda packages.
 
+### PyPI
+
+- Supported platforms: Linux (64-bit)
+- Supported Python versions: Python2, Python3
+
+Make sure `pip` command is in your path, and execute the following command:
+
+```sh
+  $ pip install pvapy
+```
+
+PvaPy pip packages contain all needed epics base and boost libraries.
+
 ## Build 
 
-This section is intended for those users that would like to build PvaPy from the source code.
+This section is intended for those users that would like to build PvaPy from 
+the source code.
 
 ### Prerequisites
 
 Building PvaPy from source requires recent versions of the following software:
 
+1. Standard development tools (gcc, make, autoconf, etc.)
+2. Python development header files/libraries (>=v2.6.6)
+3. Sphinx/Sphinx RTD Theme (optional, for generating documentation)
+
+There are two ways of building and installing PvaPy from sources: automated
+and custom. The automated local install will download and build predefined
+versions of EPICS Base, Boost and PvaPy. Custom local install relies on already existing EPICS Base and Boost libraries, and builds only PvaPy. 
+
+### Automated Build
+
+Make sure the desired version of Python is in your path, and execute the 
+following command from the top of the PvaPy source directory:
+
+```sh
+  $ PREFIX=/local/install/path make local
+```
+
+This should build and install predefined versions of EPICS Base, Boost Python 
+and PvaPy libraries under the directory specified by the PREFIX variable. If
+PREFIX is not specified, all software will be installed under the `tools/local`
+subdirectory of the PvaPy distribution.
+
+### Custom Build
+
+In addition to the Python-related prerequsites, the custom build requires
+the following software already built:
+
 1. EPICS Base (>=v3.14.12.3)
 2. EPICS4 CPP release (>=v4.4.0); note that EPICS7 release includes 
 all needed v4 modules
-3. Python development header files/libraries (>=v2.6.6)
-4. Boost (>=v1.41.0); must have the boost_python library built
-5. Standard development tools (gcc, make, autoconf, etc.)
-6. Boost.NumPy (optional, for retrieving numeric scalar arrays as numpy
+3. Boost (>=v1.41.0); must have the boost_python library built
+4. Boost.NumPy (optional, for retrieving numeric scalar arrays as numpy
 arrays; this is not needed for Boost v1.63.0 and later)
-7. Sphinx (optional, for generating documentation)
 
 The version numbers mentioned above are the earliest that PvaPy was tested with.
 Any recent version of Python and the Boost libraries (such as those that come 
@@ -55,7 +95,7 @@ was used to build the EPICS4 modules.
 This module has not been adapted for use on Microsoft Windows. Only Unix-like
 operating systems (e.g. Linux, MacOS, Solaris) are currently supported.
 
-#### 1. Configure PvaPy.
+#### 1. Configure PvaPy
 
 This can be done manually, or using autoconf.
 
@@ -160,7 +200,7 @@ or for csh users:
   % echo $PYTHONPATH
   /home/epics/v4/pvaPy/lib/python/2.7/linux-x86_64
 ```
-#### 2. Compile the pvaPy source.
+#### 2. Compile PvaPy Source
 
 In the top level package directory run:
 
@@ -171,7 +211,7 @@ In the top level package directory run:
 The above command will create and install a loadable library `pvaccess.so`
 under the `lib/python` directory which can be imported directly by Python.
 
-#### 3. Generate documentation.
+#### 3. Generate Documentation
 
 This step is optional and requires Sphinx to be installed:
 
