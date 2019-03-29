@@ -9,7 +9,6 @@
 #include "pv/pvData.h"
 #include "InvalidState.h"
 
-
 template <class T>
 class SynchronizedQueue : public std::queue<T>
 {
@@ -218,5 +217,7 @@ void SynchronizedQueue<T>::clear()
         itemPoppedEvent.signal();
     }
 }
+
+typedef std::tr1::shared_ptr<SynchronizedQueue<std::string> > StringQueuePtr;
 
 #endif

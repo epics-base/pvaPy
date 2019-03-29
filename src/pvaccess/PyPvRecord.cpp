@@ -8,17 +8,18 @@
 
 PvaPyLogger PyPvRecord::logger("PyPvRecord");
 
-PyPvRecordPtr PyPvRecord::create(const std::string& name, const PvObject& pvObject, const boost::python::object& onWriteCallback)
+PyPvRecordPtr PyPvRecord::create(const std::string& name, const PvObject& pvObject, const StringQueuePtr& callbackQueuePtr, const boost::python::object& onWriteCallback)
 {
-    PyPvRecordPtr pvRecord(new PyPvRecord(name, pvObject, onWriteCallback));
+    PyPvRecordPtr pvRecord(new PyPvRecord(name, pvObject, callbackQueuePtr, onWriteCallback));
     if(!pvRecord->init()) {
         pvRecord.reset();
     }
     return pvRecord;
 }
 
-PyPvRecord::PyPvRecord(const std::string& name, const PvObject& pvObject, const boost::python::object& onWriteCallback_)
+PyPvRecord::PyPvRecord(const std::string& name, const PvObject& pvObject, const StringQueuePtr& callbackQueuePtr_, const boost::python::object& onWriteCallback_)
     : epics::pvDatabase::PVRecord(name, pvObject.getPvStructurePtr()),
+    callbackQueuePtr(callbackQueuePtr_),
     onWriteCallback(onWriteCallback_)
 {
     if(!PyUtility::isPyNone(onWriteCallback)) {
@@ -46,6 +47,12 @@ void PyPvRecord::process()
     if(PyUtility::isPyNone(onWriteCallback)) {
         return;
     }
+    callbackQueuePtr->push(getRecordName());
+    //executeCallback();
+}
+
+void PyPvRecord::executeCallback() 
+{
     PyGilManager::gilStateEnsure();
 
     // Call python code

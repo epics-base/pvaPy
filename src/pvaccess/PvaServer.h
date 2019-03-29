@@ -13,6 +13,8 @@
 #include "PvObject.h"
 #include "PyPvRecord.h"
 #include "PvaPyLogger.h"
+#include "SynchronizedQueue.h"
+
 
 class PvaServer 
 {
@@ -20,6 +22,7 @@ public:
     PvaServer();
     PvaServer(const std::string& channelName, const PvObject& pvObject);
     PvaServer(const std::string& channelName, const PvObject& pvObject, const boost::python::object& onWriteCallback);
+    PvaServer(const PvaServer&);
     virtual ~PvaServer();
     virtual void update(const PvObject& pvObject);
     virtual void update(const std::string& channelName, const PvObject& pvObject);
@@ -28,12 +31,30 @@ public:
     virtual void removeAllRecords();
     virtual bool hasRecord(const std::string& channelName);
     virtual boost::python::list getRecordNames();
+    virtual void start();
+    virtual void stop();
 
 private:
+    static const double ShutdownWaitTime;
+    static const double RecordUpdateTimeout;
+
+    static void callbackThread(PvaServer* server);
+    void startCallbackThread();
+    void waitForCallbackThreadExit(double timeout);
+    void notifyCallbackThreadExit();
+
     void initRecord(const std::string& channelName, const PvObject& pvObject, const boost::python::object& onWriteCallback = boost::python::object());
+    PyPvRecordPtr findRecord(const std::string& channelName);
+
     static PvaPyLogger logger;
     epics::pvAccess::ServerContext::shared_pointer server;
     std::map<std::string, PyPvRecordPtr> recordMap;
+    bool isRunning;
+
+    StringQueuePtr callbackQueuePtr;
+    bool callbackThreadRunning;
+    epics::pvData::Mutex callbackThreadMutex;
+    epicsEvent callbackThreadExitEvent;
 };
 
 #endif

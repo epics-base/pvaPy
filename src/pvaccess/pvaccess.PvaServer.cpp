@@ -47,6 +47,20 @@ class_<PvaServer>("PvaServer",
 
     .def(init<std::string, const PvObject&, const boost::python::object&>(args("channelName", "pvObject", "onWriteCallback")))
 
+    .def("start",
+        static_cast<void(PvaServer::*)()>(&PvaServer::start),
+        "Starts PVA server. This method is called in all constructors automatically, but may be used to restart server if it has been stopped.\n\n"
+        ":Raises: *PvaException* - in case of any errors\n\n"
+        "::\n\n"
+        "    pvaServer.start()\n\n")
+
+    .def("stop",
+        static_cast<void(PvaServer::*)()>(&PvaServer::stop),
+        "Stops PVA server.\n\n"
+        ":Raises: *PvaException* - in case of any errors\n\n"
+        "::\n\n"
+        "    pvaServer.stop()\n\n")
+
     .def("update",
         static_cast<void(PvaServer::*)(const PvObject&)>(&PvaServer::update),
         args("pvObject"),
