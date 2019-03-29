@@ -1,6 +1,9 @@
 ## Release 1.4.0 (2019/03/29)
 
 - added method for removing all records from PvaServer
+- added start/stop methods for PvaServer
+- resolved issue with record write callbacks hanging if both client
+  and server are running in the same intepreter
 - added support for building local installation of epics/boost/pvapy
 - resolved several issues with pip packaging
 - conda/pip package dependencies: 
