@@ -29,11 +29,15 @@ cd $BUILD_DIR
 echo "Building boost $BOOST_VERSION"
 BOOST_TAR_FILE=`basename $BOOST_DOWNLOAD_URL`
 if [ ! -f $BOOST_TAR_FILE ]; then
+    echo "Downloading boost from $BOOST_DOWNLOAD_URL"
     curl -Ls -o $BOOST_TAR_FILE -w %{url_effective} $BOOST_DOWNLOAD_URL > /dev/null || exit 1
 fi
 BOOST_BUILD_DIR=`echo $BOOST_TAR_FILE | sed 's?.tar.gz??g'`
 
+echo "Removing old build directory $BOOST_BUILD_DIR"
 rm -rf $BOOST_BUILD_DIR
+
+echo "Unpacking $BOOST_TAR_FILE"
 tar xf $BOOST_TAR_FILE
 cd $BOOST_BUILD_DIR
 
