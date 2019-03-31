@@ -3,7 +3,7 @@ TOP = ../../..
 DEPLOY_CONF = ${CURDIR}/../../../configure/DEPLOY.conf
 DIST_DIR = dist
 BUILD_DIR = build
-PACKAGE_DIR = epics
+PACKAGE_DIR = epics-base
 
 package: build
 	DEPLOY_CONF=$(DEPLOY_CONF) pip wheel . -w $(DIST_DIR) 
