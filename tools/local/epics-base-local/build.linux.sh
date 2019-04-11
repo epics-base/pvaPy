@@ -48,7 +48,7 @@ mkdir -p $PREFIX/bin/$EPICS_HOST_ARCH
 cd $PREFIX/bin/$EPICS_HOST_ARCH
 for f in $EPICS_EXECUTABLES; do
     echo "Linking executable file: $f"
-    ln -s $LOCAL_EPICS_DIR/bin/$EPICS_HOST_ARCH/$f .
+    rm -f $f && ln -s $LOCAL_EPICS_DIR/bin/$EPICS_HOST_ARCH/$f .
 done
 
 echo "Creating library symlinks"
@@ -58,6 +58,6 @@ EPICS_LIBRARIES=`find $LOCAL_EPICS_DIR/lib/$EPICS_HOST_ARCH -name '*.so*' -o -na
 for f in $EPICS_LIBRARIES; do
     libFile=`basename $f`
     echo "Linking library file: $libFile"
-    ln -s $LOCAL_EPICS_DIR/lib/$EPICS_HOST_ARCH/$libFile .
+    rm -f $libFile && ln -s $LOCAL_EPICS_DIR/lib/$EPICS_HOST_ARCH/$libFile .
 done
 
