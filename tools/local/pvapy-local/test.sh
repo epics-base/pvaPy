@@ -54,7 +54,7 @@ PYTHON_LIB=`ls -c1 $PYTHON_DIR/lib/libpython${PYTHON_MAJOR_MINOR_VERSION}*.so.* 
 LOCAL_PVA_PY_LIB_DIR=$LOCAL_PVA_PY_DIR/lib/python$PYTHON_MAJOR_MINOR_VERSION/lib-dynload
 LOCAL_PY_LIB_DIR=$PREFIX/lib/python$PYTHON_MAJOR_MINOR_VERSION/lib-dynload
 
-echo "Sourcing setup file"
+echo "Sourcing setup file $PVA_PY_BUILD_DIR/bin/$EPICS_HOST_ARCH/pvapy_setup_full.$PYTHON_MAJOR_MINOR_VERSION.sh"
 source $PVA_PY_BUILD_DIR/bin/$EPICS_HOST_ARCH/pvapy_setup_full.$PYTHON_MAJOR_MINOR_VERSION.sh
 
 echo "Starting test server"
