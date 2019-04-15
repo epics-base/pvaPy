@@ -81,6 +81,7 @@ pvaccess_SRCS += pvaccess.NtType.cpp
 pvaccess_SRCS += pvaccess.NtTable.cpp
 
 pvaccess_SRCS += pvaccess.Channel.cpp
+pvaccess_SRCS += pvaccess.MultiChannel.cpp
 pvaccess_SRCS += pvaccess.RpcClient.cpp
 pvaccess_SRCS += pvaccess.RpcServer.cpp
 
@@ -100,6 +101,7 @@ pvaccess_SRCS += InvalidArgument.cpp
 pvaccess_SRCS += InvalidDataType.cpp
 pvaccess_SRCS += InvalidRequest.cpp
 pvaccess_SRCS += InvalidState.cpp
+pvaccess_SRCS += MultiChannel.cpp
 pvaccess_SRCS += NtTable.cpp
 pvaccess_SRCS += NtType.cpp
 pvaccess_SRCS += ObjectAlreadyExists.cpp
