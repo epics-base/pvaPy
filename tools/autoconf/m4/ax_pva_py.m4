@@ -55,25 +55,25 @@ AC_DEFUN([AX_PVA_PY],
     current_dir=`pwd`
     cd $PVA_PY_TOP > /dev/null && PVA_PY_TOP=`pwd` && cd $current_dir > /dev/null
 
-    # check for existing RELEASE.local file
+    # disabled check for existing RELEASE.local file
     release_local=$PVA_PY_TOP/configure/RELEASE.local
-    AC_MSG_CHECKING(for existing pvaPy $release_local file)
-    if test -f $release_local; then
-        AC_MSG_RESULT([yes])
-        AC_MSG_ERROR(you must remove existing $release_local file in order to recreate pvaPy configuration)
-    else
-        AC_MSG_RESULT([no])
-    fi
+    #AC_MSG_CHECKING(for existing pvaPy $release_local file)
+    #if test -f $release_local; then
+    #    AC_MSG_RESULT([yes])
+    #    AC_MSG_ERROR(you must remove existing $release_local file in order to recreate pvaPy configuration)
+    #else
+    #    AC_MSG_RESULT([no])
+    #fi
 
-    # check for existing CONFIG_SITE.local file
+    # disabled check for existing CONFIG_SITE.local file
     config_site_local=$PVA_PY_TOP/configure/CONFIG_SITE.local
-    AC_MSG_CHECKING(for existing pvaPy $config_site_local file)
-    if test -f $config_site_local; then
-        AC_MSG_RESULT([yes])
-        AC_MSG_ERROR(you must remove existing $config_site_local file in order to recreate pvaPy configuration)
-    else
-        AC_MSG_RESULT([no])
-    fi
+    #AC_MSG_CHECKING(for existing pvaPy $config_site_local file)
+    #if test -f $config_site_local; then
+    #    AC_MSG_RESULT([yes])
+    #    AC_MSG_ERROR(you must remove existing $config_site_local file in order to recreate pvaPy configuration)
+    #else
+    #    AC_MSG_RESULT([no])
+    #fi
 
     # check for boost libraries
     AC_MSG_CHECKING(for boost)
@@ -162,16 +162,26 @@ AC_DEFUN([AX_PVA_PY],
 
     # create RELEASE.local
     if ! test -z $PVACLIENTCPP_DIR; then
-        echo "PVACLIENT = $PVACLIENTCPP_DIR" >> $release_local
+        if test "$PVACLIENTCPP_DIR" != "$EPICS_BASE"; then
+            echo "PVACLIENT = $PVACLIENTCPP_DIR" >> $release_local
+        fi
     fi
     if ! test -z $PVDATABASECPP_DIR; then
-        echo "PVDATABASE = $PVDATABASECPP_DIR" >> $release_local
+        if test "$PVDATABASECPP_DIR" != "$EPICS_BASE"; then
+            echo "PVDATABASE = $PVDATABASECPP_DIR" >> $release_local
+        fi
     fi
     if ! test -z $NORMATIVETYPESCPP_DIR; then
-        echo "NORMATIVETYPES = $NORMATIVETYPESCPP_DIR" >> $release_local
+        if test "$NORMATIVETYPESCPP_DIR" != "$EPICS_BASE"; then
+            echo "NORMATIVETYPES = $NORMATIVETYPESCPP_DIR" >> $release_local
+        fi
     fi
-    echo "PVACCESS = $PVACCESSCPP_DIR" >> $release_local
-    echo "PVDATA = $PVDATACPP_DIR" >> $release_local
+    if test "$PVACCESSCPP_DIR" != "$EPICS_BASE"; then
+        echo "PVACCESS = $PVACCESSCPP_DIR" >> $release_local
+    fi
+    if test "$PVDATACPP_DIR" != "$EPICS_BASE"; then
+        echo "PVDATA = $PVDATACPP_DIR" >> $release_local
+    fi
     echo "EPICS_BASE = $EPICS_BASE" >> $release_local
     AC_MSG_NOTICE([Created $release_local file])
 
