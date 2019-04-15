@@ -87,6 +87,6 @@ BOOST_LIBRARIES=`find $LOCAL_BOOST_DIR/lib/$BOOST_HOST_ARCH -name '*.so*' -o -na
 for f in $BOOST_LIBRARIES; do
     libFile=`basename $f`
     echo "Linking library file: $libFile"
-    ln -s $LOCAL_BOOST_DIR/lib/$BOOST_HOST_ARCH/$libFile .
+    rm -f $libFile && ln -s $LOCAL_BOOST_DIR/lib/$BOOST_HOST_ARCH/$libFile .
 done
 
