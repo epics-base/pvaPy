@@ -117,6 +117,29 @@ epics::pvData::PVStructurePtr& operator<<(epics::pvData::PVStructurePtr& pvStruc
 }
 
 //
+// Dictionary methods
+//
+bool PvObject::has_key(const std::string& fieldPath) const
+{
+    return hasField(fieldPath);
+}
+
+boost::python::list PvObject::items() const
+{
+    return toDict().items();
+}
+
+boost::python::list PvObject::keys() const
+{
+    return toDict().keys();
+}
+
+boost::python::list PvObject::values() const 
+{
+    return toDict().values();
+}
+
+//
 // Has field?
 //
 bool PvObject::hasField(const std::string& fieldPath) const

@@ -40,6 +40,15 @@ void checkFieldPathExists(const std::string& fieldPath, const epics::pvData::PVS
     checkFieldExists(fieldName, pvStructurePtr2);
 }
 
+bool isPvObjectInstance(const boost::python::object& pyObject)
+{
+    boost::python::extract<PvObject> extractPvObject(pyObject);
+    if (extractPvObject.check()) {
+        return true;
+    }
+    return false;
+}
+
 //
 // Field retrieval
 //
@@ -357,6 +366,22 @@ epics::pvData::ScalarType getScalarArrayType(const std::string& fieldName, const
 }
 
 //
+// Conversion PvObject (as PY object) => PV Field
+// Returns true if conversion worked, false otherwise
+//
+bool pvObjectToPyDict(const boost::python::object& pyObject, boost::python::object& pyDict)
+{
+    boost::python::extract<PvObject> extractPvObject(pyObject);
+    if (extractPvObject.check()) {
+        PvObject o = extractPvObject();
+        pyDict = o.toDict();
+        return true;
+    }
+    return false;
+}
+
+
+//
 // Conversion PY object => PV Field
 //
 void pyObjectToField(const boost::python::object& pyObject, const std::string& fieldName, epics::pvData::PVStructurePtr& pvStructurePtr)
@@ -505,7 +530,10 @@ void pyObjectToScalarArrayField(const boost::python::object& pyObject, const std
 //
 void pyObjectToStructureField(const boost::python::object& pyObject, const std::string& fieldName, epics::pvData::PVStructurePtr& pvStructurePtr)
 {
-    boost::python::dict pyDict = PyUtility::extractValueFromPyObject<boost::python::dict>(pyObject);
+    boost::python::dict pyDict;
+    if (!pvObjectToPyDict(pyObject, pyDict)) {
+        pyDict = PyUtility::extractValueFromPyObject<boost::python::dict>(pyObject);
+    }
     pyDictToStructureField(pyDict, fieldName, pvStructurePtr);
 }
 

@@ -35,6 +35,8 @@ namespace PyPvDataUtility
 void checkFieldExists(const std::string& fieldName, const epics::pvData::PVStructurePtr& pvStructurePtr);
 void checkFieldPathExists(const std::string& fieldPath, const epics::pvData::PVStructurePtr& pvStructurePtr);
 
+bool isPvObjectInstance(const boost::python::object& pyObject);
+
 //
 // Field retrieval
 //
@@ -97,6 +99,12 @@ epics::pvData::Type getFieldType(const std::string& fieldName, const epics::pvDa
 epics::pvData::ScalarType getScalarType(const std::string& fieldName, const epics::pvData::PVStructurePtr& pvStructurePtr);
 
 epics::pvData::ScalarType getScalarArrayType(const std::string& fieldName, const epics::pvData::PVStructurePtr& pvStructurePtr);
+
+//
+// Conversion PvObject (from PY object) => PV Field
+// Returns true if conversion worked, false otherwise
+//
+bool pvObjectToPyDict(const boost::python::object& pyObject, boost::python::object& pyDict);
 
 //
 // Conversion PY object => PV Field

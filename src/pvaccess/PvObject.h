@@ -42,6 +42,12 @@ public:
     friend std::ostream& operator<<(std::ostream& out, const PvObject& pvObject);
     friend epics::pvData::PVStructurePtr& operator<<(epics::pvData::PVStructurePtr& pvStructurePtr, const PvObject& pvObject);
 
+    // Dictionary methods
+    bool has_key(const std::string& fieldPath) const;
+    boost::python::list items() const;
+    boost::python::list keys() const;
+    boost::python::list values() const;
+
     // Has field?
     bool hasField(const std::string& fieldPath) const;
 

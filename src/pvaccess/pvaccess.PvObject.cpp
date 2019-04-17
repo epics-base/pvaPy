@@ -48,6 +48,8 @@ class_<PvObject>("PvObject",
     "\t\t    structure a\n"
     "\t\t        float c 10.1\n"
     "\t\t        string b my string\n"
+    "\t\t>>> dict(pv)\n"
+    "\t\t{'a': {'b': 'my string', 'c': 10.1}}\n"
     "\t\t>>> pv['a.b']\n"
     "\t\t'my string'\n"
     "\t\t>>> pv['a.c']\n"
@@ -160,7 +162,39 @@ class_<PvObject>("PvObject",
         "::\n\n"
         "    pv = PvObject({'aString' : STRING, 'aStruct' : {'anInt' : INT, 'aString2' : STRING}})\n\n"
         "    hasField = 'aString' in pv\n\n"
-        "    hasField2 = 'aString.anInt' in pv\n\n")
+        "    hasField2 = 'aStruct.anInt' in pv\n\n")
+
+    .def("has_key", 
+        static_cast<bool(PvObject::*)(const std::string&)const>(&PvObject::hasField),
+        args("fieldPath"),
+        "Checks if the PV object has field specified by the given path, using '.' as the field name separator.\n\n"
+        ":Parameter: *fieldPath* (str) - field path\n\n"
+        ":Returns: true if path exists, false otherwise\n\n"
+        "::\n\n"
+        "    pv = PvObject({'aString' : STRING, 'aStruct' : {'anInt' : INT, 'aString2' : STRING}})\n\n"
+        "    hasField = pv.has_key('aString'\n\n"
+        "    hasField2 = pv.has_key('aStruct.anInt')\n\n")
+
+    .def("items", 
+        static_cast<boost::python::list(PvObject::*)()const>(&PvObject::items),
+        "Returns list of PV object's dictionary items.\n\n"
+        ":Returns: list of PV object's dictionary (key,value) pairs\n\n"
+        "::\n\n"
+        "    items = pv.items()\n\n")
+
+    .def("keys", 
+        static_cast<boost::python::list(PvObject::*)()const>(&PvObject::keys),
+        "Returns list of PV object's dictionary keys (top level field names).\n\n"
+        ":Returns: list of PV object's dictionary keys\n\n"
+        "::\n\n"
+        "    keys = pv.keys()\n\n")
+
+    .def("values", 
+        static_cast<boost::python::list(PvObject::*)()const>(&PvObject::values),
+        "Returns list of PV object's dictionary values (top level field values).\n\n"
+        ":Returns: list of PV object's dictionary values\n\n"
+        "::\n\n"
+        "    values = pv.values()\n\n")
 
     .def("setPyObject", 
         static_cast<void(PvObject::*)(const std::string&,const boost::python::object&)>(&PvObject::setPyObject),
