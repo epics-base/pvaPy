@@ -75,7 +75,7 @@ PyObject* channelTimeoutException = NULL;
 BOOST_PYTHON_MODULE(pvaccess)
 {
     using namespace boost::python;
-    scope().attr("__doc__") = "pvaccess module is a python wrapper for pvAccess and other `EPICS V4 <http://epics-pvdata.sourceforge.net>`_ C++ libraries."; 
+    scope().attr("__doc__") = "pvaccess module is a python wrapper for `EPICS  <https://epics.anl.gov>`_ PV Access and other C++ libraries."; 
     docstring_options local_docstring_options(true, true, false);
 
     //

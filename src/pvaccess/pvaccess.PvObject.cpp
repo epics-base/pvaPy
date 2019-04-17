@@ -1209,7 +1209,10 @@ class_<PvObject>("PvObject",
         "Converts PV structure to python dictionary.\n\n"
         ":Returns: python key:value dictionary representing current PV structure in terms of field names and their values\n\n"
         "::\n\n"
-        "    valueDict = pv.toDict()\n\n")
+        "    valueDict = pv.toDict()\n\n"
+        "Note that one can also convert PvObject instances to dictionaries using the standard *dict()* constructor:\n\n"
+        "::\n\n"
+        "    valueDict = dict(pv)\n\n")
 
     .def("getStructureDict", 
         &PvObject::getStructureDict,
