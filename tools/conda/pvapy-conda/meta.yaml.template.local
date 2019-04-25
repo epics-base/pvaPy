@@ -6,8 +6,7 @@ source:
   path: ../../..
 
 build:
-  number: 1
-
+  number: BUILD_NUMBER
   script_env:
     - BUILD_FLAGS
 
@@ -15,6 +14,7 @@ requirements:
   build:
     - python
     - sphinx
+    - sphinx_rtd_theme
     - numpy>1.15
     - epics-base=EPICS_BASE_VERSION
     - pvapy-boost=BOOST_VERSION

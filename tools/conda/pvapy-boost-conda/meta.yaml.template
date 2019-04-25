@@ -6,7 +6,7 @@ source:
   url: https://sourceforge.net/projects/boost/files/boost/BOOST_VERSION/boost_BOOST_DOWNLOAD_VERSION.tar.gz
 
 build:
-  number: 1
+  number: BUILD_NUMBER
 
 requirements:
   build:

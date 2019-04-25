@@ -2,13 +2,15 @@
 TOP = ../../..
 DEPLOY_CONF = $(TOP)/configure/DEPLOY.conf
 EPICS_BASE_VERSION=$(shell cat $(DEPLOY_CONF) | grep EPICS_BASE_VERSION | cut -f2 -d'=')
+BUILD_NUMBER=$(shell cat $(DEPLOY_CONF) | grep BUILD_NUMBER | cut -f2 -d'=')
 PACKAGE = epics-base
 CONDA_LIST_FLAGS := $(CONDA_ENV_FLAGS)
 CONDA_ENV_FLAGS += -y
 
+default: package
+
 configure:
-	conda list $(CONDA_LIST_FLAGS) conda-build | grep conda-build || conda install $(CONDA_ENV_FLAGS) conda-build
-	eval "cat meta.yaml.template | sed 's?EPICS_BASE_VERSION?${EPICS_BASE_VERSION}?g' > meta.yaml"
+	eval "cat meta.yaml.template | sed 's?BUILD_NUMBER?${BUILD_NUMBER}?g' | sed 's?EPICS_BASE_VERSION?${EPICS_BASE_VERSION}?g' > meta.yaml"
 
 build: configure
 	conda build .

@@ -6,8 +6,7 @@ source:
   url: https://epics.anl.gov/download/base/base-EPICS_BASE_VERSION.tar.gz
 
 build:
-  number: 1
-
+  number: BUILD_NUMBER
   script_env:
     - BUILD_FLAGS
 

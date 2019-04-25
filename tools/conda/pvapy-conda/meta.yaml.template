@@ -7,8 +7,7 @@ source:
   git_url: https://github.com/epics-base/pvaPy
 
 build:
-  number: 1
-
+  number: BUILD_NUMBER
   script_env:
     - BUILD_FLAGS
 
