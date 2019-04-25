@@ -1,4 +1,4 @@
-## Release 1.5.0 (2019/04/XX)
+## Release 1.5.0 (2019/04/25)
 
 - added dictionary methods to PvObject class: items(), keys(), values()
 - fixed build warning for multiple inclusion of build rules
@@ -6,7 +6,6 @@
   - EPICS BASE = 7.0.2.2
   - BOOST      = 1.70.0
   - NUMPY      > 1.15
-
 
 ## Release 1.4.0 (2019/03/29)
 
