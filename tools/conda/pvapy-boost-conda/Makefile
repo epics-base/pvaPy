@@ -7,6 +7,8 @@ BUILD_NUMBER=$(shell cat $(DEPLOY_CONF) | grep BUILD_NUMBER | cut -f2 -d'=')
 PACKAGE = pvapy-boost
 CONDA_ENV_FLAGS += -y
 
+default: package
+
 configure:
 	eval "cat meta.yaml.template | sed 's?BUILD_NUMBER?${BUILD_NUMBER}?g' | sed 's?BOOST_VERSION?${BOOST_VERSION}?g' | sed 's?BOOST_DOWNLOAD_VERSION?${BOOST_DOWNLOAD_VERSION}?g' > meta.yaml"
 
