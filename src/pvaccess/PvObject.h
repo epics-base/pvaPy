@@ -139,6 +139,8 @@ public:
     boost::python::list getScalarArray() const;
 
     // Structure fields
+    void setStructure(const std::string& key, const PvObject& pvObject);
+    void setStructure(const PvObject& pvObject);
     void setStructure(const std::string& key, const boost::python::dict& pyDict);
     void setStructure(const boost::python::dict& pyDict);
     boost::python::dict getStructure(const std::string& key) const;

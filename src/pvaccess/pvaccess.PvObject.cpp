@@ -806,6 +806,30 @@ class_<PvObject>("PvObject",
         "    valueList = pv.getScalarArray('aScalarArray', 'aString' : STRING)\n\n")
 
     .def("setStructure", 
+        static_cast<void(PvObject::*)(const PvObject&)>(&PvObject::setStructure),
+        args("valueObject"),
+        "Sets structure value for a single-field structure, or for a structure that has structure field named 'value'.\n\n"
+        ":Parameter: *valueObject* (PvObject) - PvObject instance\n\n"
+        ":Raises: *InvalidRequest* - when single-field structure has no structure field or multiple-field structure has no structure 'value' field\n\n"
+        "::\n\n"
+        "    pv = PvObject({'aStruct' : {'anInt':INT, 'aDouble':DOUBLE}})\n\n"
+        "    pv2 = PvObject({'anInt':INT, 'aDouble':DOUBLE}, {'anInt':1, 'aDouble':1.1})\n\n"
+        "    pv.setStructure(pv2)\n\n")
+
+    .def("setStructure", 
+        static_cast<void(PvObject::*)(const std::string&,const PvObject&)>(&PvObject::setStructure),
+        args("fieldName", "valueObject"),
+        "Sets structure value for the given PV field.\n\n"
+        ":Parameter: *fieldName* (str) - field name\n\n"
+        ":Parameter: *valueObject* (PvObject) - PvObject instance\n\n"
+        ":Raises: *FieldNotFound* - when PV structure does not have specified field\n\n"
+        ":Raises: *InvalidRequest* - when specified field is not a structure\n\n"
+        "::\n\n"
+        "    pv = PvObject({'aStruct' : {'anInt':INT, 'aDouble':DOUBLE}, 'aString' : STRING})\n\n"
+        "    pv2 = PvObject({'anInt':INT, 'aDouble':DOUBLE}, {'anInt':1, 'aDouble':1.1})\n\n"
+        "    pv.setStructure('aStruct', pv2)\n\n")
+
+    .def("setStructure", 
         static_cast<void(PvObject::*)(const boost::python::dict&)>(&PvObject::setStructure),
         args("valueDict"),
         "Sets structure value for a single-field structure, or for a structure that has structure field named 'value'.\n\n"

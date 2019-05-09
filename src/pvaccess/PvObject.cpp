@@ -489,6 +489,18 @@ boost::python::list PvObject::getScalarArray() const
 }
 
 // Structure modifiers/accessors
+void PvObject::setStructure(const std::string& key, const PvObject& pvObject)
+{
+    epics::pvData::PVStructurePtr pvStructurePtr2 = PyPvDataUtility::getStructureField(key, pvStructurePtr);
+    PyPvDataUtility::copyStructureToStructure(pvObject.getPvStructurePtr(), pvStructurePtr2);
+}
+
+void PvObject::setStructure(const PvObject& pvObject)
+{
+    std::string key = PyPvDataUtility::getValueOrSingleFieldName(pvStructurePtr);
+    setStructure(key, pvObject);
+}
+
 void PvObject::setStructure(const std::string& key, const boost::python::dict& pyDict)
 {
     PyPvDataUtility::pyDictToStructureField(pyDict, key, pvStructurePtr);
