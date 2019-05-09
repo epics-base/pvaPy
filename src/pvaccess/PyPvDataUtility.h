@@ -180,6 +180,11 @@ void pyDictToUnion(const boost::python::dict& pyDict, epics::pvData::PVUnionPtr&
 void pyDictToUnionField(const boost::python::dict& pyDict, const std::string& fieldName, epics::pvData::PVStructurePtr& pvStructurePtr);
 
 //
+// Conversion PvObject => PV Union Field
+//
+void pvObjectToUnionField(const PvObject& pvObject, const std::string& fieldName, epics::pvData::PVStructurePtr& pvStructurePtr);
+
+//
 // Conversion PY [{}] => PV Union Array
 //
 void pyListToUnionArrayField(const boost::python::list& pyList, const std::string& fieldName, epics::pvData::PVStructurePtr& pvStructurePtr);

@@ -530,11 +530,19 @@ void pyObjectToScalarArrayField(const boost::python::object& pyObject, const std
 //
 void pyObjectToStructureField(const boost::python::object& pyObject, const std::string& fieldName, epics::pvData::PVStructurePtr& pvStructurePtr)
 {
-    boost::python::dict pyDict;
-    if (!pvObjectToPyDict(pyObject, pyDict)) {
-        pyDict = PyUtility::extractValueFromPyObject<boost::python::dict>(pyObject);
+    boost::python::extract<PvObject> extractPvObject(pyObject);
+    if (extractPvObject.check()) {
+        PvObject pvObject = extractPvObject();
+        epics::pvData::PVStructurePtr pvStructurePtr2 = getStructureField(fieldName, pvStructurePtr);
+        PyPvDataUtility::copyStructureToStructure(pvObject.getPvStructurePtr(), pvStructurePtr2);
     }
-    pyDictToStructureField(pyDict, fieldName, pvStructurePtr);
+    else {
+        boost::python::dict pyDict;
+        if (!pvObjectToPyDict(pyObject, pyDict)) {
+            pyDict = PyUtility::extractValueFromPyObject<boost::python::dict>(pyObject);
+        }
+        pyDictToStructureField(pyDict, fieldName, pvStructurePtr);
+    }
 }
 
 //
@@ -558,8 +566,15 @@ void pyObjectToUnionField(const boost::python::object& pyObject, const std::stri
         boost::python::tuple pyTuple = extractTuple();
         pyObject2 = pyTuple[0];
     }    
-    boost::python::dict pyDict = PyUtility::extractValueFromPyObject<boost::python::dict>(pyObject2);
-    pyDictToUnionField(pyDict, fieldName, pvStructurePtr);
+    boost::python::extract<PvObject> extractPvObject(pyObject2);
+    if (extractPvObject.check()) {
+        PvObject pvObject = extractPvObject();
+        pvObjectToUnionField(pvObject, fieldName, pvStructurePtr);
+    }
+    else {
+        boost::python::dict pyDict = PyUtility::extractValueFromPyObject<boost::python::dict>(pyObject2);
+        pyDictToUnionField(pyDict, fieldName, pvStructurePtr);
+    }
 }
 
 //
@@ -822,6 +837,18 @@ void pyDictToUnionField(const boost::python::dict& pyDict, const std::string& fi
 }
 
 //
+// Conversion PvObject => PV Union Field
+//
+void pvObjectToUnionField(const PvObject& pvObject, const std::string& fieldName, epics::pvData::PVStructurePtr& pvStructurePtr)
+{
+    epics::pvData::PVUnionPtr pvUnionPtr = getUnionField(fieldName, pvStructurePtr);
+
+    std::string keyFrom = PyPvDataUtility::getValueOrSingleFieldName(pvObject.getPvStructurePtr());
+    epics::pvData::PVFieldPtr pvFrom = PyPvDataUtility::getSubField(keyFrom, pvObject.getPvStructurePtr());
+    PyPvDataUtility::setUnionField(pvFrom, pvUnionPtr);
+}
+
+//
 // Conversion PY [{}] => PV Structure Array
 //
 void pyListToStructureArrayField(const boost::python::list& pyList, const std::string& fieldName, epics::pvData::PVStructurePtr& pvStructurePtr)
@@ -832,15 +859,23 @@ void pyListToStructureArrayField(const boost::python::list& pyList, const std::s
     int listSize = boost::python::len(pyList);
     epics::pvData::PVStructureArray::svector pvStructures(listSize);
     for (int i = 0; i < listSize; i++) {
-        boost::python::extract<boost::python::dict> dictExtract(pyList[i]);
-        if (dictExtract.check()) {
-            boost::python::dict pyDict = dictExtract();
-            epics::pvData::PVStructurePtr pvStructure = epics::pvData::getPVDataCreate()->createPVStructure(structurePtr);
-            pyDictToStructure(pyDict, pvStructure);
+        epics::pvData::PVStructurePtr pvStructure = epics::pvData::getPVDataCreate()->createPVStructure(structurePtr);
+        boost::python::extract<PvObject> extractPvObject(pyList[i]);
+        if (extractPvObject.check()) {
+            PvObject pvObject = extractPvObject();
+            PyPvDataUtility::copyStructureToStructure(pvObject.getPvStructurePtr(), pvStructure);
             pvStructures[i] = pvStructure;
         }
         else {
-            throw InvalidDataType("Invalid data type for element %d", i);
+            boost::python::extract<boost::python::dict> dictExtract(pyList[i]);
+            if (dictExtract.check()) {
+                boost::python::dict pyDict = dictExtract();
+                pyDictToStructure(pyDict, pvStructure);
+                pvStructures[i] = pvStructure;
+            }
+            else {
+                throw InvalidDataType("Invalid data type for element %d", i);
+            }
         }
     }
     pvStructureArrayPtr->setCapacity(listSize);
