@@ -1,3 +1,12 @@
+## Release 1.5.1 (2019/05/10)
+
+- added ability to set structure fields using PvObjects
+- fixed issue with setting variant unions using PvObjects
+- conda/pip package dependencies: 
+  - EPICS BASE = 7.0.2.2
+  - BOOST      = 1.70.0
+  - NUMPY      > 1.15
+
 ## Release 1.5.0 (2019/04/25)
 
 - added dictionary methods to PvObject class: items(), keys(), values()
