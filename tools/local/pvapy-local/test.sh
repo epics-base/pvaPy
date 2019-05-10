@@ -62,6 +62,7 @@ cd $PVA_PY_BUILD_DIR/test/
 python testServer.py 10  &
 
 echo "Starting tests"
+nosetests -v testPvObject.py
 nosetests -v testChannelPut.py
 
 wait 
