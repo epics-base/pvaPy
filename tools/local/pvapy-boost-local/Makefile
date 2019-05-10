@@ -1,7 +1,8 @@
 
 TOP = ../../..
 BUILD_CONF = $(TOP)/configure/BUILD.conf
-BOOST_VERSION=$(shell cat $(BUILD_CONF) | grep BOOST_VERSION | cut -f2 -d'=')
+include $(BUILD_CONF)
+
 BOOST_DOWNLOAD_VERSION=$(shell echo $(BOOST_VERSION) | sed 's?\.?_?g')
 
 default: install

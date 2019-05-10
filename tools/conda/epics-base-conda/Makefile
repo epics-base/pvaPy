@@ -1,8 +1,8 @@
 
 TOP = ../../..
 BUILD_CONF = $(TOP)/configure/BUILD.conf
-EPICS_BASE_VERSION=$(shell cat $(BUILD_CONF) | grep EPICS_BASE_VERSION | cut -f2 -d'=')
-BUILD_NUMBER=$(shell cat $(BUILD_CONF) | grep BUILD_NUMBER | cut -f2 -d'=')
+include $(BUILD_CONF)
+
 PACKAGE = epics-base
 CONDA_LIST_FLAGS := $(CONDA_ENV_FLAGS)
 CONDA_ENV_FLAGS += -y

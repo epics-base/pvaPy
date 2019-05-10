@@ -1,7 +1,7 @@
 
 TOP = ../../..
 BUILD_CONF = ${CURDIR}/../../../configure/BUILD.conf
-PVA_PY_VERSION=$(shell cat $(BUILD_CONF) | grep PVA_PY_VERSION | cut -f2 -d'=')
+include $(BUILD_CONF)
 
 default: install
 
