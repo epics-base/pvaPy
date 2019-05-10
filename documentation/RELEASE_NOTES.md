@@ -1,7 +1,8 @@
-## Release 1.5.1 (2019/05/10)
+## Release 1.6.0 (2019/05/10)
 
 - added ability to set structure fields using PvObjects
 - fixed issue with setting variant unions using PvObjects
+- added automated tests to conda packaging
 - conda/pip package dependencies: 
   - EPICS BASE = 7.0.2.2
   - BOOST      = 1.70.0
