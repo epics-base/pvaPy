@@ -3,13 +3,20 @@ package:
   version: PVA_PY_VERSION
 
 source:
-  git_rev: PVA_PY_GIT_VERSION
+  git_rev: PVA_PY_VERSION
   git_url: https://github.com/epics-base/pvaPy
 
 build:
   number: BUILD_NUMBER
   script_env:
     - BUILD_FLAGS
+
+test:
+  requires:
+    - nose
+
+  source_files:
+    - test
 
 requirements:
   build:

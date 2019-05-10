@@ -10,6 +10,13 @@ build:
   script_env:
     - BUILD_FLAGS
 
+test:
+  requires:
+    - nose
+
+  source_files:
+    - test
+
 requirements:
   build:
     - python
