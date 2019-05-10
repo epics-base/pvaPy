@@ -108,6 +108,10 @@ class TestUtility:
         return ''.join(random.choice(allowedValues) for _ in range(size))
 
     @classmethod
+    def getRandomListSize(cls):
+        return int(random.uniform(1,100))
+
+    @classmethod
     def getBooleanChannel(cls):
         return Channel(TestServer.BOOLEAN_CHANNEL_NAME)
 
