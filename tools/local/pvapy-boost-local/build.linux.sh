@@ -7,12 +7,12 @@ DEFAULT_PREFIX=$TOP/.. && cd $DEFAULT_PREFIX && DEFAULT_PREFIX=`pwd`
 PREFIX=${PREFIX:-$DEFAULT_PREFIX}
 BUILD_DIR=$TOP/build
 BOOST_HOST_ARCH=`uname | tr [A-Z] [a-z]`-`uname -m`
-DEPLOY_CONF=$TOP/../../../configure/DEPLOY.conf
-if [ ! -f $DEPLOY_CONF ]; then
-    echo "$DEPLOY_CONF not found"
+BUILD_CONF=$TOP/../../../configure/BUILD.conf
+if [ ! -f $BUILD_CONF ]; then
+    echo "$BUILD_CONF not found"
     exit 1
 fi
-. $DEPLOY_CONF
+. $BUILD_CONF
 
 OPT_BOOST_DIR=opt/boost-python-${BOOST_VERSION}
 LOCAL_BOOST_DIR=$PREFIX/$OPT_BOOST_DIR

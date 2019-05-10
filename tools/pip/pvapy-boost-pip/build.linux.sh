@@ -6,12 +6,12 @@ TOP=`dirname $0` && cd $TOP && TOP=`pwd`
 BUILD_DIR=$TOP/build
 BOOST_DIR=$TOP/pvapy-boost
 BOOST_HOST_ARCH=`uname | tr [A-Z] [a-z]`-`uname -m`
-DEPLOY_CONF=$TOP/../../../configure/DEPLOY.conf
-if [ ! -f $DEPLOY_CONF ]; then
-    echo "$DEPLOY_CONF not found"
+BUILD_CONF=$TOP/../../../configure/BUILD.conf
+if [ ! -f $BUILD_CONF ]; then
+    echo "$BUILD_CONF not found"
     exit 1
 fi
-. $DEPLOY_CONF
+. $BUILD_CONF
 
 #DEFAULT_PYTHON_VERSION="2"
 #if [ -z "$PYTHON_VERSION" ]; then

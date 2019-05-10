@@ -5,13 +5,13 @@
 
 CURRENT_DIR=`pwd`
 TOP_DIR=`dirname $0` && cd $TOP_DIR && TOP_DIR=`pwd`
-DEPLOY_CONF=$TOP_DIR/../../../configure/DEPLOY.conf
+BUILD_CONF=$TOP_DIR/../../../configure/BUILD.conf
 
-if [ ! -f $DEPLOY_CONF ]; then
-    echo "$DEPLOY_CONF not found"
+if [ ! -f $BUILD_CONF ]; then
+    echo "$BUILD_CONF not found"
     exit 1
 fi
-. $DEPLOY_CONF
+. $BUILD_CONF
 
 #DEFAULT_PYTHON_VERSION="2"
 #if [ -z "$PYTHON_VERSION" ]; then

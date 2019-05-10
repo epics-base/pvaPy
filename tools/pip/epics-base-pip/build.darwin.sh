@@ -6,12 +6,12 @@ TOP=`dirname $0` && cd $TOP && TOP=`pwd`
 BUILD_DIR=$TOP/build
 EPICS_BUILD_DIR=$BUILD_DIR/epics
 EPICS_BASE_DIR=$TOP/epics-base
-DEPLOY_CONF=$TOP/../../../configure/DEPLOY.conf
-if [ ! -f $DEPLOY_CONF ]; then
-    echo "$DEPLOY_CONF not found"
+BUILD_CONF=$TOP/../../../configure/BUILD.conf
+if [ ! -f $BUILD_CONF ]; then
+    echo "$BUILD_CONF not found"
     exit 1
 fi
-. $DEPLOY_CONF
+. $BUILD_CONF
 
 EPICS_BASE_DOWNLOAD_URL=https://epics.anl.gov/download/base/base-${EPICS_BASE_VERSION}.tar.gz
 

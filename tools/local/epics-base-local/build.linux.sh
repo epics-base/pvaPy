@@ -8,12 +8,12 @@ PREFIX=${PREFIX:-$DEFAULT_PREFIX}
 BUILD_DIR=$TOP/build
 EPICS_BUILD_DIR=$BUILD_DIR/epics
 EPICS_EXECUTABLES="caget cainfo camonitor caput caRepeater p2p pvcall pvget pvinfo pvlist pvmonitor pvput softIoc softIocPVA"
-DEPLOY_CONF=$TOP/../../../configure/DEPLOY.conf
-if [ ! -f $DEPLOY_CONF ]; then
-    echo "$DEPLOY_CONF not found"
+BUILD_CONF=$TOP/../../../configure/BUILD.conf
+if [ ! -f $BUILD_CONF ]; then
+    echo "$BUILD_CONF not found"
     exit 1
 fi
-. $DEPLOY_CONF
+. $BUILD_CONF
 
 OPT_EPICS_DIR=opt/epics-${EPICS_BASE_VERSION}
 LOCAL_EPICS_DIR=$PREFIX/$OPT_EPICS_DIR

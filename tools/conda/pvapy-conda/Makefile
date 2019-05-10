@@ -1,14 +1,14 @@
 
 TOP = ../../..
-DEPLOY_CONF = $(TOP)/configure/DEPLOY.conf
-PVA_PY_VERSION=$(shell cat $(DEPLOY_CONF) | grep PVA_PY_VERSION | cut -f2 -d'=')
-EPICS_BASE_VERSION=$(shell cat $(DEPLOY_CONF) | grep EPICS_BASE_VERSION | cut -f2 -d'=')
-BOOST_VERSION=$(shell cat $(DEPLOY_CONF) | grep BOOST_VERSION | cut -f2 -d'=')
+BUILD_CONF = $(TOP)/configure/BUILD.conf
+PVA_PY_VERSION=$(shell cat $(BUILD_CONF) | grep PVA_PY_VERSION | cut -f2 -d'=')
+EPICS_BASE_VERSION=$(shell cat $(BUILD_CONF) | grep EPICS_BASE_VERSION | cut -f2 -d'=')
+BOOST_VERSION=$(shell cat $(BUILD_CONF) | grep BOOST_VERSION | cut -f2 -d'=')
 ifeq ($(PVA_PY_VERSION),)
     PVA_PY_VERSION=$(shell git rev-parse --short HEAD)
 endif
-PVA_PY_GIT_VERSION=$(shell cat $(DEPLOY_CONF) | grep PVA_PY_GIT_VERSION | cut -f2 -d'=')
-BUILD_NUMBER=$(shell cat $(DEPLOY_CONF) | grep BUILD_NUMBER | cut -f2 -d'=')
+PVA_PY_GIT_VERSION=$(shell cat $(BUILD_CONF) | grep PVA_PY_GIT_VERSION | cut -f2 -d'=')
+BUILD_NUMBER=$(shell cat $(BUILD_CONF) | grep BUILD_NUMBER | cut -f2 -d'=')
 PVA_PY_YAML_TEMPLATE ?= meta.yaml.template
 
 PACKAGE = pvapy

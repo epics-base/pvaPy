@@ -1,5 +1,5 @@
 TOP = ../..
-DEPLOY_CONF := $(TOP)/configure/DEPLOY.conf
+BUILD_CONF := $(TOP)/configure/BUILD.conf
 PVACCESS_CONSTANTS_CPP_TEMPLATE := $(TOP)/src/pvaccess/pvaccess.constants.cpp.template
 SPHINX_CONF := $(TOP)/documentation/sphinx/conf.py
 
@@ -25,7 +25,7 @@ USR_LDFLAGS  += $(USR_LDFLAGS_$(T_A))
 # Set our library install location; /$(T_A) will be added
 INSTALL_LOCATION_LIB = $(INSTALL_LOCATION)/lib/python/$(PYTHON_VERSION)
 
-PVA_PY_VERSION=$(shell cat $(DEPLOY_CONF) | grep PVA_PY_VERSION | cut -f2 -d'=')
+PVA_PY_VERSION=$(shell cat $(BUILD_CONF) | grep PVA_PY_VERSION | cut -f2 -d'=')
 ifeq ($(PVA_PY_VERSION),)
     PVA_PY_VERSION=$(shell git rev-parse --short HEAD)
 endif
@@ -180,7 +180,7 @@ include $(TOP)/configure/RULES
 #----------------------------------------
 #  ADD RULES AFTER THIS LINE
 
-pvaccess.constants.cpp: $(PVACCESS_CONSTANTS_CPP_TEMPLATE) $(DEPLOY_CONF)
+pvaccess.constants.cpp: $(PVACCESS_CONSTANTS_CPP_TEMPLATE) $(BUILD_CONF)
 	eval "cat ${PVACCESS_CONSTANTS_CPP_TEMPLATE} | sed 's?PVA_PY_VERSION?${PVA_PY_VERSION}?g' > pvaccess.constants.cpp"
 	eval "cat ${SPHINX_CONF} | sed 's?version =.*?version = \"${PVA_PY_VERSION}\"?g' | sed 's?release =.*?release = \"${PVA_PY_VERSION}\"?g' > ${SPHINX_CONF}.2 && mv ${SPHINX_CONF}.2 ${SPHINX_CONF}"
 

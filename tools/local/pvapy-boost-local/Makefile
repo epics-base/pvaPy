@@ -1,7 +1,7 @@
 
 TOP = ../../..
-DEPLOY_CONF = $(TOP)/configure/DEPLOY.conf
-BOOST_VERSION=$(shell cat $(DEPLOY_CONF) | grep BOOST_VERSION | cut -f2 -d'=')
+BUILD_CONF = $(TOP)/configure/BUILD.conf
+BOOST_VERSION=$(shell cat $(BUILD_CONF) | grep BOOST_VERSION | cut -f2 -d'=')
 BOOST_DOWNLOAD_VERSION=$(shell echo $(BOOST_VERSION) | sed 's?\.?_?g')
 
 default: install

@@ -9,15 +9,15 @@ MODULE_NAME = 'pvapy-boost'
 MODULE = Extension(MODULE_NAME, [])
 PLATFORM = platform.uname()[0].lower()
 BUILD_SCRIPT = './build.%s.sh' % PLATFORM
-DEPLOY_CONF = os.environ.get('DEPLOY_CONF', 'non_existent_file')
+BUILD_CONF = os.environ.get('BUILD_CONF', 'non_existent_file')
 
 def get_env_var(name, default):
     value = os.environ.get(name)
     if value is not None:
         return value
 
-    if os.path.exists(DEPLOY_CONF):
-        vars = open(DEPLOY_CONF).read().split()
+    if os.path.exists(BUILD_CONF):
+        vars = open(BUILD_CONF).read().split()
         for v in vars:
             key = v.split('=')[0].strip()
             value = v.split('=')[1].strip()

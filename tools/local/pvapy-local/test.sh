@@ -6,12 +6,12 @@ TOP=`dirname $0` && cd $TOP && TOP=`pwd`
 DEFAULT_PREFIX=$TOP/.. && cd $DEFAULT_PREFIX && DEFAULT_PREFIX=`pwd`
 PREFIX=${PREFIX:-$DEFAULT_PREFIX}
 BUILD_DIR=$TOP/build
-DEPLOY_CONF=$TOP/../../../configure/DEPLOY.conf
-if [ ! -f $DEPLOY_CONF ]; then
-    echo "$DEPLOY_CONF not found"
+BUILD_CONF=$TOP/../../../configure/BUILD.conf
+if [ ! -f $BUILD_CONF ]; then
+    echo "$BUILD_CONF not found"
     exit 1
 fi
-. $DEPLOY_CONF
+. $BUILD_CONF
 
 if [ -z "$PVA_PY_VERSION" ]; then
     PVA_PY_VERSION=local

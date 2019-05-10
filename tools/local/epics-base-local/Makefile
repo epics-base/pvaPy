@@ -1,7 +1,7 @@
 
 TOP = ../../..
-DEPLOY_CONF = $(TOP)/configure/DEPLOY.conf
-EPICS_BASE_VERSION=$(shell cat $(DEPLOY_CONF) | grep EPICS_BASE_VERSION | cut -f2 -d'=')
+BUILD_CONF = $(TOP)/configure/BUILD.conf
+EPICS_BASE_VERSION=$(shell cat $(BUILD_CONF) | grep EPICS_BASE_VERSION | cut -f2 -d'=')
 
 default: install
 

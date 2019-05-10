@@ -19,15 +19,15 @@ BUILD_SCRIPT = './build.%s.sh' % PLATFORM
 README_FILE = 'pvaccess/doc/README.md'
 if not os.path.exists(README_FILE):
     README_FILE = os.path.join(MY_DIR, '../../../README.md')
-DEPLOY_CONF = os.environ.get('DEPLOY_CONF', 'non_existent_file')
+BUILD_CONF = os.environ.get('BUILD_CONF', 'non_existent_file')
 
 def get_env_var(name, default):
     value = os.environ.get(name)
     if value is not None:
         return value
 
-    if os.path.exists(DEPLOY_CONF):
-        vars = open(DEPLOY_CONF).read().split()
+    if os.path.exists(BUILD_CONF):
+        vars = open(BUILD_CONF).read().split()
         for v in vars:
             key = v.split('=')[0].strip()
             value = v.split('=')[1].strip()
