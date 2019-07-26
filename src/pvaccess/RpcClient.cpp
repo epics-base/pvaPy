@@ -69,22 +69,28 @@ epics::pvAccess::RPCClient::shared_pointer RpcClient::getRpcClient(const epics::
 
 epics::pvData::PVStructure::shared_pointer RpcClient::request(const epics::pvData::PVStructurePtr& arguments, double timeout)
 {
+  PyThreadState *state;
+  state = PyEval_SaveThread();
+  
     try {
         epics::pvAccess::RPCClient::shared_pointer client = getRpcClient(pvRequest, timeout);
 
 #if defined PVA_RPC_API_VERSION && PVA_RPC_API_VERSION >= 440
         epics::pvData::PVStructure::shared_pointer response = client->request(arguments, timeout);
 #endif // if defined PVA_RPC_API_VERSION && PVA_RPC_API_VERSION >= 440
-
+        PyEval_RestoreThread(state);
         return response;
     }
     catch (const epics::pvAccess::RPCRequestException& ex) {
+        PyEval_RestoreThread(state);
         throw PvaException(ex.what());
     }
     catch (std::exception& ex) {
+        PyEval_RestoreThread(state);
         throw PvaException(ex.what());
     }
     catch (...) {
+        PyEval_RestoreThread(state);
         throw PvaException("Unexpected error caught in RpcClient::request().");
     }
 }
