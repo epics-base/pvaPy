@@ -25,7 +25,6 @@ public:
     POINTER_DEFINITIONS(PyPvRecord);
     virtual ~PyPvRecord(); 
     virtual bool init();
-    virtual void destroy();
     virtual void process();
     void update (const PvObject& pvObject);
     void executeCallback();
