@@ -146,11 +146,7 @@ void PvaServer::removeRecord(const std::string& channelName)
     if (it == recordMap.end()) {
         throw ObjectNotFound("Master database does not have record for channel: " + channelName);
     }
-
-    epics::pvDatabase::PVDatabasePtr master = epics::pvDatabase::PVDatabase::getMaster();
-    if(!master->removeRecord(it->second)) {
-        throw PvaException("Cannot remove record to master database for channel: " + channelName);
-    }
+    it->second->remove();
     recordMap.erase(it);
 }
 

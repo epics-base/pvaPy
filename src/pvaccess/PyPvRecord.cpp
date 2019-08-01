@@ -37,11 +37,6 @@ bool PyPvRecord::init()
     return true;
 }
 
-void PyPvRecord::destroy()
-{
-    epics::pvDatabase::PVRecord::destroy();
-}
-
 void PyPvRecord::process() 
 {
     if(PyUtility::isPyNone(onWriteCallback)) {
