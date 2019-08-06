@@ -498,6 +498,13 @@ class_<Channel>("Channel",
         "    channel = Channel('string01')\n\n"
         "    channel.put('string value')\n\n")
 
+.def("parsePut", 
+        static_cast<void(Channel::*)(const boost::python::list&, const std::string&)>(&Channel::parsePut), 
+        args("valueList", "requestDescriptor"), 
+        "Assigns json args to the channel PV according to the specified request descriptor.\n\n"
+        ":Parameter: *valueList* (list) - list json args that will be assigned to the channel PV\n\n"
+        ":Parameter: *requestDescriptor* (str) - PV request descriptor\n\n")
+
 
     //
     // PutGet methods

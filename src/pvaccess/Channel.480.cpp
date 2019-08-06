@@ -357,6 +357,27 @@ void Channel::put(double value)
     put(value, PvaConstants::DefaultKey);
 }
 
+void Channel::parsePut(
+    const boost::python::list& pyList, const std::string& requestDescriptor)
+{
+    connect();
+    int listSize = boost::python::len(pyList);
+    std::vector<std::string> args(listSize);
+    for (int i = 0; i < listSize; i++) {
+        args[i] = PyUtility::extractStringFromPyObject(pyList[i]);
+    }
+    try {
+        epics::pvaClient::PvaClientPutPtr pvaPut = createPutPtr(requestDescriptor);
+        epics::pvaClient::PvaClientPutDataPtr pvaData = pvaPut->getData();
+        pvaData->parse(args);
+        pvaPut->put();
+    } 
+    catch (std::runtime_error& ex) {
+        throw PvaException(ex.what());
+    }
+}
+
+
 // PutGet methods
 
 PvObject* Channel::putGet(const PvObject& pvObject, const std::string& requestDescriptor) 
