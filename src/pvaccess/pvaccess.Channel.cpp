@@ -52,6 +52,24 @@ class_<Channel>("Channel",
         "::\n\n"
         "    pv = channel.get()\n\n")
 
+    .def("getJSON", 
+        static_cast<std::string(Channel::*)(const std::string&,bool)>(&Channel::getJSON),
+        args("requestDescriptor","multiLine"), 
+        "Retrieves PV data from the channel.\n\n"
+        ":Parameter: *requestDescriptor* (str) - PV request descriptor\n\n"
+        ":Returns: JSON string corresponding to the specified request descriptor\n\n"
+        "::\n\n"
+        "    channel = Channel('enum01')\n\n"
+        "    pv = channel.get('field(value.index)')\n\n")
+
+    .def("getJSON", 
+        static_cast<std::string(Channel::*)()>(&Channel::getJSON),
+        "Retrieves PV data from the channel.\n\n"
+        ":Returns: JSON string corresponding to the specified request descriptor\n\n"
+        "::\n\n"
+        "    channel = Channel('enum01')\n\n"
+        "    pv = channel.get('field(value.index)')\n\n")
+
     //
     // Put methods
     //
@@ -498,12 +516,21 @@ class_<Channel>("Channel",
         "    channel = Channel('string01')\n\n"
         "    channel.put('string value')\n\n")
 
-.def("parsePut", 
-        static_cast<void(Channel::*)(const boost::python::list&, const std::string&)>(&Channel::parsePut), 
-        args("valueList", "requestDescriptor"), 
+    .def("parsePut", 
+        static_cast<void(Channel::*)(const boost::python::list&, const std::string&,bool)>(&Channel::parsePut), 
+        args("valueList", "requestDescriptor","zeroArrayLength"), 
         "Assigns json args to the channel PV according to the specified request descriptor.\n\n"
         ":Parameter: *valueList* (list) - list json args that will be assigned to the channel PV\n\n"
         ":Parameter: *requestDescriptor* (str) - PV request descriptor\n\n")
+
+    .def("parsePutGet",
+        static_cast<PvObject*(Channel::*)(const boost::python::list&, const std::string&,bool)>(&Channel::parsePutGet), 
+        return_value_policy<manage_new_object>(),
+        args("valueList", "requestDescriptor","zeroArrayLength"), 
+        "Assigns json args to the channel PV according to the specified request descriptor.\n\n"
+        ":Parameter: *valueList* (list) - list json args that will be assigned to the channel PV\n\n"
+        ":Parameter: *requestDescriptor* (str) - PV request descriptor\n\n"
+        ":Returns: channel PV data corresponding to the specified request descriptor\n\n")
 
 
     //

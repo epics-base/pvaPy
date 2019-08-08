@@ -4,6 +4,7 @@
 
 #include "boost/python.hpp"
 #include <iostream>
+#include <sstream>
 
 #include "Channel.h"
 #include "epicsThread.h"
@@ -146,6 +147,29 @@ PvObject* Channel::get(const std::string& requestDescriptor)
         throw PvaException(ex.what());
     }
 }
+
+
+std::string Channel::getJSON()
+{
+    return getJSON(PvaConstants::DefaultKey,true);
+}
+
+std::string Channel::getJSON(const std::string& requestDescriptor,bool multiLine) 
+{
+    connect();
+    try {
+        epics::pvaClient::PvaClientGetPtr pvaGet = createGetPtr(requestDescriptor);
+        pvaGet->get();
+        epics::pvaClient::PvaClientGetDataPtr pvData = pvaGet->getData();
+        std::ostringstream os;
+        pvData->streamJSON(os,true,multiLine);
+        return os.str();
+    }
+    catch (std::runtime_error& ex) {
+        throw PvaException(ex.what());
+    }
+}
+
 
 void Channel::put(const PvObject& pvObject)
 {
@@ -358,7 +382,7 @@ void Channel::put(double value)
 }
 
 void Channel::parsePut(
-    const boost::python::list& pyList, const std::string& requestDescriptor)
+    const boost::python::list& pyList, const std::string& requestDescriptor,bool zeroArrayLength)
 {
     connect();
     int listSize = boost::python::len(pyList);
@@ -369,8 +393,33 @@ void Channel::parsePut(
     try {
         epics::pvaClient::PvaClientPutPtr pvaPut = createPutPtr(requestDescriptor);
         epics::pvaClient::PvaClientPutDataPtr pvaData = pvaPut->getData();
+        if(zeroArrayLength) pvaData->zeroArrayLength();
         pvaData->parse(args);
         pvaPut->put();
+    } 
+    catch (std::runtime_error& ex) {
+        throw PvaException(ex.what());
+    }
+}
+
+
+PvObject* Channel::parsePutGet(
+    const boost::python::list& pyList, const std::string& requestDescriptor,bool zeroArrayLength)
+{
+    connect();
+    int listSize = boost::python::len(pyList);
+    std::vector<std::string> args(listSize);
+    for (int i = 0; i < listSize; i++) {
+        args[i] = PyUtility::extractStringFromPyObject(pyList[i]);
+    }
+    try {
+        epics::pvaClient::PvaClientPutGetPtr pvaPutGet = createPutGetPtr(requestDescriptor);
+        epics::pvaClient::PvaClientPutDataPtr pvaData = pvaPutGet->getPutData();
+        if(zeroArrayLength) pvaData->zeroArrayLength();
+        pvaData->parse(args);
+        pvaPutGet->putGet();
+        epics::pvData::PVStructurePtr pvGet = pvaPutGet->getGetData()->getPVStructure();
+        return new PvObject(pvGet);
     } 
     catch (std::runtime_error& ex) {
         throw PvaException(ex.what());

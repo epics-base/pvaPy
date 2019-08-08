@@ -43,6 +43,8 @@ public:
     // Get methods
     virtual PvObject* get(const std::string& requestDescriptor);
     virtual PvObject* get();
+    virtual std::string getJSON(const std::string& requestDescriptor,bool multiLine = false);
+    virtual std::string getJSON();
 
     // Put methods
     virtual void put(const PvObject& pvObject, const std::string& requestDescriptor);
@@ -79,7 +81,13 @@ public:
 
     virtual void parsePut(
         const boost::python::list& args,
-        const std::string& requestDescriptor);
+        const std::string& requestDescriptor,
+        bool zeroArrayLength = true);
+
+    virtual PvObject* parsePutGet(
+        const boost::python::list& args,
+        const std::string& requestDescriptor,
+        bool zeroArrayLength = true);
 
     // PutGet methods
     virtual PvObject* putGet(const PvObject& pvObject, const std::string& requestDescriptor);
