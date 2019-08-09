@@ -55,9 +55,12 @@ void wrapRpcServer();
 void wrapRpcClient();
 
 #if PVA_API_VERSION >= 450
-//void wrapMultiChannel();
 void wrapPvaServer();
 #endif // if PVA_API_VERSION >= 450
+
+#if PVA_API_VERSION >= 481
+void wrapMultiChannel();
+#endif // if PVA_API_VERSION >= 481
 
 void wrapScalarArrayPyOwner();
 
@@ -128,8 +131,11 @@ BOOST_PYTHON_MODULE(pvaccess)
 
 #if PVA_API_VERSION >= 450
     wrapPvaServer();
-//  wrapMultiChannel();
 #endif // if PVA_API_VERSION >= 450
+
+#if PVA_API_VERSION >= 481
+    wrapMultiChannel();
+#endif // if PVA_API_VERSION >= 481
 
     wrapScalarArrayPyOwner(); 
 }
