@@ -27,7 +27,7 @@
 #   and this notice are preserved. This file is offered as-is, without any
 #   warranty.
 
-#serial 5
+#serial 6
 
 DEFAULT_PVA_VERSION=4.0.3
 
@@ -131,6 +131,18 @@ AC_DEFUN([AX_EPICS4],
         AC_MSG_RESULT([no])
         AC_MSG_ERROR("EPICS4 installation in $ac_epics4_dir_path is too old (required: pvAccess $pva_version_req)")
     ])
+
+    # check pvaClient version number
+    AC_MSG_CHECKING(for EPICS_PVACLIENT_VERSION)
+    EPICS_PVACLIENT_VERSION=0
+    pvaClientVersionConfigFile=$ac_epics4_dir_path/cfg/CONFIG_PVACLIENT_VERSION
+    if test -f $pvaClientVersionConfigFile ; then 
+        pvaClientMajorVersion=`cat $pvaClientVersionConfigFile | grep MAJOR | awk '{print $NF}'`
+        pvaClientMinorVersion=`cat $pvaClientVersionConfigFile | grep MINOR | awk '{print $NF}'`
+        pvaClientMaintVersion=`cat $pvaClientVersionConfigFile | grep MAINT | awk '{print $NF}'`
+        EPICS_PVACLIENT_VERSION=${pvaClientMajorVersion}${pvaClientMinorVersion}${pvaClientMaintVersion}
+    fi
+    AC_MSG_RESULT([$EPICS_PVACLIENT_VERSION])
 
     # test basic libraries
     AC_MSG_CHECKING(for EPICS4 libraries for $EPICS_HOST_ARCH)
@@ -243,6 +255,16 @@ AC_DEFUN([AX_EPICS4],
             export CPPFLAGS=$CPPFLAGS_SAVE
         fi
     fi
+
+    # Use EPICS_PVACLIENT_VERSION if it is defined
+    if test "$EPICS_PVACLIENT_VERSION" != "0" ; then
+        if test "$EPICS_PVACLIENT_VERSION" == "460" ; then
+            pva_api_version=481
+        else 
+            pva_api_version=482
+        fi
+    fi
+
 
     AC_MSG_RESULT([$pva_api_version])
     AC_DEFINE(HAVE_EPICS4,,[define if the EPICS4 libraries are available])
