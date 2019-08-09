@@ -1,3 +1,15 @@
+## Release 2.0.0 (2019/08/09)
+- added MultiChannel class, which allows simultaneous retrieval of PV data 
+  from multiple channels
+- fixed RPC request timeout issue when both RpcClient and RpcServer instances 
+  use the same interpreter (GitHub PR #50)
+- fixed PvaServer issue with removal of connected records (GitHub Issue #49, 
+  PR #51)
+- conda/pip package dependencies: 
+  - EPICS BASE = 7.0.3
+  - BOOST      = 1.70.0
+  - NUMPY      > 1.15
+
 ## Release 1.6.0 (2019/05/10)
 
 - added ability to set structure fields using PvObjects
