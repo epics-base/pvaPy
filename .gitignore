@@ -6,6 +6,7 @@ config.log
 configure/*.local
 **/O.*
 **/dist
+**/*.pyc
 **/__pycache__
 tools/pip/**/build
 tools/local/**/build
