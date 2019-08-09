@@ -29,6 +29,13 @@ class_<Channel>("Channel",
 
     .def(init<std::string, PvProvider::ProviderType>())
 
+    // Get channel name
+    .def("getName", static_cast<std::string(Channel::*)()const>(&Channel::getName),
+        "Get channel name.\n\n"
+        ":Returns: channel name\n\n"
+        "::\n\n"
+        "    cName = channel.getName()\n\n")
+
     //
     // Get methods
     //
