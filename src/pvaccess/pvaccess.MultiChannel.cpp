@@ -11,7 +11,7 @@ using namespace boost::python;
 void wrapMultiChannel()
 {
 
-#if PVA_API_VERSION == 480
+#if PVA_API_VERSION >= 481
 
 class_<MultiChannel>("MultiChannel", 
     "This class is used to communicate with multiple PV channels.\n\n"
@@ -33,13 +33,13 @@ class_<MultiChannel>("MultiChannel",
         static_cast<PvObject*(MultiChannel::*)()>(&MultiChannel::get), 
         return_value_policy<manage_new_object>(), 
         "Retrieves PV data from multiple channels'.\n\n"
-        ":Returns: channel PV data\n\n"
+        ":Returns: PvObject with NTMultiChannel structure that contains retrieved channel data as a variant union array\n\n"
         "::\n\n"
         "    pv = mChannel.get()\n\n")
 
 ;
 
-#endif // if PVA_API_VERSION == 480
+#endif // if PVA_API_VERSION >= 481
 
 } // wrapChannel()
 
