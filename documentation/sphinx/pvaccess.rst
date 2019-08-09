@@ -142,6 +142,14 @@ Channel
     :members:
     :inherited-members:
 
+MultiChannel
+------------
+
+.. autoclass:: pvaccess.MultiChannel()
+    :show-inheritance: 
+    :members:
+    :inherited-members:
+
 PvaServer
 ---------
 
