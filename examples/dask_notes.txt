@@ -1,0 +1,10 @@
+Terminal 1: Local DASK cluster
+bluegill2> ./dask-local-cluster.py 
+
+Terminal 2: Generate DAQ data and serve them on server1_data
+bluegill2> ./dask-generator-server.py 
+
+Terminal 3: Consume server1_data and serve them on serve2_data
+bluegill2> ./gw-server.py 
+
+
