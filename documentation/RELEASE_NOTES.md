@@ -1,6 +1,7 @@
 ## Release 2.0.0 (2019/08/09)
 - added MultiChannel class, which allows simultaneous retrieval of PV data 
   from multiple channels
+- added getName() method to the Channel class python interface
 - fixed RPC request timeout issue when both RpcClient and RpcServer instances 
   use the same interpreter (GitHub PR #50)
 - fixed PvaServer issue with removal of connected records (GitHub Issue #49, 
