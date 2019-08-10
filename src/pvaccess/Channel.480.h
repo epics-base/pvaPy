@@ -43,9 +43,7 @@ public:
     // Get methods
     virtual PvObject* get(const std::string& requestDescriptor);
     virtual PvObject* get();
-    virtual std::string getJSON(const std::string& requestDescriptor,bool multiLine = false);
-    virtual std::string getJSON();
-
+    
     // Put methods
     virtual void put(const PvObject& pvObject, const std::string& requestDescriptor);
     virtual void put(const PvObject& pvObject);

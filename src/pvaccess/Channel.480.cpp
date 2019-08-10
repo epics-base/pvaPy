@@ -149,28 +149,6 @@ PvObject* Channel::get(const std::string& requestDescriptor)
 }
 
 
-std::string Channel::getJSON()
-{
-    return getJSON(PvaConstants::DefaultKey,true);
-}
-
-std::string Channel::getJSON(const std::string& requestDescriptor,bool multiLine) 
-{
-    connect();
-    try {
-        epics::pvaClient::PvaClientGetPtr pvaGet = createGetPtr(requestDescriptor);
-        pvaGet->get();
-        epics::pvaClient::PvaClientGetDataPtr pvData = pvaGet->getData();
-        std::ostringstream os;
-        pvData->streamJSON(os,true,multiLine);
-        return os.str();
-    }
-    catch (std::runtime_error& ex) {
-        throw PvaException(ex.what());
-    }
-}
-
-
 void Channel::put(const PvObject& pvObject)
 {
     put(pvObject, PvaConstants::DefaultKey);

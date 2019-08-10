@@ -1,6 +1,7 @@
 // Copyright information and license terms for this software can be
 // found in the file LICENSE that is included with the distribution
-
+#include <pv/json.h>
+#include <pv/bitSet.h>
 #include "boost/python.hpp"
 #include "boost/python/object.hpp"
 #include "boost/python/tuple.hpp"
@@ -761,5 +762,17 @@ bool PvObject::getUseNumPyArraysFlag() const
 }
 
 #endif // if defined HAVE_NUM_PY_SUPPORT && HAVE_NUM_PY_SUPPORT == 1
+
+std::string PvObject::toJSON(bool multiLine)
+{
+    epics::pvData::JSONPrintOptions opts;
+    opts.ignoreUnprintable = true;
+    opts.multiLine = multiLine;
+    epics::pvData::BitSetPtr bitSet(new epics::pvData::BitSet(pvStructurePtr->getStructure()->getNumberFields()));
+    bitSet->set(0);
+    std::ostringstream strm;
+    epics::pvData::printJSON(strm,*pvStructurePtr,*bitSet,opts);
+    return strm.str();
+}
 
 
