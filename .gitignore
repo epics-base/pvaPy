@@ -24,5 +24,6 @@ tools/pip/pvapy-boost-pip/pvapy-boost
 tools/pip/pvapy-pip/pvapy
 tools/pip/pvapy-pip/pvaccess*
 tools/pip/pvapy-pip/README.md
+wheelhouse
 
 
