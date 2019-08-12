@@ -765,14 +765,20 @@ bool PvObject::getUseNumPyArraysFlag() const
 
 std::string PvObject::toJSON(bool multiLine)
 {
-    epics::pvData::JSONPrintOptions opts;
-    opts.ignoreUnprintable = true;
-    opts.multiLine = multiLine;
-    epics::pvData::BitSetPtr bitSet(new epics::pvData::BitSet(pvStructurePtr->getStructure()->getNumberFields()));
-    bitSet->set(0);
-    std::ostringstream strm;
-    epics::pvData::printJSON(strm,*pvStructurePtr,*bitSet,opts);
-    return strm.str();
+    if(!pvStructurePtr) throw PvaException("pvStructure is null");
+    try {
+        epics::pvData::JSONPrintOptions opts;
+        opts.ignoreUnprintable = true;
+        opts.multiLine = multiLine;
+        epics::pvData::BitSetPtr bitSet(new epics::pvData::BitSet(pvStructurePtr->getStructure()->getNumberFields()));
+        bitSet->set(0);
+        std::ostringstream strm;
+        epics::pvData::printJSON(strm,*pvStructurePtr,*bitSet,opts);
+        return strm.str();
+    } 
+    catch (std::runtime_error& ex) {
+        throw PvaException(ex.what());
+    }
 }
 
 

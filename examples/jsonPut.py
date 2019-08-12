@@ -1,38 +1,24 @@
 #!/usr/bin/env python
 
-from pvaccess import Channel
+from pvaccess import *
 
-name = raw_input("enter numeric scalar channel: ")
-chan = Channel(name)
-str1 = 'value=' +  '20'
-str2 = '{"timeStamp":{"userTag":"30"}}'
-args = [str1,str2]
-chan.parsePut(args,"value,timeStamp",True) 
-result = chan.get("");
-val = result.toJSON(True)
-print(val)
-val = result.toJSON(False)
-print(val)
-
-name = raw_input("enter numeric scalar array channel: ")
-chan = Channel(name)
-str1 = 'value=' +'[1,2,3,4,5,6]'
-args = [str1]
-chan.parsePut(args,"value,timeStamp",True) 
-result = chan.get("")
-val = result.toJSON(True)
-print(val)
-val = result.toJSON(False)
-print(val)
-
-name = raw_input("enter PVRenum: ")
-chan = Channel(name)
-str1 = 'value=' +'one'
-args = [str1]
-chan.parsePut(args,"value",False) 
-result = chan.get("value,alarm,timeStamp")
-val = result.toJSON(True)
-print(val)
-val = result.toJSON(False)
-print(val)
+provider = ProviderType.PVA
+result = raw_input("do you want provider ca: ")
+if result=="yes": provider = ProviderType.CA
+while True:
+    name = raw_input("channel name: ")
+    chan = Channel(name,provider)
+    request = raw_input("request: ")
+    args = list()
+    while True:
+        arg = raw_input("next arg or continue: ")
+        if arg == "" :  break
+        args.append(arg)
+    try:
+        chan.parsePut(args,request,True)
+        print(chan.get(request))
+    except Exception as ex:
+        print(ex)
+    request = raw_input("enter exit or continue: ")
+    if request=="exit" : break
 
