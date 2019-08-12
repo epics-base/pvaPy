@@ -2,7 +2,7 @@ AC_INIT([pvaPy], [2.0.0], [core-talk@aps.anl.gov])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 AC_CONFIG_FILES([Makefile])
 AC_CONFIG_MACRO_DIR([m4])
-AX_PYTHON_DEVEL([>=],[2.7])
+AX_PYTHON_DEVEL([>=],[2.6])
 AX_BOOST_BASE([1.40], [], [AC_MSG_ERROR(required Boost library version >= 1.40.)])
 AX_BOOST_PYTHON
 AX_BOOST_PYTHON_NUM_PY
