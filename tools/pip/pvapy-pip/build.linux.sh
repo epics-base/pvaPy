@@ -30,11 +30,13 @@ BOOST_DIR=$TOP_DIR/../pvapy-boost-pip/pvapy-boost
 BOOST_HOST_ARCH=`uname | tr [A-Z] [a-z]`-`uname -m`
 PVACCESS_LIB=pvaccess.so
 
+echo "Building pvapy $PVA_PY_VERSION"
+echo "Recreating build directory $BUILD_DIR"
+rm -rf $BUILD_DIR
 mkdir -p $BUILD_DIR
 cd $BUILD_DIR
 
 # Download.
-echo "Building pvapy $PVA_PY_VERSION"
 PVA_PY_TAR_FILE=pvaPy-$PVA_PY_VERSION.tar.gz
 PVA_PY_DOWNLOAD_URL=https://github.com/epics-base/pvaPy/archive/$PVA_PY_VERSION.tar.gz
 if [ ! -f $PVA_PY_TAR_FILE ]; then
@@ -122,7 +124,14 @@ chmod u+w $PVACCESS_LIB
 patchelf --set-rpath $newRpath $PVACCESS_LIB  || exit 1
 
 # Remove libpython from needed libraries
+echo "Removing libpython as dependency from $PVACCESS_LIB"
 patchelf --remove-needed `basename $PYTHON_LIB` $PVACCESS_LIB
+
+echo "Stripping all libraries"
+cd $PVACCESS_DIR
+strip -v $PVACCESS_LIB
+cd $PVACCESS_LIB_DIR/$EPICS_HOST_ARCH/
+strip -v `find . -type f` 
 
 # Done
 cd $CURRENT_DIR
