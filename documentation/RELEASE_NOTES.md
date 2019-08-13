@@ -1,4 +1,9 @@
+## Release 2.1.0 (2019/XX/YY)
+
+- added JSON support from pvaClientCPP (GitHub PR #52)
+
 ## Release 2.0.0 (2019/08/09)
+
 - added MultiChannel class, which allows simultaneous retrieval of PV data 
   from multiple channels
 - added getName() method to the Channel class python interface
