@@ -505,6 +505,24 @@ class_<Channel>("Channel",
         "    channel = Channel('string01')\n\n"
         "    channel.put('string value')\n\n")
 
+    .def("parsePut", 
+        static_cast<void(Channel::*)(const boost::python::list&, const std::string&,bool)>(&Channel::parsePut), 
+        args("argList", "requestDescriptor","zeroArrayLength"), 
+        "Assigns json args to the channel PV according to the specified request descriptor.\n"
+        ":arguments\n"
+        "     argList (list) - json args that will be assigned to the channel PV\n"
+        "     requestDescriptor (str) - request to pass to createRequest\n"
+        "     zeroArrayLength (True or False) - call zeroArrayLength before parse\n")
+
+    .def("parsePutGet",
+        static_cast<PvObject*(Channel::*)(const boost::python::list&, const std::string&,bool)>(&Channel::parsePutGet), 
+        return_value_policy<manage_new_object>(),
+        args("valueList", "requestDescriptor","zeroArrayLength"),
+        ":arguments\n"
+        "     argList (list) - json args that will be assigned to the channel PV\n"
+        "     requestDescriptor (str) - request to pass to createRequest\n"
+        "     zeroArrayLength (True or False) - call zeroArrayLength before parse\n"
+        ":returns: JSON string\n")
 
     //
     // PutGet methods

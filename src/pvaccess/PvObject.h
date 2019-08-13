@@ -191,6 +191,8 @@ public:
     bool getUseNumPyArraysFlag() const;
 #endif // if defined HAVE_NUM_PY_SUPPORT && HAVE_NUM_PY_SUPPORT == 1
 
+    std::string toJSON(bool multiLine = false);
+
 protected:
     epics::pvData::PVStructurePtr pvStructurePtr;
     PvType::DataType dataType;
