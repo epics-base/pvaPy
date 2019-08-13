@@ -505,6 +505,7 @@ class_<Channel>("Channel",
         "    channel = Channel('string01')\n\n"
         "    channel.put('string value')\n\n")
 
+#if PVA_API_VERSION >= 482
     .def("parsePut", 
         static_cast<void(Channel::*)(const boost::python::list&, const std::string&,bool)>(&Channel::parsePut), 
         args("argList", "requestDescriptor","zeroArrayLength"), 
@@ -522,7 +523,8 @@ class_<Channel>("Channel",
         "     argList (list) - json args that will be assigned to the channel PV\n"
         "     requestDescriptor (str) - request to pass to createRequest\n"
         "     zeroArrayLength (True or False) - call zeroArrayLength before parse\n"
-        ":returns: JSON string\n")
+        ":returns: channel PV data corresponding to the specified request descriptor\n")
+#endif // if PVA_API_VERSION >= 482
 
     //
     // PutGet methods

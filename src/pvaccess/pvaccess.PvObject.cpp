@@ -1256,12 +1256,14 @@ class_<PvObject>("PvObject",
     .add_property("useNumPyArrays", &PvObject::getUseNumPyArraysFlag, &PvObject::setUseNumPyArraysFlag)
 #endif // if defined HAVE_NUM_PY_SUPPORT && HAVE_NUM_PY_SUPPORT == 1
 
+#if PVA_API_VERSION >= 482
     .def("toJSON", 
         static_cast<std::string(PvObject::*)(bool)>(&PvObject::toJSON), 
         args("multiLine"), 
         "displays PvObject as a JSON string.\n"
         ":argument multiLine (True or False) - display via multiple lines\n"
         ":return JSON string\n")
+#endif // if PVA_API_VERSION >= 482
 ;
 
 } // wrapPvObject()

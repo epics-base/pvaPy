@@ -43,7 +43,7 @@ public:
     // Get methods
     virtual PvObject* get(const std::string& requestDescriptor);
     virtual PvObject* get();
-    
+
     // Put methods
     virtual void put(const PvObject& pvObject, const std::string& requestDescriptor);
     virtual void put(const PvObject& pvObject);
@@ -76,16 +76,6 @@ public:
     virtual void put(float value);
     virtual void put(double value, const std::string& requestDescriptor);
     virtual void put(double value);
-
-    virtual void parsePut(
-        const boost::python::list& args,
-        const std::string& requestDescriptor,
-        bool zeroArrayLength = true);
-
-    virtual PvObject* parsePutGet(
-        const boost::python::list& args,
-        const std::string& requestDescriptor,
-        bool zeroArrayLength = true);
 
     // PutGet methods
     virtual PvObject* putGet(const PvObject& pvObject, const std::string& requestDescriptor);

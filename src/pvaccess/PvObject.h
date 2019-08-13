@@ -191,7 +191,9 @@ public:
     bool getUseNumPyArraysFlag() const;
 #endif // if defined HAVE_NUM_PY_SUPPORT && HAVE_NUM_PY_SUPPORT == 1
 
+#if PVA_API_VERSION >= 482
     std::string toJSON(bool multiLine = false);
+#endif // if PVA_API_VERSION >= 482
 
 protected:
     epics::pvData::PVStructurePtr pvStructurePtr;

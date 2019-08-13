@@ -1,7 +1,12 @@
 // Copyright information and license terms for this software can be
 // found in the file LICENSE that is included with the distribution
+
+
+#if PVA_API_VERSION >= 482
 #include <pv/json.h>
 #include <pv/bitSet.h>
+#endif // if PVA_API_VERSION >= 482
+
 #include "boost/python.hpp"
 #include "boost/python/object.hpp"
 #include "boost/python/tuple.hpp"
@@ -763,6 +768,7 @@ bool PvObject::getUseNumPyArraysFlag() const
 
 #endif // if defined HAVE_NUM_PY_SUPPORT && HAVE_NUM_PY_SUPPORT == 1
 
+#if PVA_API_VERSION >= 482
 std::string PvObject::toJSON(bool multiLine)
 {
     if(!pvStructurePtr) throw PvaException("pvStructure is null");
@@ -780,5 +786,6 @@ std::string PvObject::toJSON(bool multiLine)
         throw PvaException(ex.what());
     }
 }
+#endif // if PVA_API_VERSION >= 482
 
 

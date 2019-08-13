@@ -36,7 +36,7 @@ This produces:
                  argList (list) - json args that will be assigned to the channel PV
                  requestDescriptor (str) - request to pass to createRequest
                  zeroArrayLength (True or False) - call zeroArrayLength before parse
-            :returns: JSON string
+            :returns: channel PV data corresponding to the specified request descriptor
 
 
 ## jsonPutExample.py 
