@@ -137,9 +137,9 @@ AC_DEFUN([AX_EPICS4],
     EPICS_PVACLIENT_VERSION=0
     pvaClientVersionConfigFile=$ac_epics4_dir_path/cfg/CONFIG_PVACLIENT_VERSION
     if test -f $pvaClientVersionConfigFile ; then 
-        pvaClientMajorVersion=`cat $pvaClientVersionConfigFile | grep MAJOR | awk '{print $NF}'`
-        pvaClientMinorVersion=`cat $pvaClientVersionConfigFile | grep MINOR | awk '{print $NF}'`
-        pvaClientMaintVersion=`cat $pvaClientVersionConfigFile | grep MAINT | awk '{print $NF}'`
+        pvaClientMajorVersion=`cat $pvaClientVersionConfigFile | grep MAJOR | grep "=" | awk '{print $NF}'`
+        pvaClientMinorVersion=`cat $pvaClientVersionConfigFile | grep MINOR | grep "=" | awk '{print $NF}'`
+        pvaClientMaintVersion=`cat $pvaClientVersionConfigFile | grep MAINT | grep "=" | awk '{print $NF}'`
         EPICS_PVACLIENT_VERSION=${pvaClientMajorVersion}${pvaClientMinorVersion}${pvaClientMaintVersion}
     fi
     AC_MSG_RESULT([$EPICS_PVACLIENT_VERSION])
