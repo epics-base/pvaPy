@@ -1,4 +1,13 @@
+## Release 2.0.1 (2019/11/18)
+
+- no source code changes
+- conda/pip package dependencies: 
+  - EPICS BASE = 7.0.3.1
+  - BOOST      = 1.70.0
+  - NUMPY      > 1.15
+
 ## Release 2.0.0 (2019/08/09)
+
 - added MultiChannel class, which allows simultaneous retrieval of PV data 
   from multiple channels
 - added getName() method to the Channel class python interface

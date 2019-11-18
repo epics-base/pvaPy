@@ -1,6 +1,6 @@
 package:
   name: pvapy
-  version: 2.0.0
+  version: 2.0.1
 
 source:
   path: ../../..
@@ -17,20 +17,9 @@ test:
   source_files:
     - test
 
-# Python build version requirement is temporary due to bug in conda's
-# 3.7.4 build which results in the following behavior:
-# bluegill2> python
-# Python 3.7.4 (default, Aug  9 2019, 18:51:30)
-# [GCC 7.3.0] :: Anaconda, Inc. on linux
-# Type "help", "copyright", "credits" or "license" for more information.
-# >>> from distutils.sysconfig import *
-# >>> get_config_var('VERSION')
-# 4.8.5-39)
-# '3.7'
-
 requirements:
   build:
-    - python<=3.7.3
+    - python
     - sphinx
     - sphinx_rtd_theme
     - numpy>1.15
