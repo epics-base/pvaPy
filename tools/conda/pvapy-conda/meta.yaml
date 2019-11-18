@@ -3,7 +3,8 @@ package:
   version: 2.0.1
 
 source:
-  path: ../../..
+  git_rev: 2.0.1
+  git_url: https://github.com/epics-base/pvaPy
 
 build:
   number: 1
@@ -23,13 +24,13 @@ requirements:
     - sphinx
     - sphinx_rtd_theme
     - numpy>1.15
-    - epics-base=7.0.3
+    - epics-base=7.0.3.1
     - pvapy-boost=1.70.0
 
   run:
     - python
     - numpy>1.15
-    - epics-base=7.0.3
+    - epics-base=7.0.3.1
     - pvapy-boost=1.70.0
 
 about:
