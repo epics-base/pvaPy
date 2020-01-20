@@ -4,7 +4,7 @@
 - fixed documentation build for older sphinx versions 
 - conda/pip package dependencies: 
   - EPICS BASE = 7.0.3.1
-  - BOOST      = 1.72.0
+  - BOOST      = 1.70.0
   - NUMPY      > 1.15
 
 ## Release 2.0.1 (2019/11/18)
