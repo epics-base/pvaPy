@@ -1,6 +1,19 @@
-## Release 2.1.0 (2019/XX/YY)
+## Release 2.1.0 (2020/01/20)
 
 - added JSON support from pvaClientCPP (GitHub PR #52)
+- fixed documentation build for older sphinx versions 
+- conda/pip package dependencies: 
+  - EPICS BASE = 7.0.3.1
+  - BOOST      = 1.72.0
+  - NUMPY      > 1.15
+
+## Release 2.0.1 (2019/11/18)
+
+- no source code changes
+- conda/pip package dependencies: 
+  - EPICS BASE = 7.0.3.1
+  - BOOST      = 1.70.0
+  - NUMPY      > 1.15
 
 ## Release 2.0.0 (2019/08/09)
 
