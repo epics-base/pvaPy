@@ -96,6 +96,9 @@ pip-clean:
 	$(MAKE) -C $(PIP_DIR)/pvapy-boost-pip clean
 	$(MAKE) -C $(PIP_DIR)/pvapy-pip clean
 
+pip-test:
+	$(MAKE) -C $(PIP_DIR)/pvapy-pip test
+
 package-local local: package-epics-base-local package-pvapy-boost-local package-pvapy-local
 	
 package-epics-base-local:

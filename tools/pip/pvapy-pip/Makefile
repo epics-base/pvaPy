@@ -15,6 +15,8 @@ configure:
 build: configure
 	PVA_PY_VERSION=$(PVA_PY_VERSION) python setup.py build_ext 
 
+test: 
+	./run_test.sh
 clean: 
 	rm -rf $(BUILD_DIR) $(DIST_DIR) $(PACKAGE_DIRS) MANIFEST
 
