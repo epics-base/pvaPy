@@ -30,6 +30,7 @@ const double Channel::DefaultTimeout(3.0);
 const int Channel::DefaultMaxPvObjectQueueLength(0);
 const double Channel::ShutdownWaitTime(0.1);
 const double Channel::MonitorStartWaitTime(0.1);
+const double Channel::ThreadStartWaitTime(0.1);
 
 PvaPyLogger Channel::logger("Channel");
 PvaClient Channel::pvaClient;
@@ -123,11 +124,11 @@ void Channel::issueConnect()
         return;
     }
     try {
-        pvaClientChannelPtr->issueConnect();
         hasIssuedConnect = true;
+        pvaClientChannelPtr->issueConnect();
     } 
     catch (std::runtime_error& ex) {
-        throw PvaException("Could not issue connect for channel %s: %s.", pvaClientChannelPtr->getChannelName().c_str(), ex.what());
+        logger.warn("Could not issue connect for channel %s: %s.", pvaClientChannelPtr->getChannelName().c_str(), ex.what());
     }
 }
 
@@ -872,6 +873,14 @@ void Channel::startProcessingThread()
     }
 }
 
+void Channel::startIssueConnectThread() 
+{
+    if (hasIssuedConnect) {
+        return;
+    }
+    epicsThreadCreate("IssueConnectThread", epicsThreadPriorityHigh, epicsThreadGetStackSize(epicsThreadStackSmall), (EPICSTHREADFUNC)issueConnectThread, this);
+}
+
 void Channel::waitForProcessingThreadExit(double timeout) 
 {
     if (processingThreadRunning) {
@@ -937,6 +946,14 @@ void Channel::processingThread(Channel* channel)
     channel->pvObjectQueue.clear();
     channel->notifyProcessingThreadExit();
     channel->processingThreadRunning = false;
+}
+
+void Channel::issueConnectThread(Channel* channel)
+{
+    logger.debug("About to issue channel connect in a thread %s", epicsThreadGetNameSelf());
+    channel->issueConnect();
+    bool isConnected = channel->isChannelConnected();
+    channel->callConnectionCallback(isConnected);
 }
 
 //
@@ -1104,5 +1121,13 @@ epics::pvaClient::PvaClientPutGetPtr Channel::createPutGetPtr(const std::string&
         return pvaClientChannelPtr->createPutGet(requestDescriptor);
     }
 }
+
+void Channel::setConnectionCallback(const boost::python::object& callback)
+{
+    connectionCallback = callback;
+    startIssueConnectThread();
+    epicsThreadSleep(ThreadStartWaitTime);
+}
+
 
 

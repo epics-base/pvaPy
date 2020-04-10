@@ -156,14 +156,17 @@ public:
 private:
     static const double ShutdownWaitTime;
     static const double MonitorStartWaitTime;
+    static const double ThreadStartWaitTime;
 
     static PvaPyLogger logger;
     static PvaClient pvaClient;
     static CaClient caClient;
 
     static void processingThread(Channel* channel);
+    static void issueConnectThread(Channel* channel);
 
     void startProcessingThread();
+    void startIssueConnectThread();
     void waitForProcessingThreadExit(double timeout);
     void notifyProcessingThreadExit();
 
@@ -254,11 +257,6 @@ inline std::string Channel::getDefaultPutGetRequestDescriptor() const
 inline void Channel::notifyProcessingThreadExit()
 {
     processingThreadExitEvent.signal();
-}
-
-inline void Channel::setConnectionCallback(const boost::python::object& callback)
-{
-    connectionCallback = callback;
 }
 
 #endif
