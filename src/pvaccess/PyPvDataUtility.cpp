@@ -453,7 +453,7 @@ void pyObjectToScalarField(const boost::python::object& pyObject, const std::str
         }
         case epics::pvData::pvUShort: {
             epics::pvData::PVUShortPtr fieldPtr = pvStructurePtr->getSubField<epics::pvData::PVUShort>(fieldName);
-            unsigned int16_t value = PyUtility::extractValueFromPyObject<unsigned int16_t>(pyObject);
+            uint16_t value = PyUtility::extractValueFromPyObject<uint16_t>(pyObject);
             fieldPtr->put(static_cast<epics::pvData::uint16>(value));
             break;
         }
@@ -694,7 +694,7 @@ void pyListToScalarArrayField(const boost::python::list& pyList, const std::stri
             break;
         }
         case epics::pvData::pvUShort: {
-            pyListToScalarArrayField<epics::pvData::PVUShortArray, epics::pvData::uint16, unsigned int16_t>(pyList, fieldName, pvStructurePtr);
+            pyListToScalarArrayField<epics::pvData::PVUShortArray, epics::pvData::uint16, uint16_t>(pyList, fieldName, pvStructurePtr);
             break;
         }
         case epics::pvData::pvInt: {
