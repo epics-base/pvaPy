@@ -31,6 +31,7 @@ std::string toString(bool b)
     return "false";
 }
 
+#ifndef WINDOWS
 std::string& leftTrim(std::string& s) 
 {
     s.erase(s.begin(), std::find_if(s.begin(), s.end(),
@@ -44,6 +45,19 @@ std::string& rightTrim(std::string& s)
         std::not1(std::ptr_fun<int, int>(std::isspace))).base(), s.end());
     return s;
 }
+#else
+std::string& leftTrim(std::string& s) 
+    s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](int ch) {
+        return !std::isspace(ch);
+    }));
+}
+
+std::string& rightTrim(std::string& s) 
+    s.erase(std::find_if(s.rbegin(), s.rend(), [](int ch) {
+        return !std::isspace(ch);
+    }).base(), s.end());
+}
+#endif
 
 std::string& trim(std::string& s) 
 {
