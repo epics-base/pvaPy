@@ -6,7 +6,6 @@
 #include "PvaException.h"
 
 // Constants.
-const int PvaException::MaxMessageLength(1024);
 const int PvaException::GenericErrorCode(1);
 const char* PvaException::PyExceptionClassName = "PvaException";
 
@@ -31,8 +30,8 @@ PvaException::PvaException(const char* message, ...) :
 {
     va_list messageArgs;
     va_start(messageArgs, message);
-    char messageBuffer[MaxMessageLength];
-    epicsVsnprintf(messageBuffer, MaxMessageLength, message, messageArgs);
+    char messageBuffer[MAX_MESSAGE_LENGTH];
+    epicsVsnprintf(messageBuffer, MAX_MESSAGE_LENGTH, message, messageArgs);
     error = std::string(messageBuffer);
     va_end(messageArgs);
 }
@@ -42,8 +41,8 @@ PvaException::PvaException(const char* message, va_list messageArgs) :
     error(),
     errorCode(GenericErrorCode)
 {
-    char messageBuffer[MaxMessageLength];
-    epicsVsnprintf(messageBuffer, MaxMessageLength, message, messageArgs);
+    char messageBuffer[MAX_MESSAGE_LENGTH];
+    epicsVsnprintf(messageBuffer, MAX_MESSAGE_LENGTH, message, messageArgs);
     error = std::string(messageBuffer);
 }
 
