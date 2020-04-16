@@ -23,7 +23,11 @@ public:
     void startListener();
     void stopListener();
 
+#ifndef WINDOWS
     void listen(int seconds=0);
+#else
+    void listen(int seconds);
+#endif
     void start();
     void stop();
     void shutdown();
