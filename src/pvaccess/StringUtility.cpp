@@ -2,6 +2,7 @@
 // found in the file LICENSE that is included with the distribution
 
 #include <algorithm>
+#include <cctype>
 #include "StringUtility.h"
 
 namespace StringUtility
@@ -47,6 +48,7 @@ std::string& rightTrim(std::string& s)
 }
 #else
 std::string& leftTrim(std::string& s) 
+{
     s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](int ch) {
         return !std::isspace(ch);
     }));
@@ -54,6 +56,7 @@ std::string& leftTrim(std::string& s)
 }
 
 std::string& rightTrim(std::string& s) 
+{
     s.erase(std::find_if(s.rbegin(), s.rend(), [](int ch) {
         return !std::isspace(ch);
     }).base(), s.end());
