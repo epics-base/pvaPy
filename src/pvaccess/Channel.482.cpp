@@ -30,6 +30,7 @@ const double Channel::DefaultTimeout(3.0);
 const int Channel::DefaultMaxPvObjectQueueLength(0);
 const double Channel::ShutdownWaitTime(0.1);
 const double Channel::MonitorStartWaitTime(0.1);
+const double Channel::ThreadStartWaitTime(0.1);
 
 PvaPyLogger Channel::logger("Channel");
 PvaClient Channel::pvaClient;
@@ -54,8 +55,11 @@ Channel::Channel(const std::string& channelName, PvProvider::ProviderType provid
     providerType(providerType_),
     defaultRequestDescriptor(),
     defaultPutGetRequestDescriptor(),
-    isConnected(false)
+    isConnected(false),
+    hasIssuedConnect(false),
+    connectionCallback()
 {
+    PyGilManager::evalInitThreads();
     stateRequester = epics::pvaClient::PvaClientChannelStateChangeRequesterPtr(new ChannelStateRequesterImpl(isConnected, this));
     pvaClientChannelPtr->setStateChangeRequester(stateRequester);
 }
@@ -77,8 +81,10 @@ Channel::Channel(const Channel& c) :
     providerType(c.providerType),
     defaultRequestDescriptor(c.defaultRequestDescriptor),
     defaultPutGetRequestDescriptor(c.defaultPutGetRequestDescriptor),
-    isConnected(false)
+    isConnected(false),
+    connectionCallback()
 {
+    PyGilManager::evalInitThreads();
     stateRequester = epics::pvaClient::PvaClientChannelStateChangeRequesterPtr(new ChannelStateRequesterImpl(isConnected, this));
     pvaClientChannelPtr->setStateChangeRequester(stateRequester);
 }
@@ -99,11 +105,12 @@ void Channel::connect()
     try {
         //pvaClientChannelPtr->connect(timeout);
         issueConnect();
-        epics::pvData::Status status = pvaClientChannelPtr->waitConnect(timeout);
-        if(!status.isOK()) {
-            throw ChannelTimeout("Channel %s timed out.", pvaClientChannelPtr->getChannelName().c_str());
+        if (!isChannelConnected()) {
+            epics::pvData::Status status = pvaClientChannelPtr->waitConnect(timeout);
+            if(!status.isOK()) {
+                throw ChannelTimeout("Channel %s timed out.", pvaClientChannelPtr->getChannelName().c_str());
+            }
         }
-
         determineDefaultRequestDescriptor();
     } 
     catch (std::runtime_error&) {
@@ -113,14 +120,15 @@ void Channel::connect()
 
 void Channel::issueConnect() 
 {
-    if (isChannelConnected()) {
+    if (hasIssuedConnect) {
         return;
     }
     try {
+        hasIssuedConnect = true;
         pvaClientChannelPtr->issueConnect();
     } 
     catch (std::runtime_error& ex) {
-        throw PvaException("Could not issue connect for channel %s: %s.", pvaClientChannelPtr->getChannelName().c_str(), ex.what());
+        logger.warn("Could not issue connect for channel %s: %s.", pvaClientChannelPtr->getChannelName().c_str(), ex.what());
     }
 }
 
@@ -768,6 +776,22 @@ void Channel::callSubscriber(const std::string& pySubscriberName, boost::python:
     PyGilManager::gilStateRelease();
 }
 
+void Channel::callConnectionCallback(bool isConnected) 
+{
+    PyGilManager::gilStateEnsure();
+    try {
+        connectionCallback(isConnected);
+    }
+    catch(const boost::python::error_already_set&) {
+        logger.error("Connection callback raised python exception.");
+        PyErr_Print();
+        PyErr_Clear();
+    }
+    catch (const std::exception& ex) {
+        logger.error(ex.what());
+    }
+    PyGilManager::gilStateRelease();
+}
 
 void Channel::setMonitorMaxQueueLength(int maxLength)
 {
@@ -849,6 +873,14 @@ void Channel::startProcessingThread()
     }
 }
 
+void Channel::startIssueConnectThread() 
+{
+    if (hasIssuedConnect) {
+        return;
+    }
+    epicsThreadCreate("IssueConnectThread", epicsThreadPriorityHigh, epicsThreadGetStackSize(epicsThreadStackSmall), (EPICSTHREADFUNC)issueConnectThread, this);
+}
+
 void Channel::waitForProcessingThreadExit(double timeout) 
 {
     if (processingThreadRunning) {
@@ -916,6 +948,14 @@ void Channel::processingThread(Channel* channel)
     channel->processingThreadRunning = false;
 }
 
+void Channel::issueConnectThread(Channel* channel)
+{
+    logger.debug("About to issue channel connect in a thread %s", epicsThreadGetNameSelf());
+    channel->issueConnect();
+    bool isConnected = channel->isChannelConnected();
+    channel->callConnectionCallback(isConnected);
+}
+
 //
 // Monitor data processing interface
 //
@@ -958,36 +998,40 @@ void Channel::processMonitorData(epics::pvData::PVStructurePtr pvStructurePtr)
 void Channel::onChannelConnect()
 {
     logger.debug("On channel connect called for %s", getName().c_str());
-    if (!monitorActive) {
-        return;
-    }
-    if (monitorRunning) {
-        return;
+    if (monitorActive && !monitorRunning) {
+        try {
+            pvaClientMonitorRequesterPtr = epics::pvaClient::PvaClientMonitorRequesterPtr(new ChannelMonitorRequesterImpl(getName(), this));
+
+            //pvaClientMonitorPtr = pvaClientChannelPtr->monitor(monitorRequestDescriptor, pvaClientMonitorRequesterPtr);
+            //pvaClientMonitorPtr = epics::pvaClient::PvaClientMonitor::create(pvaClientPtr, getName(), PvProvider::getProviderName(providerType), monitorRequestDescriptor, epics::pvaClient::PvaClientChannelStateChangeRequesterPtr(), pvaClientMonitorRequesterPtr);
+            pvaClientMonitorPtr =  pvaClientChannelPtr->createMonitor(monitorRequestDescriptor);
+            pvaClientMonitorPtr->setRequester(pvaClientMonitorRequesterPtr);
+            pvaClientMonitorPtr->issueConnect();
+            monitorRunning = true;
+        } 
+        catch (PvaException& ex) {
+            monitorActive = false;
+            logger.error(ex.what());
+        }
+        catch (std::runtime_error& ex) {
+            monitorActive = false;
+            logger.error(ex.what());
+        }
     }
 
-    try {
-        pvaClientMonitorRequesterPtr = epics::pvaClient::PvaClientMonitorRequesterPtr(new ChannelMonitorRequesterImpl(getName(), this));
-
-        //pvaClientMonitorPtr = pvaClientChannelPtr->monitor(monitorRequestDescriptor, pvaClientMonitorRequesterPtr);
-        //pvaClientMonitorPtr = epics::pvaClient::PvaClientMonitor::create(pvaClientPtr, getName(), PvProvider::getProviderName(providerType), monitorRequestDescriptor, epics::pvaClient::PvaClientChannelStateChangeRequesterPtr(), pvaClientMonitorRequesterPtr);
-        pvaClientMonitorPtr =  pvaClientChannelPtr->createMonitor(monitorRequestDescriptor);
-        pvaClientMonitorPtr->setRequester(pvaClientMonitorRequesterPtr);
-        pvaClientMonitorPtr->issueConnect();
-        monitorRunning = true;
-    } 
-    catch (PvaException& ex) {
-        monitorActive = false;
-        logger.error(ex.what());
-    }
-    catch (std::runtime_error& ex) {
-        monitorActive = false;
-        logger.error(ex.what());
+    // Call user callback
+    if(!PyUtility::isPyNone(connectionCallback)) {
+        callConnectionCallback(true);
     }
 }
 
 void Channel::onChannelDisconnect()
 {
     logger.debug("On channel disconnect called for %s", getName().c_str());
+    // Call user callback
+    if(!PyUtility::isPyNone(connectionCallback)) {
+        callConnectionCallback(false);
+    }
 }
 
 // Introspection
@@ -1077,5 +1121,13 @@ epics::pvaClient::PvaClientPutGetPtr Channel::createPutGetPtr(const std::string&
         return pvaClientChannelPtr->createPutGet(requestDescriptor);
     }
 }
+
+void Channel::setConnectionCallback(const boost::python::object& callback)
+{
+    connectionCallback = callback;
+    startIssueConnectThread();
+    epicsThreadSleep(ThreadStartWaitTime);
+}
+
 
 

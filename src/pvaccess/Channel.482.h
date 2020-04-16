@@ -37,6 +37,7 @@ public:
     Channel(const std::string& channelName, PvProvider::ProviderType providerType=PvProvider::PvaProviderType);
     Channel(const Channel& channel);
     virtual ~Channel();
+    virtual void setConnectionCallback(const boost::python::object& callback);
 
     std::string getName() const;
 
@@ -147,6 +148,7 @@ public:
     virtual void processMonitorData(epics::pvData::PVStructurePtr pvStructurePtr);
     virtual void onChannelConnect();
     virtual void onChannelDisconnect();
+    virtual void callConnectionCallback(bool isConnected);
 
     // Introspection
     virtual boost::python::dict getIntrospectionDict();
@@ -154,14 +156,17 @@ public:
 private:
     static const double ShutdownWaitTime;
     static const double MonitorStartWaitTime;
+    static const double ThreadStartWaitTime;
 
     static PvaPyLogger logger;
     static PvaClient pvaClient;
     static CaClient caClient;
 
     static void processingThread(Channel* channel);
+    static void issueConnectThread(Channel* channel);
 
     void startProcessingThread();
+    void startIssueConnectThread();
     void waitForProcessingThreadExit(double timeout);
     void notifyProcessingThreadExit();
 
@@ -203,7 +208,10 @@ private:
     std::string defaultPutGetRequestDescriptor;
 
     bool isConnected;
+    bool hasIssuedConnect;
     epics::pvaClient::PvaClientChannelStateChangeRequesterPtr stateRequester;
+    bool connectionCallbackRequiresThread;
+    boost::python::object connectionCallback;
 };
 
 inline std::string Channel::getName() const

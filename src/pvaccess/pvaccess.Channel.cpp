@@ -1208,6 +1208,19 @@ class_<Channel>("Channel",
         "::\n\n"
         "    introspectionDict = channel.getIntrospectionDict()\n\n")
 
+#if PVA_API_VERSION >= 482
+    .def("setConnectionCallback", 
+        &Channel::setConnectionCallback, 
+        args("callback"), 
+        "Subscribes python object to notifications of changes in the channel connection status.\n\n"
+        ":Parameter: *callback* (object) - reference to python function that will be executed when connection status changes; the function should take a boolean argument which describes whether channel is connected or not\n\n"
+        "::\n\n"
+        "    def connectionCallback(isConnected):\n\n"
+        "        print 'Channel connected: %s' % (isConnected))\n\n"
+        "    channel = Channel('exampleFloat')\n\n"
+        "    channel.setConnectionCallback(connectionCallback)\n\n")
+#endif // if PVA_API_VERSION >= 482
+
 ;
 
 } // wrapChannel()
