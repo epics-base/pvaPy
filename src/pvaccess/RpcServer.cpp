@@ -86,7 +86,7 @@ void RpcServer::listen(int seconds)
 
 void RpcServer::start()
 {
-    listen();
+    listen(0);
 }
 
 void RpcServer::stop()
