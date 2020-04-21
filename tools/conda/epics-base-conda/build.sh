@@ -11,6 +11,12 @@ echo "Building epics"
 #eval "cat configure/CONFIG_SITE | sed 's?#INSTALL_LOCATION=.*?INSTALL_LOCATION=$CONDA_EPICS_DIR?' > configure/CONFIG_SITE.2 && mv configure/CONFIG_SITE.2 configure/CONFIG_SITE" 
 echo "INSTALL_LOCATION=$CONDA_EPICS_DIR" > configure/CONFIG_SITE.local
 
+CONFIG_FILE=configure/os/CONFIG_SITE.Common.linux-x86_64
+eval "cat $CONFIG_FILE | grep -v GNU_DIR | sed 's?COMMANDLINE_LIBRARY.*?COMMANDLINE_LIBRARY=EPICS?' > $CONFIG_FILE.2 && mv $CONFIG_FILE.2 $CONFIG_FILE"
+CONFIG_FILE=configure/os/CONFIG_SITE.Common.linux-x86
+eval "cat $CONFIG_FILE | grep -v GNU_DIR | sed 's?COMMANDLINE_LIBRARY.*?COMMANDLINE_LIBRARY=EPICS?' > $CONFIG_FILE.2 && mv $CONFIG_FILE.2 $CONFIG_FILE"
+
+
 echo "Using BUILD_FLAGS: $BUILD_FLAGS"
 make $BUILD_FLAGS
 make install 
