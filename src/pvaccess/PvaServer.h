@@ -26,7 +26,11 @@ public:
     virtual ~PvaServer();
     virtual void update(const PvObject& pvObject);
     virtual void update(const std::string& channelName, const PvObject& pvObject);
+#ifndef WINDOWS
     virtual void addRecord(const std::string& channelName, const PvObject& pvObject, const boost::python::object& onWriteCallback = boost::python::object());
+#else
+    virtual void addRecord(const std::string& channelName, const PvObject& pvObject, const boost::python::object& onWriteCallback);
+#endif
     virtual void removeRecord(const std::string& channelName);
     virtual void removeAllRecords();
     virtual bool hasRecord(const std::string& channelName);

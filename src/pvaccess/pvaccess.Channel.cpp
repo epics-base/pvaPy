@@ -5,7 +5,9 @@
 
 using namespace boost::python;
 
+#ifndef WINDOWS
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(ChannelMonitor, Channel::monitor, 1, 2)
+#endif
 
 //
 // Channel class
@@ -1147,6 +1149,7 @@ class_<Channel>("Channel",
         "::\n\n"
         "    channel.startMonitor()\n\n")
 
+#ifndef WINDOWS
     .def("monitor",
         static_cast<void(Channel::*)(const boost::python::object&, const std::string&)>(&Channel::monitor),
         ChannelMonitor(args("subscriber", "requestDescriptor=field(value)"),
@@ -1157,6 +1160,18 @@ class_<Channel>("Channel",
         "    def echo(x):\n\n"
         "        print 'New PV value: ', x\n\n"
         "    channel.monitor(echo, 'field(value,alarm,timeStamp)')\n\n"))
+#else
+    .def("monitor",
+        static_cast<void(Channel::*)(const boost::python::object&, const std::string&)>(&Channel::monitor),
+        args("subscriber", "requestDescriptor"),
+        "Subscribes python object to notifications of changes in PV value and starts channel monitor. This method is appropriate when there is only one subscriber.\n\n"
+        ":Parameter: *subscriber* (object) - reference to python subscriber object (e.g., python function) that will be executed when PV value changes\n\n"
+        ":Parameter: *requestDescriptor* (str) - describes what PV data should be sent to subscribed channel clients\n\n"
+        "::\n\n"
+        "    def echo(x):\n\n"
+        "        print 'New PV value: ', x\n\n"
+        "    channel.monitor(echo, 'field(value,alarm,timeStamp)')\n\n")
+#endif
 
     .def("stopMonitor", 
         &Channel::stopMonitor, 

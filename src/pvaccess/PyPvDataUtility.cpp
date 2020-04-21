@@ -447,13 +447,13 @@ void pyObjectToScalarField(const boost::python::object& pyObject, const std::str
         }
         case epics::pvData::pvShort: {
             epics::pvData::PVShortPtr fieldPtr = pvStructurePtr->getSubField<epics::pvData::PVShort>(fieldName);
-            short value = PyUtility::extractValueFromPyObject<short>(pyObject);
+            int16_t value = PyUtility::extractValueFromPyObject<int16_t>(pyObject);
             fieldPtr->put(static_cast<epics::pvData::int16>(value));
             break;
         }
         case epics::pvData::pvUShort: {
             epics::pvData::PVUShortPtr fieldPtr = pvStructurePtr->getSubField<epics::pvData::PVUShort>(fieldName);
-            unsigned short value = PyUtility::extractValueFromPyObject<unsigned short>(pyObject);
+            uint16_t value = PyUtility::extractValueFromPyObject<uint16_t>(pyObject);
             fieldPtr->put(static_cast<epics::pvData::uint16>(value));
             break;
         }
@@ -690,11 +690,11 @@ void pyListToScalarArrayField(const boost::python::list& pyList, const std::stri
             break;
         }
         case epics::pvData::pvShort: {
-            pyListToScalarArrayField<epics::pvData::PVShortArray, epics::pvData::int16, short>(pyList, fieldName, pvStructurePtr);
+            pyListToScalarArrayField<epics::pvData::PVShortArray, epics::pvData::int16, int16_t>(pyList, fieldName, pvStructurePtr);
             break;
         }
         case epics::pvData::pvUShort: {
-            pyListToScalarArrayField<epics::pvData::PVUShortArray, epics::pvData::uint16, unsigned short>(pyList, fieldName, pvStructurePtr);
+            pyListToScalarArrayField<epics::pvData::PVUShortArray, epics::pvData::uint16, uint16_t>(pyList, fieldName, pvStructurePtr);
             break;
         }
         case epics::pvData::pvInt: {
@@ -1035,12 +1035,12 @@ void addScalarFieldToDict(const std::string& fieldName, epics::pvData::ScalarTyp
             break;
         }
         case epics::pvData::pvShort: {
-            short value = getShortField(fieldName, pvStructurePtr)->get();
+            int16_t value = getShortField(fieldName, pvStructurePtr)->get();
             pyDict[fieldName] = value;
             break;
         }
         case epics::pvData::pvUShort: {
-            ushort value = getUShortField(fieldName, pvStructurePtr)->get();
+            uint16_t value = getUShortField(fieldName, pvStructurePtr)->get();
             pyDict[fieldName] = value;
             break;
         }
@@ -2104,10 +2104,10 @@ numpy_::ndarray getScalarArrayFieldAsNumPyArray(const std::string& fieldName, co
             return getScalarArrayAsNumPyArray<epics::pvData::PVUByteArray, uint8_t>(pvScalarArrayPtr);
         }
         case epics::pvData::pvShort: {
-            return getScalarArrayAsNumPyArray<epics::pvData::PVShortArray, short>(pvScalarArrayPtr);
+            return getScalarArrayAsNumPyArray<epics::pvData::PVShortArray, int16_t>(pvScalarArrayPtr);
         }
         case epics::pvData::pvUShort: {
-            return getScalarArrayAsNumPyArray<epics::pvData::PVUShortArray, ushort>(pvScalarArrayPtr);
+            return getScalarArrayAsNumPyArray<epics::pvData::PVUShortArray, uint16_t>(pvScalarArrayPtr);
         }
         case epics::pvData::pvInt: {
             return getScalarArrayAsNumPyArray<epics::pvData::PVIntArray, int32_t>(pvScalarArrayPtr);

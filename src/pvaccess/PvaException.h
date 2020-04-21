@@ -9,13 +9,14 @@
 #include <string>
 #include <cstdarg>
 
+#define MAX_MESSAGE_LENGTH 1024
+
 /**
  * Base exception class.
  */
 class PvaException : public std::exception
 {
 public:
-    static const int MaxMessageLength;
     static const int GenericErrorCode;
     static const char* PyExceptionClassName;
 

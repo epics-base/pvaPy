@@ -132,7 +132,11 @@ public:
     virtual void callSubscribers(PvObject& pvObject);
     virtual void startMonitor(const std::string& requestDescriptor);
     virtual void startMonitor();
+#ifndef WINDOWS
     virtual void monitor(const boost::python::object& pySubscriber, const std::string& requestDescriptor=PvaConstants::DefaultKey);
+#else
+    virtual void monitor(const boost::python::object& pySubscriber, const std::string& requestDescriptor);
+#endif
     virtual void stopMonitor();
     virtual bool isMonitorActive() const;
     virtual void setTimeout(double timeout);

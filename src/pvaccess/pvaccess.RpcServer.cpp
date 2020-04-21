@@ -7,7 +7,9 @@
 
 using namespace boost::python;
 
+#ifndef WINDOWS
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(RpcServerListen, RpcServer::listen, 0, 1)
+#endif
 
 //
 // RPC Server class
@@ -84,6 +86,7 @@ class_<RpcServer>("RpcServer",
         "::\n\n"
         "    rpcServer.stop()\n\n")
 
+#ifndef WINDOWS
     .def("listen", 
         static_cast<void(RpcServer::*)(int)>(&RpcServer::listen), 
         RpcServerListen(args("seconds=0"), 
@@ -91,6 +94,15 @@ class_<RpcServer>("RpcServer",
         ":Parameter: *seconds* (int) - specifies the amount of time server should be listening for requests (0 indicates 'forever')\n\n"
         "::\n\n"
         "    rpcServer.listen(60)\n\n"))
+#else
+    .def("listen", 
+        static_cast<void(RpcServer::*)(int)>(&RpcServer::listen), 
+        args("seconds=0"), 
+        "Start serving RPC requests.\n\n"
+        ":Parameter: *seconds* (int) - specifies the amount of time server should be listening for requests (0 indicates 'forever')\n\n"
+        "::\n\n"
+        "    rpcServer.listen(60)\n\n")
+#endif
 
     .def("shutdown", 
         &RpcServer::shutdown, 

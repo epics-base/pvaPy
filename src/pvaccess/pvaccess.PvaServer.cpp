@@ -8,7 +8,9 @@
 
 using namespace boost::python;
 
+#ifndef WINDOWS
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(PvaServerAddRecord, PvaServer::addRecord, 2, 3)
+#endif
 
 //
 // PVA Server class
@@ -81,6 +83,7 @@ class_<PvaServer>("PvaServer",
         "    pv = PvObject({'x' : INT, 'y' : INT}, {'x' : 3, 'y' : 5})\n\n"
         "    pvaServer.update('myChannel', pv)\n\n")
 
+#ifndef WINDOWS
     .def("addRecord",
         static_cast<void(PvaServer::*)(const std::string&,const PvObject&,const boost::python::object&)>(&PvaServer::addRecord),
         PvaServerAddRecord(args("channelName","pvObject","onWriteCallback=None"),
@@ -95,6 +98,22 @@ class_<PvaServer>("PvaServer",
         "    def echo(x):\n\n"
         "        print('New PV value was written: %s' % x)\n\n"
         "    pvaServer.addRecord('pair', pv, echo)\n\n"))
+#else
+    .def("addRecord",
+        static_cast<void(PvaServer::*)(const std::string&,const PvObject&,const boost::python::object&)>(&PvaServer::addRecord),
+        args("channelName","pvObject","onWriteCallback"),
+        "Adds PV record to the server database.\n\n"
+        ":Parameter: *channelName* (str) - channel name\n\n"
+        ":Parameter: *pvObject* (PvObject) - PV object that will be exposed on the specified channel. Any changes to object's field values will be reflected on the channel.\n\n"
+        ":Parameter: *onWriteCallback* (object) - reference to python object (e.g., python function) that will be executed on channel write.\n\n"
+        ":Raises: *ObjectAlreadyExists* - when database already contains record associated with a given channel name\n\n"
+        ":Raises: *PvaException* - in case of any other errors\n\n"
+        "::\n\n"
+        "    pv = PvObject({'x' : INT, 'y' : INT}, {'x' : 3, 'y' : 5})\n\n"
+        "    def echo(x):\n\n"
+        "        print('New PV value was written: %s' % x)\n\n"
+        "    pvaServer.addRecord('pair', pv, echo)\n\n")
+#endif
 
     .def("removeRecord",
         static_cast<void(PvaServer::*)(const std::string&)>(&PvaServer::removeRecord),
