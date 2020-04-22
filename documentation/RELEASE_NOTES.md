@@ -1,3 +1,11 @@
+## Release 2.2.0 (2020/04/21)
+
+- added support for connection callback
+- conda/pip package dependencies: 
+  - EPICS BASE = 7.0.3.1
+  - BOOST      = 1.70.0
+  - NUMPY      > 1.15
+
 ## Release 2.1.0 (2020/01/20)
 
 - added JSON support from pvaClientCPP (GitHub PR #52)
