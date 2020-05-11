@@ -951,9 +951,8 @@ void Channel::processingThread(Channel* channel)
 void Channel::issueConnectThread(Channel* channel)
 {
     logger.debug("About to issue channel connect in a thread %s", epicsThreadGetNameSelf());
+    channel->callConnectionCallback(false);
     channel->issueConnect();
-    bool isConnected = channel->isChannelConnected();
-    channel->callConnectionCallback(isConnected);
 }
 
 //
