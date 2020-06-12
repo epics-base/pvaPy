@@ -1,3 +1,11 @@
+## Release 2.3.0 (2020/06/XX)
+
+- fixed issue with channel puts involving large integers (GitHub Issue #58)
+- conda/pip package dependencies: 
+  - EPICS BASE = 7.0.4
+  - BOOST      = 1.70.0
+  - NUMPY      > 1.15
+
 ## Release 2.2.0 (2020/04/21)
 
 - added support for connection callback
