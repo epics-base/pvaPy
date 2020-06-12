@@ -1,4 +1,4 @@
-## Release 2.3.0 (2020/06/XX)
+## Release 2.3.0 (2020/06/12)
 
 - fixed issue with channel puts involving large integers (GitHub Issue #58)
 - conda/pip package dependencies: 
