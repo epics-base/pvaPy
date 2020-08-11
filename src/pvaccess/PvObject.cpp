@@ -40,6 +40,7 @@ PvObject::PvObject(const epics::pvData::PVStructurePtr& pvStructurePtr_)
     dataType(PvType::Structure),
     useNumPyArrays(UseNumPyArraysDefault)
 {
+    initializeBoostNumPy();
 }
 
 PvObject::PvObject(const boost::python::dict& structureDict, const std::string& structureId)
@@ -47,6 +48,7 @@ PvObject::PvObject(const boost::python::dict& structureDict, const std::string& 
     dataType(PvType::Structure),
     useNumPyArrays(UseNumPyArraysDefault)
 {
+    initializeBoostNumPy();
 }
 
 PvObject::PvObject(const boost::python::dict& structureDict, const boost::python::dict& valueDict, const std::string& structureId)
@@ -54,6 +56,7 @@ PvObject::PvObject(const boost::python::dict& structureDict, const boost::python
     dataType(PvType::Structure),
     useNumPyArrays(UseNumPyArraysDefault)
 {
+    initializeBoostNumPy();
     PyPvDataUtility::pyDictToStructure(valueDict, pvStructurePtr);
 }
 
@@ -62,6 +65,7 @@ PvObject::PvObject(const PvObject& pvObject)
     dataType(pvObject.dataType),
     useNumPyArrays(pvObject.useNumPyArrays)
 {
+    initializeBoostNumPy();
 }
 
 // Destructor
@@ -748,13 +752,19 @@ PvObject PvObject::createUnionArrayElementField(const std::string& fieldName) co
 }
 
 // Methods specific to Boost NumPy 
-#if defined HAVE_NUM_PY_SUPPORT && HAVE_NUM_PY_SUPPORT == 1
-bool PvObject::boostNumPyInitialized(initializeBoostNumPy());
+bool PvObject::boostNumPyInitialized(false);
 bool PvObject::initializeBoostNumPy() 
 {
-    numpy_::initialize();
+    if (!boostNumPyInitialized) {
+        boostNumPyInitialized = true;
+#if defined HAVE_NUM_PY_SUPPORT && HAVE_NUM_PY_SUPPORT == 1
+        numpy_::initialize();
+#endif // if defined HAVE_NUM_PY_SUPPORT && HAVE_NUM_PY_SUPPORT == 1
+    }
     return true;
 }
+
+#if defined HAVE_NUM_PY_SUPPORT && HAVE_NUM_PY_SUPPORT == 1
 
 void PvObject::setUseNumPyArraysFlag(bool useNumPyArrays)
 {

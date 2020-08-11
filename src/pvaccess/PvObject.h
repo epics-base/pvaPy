@@ -202,12 +202,8 @@ protected:
 
 private:
 
-#if defined HAVE_NUM_PY_SUPPORT && HAVE_NUM_PY_SUPPORT == 1
     static bool initializeBoostNumPy();
     static bool boostNumPyInitialized;
-#endif // if defined HAVE_NUM_PY_SUPPORT && HAVE_NUM_PY_SUPPORT == 1
-
- 
 };
 
 #endif
