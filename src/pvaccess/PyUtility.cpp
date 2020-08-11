@@ -44,6 +44,24 @@ bool isNumPyNDArray(const boost::python::object& pyObject)
 }
 #endif // if defined HAVE_NUM_PY_SUPPORT && HAVE_NUM_PY_SUPPORT == 1
 
+std::string extractStringFromPyList(const boost::python::object& pyObject)
+{
+    std::string result = "";
+    boost::python::extract<boost::python::list> extractListValue(pyObject);
+    if(!extractListValue.check()) {
+        return result;
+    }
+    boost::python::list pyList = extractListValue();
+    int listSize = boost::python::len(pyList);
+    for (int i = 0; i < listSize; i++) {
+        boost::python::extract<int> charExtract(pyList[i]);
+        if(charExtract.check()) {
+            result.push_back(char(charExtract()));
+        }
+    }
+    return result;
+}
+
 
 } // namespace PyUtility
 

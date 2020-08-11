@@ -2024,6 +2024,44 @@ boost::python::dict extractUnionStructureDict(const boost::python::dict& pyDict)
 }
 
 //
+// Check if field path is a scalar array of chars.
+// Allow notation like 'x.y.z' for the field path.
+// 
+bool isFieldPathCharScalarArray(const std::string& fieldPath, const epics::pvData::PVStructurePtr& pvStructurePtr) 
+{
+    epics::pvData::ScalarArrayConstPtr scalarArrayPtr = getFieldPathAsScalarArray(fieldPath, pvStructurePtr);
+    bool isCharArray = false;
+    if (scalarArrayPtr) {
+        epics::pvData::ScalarType scalarType = scalarArrayPtr->getElementType();
+        if (scalarType == epics::pvData::pvByte || scalarType == epics::pvData::pvUByte) {
+            isCharArray = true;
+        }
+    }
+    return isCharArray;
+}
+
+//
+// Get field path as a scalar array.
+// Allow notation like 'x.y.z' for the field path.
+// 
+epics::pvData::ScalarArrayConstPtr getFieldPathAsScalarArray(const std::string& fieldPath, const epics::pvData::PVStructurePtr& pvStructurePtr) 
+{
+    std::vector<std::string> fieldNames = StringUtility::split(fieldPath);
+    epics::pvData::PVStructurePtr pvStructurePtr2 = getParentStructureForFieldPath(fieldNames, pvStructurePtr);
+
+    // Last field in the path is what we want.
+    int nElements = fieldNames.size();
+    std::string fieldName = fieldNames[nElements-1];
+    epics::pvData::FieldConstPtr fieldPtr = getField(fieldName, pvStructurePtr2);
+    epics::pvData::Type type = fieldPtr->getType();
+    epics::pvData::ScalarArrayConstPtr scalarArrayPtr;
+    if (type == epics::pvData::scalarArray) {
+        scalarArrayPtr = std::tr1::static_pointer_cast<const epics::pvData::ScalarArray>(fieldPtr);
+    }
+    return scalarArrayPtr;
+}
+
+//
 // Return structure field as python object. Allow notation like 'x.y.z'
 // for the field path.
 //

@@ -317,6 +317,8 @@ boost::python::dict extractUnionStructureDict(const boost::python::dict& pyDict)
 //
 // Support for field path notation.
 //
+bool isFieldPathCharScalarArray(const std::string& fieldPath, const epics::pvData::PVStructurePtr& pvStructurePtr);
+epics::pvData::ScalarArrayConstPtr getFieldPathAsScalarArray(const std::string& fieldPath, const epics::pvData::PVStructurePtr& pvStructurePtr);
 boost::python::object getFieldPathAsPyObject(const std::string& fieldPath, const epics::pvData::PVStructurePtr& pvStructurePtr, bool useNumPyArrays);
 void setPyObjectToFieldPath(const boost::python::object& pyObject, const std::string& fieldPath, const epics::pvData::PVStructurePtr& pvStructurePtr);
 

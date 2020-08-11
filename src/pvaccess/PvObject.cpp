@@ -198,6 +198,24 @@ boost::python::object PvObject::getPyObject() const
     return getPyObject(key);
 }
 
+std::string PvObject::getAsString(const std::string& fieldPath) const
+{
+    if (PyPvDataUtility::isFieldPathCharScalarArray(fieldPath, pvStructurePtr)) {
+        boost::python::object o = PyPvDataUtility::getFieldPathAsPyObject(fieldPath, pvStructurePtr, false);
+        return PyUtility::extractStringFromPyList(o);
+    }
+    else {
+        boost::python::object o = PyPvDataUtility::getFieldPathAsPyObject(fieldPath, pvStructurePtr, useNumPyArrays);
+        return PyUtility::extractStringFromPyObject(o);
+    }
+}
+
+std::string PvObject::getAsString() const
+{
+    std::string fieldPath = PyPvDataUtility::getValueOrSingleFieldName(pvStructurePtr);
+    return getAsString(fieldPath);
+}
+
 // Boolean modifiers/accessors
 void PvObject::setBoolean(const std::string& key, bool value)
 {

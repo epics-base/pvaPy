@@ -243,6 +243,27 @@ class_<PvObject>("PvObject",
         "    value = pv.getPyObject('aString')\n\n"
         "    value2 = pv.getPyObject('aStruct.aString2')\n\n")
 
+    .def("getAsString", 
+        static_cast<std::string(PvObject::*)()const>(&PvObject::getAsString),
+        "Retrieves value object from a single-field structure, or from a structure that has field named 'value', and converts it into a string.\n\n"
+        ":Returns: string representation of the value object\n\n"
+        ":Raises: *InvalidRequest* - when single-field structure has no field or multiple-field structure has no 'value' field\n\n"
+        "::\n\n"
+        "    pv = PvObject({'aString' : STRING})\n\n"
+        "    value = pv.getAsString()\n\n")
+ 
+    .def("getAsString", 
+        static_cast<std::string(PvObject::*)(const std::string&)const>(&PvObject::getAsString),
+        args("fieldPath"), 
+        "Retrieves value object assigned to the given PV field path, which uses '.' as the field name separator, and converts it into a string.\n\n"
+        ":Parameter: *fieldPath* (str) - field path\n\n"
+        ":Returns: string representation of the value object\n\n"
+        ":Raises: *FieldNotFound* - when a part of the specified field path is not found\n\n"
+        "::\n\n"
+        "    pv = PvObject({'aString' : STRING, 'aStruct' : {'anInt' : INT, 'aString2' : STRING}})\n\n"
+        "    value = pv.getAsString('aString')\n\n"
+        "    value2 = pv.getAsString('aStruct.aString2')\n\n")
+
     .def("__getitem__", 
         static_cast<boost::python::object(PvObject::*)(const std::string&)const>(&PvObject::getPyObject),
         args("fieldPath"), 

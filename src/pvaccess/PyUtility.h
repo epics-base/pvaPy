@@ -31,6 +31,8 @@ bool isPyList(const boost::python::object& pyObject);
 bool isNumPyNDArray(const boost::python::object& pyObject);
 #endif // if defined HAVE_NUM_PY_SUPPORT && HAVE_NUM_PY_SUPPORT == 1
 
+std::string extractStringFromPyList(const boost::python::object& pyObject);
+
 template<typename PyType>
 PyType extractValueFromPyObject(const boost::python::object& pyObject)
 {

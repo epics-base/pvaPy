@@ -1,3 +1,8 @@
+## Release 3.0.0 (2020/08/XX)
+
+- added support for windows
+- added ability to retrieve PvObject field as a string
+
 ## Release 2.3.0 (2020/06/12)
 
 - fixed issue with channel puts involving large integers (GitHub Issue #58)
