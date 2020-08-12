@@ -617,12 +617,32 @@ void PvObject::setUnion(const boost::python::tuple& pyTuple)
 
 PvObject PvObject::getUnion(const std::string& key) const
 {
-    epics::pvData::PVUnionPtr pvUnionPtr = PyPvDataUtility::getUnionField(key, pvStructurePtr);
-    std::string fieldName = pvUnionPtr->getSelectedFieldName();
-    if (!fieldName.size()) {
-        throw InvalidRequest("No field has been selected for union %s.", key.c_str());
+    epics::pvData::PVUnionPtr pvUnionPtr = pvStructurePtr->getSubField<epics::pvData::PVUnion>(key);
+    std::string unionFieldName = PvaConstants::ValueFieldKey;
+    epics::pvData::PVFieldPtr pvField;
+    if (!pvUnionPtr->getUnion()->isVariant()) {
+        unionFieldName = pvUnionPtr->getSelectedFieldName();
+        if (unionFieldName != "") {
+            pvField = pvUnionPtr->select(unionFieldName);
+        }
     }
-    return PvObject(PyPvDataUtility::createUnionPvStructure(pvUnionPtr, fieldName));
+    else {
+        pvField = pvUnionPtr->get();
+    }
+    epics::pvData::PVStructurePtr unionPvStructurePtr;
+    if(pvField) {
+        epics::pvData::StructureConstPtr unionStructurePtr = epics::pvData::getFieldCreate()->createFieldBuilder()->add(unionFieldName, pvField->getField())->createStructure();
+        unionPvStructurePtr = epics::pvData::getPVDataCreate()->createPVStructure(unionStructurePtr);
+#if PVA_API_VERSION == 440
+        epics::pvData::Convert::getConvert()->copy(pvField, unionPvStructurePtr->getSubField(unionFieldName));
+#else
+        unionPvStructurePtr->getSubField(unionFieldName)->copy(*pvField);
+#endif // if PVA_API_VERSION == 440
+    }
+    else {
+        unionPvStructurePtr = epics::pvData::getPVDataCreate()->createPVStructure(epics::pvData::getFieldCreate()->createStructure());
+    }
+    return PvObject(unionPvStructurePtr); 
 }
 
 PvObject PvObject::getUnion() const
