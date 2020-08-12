@@ -70,7 +70,7 @@ class_<PvAlarm, bases<PvObject> >("PvAlarm",
         "Sets alarm message.\n\n"
         ":Parameter: *message* (str) - alarm message\n\n"
         "::\n\n"
-        "    alarm.setmessage('alarm message')\n\n")
+        "    alarm.setMessage('alarm message')\n\n")
 ;
 
 } // wrapPvAlarm()
