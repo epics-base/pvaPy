@@ -73,6 +73,28 @@ PvObject::~PvObject()
 {
 }
 
+// Static methods
+bool PvObject::isPvObjectInstance(const boost::python::object& pyObject)
+{
+    boost::python::extract<PvObject> extractPvObject(pyObject);
+    if (extractPvObject.check()) {
+        return true;
+    }
+    return false;
+}
+
+bool PvObject::pvObjectToPyDict(const boost::python::object& pyObject, boost::python::object& pyDict)
+{
+    boost::python::extract<PvObject> extractPvObject(pyObject);
+    if (extractPvObject.check()) {
+        PvObject o = extractPvObject();
+        pyDict = o.toDict();
+        return true;
+    }
+    return false;
+}
+
+
 // Operators/conversion methods
 epics::pvData::PVStructurePtr PvObject::getPvStructurePtr() const
 {
@@ -617,31 +639,7 @@ void PvObject::setUnion(const boost::python::tuple& pyTuple)
 
 PvObject PvObject::getUnion(const std::string& key) const
 {
-    epics::pvData::PVUnionPtr pvUnionPtr = pvStructurePtr->getSubField<epics::pvData::PVUnion>(key);
-    std::string unionFieldName = PvaConstants::ValueFieldKey;
-    epics::pvData::PVFieldPtr pvField;
-    if (!pvUnionPtr->getUnion()->isVariant()) {
-        unionFieldName = pvUnionPtr->getSelectedFieldName();
-        if (unionFieldName != "") {
-            pvField = pvUnionPtr->select(unionFieldName);
-        }
-    }
-    else {
-        pvField = pvUnionPtr->get();
-    }
-    epics::pvData::PVStructurePtr unionPvStructurePtr;
-    if(pvField) {
-        epics::pvData::StructureConstPtr unionStructurePtr = epics::pvData::getFieldCreate()->createFieldBuilder()->add(unionFieldName, pvField->getField())->createStructure();
-        unionPvStructurePtr = epics::pvData::getPVDataCreate()->createPVStructure(unionStructurePtr);
-#if PVA_API_VERSION == 440
-        epics::pvData::Convert::getConvert()->copy(pvField, unionPvStructurePtr->getSubField(unionFieldName));
-#else
-        unionPvStructurePtr->getSubField(unionFieldName)->copy(*pvField);
-#endif // if PVA_API_VERSION == 440
-    }
-    else {
-        unionPvStructurePtr = epics::pvData::getPVDataCreate()->createPVStructure(epics::pvData::getFieldCreate()->createStructure());
-    }
+    epics::pvData::PVStructurePtr unionPvStructurePtr = PyPvDataUtility::getUnionPvStructurePtr(key, pvStructurePtr);
     return PvObject(unionPvStructurePtr); 
 }
 

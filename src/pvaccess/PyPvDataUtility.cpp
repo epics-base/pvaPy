@@ -40,15 +40,6 @@ void checkFieldPathExists(const std::string& fieldPath, const epics::pvData::PVS
     checkFieldExists(fieldName, pvStructurePtr2);
 }
 
-bool isPvObjectInstance(const boost::python::object& pyObject)
-{
-    boost::python::extract<PvObject> extractPvObject(pyObject);
-    if (extractPvObject.check()) {
-        return true;
-    }
-    return false;
-}
-
 //
 // Field retrieval
 //
@@ -366,22 +357,6 @@ epics::pvData::ScalarType getScalarArrayType(const std::string& fieldName, const
 }
 
 //
-// Conversion PvObject (as PY object) => PV Field
-// Returns true if conversion worked, false otherwise
-//
-bool pvObjectToPyDict(const boost::python::object& pyObject, boost::python::object& pyDict)
-{
-    boost::python::extract<PvObject> extractPvObject(pyObject);
-    if (extractPvObject.check()) {
-        PvObject o = extractPvObject();
-        pyDict = o.toDict();
-        return true;
-    }
-    return false;
-}
-
-
-//
 // Conversion PY object => PV Field
 //
 void pyObjectToField(const boost::python::object& pyObject, const std::string& fieldName, epics::pvData::PVStructurePtr& pvStructurePtr)
@@ -534,13 +509,11 @@ void pyObjectToStructureField(const boost::python::object& pyObject, const std::
     if (extractPvObject.check()) {
         PvObject pvObject = extractPvObject();
         epics::pvData::PVStructurePtr pvStructurePtr2 = getStructureField(fieldName, pvStructurePtr);
-        PyPvDataUtility::copyStructureToStructure(pvObject.getPvStructurePtr(), pvStructurePtr2);
+        copyStructureToStructure(pvObject.getPvStructurePtr(), pvStructurePtr2);
     }
     else {
         boost::python::dict pyDict;
-        if (!pvObjectToPyDict(pyObject, pyDict)) {
-            pyDict = PyUtility::extractValueFromPyObject<boost::python::dict>(pyObject);
-        }
+        pyDict = PyUtility::extractValueFromPyObject<boost::python::dict>(pyObject);
         pyDictToStructureField(pyDict, fieldName, pvStructurePtr);
     }
 }
@@ -863,7 +836,7 @@ void pyListToStructureArrayField(const boost::python::list& pyList, const std::s
         boost::python::extract<PvObject> extractPvObject(pyList[i]);
         if (extractPvObject.check()) {
             PvObject pvObject = extractPvObject();
-            PyPvDataUtility::copyStructureToStructure(pvObject.getPvStructurePtr(), pvStructure);
+            copyStructureToStructure(pvObject.getPvStructurePtr(), pvStructure);
             pvStructures[i] = pvStructure;
         }
         else {
@@ -1161,9 +1134,9 @@ boost::python::object getStructureArrayFieldAsPyObject(const std::string& fieldN
 }
 
 //
-// Add PV Union => PY {}
+// Get Union PV Structure Pointer
 // 
-void addUnionFieldToDict(const std::string& fieldName, const epics::pvData::PVStructurePtr& pvStructurePtr, boost::python::dict& pyDict, bool useNumPyArrays)
+epics::pvData::PVStructurePtr getUnionPvStructurePtr(const std::string& fieldName, const epics::pvData::PVStructurePtr& pvStructurePtr)
 {
     epics::pvData::PVUnionPtr pvUnionPtr = pvStructurePtr->getSubField<epics::pvData::PVUnion>(fieldName);
     std::string unionFieldName = PvaConstants::ValueFieldKey;
@@ -1188,10 +1161,17 @@ void addUnionFieldToDict(const std::string& fieldName, const epics::pvData::PVSt
 #endif // if PVA_API_VERSION == 440
     }
     else {
-        unionPvStructurePtr = epics::pvData::getPVDataCreate()->createPVStructure(
-            epics::pvData::getFieldCreate()->createStructure());
+        unionPvStructurePtr = epics::pvData::getPVDataCreate()->createPVStructure(epics::pvData::getFieldCreate()->createStructure());
     }
+    return unionPvStructurePtr;
+}
 
+//
+// Add PV Union => PY {}
+// 
+void addUnionFieldToDict(const std::string& fieldName, const epics::pvData::PVStructurePtr& pvStructurePtr, boost::python::dict& pyDict, bool useNumPyArrays)
+{
+    epics::pvData::PVStructurePtr unionPvStructurePtr = getUnionPvStructurePtr(fieldName, pvStructurePtr);
     boost::python::dict pyDict2;
     structureToPyDict(unionPvStructurePtr, pyDict2, useNumPyArrays);
     boost::python::tuple pyTuple = boost::python::make_tuple(pyDict2);

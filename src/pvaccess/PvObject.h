@@ -22,6 +22,10 @@ public:
     static const char* StructureId;
     static const bool UseNumPyArraysDefault;
 
+    // Static methods
+    static bool isPvObjectInstance(const boost::python::object& pyObject);
+    static bool pvObjectToPyDict(const boost::python::object& pyObject, boost::python::object& pyDict);
+
     // Constructors
     PvObject(const epics::pvData::PVStructurePtr& pvStructurePtr);
     PvObject(const boost::python::dict& structureDict, const std::string& structureId=StructureId);
