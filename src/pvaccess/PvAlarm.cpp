@@ -41,8 +41,8 @@ PvAlarm::PvAlarm(const boost::python::dict& pyDict, const std::string& structure
 {
 }
 
-PvAlarm::PvAlarm(const PvAlarm& pvTimeStamp)
-    : PvObject(pvTimeStamp.pvStructurePtr)
+PvAlarm::PvAlarm(const PvAlarm& pvAlarm)
+    : PvObject(pvAlarm.pvStructurePtr)
 {
 }
 
