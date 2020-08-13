@@ -31,8 +31,8 @@ boost::python::dict NtTable::createStructureDict(int nColumns, PvType::ScalarTyp
     }
     pyDict[ValueFieldKey] = pyDict2;
     pyDict[DescriptorFieldKey] = PvType::String;
-    pyDict[TimeStampFieldKey] = PvTimeStamp::createStructureDict();
     pyDict[AlarmFieldKey] = PvAlarm::createStructureDict();
+    pyDict[TimeStampFieldKey] = PvTimeStamp::createStructureDict();
     return pyDict;
 }
 
