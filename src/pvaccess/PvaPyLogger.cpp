@@ -17,7 +17,7 @@ const char* PvaPyLogger::LogLevelDebug("DEBUG");
 const char* PvaPyLogger::LogLevelTrace("TRACE");
 
 const int PvaPyLogger::MaxTimeStampLength(64);
-const char* PvaPyLogger::LogLevelEnvVarName("PVA_PY_LOG_LEVEL");
+const char* PvaPyLogger::LogLevelEnvVarName("PVAPY_LOG_LEVEL");
 const char* PvaPyLogger::TimeStampFormat("%Y/%m/%d %H:%M:%S.%03f");
 
 FILE* PvaPyLogger::logFile(stdout);
@@ -34,7 +34,7 @@ void PvaPyLogger::setLogFile(FILE* file)
 
 int PvaPyLogger::getLogLevelMaskFromEnvVar()
 {
-    int logLevelMask = PVA_PY_LOG_LEVEL_NONE;
+    int logLevelMask = PVAPY_LOG_LEVEL_NONE;
     const char* logLevelMaskString = getenv(LogLevelEnvVarName);
     if (logLevelMaskString) {
         logLevelMask = atoi(logLevelMaskString);
@@ -102,7 +102,7 @@ void PvaPyLogger::error(const char* message, va_list messageArgs) const
 
 void PvaPyLogger::warn(const std::string& message) const
 {
-    if (!(logLevelMask & PVA_PY_LOG_LEVEL_WARN)) {
+    if (!(logLevelMask & PVAPY_LOG_LEVEL_WARN)) {
         return;
     }
     log(LogLevelWarn, message.c_str());
@@ -110,7 +110,7 @@ void PvaPyLogger::warn(const std::string& message) const
 
 void PvaPyLogger::warn(const char* message, ...) const
 {
-    if (!(logLevelMask & PVA_PY_LOG_LEVEL_WARN)) {
+    if (!(logLevelMask & PVAPY_LOG_LEVEL_WARN)) {
         return;
     }
     va_list messageArgs;
@@ -121,7 +121,7 @@ void PvaPyLogger::warn(const char* message, ...) const
 
 void PvaPyLogger::warn(const char* message, va_list messageArgs) const
 {
-    if (!(logLevelMask & PVA_PY_LOG_LEVEL_WARN)) {
+    if (!(logLevelMask & PVAPY_LOG_LEVEL_WARN)) {
         return;
     }
     log(LogLevelWarn, message, messageArgs);
@@ -129,7 +129,7 @@ void PvaPyLogger::warn(const char* message, va_list messageArgs) const
 
 void PvaPyLogger::info(const std::string& message) const
 {
-    if (!(logLevelMask & PVA_PY_LOG_LEVEL_INFO)) {
+    if (!(logLevelMask & PVAPY_LOG_LEVEL_INFO)) {
         return;
     }
     log(LogLevelInfo, message.c_str());
@@ -137,7 +137,7 @@ void PvaPyLogger::info(const std::string& message) const
 
 void PvaPyLogger::info(const char* message, ...) const
 {
-    if (!(logLevelMask & PVA_PY_LOG_LEVEL_INFO)) {
+    if (!(logLevelMask & PVAPY_LOG_LEVEL_INFO)) {
         return;
     }
     va_list messageArgs;
@@ -148,7 +148,7 @@ void PvaPyLogger::info(const char* message, ...) const
 
 void PvaPyLogger::info(const char* message, va_list messageArgs) const
 {
-    if (!(logLevelMask & PVA_PY_LOG_LEVEL_INFO)) {
+    if (!(logLevelMask & PVAPY_LOG_LEVEL_INFO)) {
         return;
     }
     log(LogLevelInfo, message, messageArgs);
@@ -156,7 +156,7 @@ void PvaPyLogger::info(const char* message, va_list messageArgs) const
 
 void PvaPyLogger::debug(const std::string& message) const
 {
-    if (!(logLevelMask & PVA_PY_LOG_LEVEL_DEBUG)) {
+    if (!(logLevelMask & PVAPY_LOG_LEVEL_DEBUG)) {
         return;
     }
     log(LogLevelDebug, message.c_str());
@@ -164,7 +164,7 @@ void PvaPyLogger::debug(const std::string& message) const
 
 void PvaPyLogger::debug(const char* message, ...) const
 {
-    if (!(logLevelMask & PVA_PY_LOG_LEVEL_DEBUG)) {
+    if (!(logLevelMask & PVAPY_LOG_LEVEL_DEBUG)) {
         return;
     }
     va_list messageArgs;
@@ -175,7 +175,7 @@ void PvaPyLogger::debug(const char* message, ...) const
 
 void PvaPyLogger::debug(const char* message, va_list messageArgs) const
 {
-    if (!(logLevelMask & PVA_PY_LOG_LEVEL_DEBUG)) {
+    if (!(logLevelMask & PVAPY_LOG_LEVEL_DEBUG)) {
         return;
     }
     log(LogLevelDebug, message, messageArgs);
@@ -183,7 +183,7 @@ void PvaPyLogger::debug(const char* message, va_list messageArgs) const
 
 void PvaPyLogger::trace(const std::string& message) const
 {
-    if (!(logLevelMask & PVA_PY_LOG_LEVEL_TRACE)) {
+    if (!(logLevelMask & PVAPY_LOG_LEVEL_TRACE)) {
         return;
     }
     log(LogLevelTrace, message.c_str());
@@ -191,7 +191,7 @@ void PvaPyLogger::trace(const std::string& message) const
 
 void PvaPyLogger::trace(const char* message, ...) const
 {
-    if (!(logLevelMask & PVA_PY_LOG_LEVEL_TRACE)) {
+    if (!(logLevelMask & PVAPY_LOG_LEVEL_TRACE)) {
         return;
     }
     va_list messageArgs;
@@ -202,7 +202,7 @@ void PvaPyLogger::trace(const char* message, ...) const
 
 void PvaPyLogger::trace(const char* message, va_list messageArgs) const
 {
-    if (!(logLevelMask & PVA_PY_LOG_LEVEL_TRACE)) {
+    if (!(logLevelMask & PVAPY_LOG_LEVEL_TRACE)) {
         return;
     }
     log(LogLevelTrace, message, messageArgs);

@@ -1,8 +1,8 @@
 // Copyright information and license terms for this software can be
 // found in the file LICENSE that is included with the distribution
 
-#ifndef PVA_PY_LOGGER_H
-#define PVA_PY_LOGGER_H
+#ifndef PVAPY_LOGGER_H
+#define PVAPY_LOGGER_H
 
 #include <string>
 #include <cstdarg>
@@ -12,14 +12,14 @@ class PvaPyLogger
 {
 public:
     enum LogLogLevel { 
-        PVA_PY_LOG_LEVEL_NONE = 0,
-        PVA_PY_LOG_LEVEL_CRITICAL = 1,
-        PVA_PY_LOG_LEVEL_ERROR = 2,
-        PVA_PY_LOG_LEVEL_WARN = 4,
-        PVA_PY_LOG_LEVEL_INFO = 8,
-        PVA_PY_LOG_LEVEL_DEBUG = 16,
-        PVA_PY_LOG_LEVEL_TRACE = 32,
-        PVA_PY_LOG_LEVEL_ALL = 255
+        PVAPY_LOG_LEVEL_NONE = 0,
+        PVAPY_LOG_LEVEL_CRITICAL = 1,
+        PVAPY_LOG_LEVEL_ERROR = 2,
+        PVAPY_LOG_LEVEL_WARN = 4,
+        PVAPY_LOG_LEVEL_INFO = 8,
+        PVAPY_LOG_LEVEL_DEBUG = 16,
+        PVAPY_LOG_LEVEL_TRACE = 32,
+        PVAPY_LOG_LEVEL_ALL = 255
     };
 
     static const char* LogLevelCritical;
