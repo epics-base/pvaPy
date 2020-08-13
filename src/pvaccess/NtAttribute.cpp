@@ -101,12 +101,12 @@ boost::python::list NtAttribute::getTags() const
 
 void NtAttribute::setDescriptor(const std::string& descriptor)
 {
-        pvStructurePtr->getSubField<epics::pvData::PVString>(DescriptorFieldKey)->put(descriptor);
+    pvStructurePtr->getSubField<epics::pvData::PVString>(DescriptorFieldKey)->put(descriptor);
 }
 
 std::string NtAttribute::getDescriptor() const
 {
-        return pvStructurePtr->getSubField<epics::pvData::PVString>(DescriptorFieldKey)->get();
+    return pvStructurePtr->getSubField<epics::pvData::PVString>(DescriptorFieldKey)->get();
 }
 
 PvTimeStamp NtAttribute::getTimeStamp() const
