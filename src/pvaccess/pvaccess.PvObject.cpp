@@ -795,7 +795,7 @@ class_<PvObject>("PvObject",
         "    value = pv.getString('aString')\n\n")
 
     .def("setScalarArray", 
-        static_cast<void(PvObject::*)(const boost::python::list&)>(&PvObject::setScalarArray),
+        static_cast<void(PvObject::*)(const boost::python::object&)>(&PvObject::setScalarArray),
         args("valueList"),
         "Sets scalar array value for a single-field structure, or for a structure that has scalar array field named 'value'.\n\n"
         ":Parameter: *valueList* (list) - list of scalar values\n\n"
@@ -805,7 +805,7 @@ class_<PvObject>("PvObject",
         "    pv.setScalarArray([0,1,2,3,4])\n\n")
 
     .def("setScalarArray", 
-        static_cast<void(PvObject::*)(const std::string&,const boost::python::list&)>(&PvObject::setScalarArray),
+        static_cast<void(PvObject::*)(const std::string&,const boost::python::object&)>(&PvObject::setScalarArray),
         args("fieldName", "valueList"),
         "Sets scalar array value for the given PV field.\n\n"
         ":Parameter: *fieldName* (str) - field name\n\n"
