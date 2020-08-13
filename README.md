@@ -29,7 +29,7 @@ Conda packages.
 
 ### PyPI
 
-- Supported platforms: Linux (64-bit)
+- Supported platforms: Linux (64-bit), Windows (64-bit)
 - Supported Python versions: Python2, Python3
 
 Make sure `pip` command is in your path, and execute the following command:
@@ -59,6 +59,7 @@ versions of EPICS Base, Boost and PvaPy. Custom local install relies on already 
 
 ### Automated Build
 
+Automated build works under Linux and OSX.
 Make sure the desired version of Python is in your path, and execute the 
 following command from the top of the PvaPy source directory:
 
@@ -97,7 +98,8 @@ operating systems (e.g. Linux, MacOS, Solaris) are currently supported.
 
 #### 1. Configure PvaPy
 
-This can be done manually, or using autoconf.
+This can be done manually (all platforms), or using autoconf (on Linux
+and OSX).
 
 For manual configuration: Read the comments in both the `configure/RELEASE` and
 `configure/CONFIG_SITE` files and follow the instructions given there.
@@ -105,7 +107,7 @@ For manual configuration: Read the comments in both the `configure/RELEASE` and
 For automatic configuration: In the top level directory run
 
 ```sh
-  $ make configure EPICS_BASE=/epics/base/path [EPICS4_DIR=/epics/v4/path] [BOOST_NUM_PY_DIR=/boost.numpy/path] [BOOST_ROOT=/boost/path] [PYTHON_VERSION=3]
+  $ make configure EPICS_BASE=/epics/base/path [EPICS4_DIR=/epics/v4/path] [BOOST_NUMPY_DIR=/boost.numpy/path] [BOOST_ROOT=/boost/path] [PYTHON_VERSION=3]
 ```
 
 Note that you can only use the automatic configuration if the v4 modules have
@@ -116,7 +118,7 @@ If you are using EPICS7 release, you can omit EPICS4_DIR argument, as
 configuration scripts will find the required v4 libraries and header files in 
 the EPICS Base directory. 
 
-The optional `BOOST_NUM_PY_DIR` argument enables NumPy array support for older
+The optional `BOOST_NUMPY_DIR` argument enables NumPy array support for older
 Boost versions, as v1.63.0 and later releases already include NumPy libraries.
 The optional `BOOST_ROOT` argument is typically used for custom Boost 
 installation directory. In case you are using custom python installation that 
@@ -139,21 +141,21 @@ examples below:
   EPICS_BASE = /home/epics/base-3.15.5
 
   $ cat CONFIG_SITE.local
-  PVA_PY_CPPFLAGS = -I/usr/include -I/usr/include/python2.7
-  PVA_PY_LDFLAGS = -L/usr/lib64 -lpython2.7
-  PVA_PY_SYS_LIBS = boost_python  
+  PVAPY_CPPFLAGS = -I/usr/include -I/usr/include/python2.7
+  PVAPY_LDFLAGS = -L/usr/lib64 -lpython2.7
+  PVAPY_SYS_LIBS = boost_python  
   PVA_API_VERSION = 480
   PVA_RPC_API_VERSION = 480
-  HAVE_BOOST_NUM_PY = 0
-  HAVE_BOOST_PYTHON_NUM_PY = 0
+  HAVE_BOOST_NUMPY = 0
+  HAVE_BOOST_PYTHON_NUMPY = 0
   PYTHON_VERSION = 2.7
-  PVA_PY_PYTHON = /bin/python
-  PVA_PY_PYTHONPATH = /home/epics/v4/pvaPy/lib/python/2.7/linux-x86_64
-  PVA_PY_LD_LIBRARY_PATH = /usr/lib64
-  PVA_PY_EPICS_BASE = /home/epics/base-3.15.5
-  PVA_PY_EPICS4_DIR = /home/epics/v4
-  PVA_PY_HOST_ARCH = linux-x86_64
-  PVA_PY_SETUP_SH = /home/epics/pvaPy/bin/linux-x86_64/pvapy_setup_full.2.7.sh
+  PVAPY_PYTHON = /bin/python
+  PVAPY_PYTHONPATH = /home/epics/v4/pvaPy/lib/python/2.7/linux-x86_64
+  PVAPY_LD_LIBRARY_PATH = /usr/lib64
+  PVAPY_EPICS_BASE = /home/epics/base-3.15.5
+  PVAPY_EPICS4_DIR = /home/epics/v4
+  PVAPY_HOST_ARCH = linux-x86_64
+  PVAPY_SETUP_SH = /home/epics/pvaPy/bin/linux-x86_64/pvapy_setup_full.2.7.sh
 ```
 
 The above files were created automatically on a 64-bit RHEL 7.4 machine, with

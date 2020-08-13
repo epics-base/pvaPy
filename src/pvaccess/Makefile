@@ -13,12 +13,12 @@ include $(BUILD_CONF)
 
 USR_CXXFLAGS += -DPVA_API_VERSION=$(PVA_API_VERSION)
 USR_CXXFLAGS += -DPVA_RPC_API_VERSION=$(PVA_RPC_API_VERSION)
-USR_CXXFLAGS += -DHAVE_BOOST_NUM_PY=$(HAVE_BOOST_NUM_PY)
-USR_CXXFLAGS += -DHAVE_BOOST_PYTHON_NUM_PY=$(HAVE_BOOST_PYTHON_NUM_PY)
+USR_CXXFLAGS += -DHAVE_BOOST_NUMPY=$(HAVE_BOOST_NUMPY)
+USR_CXXFLAGS += -DHAVE_BOOST_PYTHON_NUMPY=$(HAVE_BOOST_PYTHON_NUMPY)
 
-USR_CXXFLAGS += $(PVA_PY_CPPFLAGS)
-USR_LDFLAGS  += $(PVA_PY_LDFLAGS)
-USR_SYS_LIBS += $(PVA_PY_SYS_LIBS)
+USR_CXXFLAGS += $(PVAPY_CPPFLAGS)
+USR_LDFLAGS  += $(PVAPY_LDFLAGS)
+USR_SYS_LIBS += $(PVAPY_SYS_LIBS)
 
 # -flat_namespace seems to be needed for OSX/Python 3
 USR_LDFLAGS_darwin-x86  += -flat_namespace
@@ -27,8 +27,8 @@ USR_LDFLAGS  += $(USR_LDFLAGS_$(T_A))
 # Set our library install location; /$(T_A) will be added
 INSTALL_LOCATION_LIB = $(INSTALL_LOCATION)/lib/python/$(PYTHON_VERSION)
 
-ifeq ($(PVA_PY_VERSION),)
-    PVA_PY_VERSION=$(shell git rev-parse --short HEAD)
+ifeq ($(PVAPY_VERSION),)
+    PVAPY_VERSION=$(shell git rev-parse --short HEAD)
 endif
 
 
@@ -192,8 +192,8 @@ include $(TOP)/configure/RULES
 #  ADD RULES AFTER THIS LINE
 
 pvaccess.constants.cpp: $(PVACCESS_CONSTANTS_CPP_TEMPLATE) $(BUILD_CONF)
-	perl -p -e "s?PVA_PY_VERSION?${PVA_PY_VERSION}?g" ${PVACCESS_CONSTANTS_CPP_TEMPLATE} > pvaccess.constants.cpp
-	perl -p -e "s?version =.*?version = \"${PVA_PY_VERSION}\"?g" ${SPHINX_CONF} > ${SPHINX_CONF}.2 
-	perl -p -e "s?release =.*?release = \"${PVA_PY_VERSION}\"?g" ${SPHINX_CONF}.2 > ${SPHINX_CONF}
+	perl -p -e "s?PVAPY_VERSION?${PVAPY_VERSION}?g" ${PVACCESS_CONSTANTS_CPP_TEMPLATE} > pvaccess.constants.cpp
+	perl -p -e "s?version =.*?version = \"${PVAPY_VERSION}\"?g" ${SPHINX_CONF} > ${SPHINX_CONF}.2 
+	perl -p -e "s?release =.*?release = \"${PVAPY_VERSION}\"?g" ${SPHINX_CONF}.2 > ${SPHINX_CONF}
 	$(RM) ${SPHINX_CONF}.2 
 

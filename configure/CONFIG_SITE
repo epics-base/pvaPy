@@ -30,17 +30,17 @@ CHECK_RELEASE = YES
 
 # Use these only if Boost is not in a system location
 #BOOST_DIR = /opt/boost
-#PVA_PY_CPPFLAGS += -I$(BOOST_DIR)/include
-#PVA_PY_LDFLAGS += -L$(BOOST_DIR)/lib64
+#PVAPY_CPPFLAGS += -I$(BOOST_DIR)/include
+#PVAPY_LDFLAGS += -L$(BOOST_DIR)/lib64
 
 # The Boost python library to link with (-mt if available)
-#PVA_PY_SYS_LIBS += boost_python-mt
+#PVAPY_SYS_LIBS += boost_python-mt
 
 # Python install prefix and version
 #PYTHON_DIR = /usr
 #PYTHON_VERSION = 2.6
-#PVA_PY_CPPFLAGS += -I$(PYTHON_DIR)/include/python$(PYTHON_VERSION)
-#PVA_PY_SYS_LIBS += python$(PYTHON_VERSION)
+#PVAPY_CPPFLAGS += -I$(PYTHON_DIR)/include/python$(PYTHON_VERSION)
+#PVAPY_SYS_LIBS += python$(PYTHON_VERSION)
 
 # The version number of the pvAccess API
 #PVA_API_VERSION = 450

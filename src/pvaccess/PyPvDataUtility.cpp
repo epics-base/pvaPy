@@ -16,9 +16,9 @@
 
 namespace pvd = epics::pvData;
 namespace bp = boost::python;
-#if defined HAVE_NUM_PY_SUPPORT && HAVE_NUM_PY_SUPPORT == 1
+#if defined HAVE_NUMPY_SUPPORT && HAVE_NUMPY_SUPPORT == 1
 namespace np = numpy_;
-#endif // if defined HAVE_NUM_PY_SUPPORT && HAVE_NUM_PY_SUPPORT == 1
+#endif // if defined HAVE_NUMPY_SUPPORT && HAVE_NUMPY_SUPPORT == 1
 
 // Scalar array utilities
 namespace PyPvDataUtility
@@ -495,12 +495,12 @@ void pyObjectToScalarArrayField(const bp::object& pyObject, const std::string& f
         bp::list pyList = PyUtility::extractValueFromPyObject<bp::list>(pyObject);
         pyListToScalarArrayField(pyList, fieldName, pvStructurePtr);
     }
-#if defined HAVE_NUM_PY_SUPPORT && HAVE_NUM_PY_SUPPORT == 1
+#if defined HAVE_NUMPY_SUPPORT && HAVE_NUMPY_SUPPORT == 1
     else if (PyUtility::isNumPyNDArray(pyObject)) {
         np::ndarray ndArray = PyUtility::extractValueFromPyObject<np::ndarray>(pyObject);
         setScalarArrayFieldFromNumPyArray(ndArray, fieldName, pvStructurePtr);
     }
-#endif // if defined HAVE_NUM_PY_SUPPORT && HAVE_NUM_PY_SUPPORT == 1
+#endif // if defined HAVE_NUMPY_SUPPORT && HAVE_NUMPY_SUPPORT == 1
     else {
         throw InvalidDataType("Dictionary key %s must be a list.", fieldName.c_str());
     }
@@ -1082,7 +1082,7 @@ bp::object getScalarArrayFieldAsPyObject(const std::string& fieldName, const pvd
 
 // Only use NumPy arrays if support is compiled in and the corresponding
 // flag is set 
-#if defined HAVE_NUM_PY_SUPPORT && HAVE_NUM_PY_SUPPORT == 1
+#if defined HAVE_NUMPY_SUPPORT && HAVE_NUMPY_SUPPORT == 1
     pvd::ScalarType scalarType = getScalarArrayType(fieldName, pvStructurePtr);
     if (useNumPyArrays && scalarType != pvd::pvString) {
         return getScalarArrayFieldAsNumPyArray(fieldName, pvStructurePtr);
@@ -1092,7 +1092,7 @@ bp::object getScalarArrayFieldAsPyObject(const std::string& fieldName, const pvd
     }
 #else
     return getScalarArrayFieldAsPyList(fieldName, pvStructurePtr);
-#endif // if defined HAVE_NUM_PY_SUPPORT && HAVE_NUM_PY_SUPPORT == 1
+#endif // if defined HAVE_NUMPY_SUPPORT && HAVE_NUMPY_SUPPORT == 1
 }
 
 
@@ -2113,7 +2113,7 @@ void setPyObjectToFieldPath(const bp::object& pyObject, const std::string& field
     pyObjectToField(pyObject, fieldName, pvStructurePtr2);
 }
 
-#if defined HAVE_NUM_PY_SUPPORT && HAVE_NUM_PY_SUPPORT == 1
+#if defined HAVE_NUMPY_SUPPORT && HAVE_NUMPY_SUPPORT == 1
 
 //
 // Conversion PV Scalar Array => NumPy Array
@@ -2220,7 +2220,7 @@ void setScalarArrayFieldFromNumPyArray(const np::ndarray& ndArray, const std::st
     }
 }
 
-#endif // if defined HAVE_NUM_PY_SUPPORT && HAVE_NUM_PY_SUPPORT == 1
+#endif // if defined HAVE_NUMPY_SUPPORT && HAVE_NUMPY_SUPPORT == 1
 
 } // namespace PyPvDataUtility
 

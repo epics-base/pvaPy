@@ -193,10 +193,10 @@ public:
     PvObject createUnionArrayElementField(const std::string& key, const std::string& fieldName) const;
     PvObject createUnionArrayElementField(const std::string& fieldName) const;
 
-#if defined HAVE_NUM_PY_SUPPORT && HAVE_NUM_PY_SUPPORT == 1
+#if defined HAVE_NUMPY_SUPPORT && HAVE_NUMPY_SUPPORT == 1
     void setUseNumPyArraysFlag(bool useNumPyArrays);
     bool getUseNumPyArraysFlag() const;
-#endif // if defined HAVE_NUM_PY_SUPPORT && HAVE_NUM_PY_SUPPORT == 1
+#endif // if defined HAVE_NUMPY_SUPPORT && HAVE_NUMPY_SUPPORT == 1
 
 #if PVA_API_VERSION >= 482
     std::string toJSON(bool multiLine = false);

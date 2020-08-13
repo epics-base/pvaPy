@@ -2,6 +2,11 @@
 
 - added support for windows
 - added ability to retrieve PvObject field as a string
+- added NtNdArray and its related wrapper classes
+- conda/pip package dependencies: 
+  - EPICS BASE = 7.0.4
+  - BOOST      = 1.70.0
+  - NUMPY      > 1.15
 
 ## Release 2.3.0 (2020/06/12)
 

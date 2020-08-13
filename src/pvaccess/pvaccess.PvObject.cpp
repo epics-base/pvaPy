@@ -1285,9 +1285,9 @@ class_<PvObject>("PvObject",
         "::\n\n"
         "    introspectionDict = pv.getIntrospectionDict()\n\n")
 
-#if defined HAVE_NUM_PY_SUPPORT && HAVE_NUM_PY_SUPPORT == 1
+#if defined HAVE_NUMPY_SUPPORT && HAVE_NUMPY_SUPPORT == 1
     .add_property("useNumPyArrays", &PvObject::getUseNumPyArraysFlag, &PvObject::setUseNumPyArraysFlag)
-#endif // if defined HAVE_NUM_PY_SUPPORT && HAVE_NUM_PY_SUPPORT == 1
+#endif // if defined HAVE_NUMPY_SUPPORT && HAVE_NUMPY_SUPPORT == 1
 
 #if PVA_API_VERSION >= 482
     .def("toJSON", 

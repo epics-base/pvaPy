@@ -1,6 +1,6 @@
 package:
   name: pvapy
-  version: PVA_PY_VERSION
+  version: PVAPY_VERSION
 
 source:
   path: ../../..

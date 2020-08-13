@@ -1,7 +1,7 @@
 
 TOP = ../../..
 BUILD_CONF = ${CURDIR}/../../../configure/BUILD.conf
-PVA_PY_VERSION=$(shell cat $(BUILD_CONF) | grep PVA_PY_VERSION | cut -f2 -d'=')
+PVAPY_VERSION=$(shell cat $(BUILD_CONF) | grep PVAPY_VERSION | cut -f2 -d'=')
 DIST_DIR = dist
 BUILD_DIR = build
 
@@ -13,7 +13,7 @@ package: build
 configure:
 
 build: configure
-	PVA_PY_VERSION=$(PVA_PY_VERSION) python setup.py build_ext 
+	PVAPY_VERSION=$(PVAPY_VERSION) python setup.py build_ext 
 
 test: 
 	./run_test.sh

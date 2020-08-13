@@ -16,9 +16,9 @@
 
 #include "pvapy.environment.h"
 
-#if defined HAVE_NUM_PY_SUPPORT && HAVE_NUM_PY_SUPPORT == 1
-#include NUM_PY_HEADER_FILE
-#endif // if defined HAVE_NUM_PY_SUPPORT && HAVE_NUM_PY_SUPPORT == 1
+#if defined HAVE_NUMPY_SUPPORT && HAVE_NUMPY_SUPPORT == 1
+#include NUMPY_HEADER_FILE
+#endif // if defined HAVE_NUMPY_SUPPORT && HAVE_NUMPY_SUPPORT == 1
 
 #include "PvType.h"
 #include "PyUtility.h"
@@ -325,7 +325,7 @@ void setPyObjectToFieldPath(const boost::python::object& pyObject, const std::st
 //
 // Boost NumPy Support
 //
-#if defined HAVE_NUM_PY_SUPPORT && HAVE_NUM_PY_SUPPORT == 1
+#if defined HAVE_NUMPY_SUPPORT && HAVE_NUMPY_SUPPORT == 1
 
 //
 // Conversion PV Scalar Array => NumPy Array
@@ -342,7 +342,7 @@ void setScalarArrayFieldFromNumPyArray(const numpy_::ndarray& ndArray, const std
 
 template<typename CppType>
 void setScalarArrayFieldFromNumPyArrayImpl(const numpy_::ndarray& ndArray, const std::string& fieldName, epics::pvData::PVStructurePtr& pvStructurePtr);
-#endif // if defined HAVE_NUM_PY_SUPPORT && HAVE_NUM_PY_SUPPORT == 1
+#endif // if defined HAVE_NUMPY_SUPPORT && HAVE_NUMPY_SUPPORT == 1
 
 //
 // Template implementations
@@ -393,7 +393,7 @@ void copyScalarArrayToScalarArray(const epics::pvData::PVScalarArrayPtr& srcPvSc
     destPvScalarArrayPtr->putFrom(data);
 }
 
-#if defined HAVE_NUM_PY_SUPPORT && HAVE_NUM_PY_SUPPORT == 1
+#if defined HAVE_NUMPY_SUPPORT && HAVE_NUMPY_SUPPORT == 1
 template<typename PvArrayType, typename CppType>
 numpy_::ndarray getScalarArrayAsNumPyArray(const epics::pvData::PVScalarArrayPtr& pvScalarArrayPtr)
 {
@@ -433,7 +433,7 @@ void setScalarArrayFieldFromNumPyArrayImpl(const numpy_::ndarray& ndArray, const
     valueArray->replace(freeze(v));
 }
 
-#endif // if defined HAVE_NUM_PY_SUPPORT && HAVE_NUM_PY_SUPPORT == 1
+#endif // if defined HAVE_NUMPY_SUPPORT && HAVE_NUMPY_SUPPORT == 1
 
 } // namespace PyPvDataUtility
 

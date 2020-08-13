@@ -4,13 +4,13 @@ CONFIG_SITE_LOCAL = $(strip $(wildcard $(TOP)/configure/CONFIG_SITE.local))
 ifneq ($(CONFIG_SITE_LOCAL),)
 
     include $(CONFIG_SITE_LOCAL)
-    PVA_PY_SETUP = $(strip $(wildcard $(PVA_PY_SETUP_SH)))
+    PVAPY_SETUP = $(strip $(wildcard $(PVAPY_SETUP_SH)))
 
-    ifneq ($(PVA_PY_SETUP),)
+    ifneq ($(PVAPY_SETUP),)
     default: 
-	. $(PVA_PY_SETUP); $(MAKE) -C sphinx default
+	. $(PVAPY_SETUP); $(MAKE) -C sphinx default
     %: 
-	. $(PVA_PY_SETUP); $(MAKE) -C sphinx $@
+	. $(PVAPY_SETUP); $(MAKE) -C sphinx $@
     else
     default: 
 	$(MAKE) -C sphinx default

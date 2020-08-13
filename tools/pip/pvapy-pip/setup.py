@@ -9,7 +9,7 @@ import os
 import platform
 import fnmatch
 
-DEFAULT_PVA_PY_VERSION = 'master'
+DEFAULT_PVAPY_VERSION = 'master'
 PACKAGE_NAME = 'pvapy'
 MODULE_NAME = 'pvaccess'
 MODULE = Extension(MODULE_NAME, [])
@@ -47,7 +47,7 @@ class BuildExt(build_ext):
         print('Building %s' % MODULE_NAME)
         os.system(BUILD_SCRIPT)
 
-MODULE_VERSION = get_env_var('PVA_PY_VERSION', DEFAULT_PVA_PY_VERSION)
+MODULE_VERSION = get_env_var('PVAPY_VERSION', DEFAULT_PVAPY_VERSION)
 MODULE_FILES = map(lambda f: f.replace('%s/' % MODULE_NAME, ''), find_files(MODULE_NAME))
 LONG_DESCRIPTION = open(README_FILE).read()
     

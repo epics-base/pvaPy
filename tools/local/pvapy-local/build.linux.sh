@@ -13,8 +13,8 @@ if [ ! -f $BUILD_CONF ]; then
 fi
 . $BUILD_CONF
 
-if [ -z "$PVA_PY_VERSION" ]; then
-    PVA_PY_VERSION=local
+if [ -z "$PVAPY_VERSION" ]; then
+    PVAPY_VERSION=local
 fi
 
 OPT_EPICS_DIR=opt/epics-${EPICS_BASE_VERSION}
@@ -25,40 +25,40 @@ OPT_BOOST_DIR=opt/boost-python-${BOOST_VERSION}
 LOCAL_BOOST_DIR=$PREFIX/$OPT_BOOST_DIR
 BOOST_HOST_ARCH=`uname | tr [A-Z] [a-z]`-`uname -m`
 
-OPT_PVA_PY_DIR=opt/pvapy-${PVA_PY_VERSION}
-PVA_PY_BUILD_DIR=$BUILD_DIR/pvaPy-$PVA_PY_VERSION
-LOCAL_PVA_PY_DIR=$PREFIX/$OPT_PVA_PY_DIR
-LOCAL_PVA_PY_DOC_DIR=$LOCAL_PVA_PY_DIR/doc
+OPT_PVAPY_DIR=opt/pvapy-${PVAPY_VERSION}
+PVAPY_BUILD_DIR=$BUILD_DIR/pvaPy-$PVAPY_VERSION
+LOCAL_PVAPY_DIR=$PREFIX/$OPT_PVAPY_DIR
+LOCAL_PVAPY_DOC_DIR=$LOCAL_PVAPY_DIR/doc
 
 # Download.
-echo "Building pvapy $PVA_PY_VERSION in $LOCAL_PVA_PY_DIR (PREFIX=$PREFIX}"
+echo "Building pvapy $PVAPY_VERSION in $LOCAL_PVAPY_DIR (PREFIX=$PREFIX}"
 mkdir -p $BUILD_DIR
 cd $BUILD_DIR
 
-PVA_PY_TAR_FILE=pvaPy-$PVA_PY_VERSION.tar.gz
-if [ "$PVA_PY_VERSION" = "local" ]; then
-    echo "Creating $PVA_PY_TAR_FILE from local sources"
+PVAPY_TAR_FILE=pvaPy-$PVAPY_VERSION.tar.gz
+if [ "$PVAPY_VERSION" = "local" ]; then
+    echo "Creating $PVAPY_TAR_FILE from local sources"
     rm -rf pvaPy-local
     mkdir -p pvaPy-local
     SRC_TOP=$TOP/../../..
     rsync -arl $SRC_TOP/* --exclude "O.*" --exclude "build" pvaPy-local/
-    tar zcvf $PVA_PY_TAR_FILE pvaPy-local
+    tar zcvf $PVAPY_TAR_FILE pvaPy-local
 fi
 
-PVA_PY_DOWNLOAD_URL=https://github.com/epics-base/pvaPy/archive/$PVA_PY_VERSION.tar.gz
-if [ ! -f $PVA_PY_TAR_FILE ]; then
-    echo "Downloading $PVA_PY_TAR_FILE"
-    curl -Ls -o $PVA_PY_TAR_FILE -w %{url_effective} $PVA_PY_DOWNLOAD_URL
+PVAPY_DOWNLOAD_URL=https://github.com/epics-base/pvaPy/archive/$PVAPY_VERSION.tar.gz
+if [ ! -f $PVAPY_TAR_FILE ]; then
+    echo "Downloading $PVAPY_TAR_FILE"
+    curl -Ls -o $PVAPY_TAR_FILE -w %{url_effective} $PVAPY_DOWNLOAD_URL
     if [ $? -ne 0 ]; then
-        PVA_PY_GIT_URL=https://github.com/epics-base/pvaPy
-        echo "$PVA_PY_TAR_FILE does not exist, using git repository $PVA_PY_GIT_URLi, branch $PVA_PY_GIT_VERSION"
-        if [ ! -d $PVA_PY_BUILD_DIR ]; then
-            git clone $PVA_PY_GIT_URL $PVA_PY_BUILD_DIR
+        PVAPY_GIT_URL=https://github.com/epics-base/pvaPy
+        echo "$PVAPY_TAR_FILE does not exist, using git repository $PVAPY_GIT_URLi, branch $PVAPY_GIT_VERSION"
+        if [ ! -d $PVAPY_BUILD_DIR ]; then
+            git clone $PVAPY_GIT_URL $PVAPY_BUILD_DIR
         fi
-        cd $PVA_PY_BUILD_DIR
-        git checkout $PVA_PY_GIT_VERSION
+        cd $PVAPY_BUILD_DIR
+        git checkout $PVAPY_GIT_VERSION
     else
-        tar zxf $PVA_PY_TAR_FILE || exit 1
+        tar zxf $PVAPY_TAR_FILE || exit 1
     fi
 fi
 
@@ -78,32 +78,32 @@ export LD_LIBRARY_PATH=$PYTHON_DIR/lib:$LD_LIBRARY_PATH
 PYTHON_MAJOR_MINOR_VERSION=`$PYTHON_BIN --version 2>&1 | cut -f2 -d ' ' | cut -f1,2 -d '.'`
 PYTHON_MAJOR_VERSION=`echo $PYTHON_MAJOR_MINOR_VERSION | cut -f1 -d '.'`
 PYTHON_LIB=`ls -c1 $PYTHON_DIR/lib/libpython${PYTHON_MAJOR_MINOR_VERSION}*.so.* 2> /dev/null` 
-LOCAL_PVA_PY_LIB_DIR=$LOCAL_PVA_PY_DIR/lib/python$PYTHON_MAJOR_MINOR_VERSION/lib-dynload
+LOCAL_PVAPY_LIB_DIR=$LOCAL_PVAPY_DIR/lib/python$PYTHON_MAJOR_MINOR_VERSION/lib-dynload
 LOCAL_PY_LIB_DIR=$PREFIX/lib/python$PYTHON_MAJOR_MINOR_VERSION/lib-dynload
 
-PVA_PY_FLAGS=""
+PVAPY_FLAGS=""
 if [ "$PYTHON_MAJOR_VERSION" = "3" ]; then
-    PVA_PY_FLAGS="PYTHON_VERSION=3"
+    PVAPY_FLAGS="PYTHON_VERSION=3"
 fi
-PVA_PY_FLAGS="EPICS_BASE=$LOCAL_EPICS_DIR BOOST_ROOT=$LOCAL_BOOST_DIR PVA_PY_ROOT=$LOCAL_PVA_PY_DIR $PVA_PY_FLAGS"
-PVACCESS_BUILD_LIB_DIR=$PVA_PY_BUILD_DIR/lib/python/$PYTHON_MAJOR_MINOR_VERSION/$EPICS_HOST_ARCH
+PVAPY_FLAGS="EPICS_BASE=$LOCAL_EPICS_DIR BOOST_ROOT=$LOCAL_BOOST_DIR PVAPY_ROOT=$LOCAL_PVAPY_DIR $PVAPY_FLAGS"
+PVACCESS_BUILD_LIB_DIR=$PVAPY_BUILD_DIR/lib/python/$PYTHON_MAJOR_MINOR_VERSION/$EPICS_HOST_ARCH
 
 PVACCESS_LIB_DIR=lib/python/$PYTHON_MAJOR_MINOR_VERSION/$EPICS_HOST_ARCH
 
 echo "Using BUILD_FLAGS: $BUILD_FLAGS"
-cd $PVA_PY_BUILD_DIR
-make configure $PVA_PY_FLAGS || exit 1
+cd $PVAPY_BUILD_DIR
+make configure $PVAPY_FLAGS || exit 1
 make $BUILD_FLAGS || exit 1
 
 echo "Building pvapy docs"
 make doc || exit 1
-mkdir -p $LOCAL_PVA_PY_DOC_DIR
-rsync -arvlP documentation/sphinx/_build/html $LOCAL_PVA_PY_DOC_DIR/
-rsync -arvlP README.md $LOCAL_PVA_PY_DOC_DIR/
+mkdir -p $LOCAL_PVAPY_DOC_DIR
+rsync -arvlP documentation/sphinx/_build/html $LOCAL_PVAPY_DOC_DIR/
+rsync -arvlP README.md $LOCAL_PVAPY_DOC_DIR/
 
 echo "Installing pvapy library"
-mkdir -p $LOCAL_PVA_PY_LIB_DIR
-rsync -arv $PVACCESS_LIB_DIR/pvaccess.so $LOCAL_PVA_PY_LIB_DIR/
+mkdir -p $LOCAL_PVAPY_LIB_DIR
+rsync -arv $PVACCESS_LIB_DIR/pvaccess.so $LOCAL_PVAPY_LIB_DIR/
 mkdir -p $LOCAL_PY_LIB_DIR
 rsync -arv $PVACCESS_LIB_DIR/pvaccess.so $LOCAL_PY_LIB_DIR/
 

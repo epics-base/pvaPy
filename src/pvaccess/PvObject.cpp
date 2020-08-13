@@ -25,16 +25,16 @@
 
 namespace pvd = epics::pvData;
 namespace bp = boost::python;
-#if defined HAVE_NUM_PY_SUPPORT && HAVE_NUM_PY_SUPPORT == 1
+#if defined HAVE_NUMPY_SUPPORT && HAVE_NUMPY_SUPPORT == 1
 namespace np = numpy_;
-#endif // if defined HAVE_NUM_PY_SUPPORT && HAVE_NUM_PY_SUPPORT == 1
+#endif // if defined HAVE_NUMPY_SUPPORT && HAVE_NUMPY_SUPPORT == 1
 
-#if defined HAVE_NUM_PY_SUPPORT && HAVE_NUM_PY_SUPPORT == 1
-#include NUM_PY_HEADER_FILE
+#if defined HAVE_NUMPY_SUPPORT && HAVE_NUMPY_SUPPORT == 1
+#include NUMPY_HEADER_FILE
 const bool PvObject::UseNumPyArraysDefault(true);
 #else
 const bool PvObject::UseNumPyArraysDefault(false);
-#endif // if defined HAVE_NUM_PY_SUPPORT && HAVE_NUM_PY_SUPPORT == 1
+#endif // if defined HAVE_NUMPY_SUPPORT && HAVE_NUMPY_SUPPORT == 1
 
 // Constants
 const char* PvObject::ValueFieldKey(PVA_VALUE_FIELD_KEY);
@@ -802,14 +802,14 @@ bool PvObject::initializeBoostNumPy()
 {
     if (!boostNumPyInitialized) {
         boostNumPyInitialized = true;
-#if defined HAVE_NUM_PY_SUPPORT && HAVE_NUM_PY_SUPPORT == 1
+#if defined HAVE_NUMPY_SUPPORT && HAVE_NUMPY_SUPPORT == 1
         numpy_::initialize();
-#endif // if defined HAVE_NUM_PY_SUPPORT && HAVE_NUM_PY_SUPPORT == 1
+#endif // if defined HAVE_NUMPY_SUPPORT && HAVE_NUMPY_SUPPORT == 1
     }
     return true;
 }
 
-#if defined HAVE_NUM_PY_SUPPORT && HAVE_NUM_PY_SUPPORT == 1
+#if defined HAVE_NUMPY_SUPPORT && HAVE_NUMPY_SUPPORT == 1
 
 void PvObject::setUseNumPyArraysFlag(bool useNumPyArrays)
 {
@@ -821,7 +821,7 @@ bool PvObject::getUseNumPyArraysFlag() const
     return useNumPyArrays;
 }
 
-#endif // if defined HAVE_NUM_PY_SUPPORT && HAVE_NUM_PY_SUPPORT == 1
+#endif // if defined HAVE_NUMPY_SUPPORT && HAVE_NUMPY_SUPPORT == 1
 
 #if PVA_API_VERSION >= 482
 std::string PvObject::toJSON(bool multiLine)

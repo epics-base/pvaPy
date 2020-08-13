@@ -3,7 +3,7 @@ STATIC_DIR = _static
 TEMPLATES_DIR = _templates
 
 SPHINX_MAKEFILE   = Makefile.sphinx
-SPHINX_BUILD_PATH = $(PVA_PY_SPHINX_BUILD)
+SPHINX_BUILD_PATH = $(PVAPY_SPHINX_BUILD)
 ifeq ($(wildcard $(SPHINX_BUILD_PATH)),)
     SPHINX_BUILD_PATH = $(shell which sphinx-build 2> /dev/null)
 endif
