@@ -14,10 +14,10 @@ const char* PvCodec::ParametersFieldKey("parameters");
 
 bp::dict PvCodec::createStructureDict()
 {
-    bp::dict typeDict;
-    typeDict[NameFieldKey] = PvType::String;
-    typeDict[ParametersFieldKey] = bp::make_tuple();
-    return typeDict;
+    bp::dict structureDict;
+    structureDict[NameFieldKey] = PvType::String;
+    structureDict[ParametersFieldKey] = bp::make_tuple();
+    return structureDict;
 }
 
 PvCodec::PvCodec()
