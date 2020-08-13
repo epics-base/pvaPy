@@ -46,8 +46,13 @@ void wrapPvScalarArray();
 void wrapPvUnion();
 void wrapPvTimeStamp();
 void wrapPvAlarm();
+void wrapPvCodec();
+void wrapPvDimension();
+void wrapPvDisplay();
 
 void wrapNtType();
+void wrapNtAttribute();
+void wrapNtNdArray();
 void wrapNtTable();
 
 void wrapChannel();
@@ -121,8 +126,13 @@ BOOST_PYTHON_MODULE(pvaccess)
     wrapPvUnion();
     wrapPvTimeStamp();
     wrapPvAlarm();
+    wrapPvCodec();
+    wrapPvDimension();
+    wrapPvDisplay();
 
     wrapNtType();
+    wrapNtAttribute();
+    wrapNtNdArray();
     wrapNtTable();
 
     wrapChannel();

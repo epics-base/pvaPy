@@ -76,10 +76,15 @@ pvaccess_SRCS += pvaccess.PvScalarArray.cpp
 pvaccess_SRCS += pvaccess.PvUnion.cpp
 
 pvaccess_SRCS += pvaccess.PvAlarm.cpp
+pvaccess_SRCS += pvaccess.PvCodec.cpp
+pvaccess_SRCS += pvaccess.PvDimension.cpp
+pvaccess_SRCS += pvaccess.PvDisplay.cpp
 pvaccess_SRCS += pvaccess.PvTimeStamp.cpp
 
-pvaccess_SRCS += pvaccess.NtType.cpp
+pvaccess_SRCS += pvaccess.NtAttribute.cpp
+pvaccess_SRCS += pvaccess.NtNdArray.cpp
 pvaccess_SRCS += pvaccess.NtTable.cpp
+pvaccess_SRCS += pvaccess.NtType.cpp
 
 pvaccess_SRCS += pvaccess.Channel.cpp
 pvaccess_SRCS += pvaccess.MultiChannel.cpp
@@ -103,6 +108,8 @@ pvaccess_SRCS += InvalidDataType.cpp
 pvaccess_SRCS += InvalidRequest.cpp
 pvaccess_SRCS += InvalidState.cpp
 pvaccess_SRCS += MultiChannel.cpp
+pvaccess_SRCS += NtAttribute.cpp
+pvaccess_SRCS += NtNdArray.cpp
 pvaccess_SRCS += NtTable.cpp
 pvaccess_SRCS += NtType.cpp
 pvaccess_SRCS += ObjectAlreadyExists.cpp
@@ -115,6 +122,9 @@ pvaccess_SRCS += PvaPyLogger.cpp
 pvaccess_SRCS += PvAlarm.cpp
 pvaccess_SRCS += PvBoolean.cpp
 pvaccess_SRCS += PvByte.cpp
+pvaccess_SRCS += PvCodec.cpp
+pvaccess_SRCS += PvDimension.cpp
+pvaccess_SRCS += PvDisplay.cpp
 pvaccess_SRCS += PvDouble.cpp
 pvaccess_SRCS += PvFloat.cpp
 pvaccess_SRCS += PvInt.cpp
