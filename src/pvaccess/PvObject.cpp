@@ -23,6 +23,12 @@
 #include "InvalidRequest.h"
 #include "FieldNotFound.h"
 
+namespace pvd = epics::pvData;
+namespace bp = boost::python;
+#if defined HAVE_NUM_PY_SUPPORT && HAVE_NUM_PY_SUPPORT == 1
+namespace np = numpy_;
+#endif // if defined HAVE_NUM_PY_SUPPORT && HAVE_NUM_PY_SUPPORT == 1
+
 #if defined HAVE_NUM_PY_SUPPORT && HAVE_NUM_PY_SUPPORT == 1
 #include NUM_PY_HEADER_FILE
 const bool PvObject::UseNumPyArraysDefault(true);
@@ -35,7 +41,7 @@ const char* PvObject::ValueFieldKey(PVA_VALUE_FIELD_KEY);
 const char* PvObject::StructureId(PVA_STRUCTURE_ID);
 
 // Constructors
-PvObject::PvObject(const epics::pvData::PVStructurePtr& pvStructurePtr_)
+PvObject::PvObject(const pvd::PVStructurePtr& pvStructurePtr_)
     : pvStructurePtr(pvStructurePtr_),
     dataType(PvType::Structure),
     useNumPyArrays(UseNumPyArraysDefault)
@@ -43,16 +49,16 @@ PvObject::PvObject(const epics::pvData::PVStructurePtr& pvStructurePtr_)
     initializeBoostNumPy();
 }
 
-PvObject::PvObject(const boost::python::dict& structureDict, const std::string& structureId)
-    : pvStructurePtr(epics::pvData::getPVDataCreate()->createPVStructure(PyPvDataUtility::createStructureFromDict(structureDict, structureId))),
+PvObject::PvObject(const bp::dict& structureDict, const std::string& structureId)
+    : pvStructurePtr(pvd::getPVDataCreate()->createPVStructure(PyPvDataUtility::createStructureFromDict(structureDict, structureId))),
     dataType(PvType::Structure),
     useNumPyArrays(UseNumPyArraysDefault)
 {
     initializeBoostNumPy();
 }
 
-PvObject::PvObject(const boost::python::dict& structureDict, const boost::python::dict& valueDict, const std::string& structureId)
-    : pvStructurePtr(epics::pvData::getPVDataCreate()->createPVStructure(PyPvDataUtility::createStructureFromDict(structureDict, structureId))),
+PvObject::PvObject(const bp::dict& structureDict, const bp::dict& valueDict, const std::string& structureId)
+    : pvStructurePtr(pvd::getPVDataCreate()->createPVStructure(PyPvDataUtility::createStructureFromDict(structureDict, structureId))),
     dataType(PvType::Structure),
     useNumPyArrays(UseNumPyArraysDefault)
 {
@@ -74,18 +80,18 @@ PvObject::~PvObject()
 }
 
 // Static methods
-bool PvObject::isPvObjectInstance(const boost::python::object& pyObject)
+bool PvObject::isPvObjectInstance(const bp::object& pyObject)
 {
-    boost::python::extract<PvObject> extractPvObject(pyObject);
+    bp::extract<PvObject> extractPvObject(pyObject);
     if (extractPvObject.check()) {
         return true;
     }
     return false;
 }
 
-bool PvObject::pvObjectToPyDict(const boost::python::object& pyObject, boost::python::object& pyDict)
+bool PvObject::pvObjectToPyDict(const bp::object& pyObject, bp::object& pyDict)
 {
-    boost::python::extract<PvObject> extractPvObject(pyObject);
+    bp::extract<PvObject> extractPvObject(pyObject);
     if (extractPvObject.check()) {
         PvObject o = extractPvObject();
         pyDict = o.toDict();
@@ -96,37 +102,37 @@ bool PvObject::pvObjectToPyDict(const boost::python::object& pyObject, boost::py
 
 
 // Operators/conversion methods
-epics::pvData::PVStructurePtr PvObject::getPvStructurePtr() const
+pvd::PVStructurePtr PvObject::getPvStructurePtr() const
 {
     return pvStructurePtr;
 }
 
-epics::pvData::StructureConstPtr PvObject::getStructurePtr() const
+pvd::StructureConstPtr PvObject::getStructurePtr() const
 {
     return pvStructurePtr->getStructure();
 }
 
-PvObject::operator epics::pvData::PVStructurePtr()
+PvObject::operator pvd::PVStructurePtr()
 {
     return pvStructurePtr;
 }
 
-PvObject::operator boost::python::dict() const
+PvObject::operator bp::dict() const
 {
     return toDict();
 }
 
-boost::python::dict PvObject::toDict() const
+bp::dict PvObject::toDict() const
 {
-    boost::python::dict pyDict;
+    bp::dict pyDict;
     PyPvDataUtility::structureToPyDict(pvStructurePtr, pyDict, useNumPyArrays);
     return pyDict;
 }
 
 // Introspection
-boost::python::dict PvObject::getStructureDict() const 
+bp::dict PvObject::getStructureDict() const 
 {
-    boost::python::dict pyDict;
+    bp::dict pyDict;
     PyPvDataUtility::structureToPyDict(getStructurePtr(), pyDict);
     return pyDict;
 }
@@ -142,7 +148,7 @@ std::ostream& operator<<(std::ostream& out, const PvObject& pvObject)
     return out;
 }
 
-epics::pvData::PVStructurePtr& operator<<(epics::pvData::PVStructurePtr& pvStructurePtr, const PvObject& pvObject)
+pvd::PVStructurePtr& operator<<(pvd::PVStructurePtr& pvStructurePtr, const PvObject& pvObject)
 {
     PyPvDataUtility::copyStructureToStructure(pvObject.getPvStructurePtr(), pvStructurePtr);
     return pvStructurePtr;
@@ -156,17 +162,17 @@ bool PvObject::has_key(const std::string& fieldPath) const
     return hasField(fieldPath);
 }
 
-boost::python::list PvObject::items() const
+bp::list PvObject::items() const
 {
     return toDict().items();
 }
 
-boost::python::list PvObject::keys() const
+bp::list PvObject::keys() const
 {
     return toDict().keys();
 }
 
-boost::python::list PvObject::values() const 
+bp::list PvObject::values() const 
 {
     return toDict().values();
 }
@@ -188,33 +194,38 @@ bool PvObject::hasField(const std::string& fieldPath) const
 //
 // Object set/get
 //
-void PvObject::set(const boost::python::dict& pyDict)
+void PvObject::set(const bp::dict& pyDict)
 {
     PyPvDataUtility::pyDictToStructure(pyDict, pvStructurePtr);
 }
 
-boost::python::dict PvObject::get() const
+void PvObject::set(const PvObject& pvObject)
+{
+    PyPvDataUtility::pyDictToStructure(pvObject.toDict(), pvStructurePtr);
+}
+
+bp::dict PvObject::get() const
 {
     return toDict();
 }
 
-void PvObject::setPyObject(const std::string& fieldPath, const boost::python::object& pyObject)
+void PvObject::setPyObject(const std::string& fieldPath, const bp::object& pyObject)
 {
     PyPvDataUtility::setPyObjectToFieldPath(pyObject, fieldPath, pvStructurePtr);
 }
 
-void PvObject::setPyObject(const boost::python::object& pyObject)
+void PvObject::setPyObject(const bp::object& pyObject)
 {
     std::string key = PyPvDataUtility::getValueOrSingleFieldName(pvStructurePtr);
     setPyObject(key, pyObject);
 }
 
-boost::python::object PvObject::getPyObject(const std::string& fieldPath) const
+bp::object PvObject::getPyObject(const std::string& fieldPath) const
 {
     return PyPvDataUtility::getFieldPathAsPyObject(fieldPath, pvStructurePtr, useNumPyArrays);
 }
 
-boost::python::object PvObject::getPyObject() const
+bp::object PvObject::getPyObject() const
 {
     std::string key = PyPvDataUtility::getValueOrSingleFieldName(pvStructurePtr);
     return getPyObject(key);
@@ -223,11 +234,11 @@ boost::python::object PvObject::getPyObject() const
 std::string PvObject::getAsString(const std::string& fieldPath) const
 {
     if (PyPvDataUtility::isFieldPathCharScalarArray(fieldPath, pvStructurePtr)) {
-        boost::python::object o = PyPvDataUtility::getFieldPathAsPyObject(fieldPath, pvStructurePtr, false);
+        bp::object o = PyPvDataUtility::getFieldPathAsPyObject(fieldPath, pvStructurePtr, false);
         return PyUtility::extractStringFromPyList(o);
     }
     else {
-        boost::python::object o = PyPvDataUtility::getFieldPathAsPyObject(fieldPath, pvStructurePtr, useNumPyArrays);
+        bp::object o = PyPvDataUtility::getFieldPathAsPyObject(fieldPath, pvStructurePtr, useNumPyArrays);
         return PyUtility::extractStringFromPyObject(o);
     }
 }
@@ -514,25 +525,23 @@ std::string PvObject::getString() const
 }
 
 // Scalar array modifiers/accessors
-void PvObject::setScalarArray(const std::string& key, const boost::python::list& pyList)
+void PvObject::setScalarArray(const std::string& key, const bp::list& pyList)
 {
-    PyPvDataUtility::pyListToScalarArrayField(pyList, key, pvStructurePtr);
+    PyPvDataUtility::pyObjectToScalarArrayField(pyList, key, pvStructurePtr);
 }
 
-void PvObject::setScalarArray(const boost::python::list& pyList)
+void PvObject::setScalarArray(const bp::list& pyList)
 {
     std::string key = PyPvDataUtility::getValueOrSingleFieldName(pvStructurePtr);
     setScalarArray(key, pyList);
 }
 
-boost::python::list PvObject::getScalarArray(const std::string& key) const
+bp::object PvObject::getScalarArray(const std::string& key) const
 {
-    boost::python::list pyList;
-    PyPvDataUtility::scalarArrayFieldToPyList(key, pvStructurePtr, pyList);
-    return pyList;
+    return PyPvDataUtility::getScalarArrayFieldAsPyObject(key, pvStructurePtr, useNumPyArrays);
 }
 
-boost::python::list PvObject::getScalarArray() const
+bp::object PvObject::getScalarArray() const
 {
     std::string key = PyPvDataUtility::getValueOrSingleFieldName(pvStructurePtr);
     return getScalarArray(key);
@@ -541,7 +550,7 @@ boost::python::list PvObject::getScalarArray() const
 // Structure modifiers/accessors
 void PvObject::setStructure(const std::string& key, const PvObject& pvObject)
 {
-    epics::pvData::PVStructurePtr pvStructurePtr2 = PyPvDataUtility::getStructureField(key, pvStructurePtr);
+    pvd::PVStructurePtr pvStructurePtr2 = PyPvDataUtility::getStructureField(key, pvStructurePtr);
     PyPvDataUtility::copyStructureToStructure(pvObject.getPvStructurePtr(), pvStructurePtr2);
 }
 
@@ -551,50 +560,50 @@ void PvObject::setStructure(const PvObject& pvObject)
     setStructure(key, pvObject);
 }
 
-void PvObject::setStructure(const std::string& key, const boost::python::dict& pyDict)
+void PvObject::setStructure(const std::string& key, const bp::dict& pyDict)
 {
     PyPvDataUtility::pyDictToStructureField(pyDict, key, pvStructurePtr);
 }
 
-void PvObject::setStructure(const boost::python::dict& pyDict)
+void PvObject::setStructure(const bp::dict& pyDict)
 {
     std::string key = PyPvDataUtility::getValueOrSingleFieldName(pvStructurePtr);
     setStructure(key, pyDict);
 }
 
-boost::python::dict PvObject::getStructure(const std::string& key) const
+bp::dict PvObject::getStructure(const std::string& key) const
 {
-    boost::python::dict pyDict;
+    bp::dict pyDict;
     PyPvDataUtility::structureFieldToPyDict(key, pvStructurePtr, pyDict, useNumPyArrays);
     return pyDict;
 }
 
-boost::python::dict PvObject::getStructure() const
+bp::dict PvObject::getStructure() const
 {
     std::string key = PyPvDataUtility::getValueOrSingleFieldName(pvStructurePtr);
     return getStructure(key);
 }
 
 // Structure array modifiers/accessors
-void PvObject::setStructureArray(const std::string& key, const boost::python::list& pyList)
+void PvObject::setStructureArray(const std::string& key, const bp::list& pyList)
 {
     PyPvDataUtility::pyListToStructureArrayField(pyList, key, pvStructurePtr);
 }
 
-void PvObject::setStructureArray(const boost::python::list& pyList)
+void PvObject::setStructureArray(const bp::list& pyList)
 {
     std::string key = PyPvDataUtility::getValueOrSingleFieldName(pvStructurePtr);
     setStructureArray(key, pyList);
 }
 
-boost::python::list PvObject::getStructureArray(const std::string& key) const
+bp::list PvObject::getStructureArray(const std::string& key) const
 {
-    boost::python::list pyList;
+    bp::list pyList;
     PyPvDataUtility::structureArrayFieldToPyList(key, pvStructurePtr, pyList, useNumPyArrays);
     return pyList;
 }
 
-boost::python::list PvObject::getStructureArray() const
+bp::list PvObject::getStructureArray() const
 {
     std::string key = PyPvDataUtility::getValueOrSingleFieldName(pvStructurePtr);
     return getStructureArray(key);
@@ -603,9 +612,9 @@ boost::python::list PvObject::getStructureArray() const
 // Union fields
 void PvObject::setUnion(const std::string& key, const PvObject& value)
 {
-    epics::pvData::PVUnionPtr pvUnionPtr = PyPvDataUtility::getUnionField(key, pvStructurePtr);
+    pvd::PVUnionPtr pvUnionPtr = PyPvDataUtility::getUnionField(key, pvStructurePtr);
     std::string keyFrom = PyPvDataUtility::getValueOrSingleFieldName(value.getPvStructurePtr());
-    epics::pvData::PVFieldPtr pvFrom = PyPvDataUtility::getSubField(keyFrom, value.getPvStructurePtr());
+    pvd::PVFieldPtr pvFrom = PyPvDataUtility::getSubField(keyFrom, value.getPvStructurePtr());
     PyPvDataUtility::setUnionField(pvFrom, pvUnionPtr);
 }
 
@@ -615,23 +624,23 @@ void PvObject::setUnion(const PvObject& value)
     setUnion(key, value);
 }
 
-void PvObject::setUnion(const std::string& key, const boost::python::dict& pyDict)
+void PvObject::setUnion(const std::string& key, const bp::dict& pyDict)
 {
     PyPvDataUtility::pyDictToUnionField(pyDict, key, pvStructurePtr);
 }
 
-void PvObject::setUnion(const boost::python::dict& pyDict)
+void PvObject::setUnion(const bp::dict& pyDict)
 {
     std::string key = PyPvDataUtility::getValueOrSingleFieldName(pvStructurePtr);
     setUnion(key, pyDict);
 }
 
-void PvObject::setUnion(const std::string& key, const boost::python::tuple& pyTuple)
+void PvObject::setUnion(const std::string& key, const bp::tuple& pyTuple)
 {
     PyPvDataUtility::pyTupleToUnionField(pyTuple, key, pvStructurePtr);
 }
 
-void PvObject::setUnion(const boost::python::tuple& pyTuple)
+void PvObject::setUnion(const bp::tuple& pyTuple)
 {
     std::string key = PyPvDataUtility::getValueOrSingleFieldName(pvStructurePtr);
     setUnion(key, pyTuple);
@@ -639,7 +648,7 @@ void PvObject::setUnion(const boost::python::tuple& pyTuple)
 
 PvObject PvObject::getUnion(const std::string& key) const
 {
-    epics::pvData::PVStructurePtr unionPvStructurePtr = PyPvDataUtility::getUnionPvStructurePtr(key, pvStructurePtr);
+    pvd::PVStructurePtr unionPvStructurePtr = PyPvDataUtility::getUnionPvStructurePtr(key, pvStructurePtr);
     return PvObject(unionPvStructurePtr); 
 }
 
@@ -649,16 +658,16 @@ PvObject PvObject::getUnion() const
     return getUnion(key);
 }
 
-boost::python::list PvObject::getUnionFieldNames(const std::string& key) const
+bp::list PvObject::getUnionFieldNames(const std::string& key) const
 {
-    epics::pvData::PVUnionPtr pvUnionPtr = PyPvDataUtility::getUnionField(key, pvStructurePtr);
-    epics::pvData::StringArray names = pvUnionPtr->getUnion()->getFieldNames();
-    boost::python::list pyList;
+    pvd::PVUnionPtr pvUnionPtr = PyPvDataUtility::getUnionField(key, pvStructurePtr);
+    pvd::StringArray names = pvUnionPtr->getUnion()->getFieldNames();
+    bp::list pyList;
     PyPvDataUtility::stringArrayToPyList(names, pyList);
     return pyList;
 }
 
-boost::python::list PvObject::getUnionFieldNames() const
+bp::list PvObject::getUnionFieldNames() const
 {
     std::string key = PyPvDataUtility::getValueOrSingleFieldName(pvStructurePtr);
     return getUnionFieldNames(key);
@@ -666,7 +675,7 @@ boost::python::list PvObject::getUnionFieldNames() const
 
 std::string PvObject::getSelectedUnionFieldName(const std::string& key) const
 {
-    epics::pvData::PVUnionPtr pvUnionPtr = PyPvDataUtility::getUnionField(key, pvStructurePtr);
+    pvd::PVUnionPtr pvUnionPtr = PyPvDataUtility::getUnionField(key, pvStructurePtr);
     return pvUnionPtr->getSelectedFieldName();
 }
 
@@ -678,9 +687,9 @@ std::string PvObject::getSelectedUnionFieldName() const
 
 PvObject PvObject::selectUnionField(const std::string& key, const std::string& fieldName) const
 {
-    epics::pvData::PVUnionPtr pvUnionPtr = PyPvDataUtility::getUnionField(key, pvStructurePtr);
+    pvd::PVUnionPtr pvUnionPtr = PyPvDataUtility::getUnionField(key, pvStructurePtr);
     try {
-        epics::pvData::PVFieldPtr pvField = pvUnionPtr->select(fieldName);
+        pvd::PVFieldPtr pvField = pvUnionPtr->select(fieldName);
     } 
     catch (std::runtime_error e) {
         throw FieldNotFound("Unknown field name: %s", fieldName.c_str());
@@ -696,7 +705,7 @@ PvObject PvObject::selectUnionField(const std::string& fieldName) const
 
 bool PvObject::isUnionVariant(const std::string& key) const
 {
-    epics::pvData::PVUnionPtr pvUnionPtr = PyPvDataUtility::getUnionField(key, pvStructurePtr);
+    pvd::PVUnionPtr pvUnionPtr = PyPvDataUtility::getUnionField(key, pvStructurePtr);
     return pvUnionPtr->getUnion()->isVariant();
 }
 
@@ -708,7 +717,7 @@ bool PvObject::isUnionVariant() const
 
 PvObject PvObject::createUnionField(const std::string& key, const std::string& fieldName) const
 {
-    epics::pvData::PVUnionPtr pvUnionPtr = PyPvDataUtility::getUnionField(key, pvStructurePtr);
+    pvd::PVUnionPtr pvUnionPtr = PyPvDataUtility::getUnionField(key, pvStructurePtr);
     return PvObject(PyPvDataUtility::createUnionFieldPvStructure(pvUnionPtr->getUnion(), fieldName));
 }
 
@@ -719,22 +728,22 @@ PvObject PvObject::createUnionField(const std::string& fieldName) const
 }
 
 // UnionArray fields
-void PvObject::setUnionArray(const std::string& key, const boost::python::list& pyList)
+void PvObject::setUnionArray(const std::string& key, const bp::list& pyList)
 {
     PyPvDataUtility::pyListToUnionArrayField(pyList, key, pvStructurePtr);
 }
 
-void PvObject::setUnionArray(const boost::python::list& pyList)
+void PvObject::setUnionArray(const bp::list& pyList)
 {
     std::string key = PyPvDataUtility::getValueOrSingleFieldName(pvStructurePtr);
     setUnionArray(key, pyList);
 }
 
-boost::python::list PvObject::getUnionArray(const std::string& key) const
+bp::list PvObject::getUnionArray(const std::string& key) const
 {
-    epics::pvData::PVUnionArrayPtr pvUnionArrayPtr = PyPvDataUtility::getUnionArrayField(key, pvStructurePtr);
-    epics::pvData::PVUnionArray::const_svector data = pvUnionArrayPtr->view();
-    boost::python::list pyList;
+    pvd::PVUnionArrayPtr pvUnionArrayPtr = PyPvDataUtility::getUnionArrayField(key, pvStructurePtr);
+    pvd::PVUnionArray::const_svector data = pvUnionArrayPtr->view();
+    bp::list pyList;
     for(size_t i = 0; i < data.size(); ++i) {
         std::string fieldName = data[i]->getSelectedFieldName();
         pyList.append(PvObject(PyPvDataUtility::createUnionPvStructure(data[i], fieldName)));
@@ -742,7 +751,7 @@ boost::python::list PvObject::getUnionArray(const std::string& key) const
     return pyList;
 }
 
-boost::python::list PvObject::getUnionArray() const
+bp::list PvObject::getUnionArray() const
 {
     std::string key = PyPvDataUtility::getValueOrSingleFieldName(pvStructurePtr);
     return getUnionArray(key);
@@ -750,7 +759,7 @@ boost::python::list PvObject::getUnionArray() const
 
 bool PvObject::isUnionArrayVariant(const std::string& key) const
 {
-    epics::pvData::PVUnionArrayPtr pvUnionArrayPtr = PyPvDataUtility::getUnionArrayField(key, pvStructurePtr);
+    pvd::PVUnionArrayPtr pvUnionArrayPtr = PyPvDataUtility::getUnionArrayField(key, pvStructurePtr);
     return pvUnionArrayPtr->getUnionArray()->getUnion()->isVariant();
 }
 
@@ -760,16 +769,16 @@ bool PvObject::isUnionArrayVariant() const
     return isUnionArrayVariant(key);
 }
 
-boost::python::list PvObject::getUnionArrayFieldNames(const std::string& key) const
+bp::list PvObject::getUnionArrayFieldNames(const std::string& key) const
 {
-    epics::pvData::PVUnionArrayPtr pvUnionArrayPtr = PyPvDataUtility::getUnionArrayField(key, pvStructurePtr);
-    epics::pvData::StringArray names = pvUnionArrayPtr->getUnionArray()->getUnion()->getFieldNames();
-    boost::python::list pyList;
+    pvd::PVUnionArrayPtr pvUnionArrayPtr = PyPvDataUtility::getUnionArrayField(key, pvStructurePtr);
+    pvd::StringArray names = pvUnionArrayPtr->getUnionArray()->getUnion()->getFieldNames();
+    bp::list pyList;
     PyPvDataUtility::stringArrayToPyList(names, pyList);
     return pyList;
 }
 
-boost::python::list PvObject::getUnionArrayFieldNames() const
+bp::list PvObject::getUnionArrayFieldNames() const
 {
     std::string key = PyPvDataUtility::getValueOrSingleFieldName(pvStructurePtr);
     return getUnionArrayFieldNames(key);
@@ -777,7 +786,7 @@ boost::python::list PvObject::getUnionArrayFieldNames() const
 
 PvObject PvObject::createUnionArrayElementField(const std::string& key, const std::string& fieldName) const
 {
-    epics::pvData::PVUnionArrayPtr pvUnionArrayPtr = PyPvDataUtility::getUnionArrayField(key, pvStructurePtr);
+    pvd::PVUnionArrayPtr pvUnionArrayPtr = PyPvDataUtility::getUnionArrayField(key, pvStructurePtr);
     return PvObject(PyPvDataUtility::createUnionFieldPvStructure(pvUnionArrayPtr->getUnionArray()->getUnion(), fieldName));
 }
 
@@ -819,13 +828,13 @@ std::string PvObject::toJSON(bool multiLine)
 {
     if(!pvStructurePtr) throw PvaException("pvStructure is null");
     try {
-        epics::pvData::JSONPrintOptions opts;
+        pvd::JSONPrintOptions opts;
         opts.ignoreUnprintable = true;
         opts.multiLine = multiLine;
-        epics::pvData::BitSetPtr bitSet(new epics::pvData::BitSet(pvStructurePtr->getStructure()->getNumberFields()));
+        pvd::BitSetPtr bitSet(new pvd::BitSet(pvStructurePtr->getStructure()->getNumberFields()));
         bitSet->set(0);
         std::ostringstream strm;
-        epics::pvData::printJSON(strm,*pvStructurePtr,*bitSet,opts);
+        pvd::printJSON(strm,*pvStructurePtr,*bitSet,opts);
         return strm.str();
     } 
     catch (std::runtime_error& ex) {

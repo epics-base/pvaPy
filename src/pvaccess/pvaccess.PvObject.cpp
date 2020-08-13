@@ -10,6 +10,7 @@
 
 using namespace boost::python;
 
+
 //
 // PvObject class
 //
@@ -122,6 +123,17 @@ class_<PvObject>("PvObject",
         "::\n\n"
         "    pv = PvObject({'anUInt' : UINT, 'aString' : STRING})\n\n"
         "    pv.set({'anUInt' : 1, 'aString' : 'my string example'})\n\n")
+
+    .def("set", 
+        static_cast<void(PvObject::*)(const PvObject&)>(&PvObject::set),
+        args("valueObject"),
+        "Populates PV structure fields from PvObject.\n\n"
+        ":Parameter: *valueObject* (PvObject) - object that correspond to PV structure field names and their values\n\n"
+        ":Raises: *FieldNotFound* - in case PV structure does not have one of the dictionary keys\n"
+        ":Raises: *InvalidDataType* - in case PV structure field type does not match type of the corresponding dictionary value\n\n"
+        "::\n\n"
+        "    pv = PvObject({'anUInt' : UINT, 'aString' : STRING})\n\n"
+        "    pv.set(PvObject({'anUInt' : UINT},{'anUInt' : 1}))\n\n")
 
     .def("get", 
         static_cast<boost::python::dict(PvObject::*)()const>(&PvObject::get), 
@@ -805,7 +817,7 @@ class_<PvObject>("PvObject",
         "    pv.setScalarArray('aScalarArray', [0,1,2,3,4])\n\n")
 
     .def("getScalarArray", 
-        static_cast<boost::python::list(PvObject::*)()const>(&PvObject::getScalarArray), 
+        static_cast<boost::python::object(PvObject::*)()const>(&PvObject::getScalarArray), 
         "Retrieves scalar array value from a single-field structure, or from a structure that has scalar array field named 'value'.\n\n"
         ":Returns: list of scalar values\n\n"
         ":Raises: *InvalidRequest* - when single-field structure has no scalar array field or multiple-field structure has no scalar array 'value' field\n\n"
@@ -814,7 +826,7 @@ class_<PvObject>("PvObject",
         "    valueList = pv.getScalarArray()\n\n")
 
     .def("getScalarArray", 
-        static_cast<boost::python::list(PvObject::*)(const std::string&)const>(&PvObject::getScalarArray), 
+        static_cast<boost::python::object(PvObject::*)(const std::string&)const>(&PvObject::getScalarArray), 
         args("fieldName"), 
         "Retrieves scalar array value assigned to the given PV field.\n\n"
         ":Parameter: *fieldName* (str) - field name\n\n"

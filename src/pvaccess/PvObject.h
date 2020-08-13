@@ -57,6 +57,7 @@ public:
 
     // Object set/get
     void set(const boost::python::dict& pyDict);
+    void set(const PvObject& pvObject);
     boost::python::dict get() const;
 
     void setPyObject(const std::string& fieldPath, const boost::python::object& pyObject);
@@ -141,8 +142,8 @@ public:
     // Scalar array fields
     void setScalarArray(const std::string& key, const boost::python::list& pyList);
     void setScalarArray(const boost::python::list& pyList);
-    boost::python::list getScalarArray(const std::string& key) const;
-    boost::python::list getScalarArray() const;
+    boost::python::object getScalarArray(const std::string& key) const;
+    boost::python::object getScalarArray() const;
 
     // Structure fields
     void setStructure(const std::string& key, const PvObject& pvObject);
