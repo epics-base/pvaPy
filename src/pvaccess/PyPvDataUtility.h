@@ -20,6 +20,7 @@
 #include NUM_PY_HEADER_FILE
 #endif // if defined HAVE_NUM_PY_SUPPORT && HAVE_NUM_PY_SUPPORT == 1
 
+#include "PvType.h"
 #include "PyUtility.h"
 #include "ScalarArrayPyOwner.h"
 #include "InvalidDataType.h"
@@ -203,14 +204,14 @@ void structureFieldToPyDict(const std::string& fieldName, const epics::pvData::P
 //
 // Add PV Scalar => PY {}
 // 
-void addScalarFieldToDict(const std::string& fieldName, epics::pvData::ScalarType scalarType, const epics::pvData::PVStructurePtr& pvStructurePtr, boost::python::dict& pyDict);
-boost::python::object getScalarFieldAsPyObject(const std::string& fieldName, epics::pvData::ScalarType scalarType, const epics::pvData::PVStructurePtr& pvStructurePtr);
+void addScalarFieldToDict(const std::string& fieldName, const epics::pvData::PVStructurePtr& pvStructurePtr, boost::python::dict& pyDict);
+boost::python::object getScalarFieldAsPyObject(const std::string& fieldName, const epics::pvData::PVStructurePtr& pvStructurePtr);
 
 //
 // Add PV Scalar Array => PY {}
 // 
-void addScalarArrayFieldToDict(const std::string& fieldName, epics::pvData::ScalarType scalarType, const epics::pvData::PVStructurePtr& pvStructurePtr, boost::python::dict& pyDict, bool useNumPyArrays);
-boost::python::object getScalarArrayFieldAsPyObject(const std::string& fieldName, epics::pvData::ScalarType scalarType, const epics::pvData::PVStructurePtr& pvStructurePtr, bool useNumPyArrays);
+void addScalarArrayFieldToDict(const std::string& fieldName, const epics::pvData::PVStructurePtr& pvStructurePtr, boost::python::dict& pyDict, bool useNumPyArrays);
+boost::python::object getScalarArrayFieldAsPyObject(const std::string& fieldName, const epics::pvData::PVStructurePtr& pvStructurePtr, bool useNumPyArrays);
 
 //
 // Add PV Structure => PY {}
@@ -280,6 +281,8 @@ void copyScalarArrayToStructure(const std::string& fieldName, epics::pvData::Sca
 // 
 // Methods for creating structure
 //
+boost::python::list createStructureList(PvType::ScalarType pvType);
+boost::python::list createStructureList(const boost::python::dict& pyDict);
 epics::pvData::StructureConstPtr createStructureFromDict(const boost::python::dict& pyDict, const std::string& structureId="");
 epics::pvData::UnionConstPtr createUnionFromDict(const boost::python::dict& pyDict, const std::string& structureId="");
 void updateFieldArrayFromDict(const boost::python::dict& pyDict, epics::pvData::FieldConstPtrArray& fields, epics::pvData::StringArray& names);
