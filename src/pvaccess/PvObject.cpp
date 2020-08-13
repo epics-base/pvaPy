@@ -525,15 +525,15 @@ std::string PvObject::getString() const
 }
 
 // Scalar array modifiers/accessors
-void PvObject::setScalarArray(const std::string& key, const bp::list& pyList)
+void PvObject::setScalarArray(const std::string& key, const bp::object& pyObject)
 {
-    PyPvDataUtility::pyObjectToScalarArrayField(pyList, key, pvStructurePtr);
+    PyPvDataUtility::pyObjectToScalarArrayField(pyObject, key, pvStructurePtr);
 }
 
-void PvObject::setScalarArray(const bp::list& pyList)
+void PvObject::setScalarArray(const bp::object& pyObject)
 {
     std::string key = PyPvDataUtility::getValueOrSingleFieldName(pvStructurePtr);
-    setScalarArray(key, pyList);
+    setScalarArray(key, pyObject);
 }
 
 bp::object PvObject::getScalarArray(const std::string& key) const

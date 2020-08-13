@@ -140,8 +140,8 @@ public:
     std::string getString() const;
 
     // Scalar array fields
-    void setScalarArray(const std::string& key, const boost::python::list& pyList);
-    void setScalarArray(const boost::python::list& pyList);
+    void setScalarArray(const std::string& key, const boost::python::object& pyObject);
+    void setScalarArray(const boost::python::object& pyObject);
     boost::python::object getScalarArray(const std::string& key) const;
     boost::python::object getScalarArray() const;
 
