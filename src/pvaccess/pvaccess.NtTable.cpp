@@ -108,7 +108,8 @@ class_<NtTable, bases<NtType> >("NtTable",
         "Sets table time stamp.\n\n"
         ":Parameter: *timeStamp* (PvTimeStamp) - table time stamp object\n\n"
         "::\n\n"
-        "    timeStamp = PvTimeStamp(1234567890, 10000, 1)\n\n    table.setTimeStamp(timeStamp)\n\n")
+        "    timeStamp = PvTimeStamp(1234567890, 10000, 1)\n\n"
+        "    table.setTimeStamp(timeStamp)\n\n")
 
     .def("getAlarm", 
         &NtTable::getAlarm, 
