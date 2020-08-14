@@ -29,6 +29,8 @@ class_<PvDimension, bases<PvObject> >("PvDimension",
 
     .def(init<int, int, int, int, bool>())
 
+    .def(init<const PvObject&>())
+
     .def("getSize", 
         &PvDimension::getSize, 
         "Retrieves dimension size.\n\n"

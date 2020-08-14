@@ -27,6 +27,8 @@ class_<PvAlarm, bases<PvObject> >("PvAlarm",
 
     .def(init<int, int, const std::string&>())
 
+    .def(init<const PvObject&>())
+
     .def("getSeverity", 
         &PvAlarm::getSeverity, 
         "Retrieves alarm severity.\n\n"

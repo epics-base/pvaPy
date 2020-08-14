@@ -30,6 +30,8 @@ class_<PvTimeStamp, bases<PvObject> >("PvTimeStamp",
 
     .def(init<long long, int, int>())
 
+    .def(init<const PvObject&>())
+
     .def("getSecondsPastEpoch", 
         &PvTimeStamp::getSecondsPastEpoch, 
         "Retrieves time stamp value for seconds past epoch.\n\n"

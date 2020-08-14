@@ -29,6 +29,8 @@ class_<PvDisplay, bases<PvObject> >("PvDisplay",
 
     .def(init<double, double, const std::string&, const std::string&, const std::string&>())
 
+    .def(init<const PvObject&>())
+
     .def("getLimitLow", 
         &PvDisplay::getLimitLow, 
         "Retrieves limit low value.\n\n"

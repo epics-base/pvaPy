@@ -26,6 +26,8 @@ class_<NtAttribute, bases<PvObject> >("NtAttribute",
 
     .def(init<const std::string&, const PvObject&>())
 
+    .def(init<const PvObject&>())
+
     .def("getName", 
         &NtAttribute::getName, 
         "Retrieves attribute name.\n\n"

@@ -510,22 +510,21 @@ class_<Channel>("Channel",
 #if PVA_API_VERSION >= 482
     .def("parsePut", 
         static_cast<void(Channel::*)(const boost::python::list&, const std::string&,bool)>(&Channel::parsePut), 
-        args("argList", "requestDescriptor","zeroArrayLength"), 
-        "Assigns json args to the channel PV according to the specified request descriptor.\n"
-        ":arguments\n"
-        "     argList (list) - json args that will be assigned to the channel PV\n"
-        "     requestDescriptor (str) - request to pass to createRequest\n"
-        "     zeroArrayLength (True or False) - call zeroArrayLength before parse\n")
+        args("argList", "requestDescriptor", "zeroArrayLength"), 
+        "Assigns json args to the channel PV according to the specified request descriptor.\n\n"
+        ":Parameter: *argList* (list) - json args that will be assigned to the channel PV\n\n"
+        ":Parameter: *requestDescriptor* (str) - request to pass to createRequest\n\n"
+        ":Parameter: *zeroArrayLength* (bool) - if true, call zeroArrayLength before parse\n\n")
 
     .def("parsePutGet",
         static_cast<PvObject*(Channel::*)(const boost::python::list&, const std::string&,bool)>(&Channel::parsePutGet), 
         return_value_policy<manage_new_object>(),
-        args("valueList", "requestDescriptor","zeroArrayLength"),
-        ":arguments\n"
-        "     argList (list) - json args that will be assigned to the channel PV\n"
-        "     requestDescriptor (str) - request to pass to createRequest\n"
-        "     zeroArrayLength (True or False) - call zeroArrayLength before parse\n"
-        ":returns: channel PV data corresponding to the specified request descriptor\n")
+        args("argList", "requestDescriptor", "zeroArrayLength"),
+        "Assigns json args to the channel PV according to the specified request descriptor, and returns new value.\n\n"
+        ":Parameter: *argList* (list) - json args that will be assigned to the channel PV\n\n"
+        ":Parameter: *requestDescriptor* (str) - request to pass to createRequest\n\n"
+        ":Parameter: *zeroArrayLength* (bool) - if true, call zeroArrayLength before parse\n\n"
+        ":returns: channel PV data corresponding to the specified request descriptor\n\n")
 #endif // if PVA_API_VERSION >= 482
 
     //

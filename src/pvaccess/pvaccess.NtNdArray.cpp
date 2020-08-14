@@ -21,9 +21,10 @@ class_<NtNdArray, bases<NtType> >("NtNdArray",
     "\t:Parameter: *extraFieldsDict* (dict) - dictionary of key:value pairs describing the additional PV structure fields in terms of field names and their types\n\n"
     "\t::\n\n"
     "\t\ta2 = NtNdArray({'detectorName' : STRING, 'imageCrc' : STRING})\n\n"
-    "**NtNdArray(pvObject)**\n\n"
-    "\t:Parameter: *pvObject* (PvObject) - PV object that has a structure containing required NT ND Array elements:\n\n"
-    "\t\ta3 = NtNdArray(pvObject)", 
+    "\t**NtNdArray(pvObject)**\n\n"
+    "\t:Parameter: *pvObject* (PvObject) - PV object that has a structure containing the required NT ND Array elements\n\n"
+    "\t::\n\n"
+    "\t\ta3 = NtNdArray(pvObject)\n\n", 
     init<>())
 
     .def(init<const dict&>())

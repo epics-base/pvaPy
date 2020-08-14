@@ -26,6 +26,8 @@ class_<PvCodec, bases<PvObject> >("PvCodec",
 
     .def(init<const std::string&, const PvObject&>())
 
+    .def(init<const PvObject&>())
+
     .def("getName", 
         &PvCodec::getName, 
         "Retrieves codec name.\n\n"
