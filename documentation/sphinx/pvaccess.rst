@@ -115,9 +115,30 @@ PvTimeStamp
     :members: 
 
 PvAlarm
------------
+-------
 
 .. autoclass:: pvaccess.PvAlarm()
+    :show-inheritance: 
+    :members: 
+
+PvCodec
+-------
+
+.. autoclass:: pvaccess.PvCodec()
+    :show-inheritance: 
+    :members: 
+
+PvDimension
+-----------
+
+.. autoclass:: pvaccess.PvDimension()
+    :show-inheritance: 
+    :members: 
+
+PvDisplay
+---------
+
+.. autoclass:: pvaccess.PvDisplay()
     :show-inheritance: 
     :members: 
 
@@ -127,10 +148,24 @@ NtType
 .. autoclass:: pvaccess.NtType()
     :show-inheritance: 
 
+NtAttribute
+-----------
+
+.. autoclass:: pvaccess.NtAttribute()
+    :show-inheritance: 
+    :members: 
+
 NtTable
 -------
 
 .. autoclass:: pvaccess.NtTable()
+    :show-inheritance: 
+    :members: 
+
+NtNdArray
+---------
+
+.. autoclass:: pvaccess.NtNdArray()
     :show-inheritance: 
     :members: 
 
