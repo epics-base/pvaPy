@@ -1,4 +1,4 @@
-## Release 3.0.0 (2020/08/XX)
+## Release 3.0.0 (2020/08/14)
 
 - added support for windows
 - added ability to retrieve PvObject field as a string
