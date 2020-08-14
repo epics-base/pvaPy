@@ -226,24 +226,34 @@ class TestChannelPut:
     #
 
     def testPut_PvULong(self):
+        print()
         value = TestUtility.getRandomULong()
         c = TestUtility.getULongChannel()
         c.put(PvULong(value))
         value2 = c.get().getPyObject()
+        print('Testing equality: %d == %d' % (value2, value))
         assert(value == value2)
 
     def testPut_ULong(self):
-        value = TestUtility.getRandomULong()
+        print()
+        # put(ulong) will be mapped to put(long) in python,
+        # resulting in overflow errors;
+        # simply use positive long for this test
+        value = TestUtility.getRandomPositiveLong()
         c = TestUtility.getULongChannel()
+        print('Test value: %d' % (value))
         c.put(value)
         value2 = c.get().getPyObject() 
+        print('Testing equality: %d == %d' % (value2, value))
         assert(value == value2)
 
     def testPutULong_ULong(self):
+        print()
         value = TestUtility.getRandomULong()
         c = TestUtility.getULongChannel()
         c.putULong(value)
         value2 = c.get().getPyObject()
+        print('Testing equality: %d == %d' % (value2, value))
         assert(value == value2)
 
     #

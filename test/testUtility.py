@@ -4,8 +4,11 @@ import random
 import string
 import math
 import types
+import numpy as np
+from datetime import datetime as dt
 
 from pvaccess import Channel
+from pvaccess import PvTimeStamp
 from testServer import TestServer
 
 try:
@@ -21,6 +24,7 @@ class TestUtility:
 
     FLOAT_PRECISION = 0.0001
     DOUBLE_PRECISION = 0.000001
+    NANOSECONDS_IN_SECOND = 1000000000
 
     @classmethod
     def assertBooleanEquality(cls, value1, value2):
@@ -45,6 +49,12 @@ class TestUtility:
     @classmethod
     def assertDoubleEquality(cls, value1, value2):
         assert(math.fabs(value1-value2)<cls.DOUBLE_PRECISION)
+
+    @classmethod
+    def assertListEquality(cls, list1, list2):
+        assert(len(list1) == len(list2))
+        for i in range(0,len(list1)):
+            assert(str(list1[i])==str(list2[i]))
 
     @classmethod
     def getRandomBoolean(cls):
@@ -74,22 +84,27 @@ class TestUtility:
 
     @classmethod
     def getRandomInt(cls):
-        #return int(random.uniform(-2147483648,2147483648))
-        return int(random.uniform(-100,100))
+        return int(random.uniform(-2147483648,2147483648))
+        #return int(random.uniform(-100,100))
 
     @classmethod
     def getRandomUInt(cls):
-        return int(random.uniform(0,1000))
-        #return int(random.uniform(0,4294967296))
+        #return int(random.uniform(0,1000))
+        return int(random.uniform(0,4294967296))
 
     @classmethod
     def getRandomLong(cls):
         return LONG(random.uniform(-9223372036854775806,9223372036854775806))
+        #return LONG(random.uniform(-10000,10000))
+
+    @classmethod
+    def getRandomPositiveLong(cls):
+        return LONG(random.uniform(0,9223372036854775806))
 
     @classmethod
     def getRandomULong(cls):
-        #return LONG(random.uniform(0,18446744073709551616))
-        return LONG(random.uniform(0,10000))
+        return LONG(random.uniform(0,18446744073709551616))
+        #return LONG(random.uniform(0,10000))
 
     @classmethod
     def getRandomFloat(cls):
@@ -109,7 +124,7 @@ class TestUtility:
 
     @classmethod
     def getRandomListSize(cls):
-        return int(random.uniform(1,100))
+        return int(random.uniform(1,1000))
 
     @classmethod
     def getBooleanChannel(cls):
@@ -159,4 +174,12 @@ class TestUtility:
     def getStringChannel(cls):
         return Channel(TestServer.STRING_CHANNEL_NAME)
 
+
+    @classmethod
+    def getTimeStamp(cls):
+        tStamp = np.datetime64(dt.now(), 'ns')
+        t = (tStamp-np.datetime64(0,'ns'))/np.timedelta64(1, 's')
+        s = int(t)
+        ns = int((t - s)*cls.NANOSECONDS_IN_SECOND)
+        return PvTimeStamp(s,ns,0)
 

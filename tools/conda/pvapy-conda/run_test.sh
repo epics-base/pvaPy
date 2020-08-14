@@ -4,7 +4,7 @@ echo "Starting test server"
 cd test
 python testServer.py 15  &
 
-for f in PvObject ChannelPut MultiChannel; do
+for f in PvObject NtTypes ChannelPut MultiChannel; do
     echo "Starting $f tests"
     sleep 1
     nosetests -v test$f.py

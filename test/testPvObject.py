@@ -26,6 +26,7 @@ class TestPvObject:
     #
 
     def test_Boolean(self):
+        print()
         value = TestUtility.getRandomBoolean()
         pv = PvObject({'v' : BOOLEAN}, {'v' : value})
         assert(pv['v'] == value)
@@ -41,6 +42,7 @@ class TestPvObject:
     #
 
     def test_Byte(self):
+        print()
         value = chr(TestUtility.getRandomUByte())
         pv = PvObject({'v' : BYTE}, {'v' : value})
         assert(pv['v'] == value)
@@ -56,6 +58,7 @@ class TestPvObject:
     #
 
     def test_UByte(self):
+        print()
         value = TestUtility.getRandomUByte()
         pv = PvObject({'v' : UBYTE}, {'v' : value})
         assert(pv['v'] == value)
@@ -71,6 +74,7 @@ class TestPvObject:
     #
 
     def test_Short(self):
+        print()
         value = TestUtility.getRandomShort()
         pv = PvObject({'v' : SHORT}, {'v' : value})
         assert(pv['v'] == value)
@@ -86,6 +90,7 @@ class TestPvObject:
     #
 
     def test_UShort(self):
+        print()
         value = TestUtility.getRandomUShort()
         pv = PvObject({'v' : USHORT}, {'v' : value})
         assert(pv['v'] == value)
@@ -101,6 +106,7 @@ class TestPvObject:
     #
 
     def test_Int(self):
+        print()
         value = TestUtility.getRandomInt()
         pv = PvObject({'v' : INT}, {'v' : value})
         assert(pv['v'] == value)
@@ -116,6 +122,7 @@ class TestPvObject:
     #
 
     def test_UInt(self):
+        print()
         value = TestUtility.getRandomUInt()
         pv = PvObject({'v' : UINT}, {'v' : value})
         assert(pv['v'] == value)
@@ -131,6 +138,7 @@ class TestPvObject:
     #
 
     def test_Long(self):
+        print()
         value = TestUtility.getRandomLong()
         pv = PvObject({'v' : LONG}, {'v' : value})
         assert(pv['v'] == value)
@@ -146,6 +154,7 @@ class TestPvObject:
     #
 
     def test_ULong(self):
+        print()
         value = TestUtility.getRandomULong()
         pv = PvObject({'v' : ULONG}, {'v' : value})
         assert(pv['v'] == value)
@@ -161,15 +170,22 @@ class TestPvObject:
     #
 
     def test_Float(self):
+        print()
         value = TestUtility.getRandomFloat()
         pv = PvObject({'v' : FLOAT}, {'v' : value})
-        TestUtility.assertFloatEquality(pv['v'], value)
+        value2 = pv['v']
+        print('Testing equality: %.10f == %.10f' % (value2, value))
+        TestUtility.assertFloatEquality(value2, value)
         value = TestUtility.getRandomFloat()
         pv['v'] = value 
-        TestUtility.assertFloatEquality(pv['v'], value)
+        value2 = pv['v']
+        print('Testing equality: %.10f == %.10f' % (value2, value))
+        TestUtility.assertFloatEquality(value2, value)
         value = TestUtility.getRandomFloat()
         pv.setFloat(value)
-        TestUtility.assertFloatEquality(pv.getFloat(), value)
+        value2 = pv.getFloat()
+        print('Testing equality: %.10f == %.10f' % (value2, value))
+        TestUtility.assertFloatEquality(value2, value)
      
     #
     # Double
