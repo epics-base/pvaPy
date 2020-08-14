@@ -261,7 +261,7 @@ class_<PvObject>("PvObject",
         ":Returns: string representation of the value object\n\n"
         ":Raises: *InvalidRequest* - when single-field structure has no field or multiple-field structure has no 'value' field\n\n"
         "::\n\n"
-        "    pv = PvObject({'aString' : STRING})\n\n"
+        "    pv = PvObject({'byteArray' : [BYTE]})\n\n"
         "    value = pv.getAsString()\n\n")
  
     .def("getAsString", 
@@ -272,9 +272,9 @@ class_<PvObject>("PvObject",
         ":Returns: string representation of the value object\n\n"
         ":Raises: *FieldNotFound* - when a part of the specified field path is not found\n\n"
         "::\n\n"
-        "    pv = PvObject({'aString' : STRING, 'aStruct' : {'anInt' : INT, 'aString2' : STRING}})\n\n"
-        "    value = pv.getAsString('aString')\n\n"
-        "    value2 = pv.getAsString('aStruct.aString2')\n\n")
+        "    pv = PvObject({'byteArray' : [BYTE], 'aStruct' : {'anInt' : INT, 'ubyteArray' : [UBYTE]}})\n\n"
+        "    value = pv.getAsString('byteArray')\n\n"
+        "    value2 = pv.getAsString('aStruct.ubyteArray')\n\n")
 
     .def("__getitem__", 
         static_cast<boost::python::object(PvObject::*)(const std::string&)const>(&PvObject::getPyObject),
