@@ -32,7 +32,7 @@ tar zxf $EPICS_BASE_TAR_FILE
 
 # Build
 echo "Using BUILD_FLAGS: $BUILD_FLAGS"
-cd base-${EPICS_BASE_VERSION}
+cd base-*${EPICS_BASE_VERSION}
 EPICS_HOST_ARCH=`./startup/EpicsHostArch`
 echo "INSTALL_LOCATION=$LOCAL_EPICS_DIR" > configure/CONFIG_SITE.local
 
