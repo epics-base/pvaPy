@@ -1122,7 +1122,7 @@ class_<Channel>("Channel",
         "The following code snippet defines a simple subscriber object, subscribes it to PV value changes, and starts channel monitor:\n\n"
         "::\n\n"
         "    def echo(x):\n\n"
-        "        print 'New PV value: ', x\n\n"
+        "        print('New PV value: %s' % x)\n\n"
         "    channel = Channel('exampleFloat')\n\n"
         "    channel.subscribe('echo', echo)\n\n"
         "    channel.startMonitor()\n\n")
@@ -1157,7 +1157,7 @@ class_<Channel>("Channel",
         ":Parameter: *requestDescriptor* (str) - describes what PV data should be sent to subscribed channel clients\n\n"
         "::\n\n"
         "    def echo(x):\n\n"
-        "        print 'New PV value: ', x\n\n"
+        "        print('New PV value: %s' % x)\n\n"
         "    channel.monitor(echo, 'field(value,alarm,timeStamp)')\n\n"))
 #else
     .def("monitor",
@@ -1168,7 +1168,7 @@ class_<Channel>("Channel",
         ":Parameter: *requestDescriptor* (str) - describes what PV data should be sent to subscribed channel clients\n\n"
         "::\n\n"
         "    def echo(x):\n\n"
-        "        print 'New PV value: ', x\n\n"
+        "        print('New PV value: %s' % x)\n\n"
         "    channel.monitor(echo, 'field(value,alarm,timeStamp)')\n\n")
 #endif
 
@@ -1230,7 +1230,7 @@ class_<Channel>("Channel",
         ":Parameter: *callback* (object) - reference to python function that will be executed when connection status changes; the function should take a boolean argument which describes whether channel is connected or not\n\n"
         "::\n\n"
         "    def connectionCallback(isConnected):\n\n"
-        "        print 'Channel connected: %s' % (isConnected))\n\n"
+        "        print('Channel connected: %s' % (isConnected))\n\n"
         "    channel = Channel('exampleFloat')\n\n"
         "    channel.setConnectionCallback(connectionCallback)\n\n")
 #endif // if PVA_API_VERSION >= 482
