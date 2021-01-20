@@ -1,3 +1,7 @@
+## Release 3.1.0 (2021/MM/DD)
+
+- added support for MultiChannel put and monitor
+
 ## Release 3.0.0 (2020/08/14)
 
 - added support for windows
