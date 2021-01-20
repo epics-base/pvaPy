@@ -37,6 +37,17 @@ class_<MultiChannel>("MultiChannel",
         "::\n\n"
         "    pv = mChannel.get()\n\n")
 
+    .def("put",
+        static_cast<void(MultiChannel::*)(const boost::python::list&)>(&MultiChannel::put),
+        args("pvObjectList"),
+        "Assigns data to multi channel member PVs'.\n\n"
+        ":Parameter: *pvObjectList* (list) - list of PvObject instance that will be assigned to the multi channel PVs\n\n"
+        "::\n\n"
+        "    mChannel = MultiChannel(['PVRstringArray', 'PVRdouble'])\n\n"
+        "    pv1 = PvObject({'value' : [STRING]}, {'value' : ['ccc', 'ddd']})\n\n"
+        "    pv2 = PvDouble(44.44)\n\n"
+        "    mChannel.put([pv1,pv2])\n\n")
+
 ;
 
 #endif // if PVA_API_VERSION >= 481

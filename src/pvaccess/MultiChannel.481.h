@@ -29,6 +29,7 @@ public:
     virtual ~MultiChannel();
 
     virtual PvObject* get();
+    virtual void put(const boost::python::list& pyList);
 
 private:
     static PvaPyLogger logger;
