@@ -144,13 +144,24 @@ if isVariant==True :
 names = pv.getUnionArrayFieldNames()
 print('unionArray fieldNames: ',names)
 unionArray = []
+# This also works
+#value = PvObject({'double' : DOUBLE})
 value = pv.createUnionArrayElementField('double')
+print('created union array element field:')
+print(value)
 value.setDouble(10.0)
 unionArray.append(value)
-value = pv.createUnionArrayElementField('doubleArr')
+
+#value = pv.createUnionArrayElementField('doubleArr')
+value = PvObject({'doubleArr' : [DOUBLE]})
 value.setScalarArray([1.0,2.0,3.0])
 unionArray.append(value)
 print('unionArray','[',unionArray[0].getDouble(),',',unionArray[1].getScalarArray(),']')
+print('Union Array Objects:')
+print(unionArray[0])
+print(unionArray[1])
+
+#pv['value'] = unionArray
 pv.setUnionArray(unionArray)
 print('after unionArraySet',pv)
 print('dictionary',pv.get())
