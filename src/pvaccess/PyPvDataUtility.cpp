@@ -1727,7 +1727,7 @@ pvd::PVStructurePtr createUnionFieldPvStructure(pvd::UnionConstPtr unionPtr, con
 {
     pvd::StringArray names(1);
     pvd::PVFieldPtrArray pvfields(1);
-    names[0] = PvaConstants::ValueFieldKey;
+    names[0] = fieldName;
     pvd::FieldConstPtr field;
     if (unionPtr->isVariant()) {
         field = pvd::getFieldCreate()->createVariantUnion();
