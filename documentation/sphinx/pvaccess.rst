@@ -100,6 +100,13 @@ PvString
     :show-inheritance: 
     :members: 
 
+PvUnion
+-------
+
+.. autoclass:: pvaccess.PvUnion()
+    :show-inheritance: 
+    :members: 
+
 PvScalarArray
 -------------
 
