@@ -91,7 +91,7 @@ value = {'aString' : 'xxx'}
 print('\nvalue:\n', value)
 try:
     pv.setUnion(value)
-except InvalidDataType as ex:
+except InvalidArgument as ex:
     print('Caught exception as expected:', ex)
 print('\npv:\n', pv)
 
