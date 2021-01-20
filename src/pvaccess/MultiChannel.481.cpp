@@ -39,9 +39,14 @@ MultiChannel::~MultiChannel()
 
 PvObject* MultiChannel::get()
 {
+    return get(PvaConstants::FieldValueAlarmTimestampRequest);
+}
+
+PvObject* MultiChannel::get(const std::string& requestDescriptor)
+{
     pvaClientMultiChannelPtr->connect();
     try {
-        epvac::PvaClientNTMultiGetPtr mGet(pvaClientMultiChannelPtr->createNTGet());
+        epvac::PvaClientNTMultiGetPtr mGet(pvaClientMultiChannelPtr->createNTGet(requestDescriptor));
         mGet->get();
         epvac::PvaClientNTMultiDataPtr mData = mGet->getData();
         epvd::PVStructurePtr pvStructure = mData->getNTMultiChannel()->getPVStructure();

@@ -28,7 +28,9 @@ public:
     MultiChannel(const MultiChannel& multiChannel);
     virtual ~MultiChannel();
 
+    virtual PvObject* get(const std::string& requestDescriptor);
     virtual PvObject* get();
+
     virtual void put(const boost::python::list& pyList);
 
 private:

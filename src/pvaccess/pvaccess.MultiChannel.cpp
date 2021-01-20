@@ -29,11 +29,21 @@ class_<MultiChannel>("MultiChannel",
     // Get methods
     //
 
+    .def("get",
+        static_cast<PvObject*(MultiChannel::*)(const std::string&)>(&MultiChannel::get),
+        return_value_policy<manage_new_object>(),
+        args("requestDescriptor"),
+        "Retrieves PV data from multiple channels.\n\n"
+        ":Parameter: *requestDescriptor* (str) - PV request descriptor\n\n"
+        ":Returns: PvObject with NTMultiChannel structure that contains retrieved data from all member channels as a variant union array\n\n"
+        "::\n\n"
+        "    pv = mChannel.get('field(value,alarm)')\n\n")
+
     .def("get", 
         static_cast<PvObject*(MultiChannel::*)()>(&MultiChannel::get), 
         return_value_policy<manage_new_object>(), 
-        "Retrieves PV data from multiple channels'.\n\n"
-        ":Returns: PvObject with NTMultiChannel structure that contains retrieved channel data as a variant union array\n\n"
+        "Retrieves PV data from multiple channels using the default request descriptor 'field(value,alarm,timeStamp)'.\n\n"
+        ":Returns: PvObject with NTMultiChannel structure that contains retrieved data from all member channels as a variant union array\n\n"
         "::\n\n"
         "    pv = mChannel.get()\n\n")
 

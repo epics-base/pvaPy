@@ -9,6 +9,7 @@ const std::string PvaConstants::StructureId(PVA_STRUCTURE_ID);
 
 const std::string PvaConstants::AllFieldsRequest(PVA_ALL_FIELDS_REQUEST);
 const std::string PvaConstants::FieldValueRequest(PVA_FIELD_VALUE_REQUEST);
+const std::string PvaConstants::FieldValueAlarmTimestampRequest(PVA_FIELD_VALUE_ALARM_TIMESTAMP_REQUEST);
 const std::string PvaConstants::PutGetAllFieldsRequest(PVA_PUT_GET_ALL_FIELDS_REQUEST);
 const std::string PvaConstants::PutGetFieldValueRequest(PVA_PUT_GET_FIELD_VALUE_REQUEST);
 
