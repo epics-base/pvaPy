@@ -50,13 +50,52 @@ class_<MultiChannel>("MultiChannel",
     .def("put",
         static_cast<void(MultiChannel::*)(const boost::python::list&)>(&MultiChannel::put),
         args("pvObjectList"),
-        "Assigns data to multi channel member PVs'.\n\n"
-        ":Parameter: *pvObjectList* (list) - list of PvObject instance that will be assigned to the multi channel PVs\n\n"
+        "Assigns data to multi-channel member PVs'.\n\n"
+        ":Parameter: *pvObjectList* (list) - list of PvObject instance that will be assigned to the multi-channel PVs\n\n"
         "::\n\n"
         "    mChannel = MultiChannel(['PVRstringArray', 'PVRdouble'])\n\n"
         "    pv1 = PvObject({'value' : [STRING]}, {'value' : ['ccc', 'ddd']})\n\n"
         "    pv2 = PvDouble(44.44)\n\n"
         "    mChannel.put([pv1,pv2])\n\n")
+
+    .def("monitor",
+        static_cast<void(MultiChannel::*)(const boost::python::object&)>(&MultiChannel::monitor),
+        args("subscriber"),
+        "Starts multi-channel monitor with default poll period and request descriptor 'field(value,alarm,timeStamp)'.\n\n"
+        ":Parameter: *subscriber* (object) - reference to python subscriber object (e.g., python function) that will be executed when PV value changes\n\n"
+        "::\n\n"
+        "    def echo(x):\n\n"
+        "        print('New PV value: %s' % x)\n\n"
+        "    mChannel.monitor(echo)\n\n")
+
+    .def("monitor",
+        static_cast<void(MultiChannel::*)(const boost::python::object&, double)>(&MultiChannel::monitor),
+        args("subscriber", "pollPeriod", "requestDescriptor"),
+        "Starts multi-channel monitor with default request descriptor 'field(value,alarm,timeStamp)'.\n\n"
+        ":Parameter: *subscriber* (object) - reference to python subscriber object (e.g., python function) that will be executed when PV value changes\n\n"
+        ":Parameter: *pollPeriod* (float) - period in seconds between two multi-channel polls\n\n"
+        "::\n\n"
+        "    def echo(x):\n\n"
+        "        print('New PV value: %s' % x)\n\n"
+        "    mChannel.monitor(echo, 1.0)\n\n")
+
+    .def("monitor",
+        static_cast<void(MultiChannel::*)(const boost::python::object&, double, const std::string&)>(&MultiChannel::monitor),
+        args("subscriber", "pollPeriod", "requestDescriptor"),
+        "Starts multi-channel monitor.\n\n"
+        ":Parameter: *subscriber* (object) - reference to python subscriber object (e.g., python function) that will be executed when PV value changes\n\n"
+        ":Parameter: *pollPeriod* (float) - period in seconds between two multi-channel polls\n\n"
+        ":Parameter: *requestDescriptor* (str) - describes what PV data should be sent to subscribed channel clients\n\n"
+        "::\n\n"
+        "    def echo(x):\n\n"
+        "        print('New PV value: %s' % x)\n\n"
+        "    mChannel.monitor(echo, 1.0, 'field(value,alarm,timeStamp)')\n\n")
+
+    .def("stopMonitor",
+        &MultiChannel::stopMonitor,
+        "Stops multi-channel monitor for PV value changes.\n\n"
+        "::\n\n"
+        "    mChannel.stopMonitor()\n\n")
 
 ;
 
