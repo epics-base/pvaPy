@@ -77,6 +77,7 @@ pvaccess_SRCS += pvaccess.PvUnion.cpp
 
 pvaccess_SRCS += pvaccess.PvAlarm.cpp
 pvaccess_SRCS += pvaccess.PvCodec.cpp
+pvaccess_SRCS += pvaccess.PvControl.cpp
 pvaccess_SRCS += pvaccess.PvDimension.cpp
 pvaccess_SRCS += pvaccess.PvDisplay.cpp
 pvaccess_SRCS += pvaccess.PvTimeStamp.cpp
@@ -123,6 +124,7 @@ pvaccess_SRCS += PvAlarm.cpp
 pvaccess_SRCS += PvBoolean.cpp
 pvaccess_SRCS += PvByte.cpp
 pvaccess_SRCS += PvCodec.cpp
+pvaccess_SRCS += PvControl.cpp
 pvaccess_SRCS += PvDimension.cpp
 pvaccess_SRCS += PvDisplay.cpp
 pvaccess_SRCS += PvDouble.cpp

@@ -13,7 +13,7 @@ void wrapPvDisplay()
 {
 
 class_<PvDisplay, bases<PvObject> >("PvDisplay", 
-    "PvDisplay represents PV dsplay structure.\n\n"
+    "PvDisplay represents PV display structure.\n\n"
     "**PvDisplay()**\n\n"
     "\t::\n\n"
     "\t\tdisplay1 = PvDisplay()\n\n"

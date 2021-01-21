@@ -47,6 +47,7 @@ void wrapPvUnion();
 void wrapPvTimeStamp();
 void wrapPvAlarm();
 void wrapPvCodec();
+void wrapPvControl();
 void wrapPvDimension();
 void wrapPvDisplay();
 
@@ -127,6 +128,7 @@ BOOST_PYTHON_MODULE(pvaccess)
     wrapPvTimeStamp();
     wrapPvAlarm();
     wrapPvCodec();
+    wrapPvControl();
     wrapPvDimension();
     wrapPvDisplay();
 

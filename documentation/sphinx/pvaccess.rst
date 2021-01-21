@@ -135,6 +135,13 @@ PvCodec
     :show-inheritance: 
     :members: 
 
+PvControl
+---------
+
+.. autoclass:: pvaccess.PvControl()
+    :show-inheritance: 
+    :members: 
+
 PvDimension
 -----------
 
