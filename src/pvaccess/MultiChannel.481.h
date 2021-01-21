@@ -22,6 +22,8 @@
 #include "PvaPyLogger.h"
 #include "PvaConstants.h"
 
+typedef epics::pvData::shared_vector<double> MultiChannelDoubleArray;
+
 class MultiChannel 
 {
 public:
@@ -31,18 +33,25 @@ public:
     MultiChannel(const MultiChannel& multiChannel);
     virtual ~MultiChannel();
 
-    virtual PvObject* get(const std::string& requestDescriptor);
     virtual PvObject* get();
+    virtual PvObject* get(const std::string& requestDescriptor);
+    virtual boost::python::list getAsDoubleArray();
 
     virtual void put(const boost::python::list& pyList);
+    virtual void putAsDoubleArray(const boost::python::list& pyList);
 
     virtual void monitor(const boost::python::object& pySubscriber);
     virtual void monitor(const boost::python::object& pySubscriber, double pollPeriod);
     virtual void monitor(const boost::python::object& pySubscriber, double pollPeriod, const std::string& requestDescriptor);
+
+    virtual void monitorAsDoubleArray(const boost::python::object& pySubscriber);
+    virtual void monitorAsDoubleArray(const boost::python::object& pySubscriber, double pollPeriod);
+
     virtual void stopMonitor();
 
 private:
-    static void monitorThread(MultiChannel* multiChannel);
+    static void ntMonitorThread(MultiChannel* multiChannel);
+    static void doubleMonitorThread(MultiChannel* multiChannel);
     static const double ShutdownWaitTime;
 
     static PvaPyLogger logger;
@@ -53,9 +62,13 @@ private:
     void notifyMonitorThreadExit();
     void waitForMonitorThreadExit(double timeout);
     void callSubscriber(PvObject& pvObject);
+    void callSubscriber(boost::python::list& pyList);
+
+    unsigned int nChannels;
 
     epics::pvaClient::PvaClientMultiChannelPtr multiChannelPtr;
-    epics::pvaClient::PvaClientNTMultiMonitorPtr multiMonitorPtr;
+    epics::pvaClient::PvaClientNTMultiMonitorPtr ntMultiMonitorPtr;
+    epics::pvaClient::PvaClientMultiMonitorDoublePtr doubleMultiMonitorPtr;
 
     epics::pvData::Mutex monitorMutex;
     epicsEvent monitorThreadExitEvent;
