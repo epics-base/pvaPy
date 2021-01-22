@@ -1,6 +1,12 @@
 ## Release 3.1.0 (2021/MM/DD)
 
 - added support for MultiChannel put and monitor
+- added PvValueAlarm, PvControl, and NtScalar wrapper classes
+- conda/pip package dependencies: 
+  - EPICS BASE = 7.0.4.1
+  - BOOST      = 1.70.0
+  - NUMPY      > 1.15
+
 
 ## Release 3.0.0 (2020/08/14)
 
