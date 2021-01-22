@@ -85,6 +85,7 @@ pvaccess_SRCS += pvaccess.PvValueAlarm.cpp
 
 pvaccess_SRCS += pvaccess.NtAttribute.cpp
 pvaccess_SRCS += pvaccess.NtNdArray.cpp
+pvaccess_SRCS += pvaccess.NtScalar.cpp
 pvaccess_SRCS += pvaccess.NtTable.cpp
 pvaccess_SRCS += pvaccess.NtType.cpp
 
@@ -112,6 +113,7 @@ pvaccess_SRCS += InvalidState.cpp
 pvaccess_SRCS += MultiChannel.cpp
 pvaccess_SRCS += NtAttribute.cpp
 pvaccess_SRCS += NtNdArray.cpp
+pvaccess_SRCS += NtScalar.cpp
 pvaccess_SRCS += NtTable.cpp
 pvaccess_SRCS += NtType.cpp
 pvaccess_SRCS += ObjectAlreadyExists.cpp

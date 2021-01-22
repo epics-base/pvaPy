@@ -156,6 +156,13 @@ PvDisplay
     :show-inheritance: 
     :members: 
 
+PvValueAlarm
+------------
+
+.. autoclass:: pvaccess.PvValueAlarm()
+    :show-inheritance: 
+    :members: 
+
 NtType
 ------
 
@@ -169,6 +176,13 @@ NtAttribute
     :show-inheritance: 
     :members: 
 
+NtNdArray
+---------
+
+.. autoclass:: pvaccess.NtNdArray()
+    :show-inheritance: 
+    :members: 
+
 NtTable
 -------
 
@@ -176,10 +190,10 @@ NtTable
     :show-inheritance: 
     :members: 
 
-NtNdArray
----------
+NtScalar
+--------
 
-.. autoclass:: pvaccess.NtNdArray()
+.. autoclass:: pvaccess.NtScalar()
     :show-inheritance: 
     :members: 
 
