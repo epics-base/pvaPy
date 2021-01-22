@@ -81,6 +81,7 @@ pvaccess_SRCS += pvaccess.PvControl.cpp
 pvaccess_SRCS += pvaccess.PvDimension.cpp
 pvaccess_SRCS += pvaccess.PvDisplay.cpp
 pvaccess_SRCS += pvaccess.PvTimeStamp.cpp
+pvaccess_SRCS += pvaccess.PvValueAlarm.cpp
 
 pvaccess_SRCS += pvaccess.NtAttribute.cpp
 pvaccess_SRCS += pvaccess.NtNdArray.cpp
@@ -144,6 +145,7 @@ pvaccess_SRCS += PvULong.cpp
 pvaccess_SRCS += PvUnion.cpp
 pvaccess_SRCS += PvUShort.cpp
 pvaccess_SRCS += PvUtility.cpp
+pvaccess_SRCS += PvValueAlarm.cpp
 pvaccess_SRCS += PyGilManager.cpp
 pvaccess_SRCS += PyPvDataUtility.cpp
 pvaccess_SRCS += PyUtility.cpp

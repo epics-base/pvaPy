@@ -42,7 +42,7 @@ class_<NtNdArray, bases<NtType> >("NtNdArray",
         args("valueDict"),
         "Sets array value.\n\n"
         ":Parameter: *valueDict* (dict) - array value dictionary (must contain array value with one of the allowed field names: booleanValue, byteValue, ubyteValue, shortValue, uShortValue, intValue, uintValue, longValue, ulongValue, floatValue, doubleValue)\n\n"
-        ":Raises: *InvalidArgument* - when object's field name/type do not match allowed fields\n\n"
+        ":Raises: *InvalidDataType* - when object's field name/type do not match allowed fields\n\n"
         "::\n\n"
         "    array.setValue({'byteValue' : [34, 56, 77, ... ]})\n\n")
 
@@ -50,7 +50,7 @@ class_<NtNdArray, bases<NtType> >("NtNdArray",
         args("valueObject"),
         "Sets array value.\n\n"
         ":Parameter: *valueObject* (PvObject) - array value object (must contain array value with one of the allowed field names: booleanValue, byteValue, ubyteValue, shortValue, uShortValue, intValue, uintValue, longValue, ulongValue, floatValue, doubleValue)\n\n"
-        ":Raises: *InvalidArgument* - when object's field name/type do not match allowed fields\n\n"
+        ":Raises: *InvalidDataType* - when object's field name/type do not match allowed fields\n\n"
         "::\n\n"
         "    array.setValue(PvObject({'byteValue' : [BYTE]}, {'byteValue' : [34, 56, 77, ... ]}))\n\n")
 
@@ -105,7 +105,7 @@ class_<NtNdArray, bases<NtType> >("NtNdArray",
         args("dimList"),
         "Sets array dimension list.\n\n"
         ":Parameter: *dimList* (list) - list of PvDimension objects\n\n"
-        ":Raises: *InvalidArgument* - when list objects do not match required type\n\n"
+        ":Raises: *InvalidDataType* - when list objects do not match required type\n\n"
         "::\n\n"
         "    array.setDimension([PvDimension(1024, 0, 1024, 1, False), PvDimension(1024, 0, 1024, 1, False)])\n\n")
 
@@ -152,7 +152,7 @@ class_<NtNdArray, bases<NtType> >("NtNdArray",
         args("attrList"),
         "Sets array attribute list.\n\n"
         ":Parameter: *attrList* (list) - list of NtAttribute objects\n\n"
-        ":Raises: *InvalidArgument* - when list objects do not match required type\n\n"
+        ":Raises: *InvalidDataType* - when list objects do not match required type\n\n"
         "::\n\n"
         "    array.setAttribute([NtAttribute('ColorMode', PvInt(0))])\n\n")
 

@@ -1,11 +1,11 @@
 // Copyright information and license terms for this software can be
 // found in the file LICENSE that is included with the distribution
 
-#include "boost/python.hpp"
-#include "boost/python/module.hpp"
-#include "boost/python/scope.hpp"
-#include "boost/python/exception_translator.hpp"
-#include "boost/python/docstring_options.hpp"
+#include <boost/python.hpp>
+#include <boost/python/module.hpp>
+#include <boost/python/scope.hpp>
+#include <boost/python/exception_translator.hpp>
+#include <boost/python/docstring_options.hpp>
 
 #include "PvaException.h"
 #include "FieldNotFound.h"
@@ -50,6 +50,7 @@ void wrapPvCodec();
 void wrapPvControl();
 void wrapPvDimension();
 void wrapPvDisplay();
+void wrapPvValueAlarm();
 
 void wrapNtType();
 void wrapNtAttribute();
@@ -131,6 +132,7 @@ BOOST_PYTHON_MODULE(pvaccess)
     wrapPvControl();
     wrapPvDimension();
     wrapPvDisplay();
+    wrapPvValueAlarm();
 
     wrapNtType();
     wrapNtAttribute();

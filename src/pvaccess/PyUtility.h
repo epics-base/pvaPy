@@ -5,13 +5,14 @@
 #define PY_UTILITY_H
 
 #include <string>
-#include "boost/python/extract.hpp"
-#include "boost/python/object.hpp"
-#include "boost/python/list.hpp"
-#include "boost/python/dict.hpp"
+#include <boost/python/extract.hpp>
+#include <boost/python/object.hpp>
+#include <boost/python/list.hpp>
+#include <boost/python/dict.hpp>
 
 #include "StringUtility.h"
 #include "InvalidArgument.h"
+#include "InvalidDataType.h"
 #include "FieldNotFound.h"
 
 #include "pvapy.environment.h"
@@ -41,7 +42,7 @@ PyType extractValueFromPyObject(const boost::python::object& pyObject)
         return extractValue();
     }
     std::string objectString = extractStringFromPyObject(pyObject);
-    throw InvalidArgument("Invalid data type for '" + objectString + "'");
+    throw InvalidDataType("Invalid data type for '" + objectString + "'");
 }
 
 template<typename PyType>
