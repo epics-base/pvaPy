@@ -70,7 +70,6 @@ PvObject* MultiChannel::get()
 PvObject* MultiChannel::get(const std::string& requestDescriptor)
 {
     try {
-        multiChannelPtr->connect();
         epvac::PvaClientNTMultiGetPtr mGet(multiChannelPtr->createNTGet(requestDescriptor));
         mGet->get();
         epvac::PvaClientNTMultiDataPtr mData = mGet->getData();
@@ -85,7 +84,6 @@ PvObject* MultiChannel::get(const std::string& requestDescriptor)
 boost::python::list MultiChannel::getAsDoubleArray()
 {
     try {
-        multiChannelPtr->connect();
         epvac::PvaClientMultiGetDoublePtr mGet(multiChannelPtr->createGet());
         epvd::shared_vector<double> data = mGet->get();
         bp::list pyList;
@@ -102,7 +100,6 @@ boost::python::list MultiChannel::getAsDoubleArray()
 void MultiChannel::put(const bp::list& pyList)
 {
     try {
-        multiChannelPtr->connect();
         epvac::PvaClientNTMultiPutPtr mPut(multiChannelPtr->createNTPut());
         epvd::shared_vector<epvd::PVUnionPtr> data = mPut->getValues();
         unsigned int listSize = bp::len(pyList);
@@ -129,7 +126,6 @@ void MultiChannel::put(const bp::list& pyList)
 void MultiChannel::putAsDoubleArray(const bp::list& pyList)
 {
     try {
-        multiChannelPtr->connect();
         epvac::PvaClientMultiPutDoublePtr mPut(multiChannelPtr->createPut());
         epvd::shared_vector<double> data(nChannels, 0);
         unsigned int listSize = bp::len(pyList);
@@ -165,7 +161,6 @@ void MultiChannel::monitor(const bp::object& pySubscriber, double pollPeriod, co
     try {
         epvd::Lock lock(monitorMutex);
         if (!monitorThreadRunning) {
-            multiChannelPtr->connect();
             ntMultiMonitorPtr = multiChannelPtr->createNTMonitor(requestDescriptor);
             monitorPollPeriod = pollPeriod;
             monitorActive = true;
@@ -191,7 +186,6 @@ void MultiChannel::monitorAsDoubleArray(const bp::object& pySubscriber, double p
     try {
         epvd::Lock lock(monitorMutex);
         if (!monitorThreadRunning) {
-            multiChannelPtr->connect();
             doubleMultiMonitorPtr = multiChannelPtr->createMonitor();
             monitorPollPeriod = pollPeriod;
             monitorActive = true;
