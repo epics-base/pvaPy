@@ -2,6 +2,7 @@
 
 - added support for MultiChannel put and monitor
 - added PvValueAlarm, PvControl, and NtScalar wrapper classes
+- fixed numpy initialization problem in RpcServer class
 - conda/pip package dependencies: 
   - EPICS BASE = 7.0.4.1
   - BOOST      = 1.70.0
