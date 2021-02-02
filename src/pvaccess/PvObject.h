@@ -23,6 +23,7 @@ public:
     static const bool UseNumPyArraysDefault;
 
     // Static methods
+    static bool initializeBoostNumPy();
     static bool isPvObjectInstance(const boost::python::object& pyObject);
     static bool pvObjectToPyDict(const boost::python::object& pyObject, boost::python::object& pyDict);
 
@@ -203,13 +204,12 @@ public:
 #endif // if PVA_API_VERSION >= 482
 
 protected:
+    bool numPyInitialized;
     epics::pvData::PVStructurePtr pvStructurePtr;
     PvType::DataType dataType;
     bool useNumPyArrays; 
 
 private:
-
-    static bool initializeBoostNumPy();
     static bool boostNumPyInitialized;
 };
 

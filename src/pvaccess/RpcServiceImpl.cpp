@@ -10,6 +10,7 @@ RpcServiceImpl::RpcServiceImpl(const boost::python::object& pyService_) :
     pyService(pyService_),
     pyObject()
 {
+    PvObject::initializeBoostNumPy();
 }
 
 RpcServiceImpl::~RpcServiceImpl()

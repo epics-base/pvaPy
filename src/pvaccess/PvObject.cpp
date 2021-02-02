@@ -42,36 +42,36 @@ const char* PvObject::StructureId(PVA_STRUCTURE_ID);
 
 // Constructors
 PvObject::PvObject(const pvd::PVStructurePtr& pvStructurePtr_)
-    : pvStructurePtr(pvStructurePtr_),
+    : numPyInitialized(initializeBoostNumPy()),
+    pvStructurePtr(pvStructurePtr_),
     dataType(PvType::Structure),
     useNumPyArrays(UseNumPyArraysDefault)
 {
-    initializeBoostNumPy();
 }
 
 PvObject::PvObject(const bp::dict& structureDict, const std::string& structureId)
-    : pvStructurePtr(pvd::getPVDataCreate()->createPVStructure(PyPvDataUtility::createStructureFromDict(structureDict, structureId))),
+    : numPyInitialized(initializeBoostNumPy()),
+    pvStructurePtr(pvd::getPVDataCreate()->createPVStructure(PyPvDataUtility::createStructureFromDict(structureDict, structureId))),
     dataType(PvType::Structure),
     useNumPyArrays(UseNumPyArraysDefault)
 {
-    initializeBoostNumPy();
 }
 
 PvObject::PvObject(const bp::dict& structureDict, const bp::dict& valueDict, const std::string& structureId)
-    : pvStructurePtr(pvd::getPVDataCreate()->createPVStructure(PyPvDataUtility::createStructureFromDict(structureDict, structureId))),
+    : numPyInitialized(initializeBoostNumPy()),
+    pvStructurePtr(pvd::getPVDataCreate()->createPVStructure(PyPvDataUtility::createStructureFromDict(structureDict, structureId))),
     dataType(PvType::Structure),
     useNumPyArrays(UseNumPyArraysDefault)
 {
-    initializeBoostNumPy();
     PyPvDataUtility::pyDictToStructure(valueDict, pvStructurePtr);
 }
 
 PvObject::PvObject(const PvObject& pvObject)
-    : pvStructurePtr(pvObject.pvStructurePtr),
+    : numPyInitialized(initializeBoostNumPy()),
+    pvStructurePtr(pvObject.pvStructurePtr),
     dataType(pvObject.dataType),
     useNumPyArrays(pvObject.useNumPyArrays)
 {
-    initializeBoostNumPy();
 }
 
 // Destructor
