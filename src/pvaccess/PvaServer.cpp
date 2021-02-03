@@ -25,6 +25,7 @@ PvaServer::PvaServer() :
     callbackThreadMutex(),
     callbackThreadExitEvent()
 {
+    PvObject::initializeBoostNumPy();
     start();
 }
 

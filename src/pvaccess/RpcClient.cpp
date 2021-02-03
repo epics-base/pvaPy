@@ -16,6 +16,7 @@ RpcClient::RpcClient(const std::string& channelName_) :
     channelName(channelName_),
     timeout(DefaultTimeout)
 {
+    PvObject::initializeBoostNumPy();
     pvRequest = epics::pvData::CreateRequest::create()->createRequest("");
 }
 
@@ -27,6 +28,7 @@ RpcClient::RpcClient(const std::string& channelName_, const PvObject& pvRequestO
     channelName(channelName_),
     timeout(DefaultTimeout)
 {
+    PvObject::initializeBoostNumPy();
     pvRequest = pvRequestObject.getPvStructurePtr();
 }
 #endif

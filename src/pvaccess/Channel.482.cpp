@@ -59,6 +59,7 @@ Channel::Channel(const std::string& channelName, PvProvider::ProviderType provid
     hasIssuedConnect(false),
     connectionCallback()
 {
+    PvObject::initializeBoostNumPy();
     PyGilManager::evalInitThreads();
     stateRequester = epics::pvaClient::PvaClientChannelStateChangeRequesterPtr(new ChannelStateRequesterImpl(isConnected, this));
     pvaClientChannelPtr->setStateChangeRequester(stateRequester);
