@@ -5,6 +5,7 @@
 #include "RpcServiceImpl.h"
 #include "PvObject.h"
 #include "PyGilManager.h"
+#include "PyUtility.h"
 
 namespace bp = boost::python; 
 
@@ -35,10 +36,9 @@ epics::pvData::PVStructurePtr RpcServiceImpl::request(const epics::pvData::PVStr
     try {
         pyObject = pyService(pyRequest);
     }
-    catch(const bp::error_already_set&) {
-        PyErr_Print();
-        PyErr_Clear();
-        throw epics::pvAccess::RPCRequestException(epics::pvData::Status::STATUSTYPE_ERROR, "RPC Service raised python exception");
+    catch(bp::error_already_set& ex) {
+        std::string errorMessage = PyUtility::getErrorMessageFromTraceback(ex);
+        throw epics::pvAccess::RPCRequestException(epics::pvData::Status::STATUSTYPE_ERROR, errorMessage);
     }
     catch (const std::exception& ex) {
         throw epics::pvAccess::RPCRequestException(epics::pvData::Status::STATUSTYPE_ERROR, ex.what());

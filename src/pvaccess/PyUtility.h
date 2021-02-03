@@ -5,6 +5,7 @@
 #define PY_UTILITY_H
 
 #include <string>
+#include <boost/python.hpp>
 #include <boost/python/extract.hpp>
 #include <boost/python/object.hpp>
 #include <boost/python/list.hpp>
@@ -55,6 +56,8 @@ PyType extractKeyValueFromPyDict(const std::string& key, const boost::python::di
     return extractValueFromPyObject<PyType>(pyObject);
 }
 
+std::string getErrorMessageFromTraceback(boost::python::error_already_set& ex);
+ 
 } // namespace PyUtility
 
 #endif 
