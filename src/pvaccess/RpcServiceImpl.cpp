@@ -1,10 +1,14 @@
 // Copyright information and license terms for this software can be
 // found in the file LICENSE that is included with the distribution
 
-#include "boost/python/extract.hpp"
+#include <boost/python/extract.hpp>
 #include "RpcServiceImpl.h"
 #include "PvObject.h"
 #include "PyGilManager.h"
+
+namespace bp = boost::python; 
+
+PvaPyLogger RpcServiceImpl::logger("Channel");
 
 RpcServiceImpl::RpcServiceImpl(const boost::python::object& pyService_) : 
     pyService(pyService_),
@@ -17,7 +21,7 @@ RpcServiceImpl::~RpcServiceImpl()
 {
     // This prevents response object destruction that is causing segfault
     // with older versions of v4 libraries.
-    //boost::python::incref(pyObject.ptr());
+    //bp::incref(pyObject.ptr());
 }
 
 epics::pvData::PVStructurePtr RpcServiceImpl::request(const epics::pvData::PVStructurePtr& args)
@@ -27,9 +31,20 @@ epics::pvData::PVStructurePtr RpcServiceImpl::request(const epics::pvData::PVStr
     // Acquire GIL
     PyGilManager::gilStateEnsure();
 
-    // Process request.
-    pyObject = pyService(pyRequest);
-    
+    // Call python code
+    try {
+        pyObject = pyService(pyRequest);
+    }
+    catch(const bp::error_already_set&) {
+        PyErr_Print();
+        PyErr_Clear();
+        throw epics::pvAccess::RPCRequestException(epics::pvData::Status::STATUSTYPE_ERROR, "RPC Service raised python exception");
+    }
+    catch (const std::exception& ex) {
+        throw epics::pvAccess::RPCRequestException(epics::pvData::Status::STATUSTYPE_ERROR, ex.what());
+        logger.error(ex.what());
+    }
+
     // Release GIL. 
     PyGilManager::gilStateRelease();
 

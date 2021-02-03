@@ -4,10 +4,11 @@
 #ifndef RPC_SERVICE_IMPL_H
 #define RPC_SERVICE_IMPL_H
 
-#include "pv/pvData.h"
-#include "pv/pvAccess.h"
-#include "pv/rpcServer.h"
-#include "boost/python/object.hpp"
+#include <pv/pvData.h>
+#include <pv/pvAccess.h>
+#include <pv/rpcServer.h>
+#include <boost/python/object.hpp>
+#include "PvaPyLogger.h"
 #include "PvObject.h"
 
 class RpcServiceImpl : public epics::pvAccess::RPCService
@@ -19,6 +20,7 @@ public:
     epics::pvData::PVStructurePtr request(const epics::pvData::PVStructurePtr& args)
         throw (epics::pvAccess::RPCRequestException);
 private:
+    static PvaPyLogger logger;
     boost::python::object pyService;
     // Keeping python response object in scope prevents problem with
     // service segfaulting while returning RPC result; this issue seems to have
