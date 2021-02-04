@@ -1285,6 +1285,14 @@ class_<PvObject>("PvObject",
         "::\n\n"
         "    introspectionDict = pv.getIntrospectionDict()\n\n")
 
+    .def("copy",
+        static_cast<PvObject(PvObject::*)()>(&PvObject::copy),
+        "Makes deep copy of the PvObject instance. This method may be useful for processing queued objects retrieved via channel monitor, where underlying structures may be re-used.\n\n"
+        ":Returns: copy of the original PV object \n\n"
+        "::\n\n"
+        "    pv = PvObject({'anUnion' : ({'anInt' : INT, 'aFloat' : FLOAT},)})\n\n"
+        "    pv2 = pv.copy()\n\n")
+
 #if defined HAVE_NUMPY_SUPPORT && HAVE_NUMPY_SUPPORT == 1
     .add_property("useNumPyArrays", &PvObject::getUseNumPyArraysFlag, &PvObject::setUseNumPyArraysFlag)
 #endif // if defined HAVE_NUMPY_SUPPORT && HAVE_NUMPY_SUPPORT == 1

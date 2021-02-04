@@ -796,6 +796,14 @@ PvObject PvObject::createUnionArrayElementField(const std::string& fieldName) co
     return createUnionArrayElementField(key, fieldName);
 }
 
+PvObject PvObject::copy()
+{
+    pvd::PVStructurePtr pvStructurePtr2(pvd::getPVDataCreate()->createPVStructure(pvStructurePtr->getStructure()));
+    PyPvDataUtility::copyStructureToStructure(pvStructurePtr, pvStructurePtr2);
+    //pvStructurePtr2->copy(*pvStructurePtr);
+    return PvObject(pvStructurePtr2); 
+}
+
 // Methods specific to Boost NumPy 
 bool PvObject::boostNumPyInitialized(false);
 bool PvObject::initializeBoostNumPy() 

@@ -4,6 +4,7 @@
 - added PvValueAlarm, PvControl, and NtScalar wrapper classes
 - fixed numpy initialization problem 
 - added error handling to RpcServer class
+- added copy method to PvObject class
 - conda/pip package dependencies: 
   - EPICS BASE = 7.0.4.1
   - BOOST      = 1.70.0

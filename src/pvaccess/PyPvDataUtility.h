@@ -261,6 +261,7 @@ void fieldToPyDict(const epics::pvData::FieldConstPtr& fieldPtr, const std::stri
 // Copy PV Structure => PV Structure
 //
 void copyStructureToStructure(const epics::pvData::PVStructurePtr& srcPvStructurePtr, epics::pvData::PVStructurePtr& destPvStructurePtr);
+void copyStructureToStructure2(const epics::pvData::PVStructurePtr& srcPvStructurePtr, epics::pvData::PVStructurePtr& destPvStructurePtr);
 void copyStructureToStructure(const std::string& fieldName, const epics::pvData::PVStructurePtr& srcPvStructurePtr, epics::pvData::PVStructurePtr& destPvStructurePtr);
 
 //

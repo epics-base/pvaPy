@@ -1330,6 +1330,17 @@ void fieldToPyDict(const pvd::FieldConstPtr& fieldPtr, const std::string& fieldN
 //
 void copyStructureToStructure(const pvd::PVStructurePtr& srcPvStructurePtr, pvd::PVStructurePtr& destPvStructurePtr)
 {
+#if PVA_API_VERSION >= 481
+    destPvStructurePtr->copy(*srcPvStructurePtr);
+#else
+    copyStructureToStructure2(srcPvStructurePtr, destPvStructurePtr);
+#endif // if PVA_API_VERSION >= 481
+}
+
+
+// Method used for older epics releases
+void copyStructureToStructure2(const pvd::PVStructurePtr& srcPvStructurePtr, pvd::PVStructurePtr& destPvStructurePtr)
+{
     pvd::StructureConstPtr srcStructurePtr = srcPvStructurePtr->getStructure();
     pvd::StringArray fieldNames = srcStructurePtr->getFieldNames();
     for (unsigned int i = 0; i < fieldNames.size(); ++i) {
