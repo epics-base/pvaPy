@@ -7,7 +7,7 @@
 - added copy method to PvObject class
 - conda/pip package dependencies: 
   - EPICS BASE = 7.0.4.1
-  - BOOST      = 1.70.0
+  - BOOST      = 1.72.0
   - NUMPY      > 1.15
 
 
