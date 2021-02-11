@@ -1331,7 +1331,12 @@ void fieldToPyDict(const pvd::FieldConstPtr& fieldPtr, const std::string& fieldN
 void copyStructureToStructure(const pvd::PVStructurePtr& srcPvStructurePtr, pvd::PVStructurePtr& destPvStructurePtr)
 {
 #if PVA_API_VERSION >= 481
-    destPvStructurePtr->copy(*srcPvStructurePtr);
+    if(*(srcPvStructurePtr->getStructure()) == *(destPvStructurePtr->getStructure())) {
+        destPvStructurePtr->copyUnchecked(*srcPvStructurePtr);
+    }
+    else {
+        copyStructureToStructure2(srcPvStructurePtr, destPvStructurePtr);
+    }
 #else
     copyStructureToStructure2(srcPvStructurePtr, destPvStructurePtr);
 #endif // if PVA_API_VERSION >= 481

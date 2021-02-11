@@ -799,8 +799,7 @@ PvObject PvObject::createUnionArrayElementField(const std::string& fieldName) co
 PvObject PvObject::copy()
 {
     pvd::PVStructurePtr pvStructurePtr2(pvd::getPVDataCreate()->createPVStructure(pvStructurePtr->getStructure()));
-    PyPvDataUtility::copyStructureToStructure(pvStructurePtr, pvStructurePtr2);
-    //pvStructurePtr2->copy(*pvStructurePtr);
+    pvStructurePtr2->copyUnchecked(*pvStructurePtr);
     return PvObject(pvStructurePtr2); 
 }
 
