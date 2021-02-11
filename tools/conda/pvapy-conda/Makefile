@@ -6,7 +6,7 @@ include $(BUILD_CONF)
 ifeq ($(PVAPY_VERSION),)
     PVAPY_VERSION=$(shell git rev-parse --short HEAD)
 endif
-PVAPY_YAML_TEMPLATE ?= meta.yaml.template
+PVAPY_YAML_TEMPLATE ?= meta.yaml.template.local
 
 PACKAGE = pvapy
 CONDA_ENV_FLAGS += -y
