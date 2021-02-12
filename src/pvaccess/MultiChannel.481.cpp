@@ -244,7 +244,7 @@ void MultiChannel::ntMonitorThread(MultiChannel* multiChannel)
             // Not good.
             logger.error("Monitor thread caught exception while processing monitor data: %s", ex.what());
         }
-        sleep(multiChannel->monitorPollPeriod);
+        epicsThreadSleep(multiChannel->monitorPollPeriod);
     }
 
     // Monitor thread done.
@@ -274,7 +274,7 @@ void MultiChannel::doubleMonitorThread(MultiChannel* multiChannel)
             // Not good.
             logger.error("Monitor thread caught exception while processing monitor data: %s", ex.what());
         }
-        sleep(multiChannel->monitorPollPeriod);
+        epicsThreadSleep(multiChannel->monitorPollPeriod);
     }
 
     // Monitor thread done.
