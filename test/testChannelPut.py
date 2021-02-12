@@ -189,10 +189,10 @@ class TestChannelPut:
         value2 = c.get().getPyObject() 
         assert(value == value2)
 
-    def testPutInt_UInt(self):
+    def testPutUInt_UInt(self):
         value = TestUtility.getRandomUInt()
         c = TestUtility.getUIntChannel()
-        c.putInt(value)
+        c.putUInt(value)
         value2 = c.get().getPyObject()
         assert(value == value2)
 
