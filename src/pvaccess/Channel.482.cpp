@@ -1115,7 +1115,7 @@ epics::pvaClient::PvaClientPutPtr Channel::createPutPtr(const std::string& reque
 epics::pvaClient::PvaClientPutGetPtr Channel::createPutGetPtr(const std::string& requestDescriptor)
 {
     if (requestDescriptor == PvaConstants::DefaultKey) {
-        return pvaClientChannelPtr->createPutGet(defaultRequestDescriptor);
+        return pvaClientChannelPtr->createPutGet(defaultPutGetRequestDescriptor);
     }
     else {
         return pvaClientChannelPtr->createPutGet(requestDescriptor);
