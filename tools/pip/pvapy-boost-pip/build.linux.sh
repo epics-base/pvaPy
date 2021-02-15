@@ -4,6 +4,7 @@
 
 TOP=`dirname $0` && cd $TOP && TOP=`pwd`
 BUILD_DIR=$TOP/build
+BUILD_SAVE_DIR=$TOP/../build
 BOOST_DIR=$TOP/pvapy-boost
 BOOST_HOST_ARCH=`uname | tr [A-Z] [a-z]`-`uname -m`
 BUILD_CONF=$TOP/../../../configure/BUILD.conf
@@ -21,6 +22,7 @@ fi
 BOOST_DOWNLOAD_VERSION=`echo ${BOOST_VERSION} | sed 's?\.?_?g'`
 BOOST_DOWNLOAD_URL=https://sourceforge.net/projects/boost/files/boost/$BOOST_VERSION/boost_${BOOST_DOWNLOAD_VERSION}.tar.gz
 
+mkdir -p $BUILD_SAVE_DIR
 mkdir -p $BUILD_DIR
 cd $BUILD_DIR
 
@@ -28,17 +30,19 @@ cd $BUILD_DIR
 
 echo "Building boost $BOOST_VERSION"
 BOOST_TAR_FILE=`basename $BOOST_DOWNLOAD_URL`
+BOOST_BUILD_DIR=`echo $BOOST_TAR_FILE | sed 's?.tar.gz??g'`
 if [ ! -f $BOOST_TAR_FILE ]; then
     echo "Downloading boost from $BOOST_DOWNLOAD_URL"
     curl -Ls -o $BOOST_TAR_FILE -w %{url_effective} $BOOST_DOWNLOAD_URL > /dev/null || exit 1
+
+    echo "Removing old build directory $BOOST_BUILD_DIR"
+    rm -rf $BOOST_BUILD_DIR
 fi
-BOOST_BUILD_DIR=`echo $BOOST_TAR_FILE | sed 's?.tar.gz??g'`
 
-echo "Removing old build directory $BOOST_BUILD_DIR"
-rm -rf $BOOST_BUILD_DIR
-
-echo "Unpacking $BOOST_TAR_FILE"
-tar xf $BOOST_TAR_FILE
+if [ ! -d $BOOST_BUILD_DIR ]; then
+    echo "Unpacking $BOOST_TAR_FILE"
+    tar xf $BOOST_TAR_FILE
+fi
 cd $BOOST_BUILD_DIR
 
 PYTHON_BIN=`which python$PYTHON_VERSION 2> /dev/null`
@@ -97,4 +101,6 @@ for f in `find . -type f -name '*.so*'`; do
     patchelf --set-rpath $newRpath $f || exit 1
 done
 
-
+# Save build so we can reuse it
+BOOST_SAVE_DIR=$BUILD_SAVE_DIR/pvapy-boost-${BOOST_VERSION}-py${PYTHON_MAJOR_MINOR_VERSION}
+rsync -arlP $BOOST_DIR/ $BOOST_SAVE_DIR/
