@@ -9,7 +9,9 @@ python testServer.py 10  &
 echo "Starting tests"
 nosetests -v testPvObject.py
 nosetests -v testNtTypes.py
+nosetests -v testNumPyArrays.py
 nosetests -v testChannelPut.py
+nosetests -v testChannelPutGet.py
 nosetests -v testMultiChannel.py
 
 wait 
