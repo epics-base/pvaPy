@@ -22,6 +22,7 @@ class PyPvRecord :
 {
 public:
     static PyPvRecordPtr create(const std::string& name, const PvObject& pvObject, const StringQueuePtr& callbackQueuePtr, const boost::python::object& onWriteCallback = boost::python::object());
+    static PyPvRecordPtr create(const std::string& name, const PvObject& pvObject, int asLevel, const std::string& asGroup, const StringQueuePtr& callbackQueuePtr, const boost::python::object& onWriteCallback = boost::python::object());
     POINTER_DEFINITIONS(PyPvRecord);
     virtual ~PyPvRecord(); 
     virtual bool init();
@@ -31,6 +32,7 @@ public:
 private:
     static PvaPyLogger logger;
     PyPvRecord(const std::string& name, const PvObject& pvObject, const StringQueuePtr& callbackQueuePtr, const boost::python::object& onWriteCallback = boost::python::object());
+    PyPvRecord(const std::string& name, const PvObject& pvObject, int asLevel, const std::string& asGroup, const StringQueuePtr& callbackQueuePtr, const boost::python::object& onWriteCallback = boost::python::object());
 
     StringQueuePtr callbackQueuePtr; 
     boost::python::object onWriteCallback;

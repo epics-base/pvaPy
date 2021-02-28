@@ -17,8 +17,27 @@ PyPvRecordPtr PyPvRecord::create(const std::string& name, const PvObject& pvObje
     return pvRecord;
 }
 
+PyPvRecordPtr PyPvRecord::create(const std::string& name, const PvObject& pvObject, int asLevel, const std::string& asGroup, const StringQueuePtr& callbackQueuePtr, const boost::python::object& onWriteCallback)
+{
+    PyPvRecordPtr pvRecord(new PyPvRecord(name, pvObject, asLevel, asGroup, callbackQueuePtr, onWriteCallback));
+    if(!pvRecord->init()) {
+        pvRecord.reset();
+    }
+    return pvRecord;
+}
+
 PyPvRecord::PyPvRecord(const std::string& name, const PvObject& pvObject, const StringQueuePtr& callbackQueuePtr_, const boost::python::object& onWriteCallback_)
     : epics::pvDatabase::PVRecord(name, pvObject.getPvStructurePtr()),
+    callbackQueuePtr(callbackQueuePtr_),
+    onWriteCallback(onWriteCallback_)
+{
+    if(!PyUtility::isPyNone(onWriteCallback)) {
+        PyGilManager::evalInitThreads();
+    }
+}
+
+PyPvRecord::PyPvRecord(const std::string& name, const PvObject& pvObject, int asLevel, const std::string& asGroup, const StringQueuePtr& callbackQueuePtr_, const boost::python::object& onWriteCallback_)
+    : epics::pvDatabase::PVRecord(name, pvObject.getPvStructurePtr(), asLevel, asGroup),
     callbackQueuePtr(callbackQueuePtr_),
     onWriteCallback(onWriteCallback_)
 {

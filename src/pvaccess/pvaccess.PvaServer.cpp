@@ -49,6 +49,23 @@ class_<PvaServer>("PvaServer",
 
     .def(init<std::string, const PvObject&, const boost::python::object&>(args("channelName", "pvObject", "onWriteCallback")))
 
+    .def("initAs",
+        static_cast<void(PvaServer::*)(const std::string&, const std::string&)>(&PvaServer::initAs),
+        args("filePath", "substitutions"),
+        "Initialize access security.\n\n"
+        ":Parameter: *filePath* (str) - AS definitions file.\n\n"
+        ":Parameter: *substitutions* (str) - Macro substitutions.\n\n"
+        ":Raises: *PvaException* - in case of any errors\n\n"
+        "::\n\n"
+        "    pvaServer.initAs('as.cnf', 'S=S27,P=BPM1')\n\n")
+
+    .def("isAsActive",
+        static_cast<bool(PvaServer::*)()>(&PvaServer::isAsActive),
+        "Is access security active?\n\n"
+        ":Returns: true if AS is active\n\n"
+        "::\n\n"
+        "    isActive = pvaServer.isAsActive()\n\n")
+
     .def("start",
         static_cast<void(PvaServer::*)()>(&PvaServer::start),
         "Starts PVA server. This method is called in all constructors automatically, but may be used to restart server if it has been stopped.\n\n"
@@ -114,6 +131,23 @@ class_<PvaServer>("PvaServer",
         "        print('New PV value was written: %s' % x)\n\n"
         "    pvaServer.addRecord('pair', pv, echo)\n\n")
 #endif
+
+    .def("addRecordWithAs",
+        static_cast<void(PvaServer::*)(const std::string&,const PvObject&,int,const std::string&,const boost::python::object&)>(&PvaServer::addRecordWithAs),
+        args("channelName","pvObject","asLevel","asGroup","onWriteCallback"),
+        "Adds PV record with access security to the server database.\n\n"
+        ":Parameter: *channelName* (str) - channel name\n\n"
+        ":Parameter: *pvObject* (PvObject) - PV object that will be exposed on the specified channel. Any changes to object's field values will be reflected on the channel.\n\n"
+        ":Parameter: *asLevel* (int) - access security level\n\n"
+        ":Parameter: *asGroup* (str) - access security group\n\n"
+        ":Parameter: *onWriteCallback* (object) - reference to python object (e.g., python function) that will be executed on channel write.\n\n"
+        ":Raises: *ObjectAlreadyExists* - when database already contains record associated with a given channel name\n\n"
+        ":Raises: *PvaException* - in case of any other errors\n\n"
+        "::\n\n"
+        "    pv = PvObject({'x' : INT, 'y' : INT}, {'x' : 3, 'y' : 5})\n\n"
+        "    def echo(x):\n\n"
+        "        print('New PV value was written: %s' % x)\n\n"
+        "    pvaServer.addRecordWithAs('pair', pv, 1, 'MyGroup', echo)\n\n")
 
     .def("removeRecord",
         static_cast<void(PvaServer::*)(const std::string&)>(&PvaServer::removeRecord),

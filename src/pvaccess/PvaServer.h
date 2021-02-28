@@ -24,6 +24,9 @@ public:
     PvaServer(const std::string& channelName, const PvObject& pvObject, const boost::python::object& onWriteCallback);
     PvaServer(const PvaServer&);
     virtual ~PvaServer();
+    virtual void initAs(const std::string& filePath);
+    virtual void initAs(const std::string& filePath, const std::string& substitutions);
+    virtual bool isAsActive();
     virtual void update(const PvObject& pvObject);
     virtual void update(const std::string& channelName, const PvObject& pvObject);
 #ifndef WINDOWS
@@ -31,6 +34,7 @@ public:
 #else
     virtual void addRecord(const std::string& channelName, const PvObject& pvObject, const boost::python::object& onWriteCallback);
 #endif
+    virtual void addRecordWithAs(const std::string& channelName, const PvObject& pvObject, int asLevel, const std::string& asGroup, const boost::python::object& onWriteCallback);
     virtual void removeRecord(const std::string& channelName);
     virtual void removeAllRecords();
     virtual bool hasRecord(const std::string& channelName);
@@ -48,6 +52,7 @@ private:
     void notifyCallbackThreadExit();
 
     void initRecord(const std::string& channelName, const PvObject& pvObject, const boost::python::object& onWriteCallback = boost::python::object());
+    void initRecord(const std::string& channelName, const PvObject& pvObject, int asLevel, const std::string& asGroup, const boost::python::object& onWriteCallback = boost::python::object());
     PyPvRecordPtr findRecord(const std::string& channelName);
 
     static PvaPyLogger logger;
