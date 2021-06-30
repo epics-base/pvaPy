@@ -1,3 +1,8 @@
+## Release 3.2.0 (2021/MM/DD)
+
+- disabled info printout for PvaServer unless the debug log level is
+  set to INFO (8) or DEBUG (16) 
+
 ## Release 3.1.0 (2021/02/12)
 
 - added support for MultiChannel put and monitor

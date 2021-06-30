@@ -43,6 +43,7 @@ public:
     int getLogLevelMask() const;
     void setLogLevelMask(int logLevel);
     void setLogLevelMaskFromEnvVar();
+    bool hasLogLevel(int level) const;
 
     bool isEpicsLogEnabled() const;
     void setUseEpicsLog(bool useEpicsLog);
@@ -105,6 +106,11 @@ inline void PvaPyLogger::setLogLevelMask(int mask)
 inline void PvaPyLogger::setLogLevelMaskFromEnvVar() 
 {
     logLevelMask = getLogLevelMaskFromEnvVar();
+}
+
+inline bool PvaPyLogger::hasLogLevel(int level) const
+{
+    return ((logLevelMask & level) > 0);
 }
 
 inline bool PvaPyLogger::isEpicsLogEnabled() const
