@@ -6,6 +6,8 @@
 
 #include "pv/pvIntrospect.h"
 
+#define PVAPY_SCALAR_TYPE_CLASS_NAME "ScalarType"
+
 namespace PvType
 {
 

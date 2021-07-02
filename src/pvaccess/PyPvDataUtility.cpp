@@ -1817,10 +1817,20 @@ void addVariantUnionArrayField(const std::string& fieldName, pvd::FieldConstPtrA
 
 bool updateFieldArrayFromInt(const bp::object& pyObject, const std::string& fieldName, pvd::FieldConstPtrArray& fields, pvd::StringArray& names)
 {
-    bp::extract<int> scalarExtract(pyObject);
-    if (!scalarExtract.check()) {
+    // *******************************************************
+    // bp::extract<int>(pyDict) results in segmentation fault
+    // with numpy>=1.21.0 
+    // for now, determine if we have scalar type using class name
+    std::string pyClassName = bp::extract<std::string>(pyObject.attr("__class__").attr("__name__"));
+    if (pyClassName != PVAPY_SCALAR_TYPE_CLASS_NAME) {
         return false;
     }
+
+    bp::extract<int> scalarExtract(pyObject);
+    //if (!scalarExtract.check()) {
+    //    return false;
+    //}
+    // *******************************************************
 
     int scalarExtractValue = scalarExtract();
     pvd::ScalarType scalarType = static_cast<pvd::ScalarType>(scalarExtractValue);
@@ -1830,10 +1840,20 @@ bool updateFieldArrayFromInt(const bp::object& pyObject, const std::string& fiel
 
 bool updateFieldArrayFromIntList(const bp::object& pyObject, const std::string& fieldName, pvd::FieldConstPtrArray& fields, pvd::StringArray& names)
 {
-    bp::extract<int> arrayScalarExtract(pyObject);
-    if (!arrayScalarExtract.check()) {
+    // *******************************************************
+    // bp::extract<int>(pyDict) results in segmentation fault
+    // with numpy>=1.21.0 
+    // for now, determine if we have scalar type using class name
+    std::string pyClassName = bp::extract<std::string>(pyObject.attr("__class__").attr("__name__"));
+    if (pyClassName != PVAPY_SCALAR_TYPE_CLASS_NAME) {
         return false;
     }
+
+    bp::extract<int> arrayScalarExtract(pyObject);
+    //if (!arrayScalarExtract.check()) {
+    //    return false;
+    //}
+    // *******************************************************
 
     int arrayScalarExtractValue = arrayScalarExtract();
     pvd::ScalarType scalarType = static_cast<pvd::ScalarType>(arrayScalarExtractValue);
