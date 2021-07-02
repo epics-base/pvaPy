@@ -15,7 +15,7 @@ if [ ! -f $BUILD_CONF ]; then
 fi
 . $BUILD_CONF
 
-OPT_EPICS_DIR=opt/epics-${EPICS_BASE_VERSION}
+OPT_EPICS_DIR=epics-${EPICS_BASE_VERSION}
 LOCAL_EPICS_DIR=$PREFIX/$OPT_EPICS_DIR
 EPICS_BASE_DOWNLOAD_URL=https://epics.anl.gov/download/base/base-${EPICS_BASE_VERSION}.tar.gz
 
