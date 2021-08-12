@@ -25,6 +25,9 @@
 #include "GetFieldRequesterImpl.h"
 
 using std::tr1::static_pointer_cast;
+namespace pvd = epics::pvData;
+namespace pvc = epics::pvaClient;
+namespace bp = boost::python;
 
 const char* Channel::DefaultSubscriberName("defaultSubscriber");
 
@@ -169,15 +172,33 @@ void Channel::put(const PvObject& pvObject, const std::string& requestDescriptor
 {
     connect();
     try {
-        epics::pvaClient::PvaClientPutPtr pvaPut = createPutPtr(requestDescriptor);
-        epics::pvData::PVStructurePtr pvSend = pvaPut->getData()->getPVStructure();
-        const epics::pvData::PVFieldPtrArray& pvFields = pvSend->getPVFields();
-        if(pvFields.size()!=1) throw InvalidRequest("invalid request: number of subfields not 1");
-        epics::pvData::PVFieldPtr pvField = pvFields[0];
-        if(pvField->getField()->getType()!=epics::pvData::structure) throw InvalidRequest("type must be structure");
-        epics::pvData::PVStructurePtr pvto = static_pointer_cast<epics::pvData::PVStructure>(pvField);
-        epics::pvData::PVStructurePtr pvs = pvObject.getPvStructurePtr();
-        pvto->copy(*pvs);
+        pvc::PvaClientPutPtr pvaPut = createPutPtr(requestDescriptor);
+        pvd::PVStructurePtr pvSend = pvaPut->getData()->getPVStructure();
+        pvd::PVStructurePtr pvSrc = pvObject.getPvStructurePtr();
+        bool structuresMatch = false;
+        if (*(pvSrc->getStructure()) == *(pvSend->getStructure())) {
+            // Structures match
+            structuresMatch = true;
+            pvSend->copyUnchecked(*pvSrc);
+        }
+        else {
+            // PV Database record fields like PvTimeStamp or PvAlarm
+            // are not at the top level
+            const pvd::PVFieldPtrArray& pvSendFields = pvSend->getPVFields();
+            if (pvSendFields.size() == 1 && pvSendFields[0]->getField()->getType() == pvd::structure) {
+                pvd::PVStructurePtr pvSend2 = static_pointer_cast<pvd::PVStructure>(pvSendFields[0]);
+                if (*(pvSrc->getStructure()) == *(pvSend2->getStructure())) {
+                    pvSend2->copyUnchecked(*pvSrc);
+                    structuresMatch = true;
+                }
+            }
+        }
+
+        if (!structuresMatch) {
+            // Try to copy fields that are both in source and destination
+            PyPvDataUtility::copyStructureToStructure2(pvSrc, pvSend);
+        }
+
         pvaPut->put();
     } 
     catch (std::runtime_error& ex) {
