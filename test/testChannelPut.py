@@ -367,7 +367,7 @@ class TestChannelPut:
     #
     def testPut_PvTimeStamp(self):
         s = TestUtility.getRandomUInt()
-        ns = TestUtility.getRandomUInt()
+        ns = TestUtility.getRandomInt()
         u = TestUtility.getRandomShort()
         t = PvTimeStamp(s,ns,u)
         c = TestUtility.getStructChannel()
