@@ -2,6 +2,10 @@
 
 - disabled info printout for PvaServer unless the debug log level is
   set to INFO (8) or DEBUG (16) 
+- fixed issue with channel puts involving objects like PvTimeStamp or
+  PvAlarm (GitHub Issue #65, PR #66)
+- restricted numpy version to < 1.21 for conda and pip packages until 
+  boot python segfaults are resolved
 
 ## Release 3.1.0 (2021/02/12)
 

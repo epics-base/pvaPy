@@ -1,10 +1,10 @@
 # PvaPy - PvAccess for Python
 
-The PvaPy package is a Python API for EPICS4. It supports both PVA and CA
-providers, all standard EPICS4 types (structures, scalars, unions, etc), 
+The PvaPy package is a Python API for EPICS7. It supports both PVA and CA
+providers, all standard EPICS7 types (structures, scalars, unions, etc), 
 standard set of channel operations (put/get, monitor), RPC client/server, 
-PVA server, etc. It uses Boost/Python to wrap EPICS4 C++ libraries and APIs, 
-and is currently supported on the Unix-like operating systems (Linux, OSX).
+PVA server, etc. It uses Boost/Python to wrap EPICS7 C++ libraries and APIs, 
+and is currently supported on Linux, OSX and Windows.
 
 ## Installation 
 
