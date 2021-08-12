@@ -13,6 +13,7 @@ from pvaccess import PvULong
 from pvaccess import PvFloat
 from pvaccess import PvDouble
 from pvaccess import PvString
+from pvaccess import PvTimeStamp
 from testUtility import TestUtility
 
 class TestChannelPut:
@@ -360,4 +361,22 @@ class TestChannelPut:
         c.putString(value)
         value2 = c.get().getPyObject()
         assert(value == value2)
+
+    #
+    # PvObject Put
+    #
+    def testPut_PvTimeStamp(self):
+        s = TestUtility.getRandomUInt()
+        ns = TestUtility.getRandomUInt()
+        u = TestUtility.getRandomShort()
+        t = PvTimeStamp(s,ns,u)
+        c = TestUtility.getStructChannel()
+        print('\nSetting timestamp field:\n%s' % (t))
+        c.put(t,'field(timestamp)')
+        t2 = c.get('field(timestamp)')['timestamp']
+        print('Testing equality: %s == %s' % (dict(t), dict(t2)))
+        assert(t['secondsPastEpoch'] == t2['secondsPastEpoch'])
+        assert(t['nanoseconds'] == t2['nanoseconds'])
+        assert(t['userTag'] == t2['userTag'])
+
 

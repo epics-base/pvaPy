@@ -19,6 +19,36 @@ class TestServer(pva.PvaServer):
     FLOAT_CHANNEL_NAME = 'testFloat'
     DOUBLE_CHANNEL_NAME = 'testDouble'
     STRING_CHANNEL_NAME = 'testString'
+    STRUCT_CHANNEL_NAME = 'testStruct'
+
+    STRUCT_OBJECT_TYPE_DICT = {
+        'value' : pva.DOUBLE,
+        'boolean' : pva.BOOLEAN,
+        'byte' : pva.BYTE,
+        'bytea' : [pva.BYTE],
+        'ubyte' : pva.UBYTE,
+        'ubytea' : [pva.UBYTE],
+        'short' : pva.SHORT,
+        'shorta' : [pva.SHORT],
+        'ushort' : pva.USHORT,
+        'ushorta' : [pva.USHORT],
+        'int' : pva.INT,
+        'inta' : [pva.INT],
+        'uint' : pva.UINT,
+        'uinta' : [pva.UINT],
+        'long' : pva.LONG,
+        'longa' : [pva.LONG],
+        'ulong' : pva.ULONG,
+        'ulonga' : [pva.ULONG],
+        'string' : pva.STRING,
+        'stringa' : [pva.STRING],
+        'float' : pva.FLOAT,
+        'floata' : [pva.FLOAT],
+        'double' : pva.DOUBLE,
+        'doublea' : [pva.DOUBLE],
+        'timestamp' : pva.PvTimeStamp(),
+        'alarm' : pva.PvAlarm()
+    }
 
     def __init__(self):
         pva.PvaServer.__init__(self)
@@ -57,6 +87,9 @@ class TestServer(pva.PvaServer):
 
         self.stringPv = pva.PvString('')
         self.addRecord(self.STRING_CHANNEL_NAME, self.stringPv)
+
+        self.structPv = pva.PvObject(self.STRUCT_OBJECT_TYPE_DICT)
+        self.addRecord(self.STRUCT_CHANNEL_NAME, self.structPv)
 
     def __del__(self):
         records = self.getRecordNames()
