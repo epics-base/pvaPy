@@ -24,6 +24,8 @@
 
 #include "GetFieldRequesterImpl.h"
 
+using std::tr1::static_pointer_cast;
+
 const char* Channel::DefaultSubscriberName("defaultSubscriber");
 
 const double Channel::DefaultTimeout(3.0);
@@ -169,7 +171,13 @@ void Channel::put(const PvObject& pvObject, const std::string& requestDescriptor
     try {
         epics::pvaClient::PvaClientPutPtr pvaPut = createPutPtr(requestDescriptor);
         epics::pvData::PVStructurePtr pvSend = pvaPut->getData()->getPVStructure();
-        pvSend << pvObject;
+        const epics::pvData::PVFieldPtrArray& pvFields = pvSend->getPVFields();
+        if(pvFields.size()!=1) throw InvalidRequest("invalid request: number of subfields not 1");
+        epics::pvData::PVFieldPtr pvField = pvFields[0];
+        if(pvField->getField()->getType()!=epics::pvData::structure) throw InvalidRequest("type must be structure");
+        epics::pvData::PVStructurePtr pvto = static_pointer_cast<epics::pvData::PVStructure>(pvField);
+        epics::pvData::PVStructurePtr pvs = pvObject.getPvStructurePtr();
+        pvto->copy(*pvs);
         pvaPut->put();
     } 
     catch (std::runtime_error& ex) {

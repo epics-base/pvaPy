@@ -26,7 +26,6 @@ RpcServiceImpl::~RpcServiceImpl()
 }
 
 epics::pvData::PVStructurePtr RpcServiceImpl::request(const epics::pvData::PVStructurePtr& args)
-    throw (epics::pvAccess::RPCRequestException)
 {
     PvObject pyRequest(args);
     // Acquire GIL
