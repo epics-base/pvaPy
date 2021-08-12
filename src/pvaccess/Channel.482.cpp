@@ -108,20 +108,26 @@ void Channel::connect()
     if (isChannelConnected()) {
         return;
     }
+    PyThreadState* _pyThreadState;
+    _pyThreadState = PyEval_SaveThread();
+
     try {
         //pvaClientChannelPtr->connect(timeout);
         issueConnect();
         if (!isChannelConnected()) {
             epics::pvData::Status status = pvaClientChannelPtr->waitConnect(timeout);
             if(!status.isOK()) {
+                PyEval_RestoreThread(_pyThreadState);
                 throw ChannelTimeout("Channel %s timed out.", pvaClientChannelPtr->getChannelName().c_str());
             }
         }
         determineDefaultRequestDescriptor();
     } 
     catch (std::runtime_error&) {
+        PyEval_RestoreThread(_pyThreadState);
         throw ChannelTimeout("Channel %s timed out.", pvaClientChannelPtr->getChannelName().c_str());
     }
+    PyEval_RestoreThread(_pyThreadState);
 }
 
 void Channel::issueConnect() 
@@ -151,13 +157,17 @@ PvObject* Channel::get()
 PvObject* Channel::get(const std::string& requestDescriptor) 
 {
     connect();
+    PyThreadState* _pyThreadState;
+    _pyThreadState = PyEval_SaveThread();
     try {
         epics::pvaClient::PvaClientGetPtr pvaGet = createGetPtr(requestDescriptor);
         pvaGet->get();
         epics::pvData::PVStructurePtr pvStructure = pvaGet->getData()->getPVStructure();
+        PyEval_RestoreThread(_pyThreadState);
         return new PvObject(pvStructure);
     }
     catch (std::runtime_error& ex) {
+        PyEval_RestoreThread(_pyThreadState);
         throw PvaException(ex.what());
     }
 }
@@ -171,6 +181,7 @@ void Channel::put(const PvObject& pvObject)
 void Channel::put(const PvObject& pvObject, const std::string& requestDescriptor) 
 {
     connect();
+    PyThreadState* _pyThreadState = NULL;
     try {
         pvc::PvaClientPutPtr pvaPut = createPutPtr(requestDescriptor);
         pvd::PVStructurePtr pvSend = pvaPut->getData()->getPVStructure();
@@ -198,12 +209,16 @@ void Channel::put(const PvObject& pvObject, const std::string& requestDescriptor
             // Try to copy fields that are both in source and destination
             PyPvDataUtility::copyStructureToStructure2(pvSrc, pvSend);
         }
-
+        _pyThreadState = PyEval_SaveThread();
         pvaPut->put();
     } 
     catch (std::runtime_error& ex) {
+        if (_pyThreadState) {
+            PyEval_RestoreThread(_pyThreadState);
+        }
         throw PvaException(ex.what());
     }
+    PyEval_RestoreThread(_pyThreadState);
 }
 
 void Channel::put(const std::vector<std::string>& values)
@@ -214,15 +229,21 @@ void Channel::put(const std::vector<std::string>& values)
 void Channel::put(const std::vector<std::string>& values, const std::string& requestDescriptor) 
 {
     connect();
+    PyThreadState* _pyThreadState = NULL;
     try {
         epics::pvaClient::PvaClientPutPtr pvaPut = createPutPtr(requestDescriptor);
         epics::pvaClient::PvaClientPutDataPtr pvaData = pvaPut->getData();
         pvaData->putStringArray(values);
+        _pyThreadState = PyEval_SaveThread();
         pvaPut->put();
     } 
     catch (std::runtime_error& ex) {
+        if (_pyThreadState) {
+            PyEval_RestoreThread(_pyThreadState);
+        }
         throw PvaException(ex.what());
     }
+    PyEval_RestoreThread(_pyThreadState);
 }
 
 void Channel::put(const std::string& value)
@@ -233,6 +254,7 @@ void Channel::put(const std::string& value)
 void Channel::put(const std::string& value, const std::string& requestDescriptor) 
 {
     connect();
+    PyThreadState* _pyThreadState = NULL;
     try {
         epics::pvaClient::PvaClientPutPtr pvaPut = createPutPtr(requestDescriptor);
         epics::pvaClient::PvaClientPutDataPtr pvaData = pvaPut->getData();
@@ -248,11 +270,16 @@ void Channel::put(const std::string& value, const std::string& requestDescriptor
             values.push_back(value);
             PvUtility::fromString(pvStructure, values);
         }
+        _pyThreadState = PyEval_SaveThread();
         pvaPut->put();
     } 
     catch (std::runtime_error& ex) {
+        if (_pyThreadState) {
+            PyEval_RestoreThread(_pyThreadState);
+        }
         throw PvaException(ex.what());
     }
+    PyEval_RestoreThread(_pyThreadState);
 }
 
 void Channel::put(const boost::python::list& pyList, const std::string& requestDescriptor) 
@@ -401,6 +428,7 @@ void Channel::parsePut(
     const boost::python::list& pyList, const std::string& requestDescriptor,bool zeroArrayLength)
 {
     connect();
+    PyThreadState* _pyThreadState = NULL;
     int listSize = boost::python::len(pyList);
     std::vector<std::string> args(listSize);
     for (int i = 0; i < listSize; i++) {
@@ -411,11 +439,16 @@ void Channel::parsePut(
         epics::pvaClient::PvaClientPutDataPtr pvaData = pvaPut->getData();
         if(zeroArrayLength) pvaData->zeroArrayLength();
         pvaData->parse(args);
+        _pyThreadState = PyEval_SaveThread();
         pvaPut->put();
     } 
     catch (std::runtime_error& ex) {
+        if (_pyThreadState) {
+            PyEval_RestoreThread(_pyThreadState);
+        }
         throw PvaException(ex.what());
     }
+    PyEval_RestoreThread(_pyThreadState);
 }
 
 
@@ -423,6 +456,7 @@ PvObject* Channel::parsePutGet(
     const boost::python::list& pyList, const std::string& requestDescriptor,bool zeroArrayLength)
 {
     connect();
+    PyThreadState* _pyThreadState = NULL;
     int listSize = boost::python::len(pyList);
     std::vector<std::string> args(listSize);
     for (int i = 0; i < listSize; i++) {
@@ -433,11 +467,16 @@ PvObject* Channel::parsePutGet(
         epics::pvaClient::PvaClientPutDataPtr pvaData = pvaPutGet->getPutData();
         if(zeroArrayLength) pvaData->zeroArrayLength();
         pvaData->parse(args);
+        _pyThreadState = PyEval_SaveThread();
         pvaPutGet->putGet();
         epics::pvData::PVStructurePtr pvGet = pvaPutGet->getGetData()->getPVStructure();
+        PyEval_RestoreThread(_pyThreadState);
         return new PvObject(pvGet);
     } 
     catch (std::runtime_error& ex) {
+        if (_pyThreadState) {
+            PyEval_RestoreThread(_pyThreadState);
+        }
         throw PvaException(ex.what());
     }
 }
@@ -448,15 +487,21 @@ PvObject* Channel::parsePutGet(
 PvObject* Channel::putGet(const PvObject& pvObject, const std::string& requestDescriptor) 
 {
     connect();
+    PyThreadState* _pyThreadState = NULL;
     try {
         epics::pvaClient::PvaClientPutGetPtr pvaPutGet = createPutGetPtr(requestDescriptor);
         epics::pvData::PVStructurePtr pvPut = pvaPutGet->getPutData()->getPVStructure();
         pvPut << pvObject;
+        _pyThreadState = PyEval_SaveThread();
         pvaPutGet->putGet();
         epics::pvData::PVStructurePtr pvGet = pvaPutGet->getGetData()->getPVStructure();
+        PyEval_RestoreThread(_pyThreadState);
         return new PvObject(pvGet);
     } 
     catch (std::runtime_error& ex) {
+        if (_pyThreadState) {
+            PyEval_RestoreThread(_pyThreadState);
+        }
         throw PvaException(ex.what());
     }
 }
@@ -469,14 +514,20 @@ PvObject* Channel::putGet(const PvObject& pvObject)
 PvObject* Channel::putGet(const std::vector<std::string>& values, const std::string& requestDescriptor) 
 {
     connect();
+    PyThreadState* _pyThreadState = NULL;
     try {
         epics::pvaClient::PvaClientPutGetPtr pvaPutGet = createPutGetPtr(requestDescriptor);
         epics::pvaClient::PvaClientPutDataPtr pvaData = pvaPutGet->getPutData();
         pvaData->putStringArray(values);
+        _pyThreadState = PyEval_SaveThread();
         pvaPutGet->putGet();
+        PyEval_RestoreThread(_pyThreadState);
         return new PvObject(pvaPutGet->getGetData()->getPVStructure());
     } 
     catch (std::runtime_error& ex) {
+        if (_pyThreadState) {
+            PyEval_RestoreThread(_pyThreadState);
+        }
         throw PvaException(ex.what());
     }
 }
@@ -489,6 +540,7 @@ PvObject* Channel::putGet(const std::vector<std::string>& values)
 PvObject* Channel::putGet(const std::string& value, const std::string& requestDescriptor) 
 {
     connect();
+    PyThreadState* _pyThreadState = NULL;
     try {
         epics::pvaClient::PvaClientPutGetPtr pvaPutGet = createPutGetPtr(requestDescriptor);
         epics::pvaClient::PvaClientPutDataPtr pvaData = pvaPutGet->getPutData();
@@ -504,10 +556,15 @@ PvObject* Channel::putGet(const std::string& value, const std::string& requestDe
             values.push_back(value);
             PvUtility::fromString(pvStructure, values);
         }
+        _pyThreadState = PyEval_SaveThread();
         pvaPutGet->putGet();
+        PyEval_RestoreThread(_pyThreadState);
         return new PvObject(pvaPutGet->getGetData()->getPVStructure());
     } 
     catch (std::runtime_error& ex) {
+        if (_pyThreadState) {
+            PyEval_RestoreThread(_pyThreadState);
+        }
         throw PvaException(ex.what());
     }
 }
@@ -664,12 +721,18 @@ PvObject* Channel::getPut()
 PvObject* Channel::getPut(const std::string& requestDescriptor) 
 {
     connect();
+    PyThreadState* _pyThreadState = NULL;
     try {
         epics::pvaClient::PvaClientPutGetPtr pvaPutGet = createPutGetPtr(requestDescriptor);
+        _pyThreadState = PyEval_SaveThread();
         pvaPutGet->getPut();
+        PyEval_RestoreThread(_pyThreadState);
         return new PvObject(pvaPutGet->getPutData()->getPVStructure());
     } 
     catch (std::runtime_error& ex) {
+        if (_pyThreadState) {
+            PyEval_RestoreThread(_pyThreadState);
+        }
         throw PvaException(ex.what());
     }
 }
