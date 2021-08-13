@@ -54,13 +54,17 @@ ASG(DEFAULT) {
 }
 ```
 
-In python:
+In python, initialize AS with the following call:
 
 ```sh
 >>> s.initAs('/local/sveseli/EPICS/acl.conf', '')
+```
 
-    At this point, the record we created does not allow writes any longer:
+At this point, the record we created does not allow writes any longer (note
+that client connection may have to be re-established before attempting
+new get() or put() calls):
 
+```sh
 >>> c = Channel('x')
 >>> print(c.get())
 structure 
