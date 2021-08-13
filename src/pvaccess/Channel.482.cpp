@@ -178,37 +178,42 @@ void Channel::put(const PvObject& pvObject)
     put(pvObject, PvaConstants::DefaultKey);
 }
 
+void Channel::preparePut(const PvObject& pvObject, pvc::PvaClientPutPtr& pvaPut) 
+{
+    pvd::PVStructurePtr pvSend = pvaPut->getData()->getPVStructure();
+    pvd::PVStructurePtr pvSrc = pvObject.getPvStructurePtr();
+    bool structuresMatch = false;
+    if (*(pvSrc->getStructure()) == *(pvSend->getStructure())) {
+        // Structures match
+        structuresMatch = true;
+        pvSend->copyUnchecked(*pvSrc);
+    }
+    else {
+        // PV Database record fields like PvTimeStamp or PvAlarm
+        // are not at the top level
+        const pvd::PVFieldPtrArray& pvSendFields = pvSend->getPVFields();
+        if (pvSendFields.size() == 1 && pvSendFields[0]->getField()->getType() == pvd::structure) {
+            pvd::PVStructurePtr pvSend2 = static_pointer_cast<pvd::PVStructure>(pvSendFields[0]);
+            if (*(pvSrc->getStructure()) == *(pvSend2->getStructure())) {
+                pvSend2->copyUnchecked(*pvSrc);
+                structuresMatch = true;
+            }
+        }
+    }
+
+    if (!structuresMatch) {
+        // Try to copy fields that are present both in source and destination
+        PyPvDataUtility::copyStructureToStructure2(pvSrc, pvSend);
+    }
+}
+
 void Channel::put(const PvObject& pvObject, const std::string& requestDescriptor) 
 {
     connect();
     PyThreadState* _pyThreadState = NULL;
     try {
         pvc::PvaClientPutPtr pvaPut = createPutPtr(requestDescriptor);
-        pvd::PVStructurePtr pvSend = pvaPut->getData()->getPVStructure();
-        pvd::PVStructurePtr pvSrc = pvObject.getPvStructurePtr();
-        bool structuresMatch = false;
-        if (*(pvSrc->getStructure()) == *(pvSend->getStructure())) {
-            // Structures match
-            structuresMatch = true;
-            pvSend->copyUnchecked(*pvSrc);
-        }
-        else {
-            // PV Database record fields like PvTimeStamp or PvAlarm
-            // are not at the top level
-            const pvd::PVFieldPtrArray& pvSendFields = pvSend->getPVFields();
-            if (pvSendFields.size() == 1 && pvSendFields[0]->getField()->getType() == pvd::structure) {
-                pvd::PVStructurePtr pvSend2 = static_pointer_cast<pvd::PVStructure>(pvSendFields[0]);
-                if (*(pvSrc->getStructure()) == *(pvSend2->getStructure())) {
-                    pvSend2->copyUnchecked(*pvSrc);
-                    structuresMatch = true;
-                }
-            }
-        }
-
-        if (!structuresMatch) {
-            // Try to copy fields that are both in source and destination
-            PyPvDataUtility::copyStructureToStructure2(pvSrc, pvSend);
-        }
+        preparePut(pvObject, pvaPut);
         _pyThreadState = PyEval_SaveThread();
         pvaPut->put();
     } 
@@ -886,7 +891,6 @@ void Channel::callConnectionCallback(bool isConnected)
     PyGilManager::gilStateRelease();
 }
 
-
 void Channel::asyncGet(const bp::object& pyCallback) 
 {
     asyncGet(pyCallback, PvaConstants::DefaultKey);
@@ -916,8 +920,44 @@ void Channel::asyncGetThread(Channel* channel)
     }
 }
 
+void Channel::asyncPut(const PvObject& pvObject, const bp::object& pyCallback) 
+{
+    asyncPut(pvObject, pyCallback, PvaConstants::DefaultKey);
+}
+
+void Channel::asyncPut(const PvObject& pvObject, const bp::object& pyCallback, const std::string& requestDescriptor) 
+{
+    connect();
+    asyncPutPyCallback = pyCallback;
+    try {
+        asyncPvaPut = createPutPtr(requestDescriptor);
+        preparePut(pvObject, asyncPvaPut);
+    } 
+    catch (std::runtime_error& ex) {
+        throw PvaException(ex.what());
+    }
+    epicsThreadCreate("AsyncPutThread", epicsThreadPriorityHigh, epicsThreadGetStackSize(epicsThreadStackSmall), (EPICSTHREADFUNC)asyncPutThread, this);
+}
+
+void Channel::asyncPutThread(Channel* channel)
+{
+    bp::object pyCallback = channel->asyncPutPyCallback;
+    try {
+        channel->asyncPvaPut->put();
+        pvd::PVStructurePtr pvStructure = channel->asyncPvaPut->getData()->getPVStructure();
+        PvObject pvObject(pvStructure); 
+        channel->invokePyCallback(pyCallback, pvObject);
+    }
+    catch (std::runtime_error& ex) {
+        logger.error(ex.what());
+    }
+}
+
 void Channel::invokePyCallback(boost::python::object& pyCallback, PvObject& pvObject) 
 {
+    if(PyUtility::isPyNone(pyCallback)) {
+        return;
+    }
     PyGilManager::gilStateEnsure();
     try {
         pyCallback(pvObject);

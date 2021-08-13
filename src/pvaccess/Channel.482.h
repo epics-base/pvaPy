@@ -51,6 +51,9 @@ public:
     // Put methods
     virtual void put(const PvObject& pvObject, const std::string& requestDescriptor);
     virtual void put(const PvObject& pvObject);
+    virtual void asyncPut(const PvObject& pvObject, const boost::python::object& pyCallback, const std::string& requestDescriptor);
+    virtual void asyncPut(const PvObject& pvObject, const boost::python::object& pyCallback);
+
     virtual void put(const std::vector<std::string>& values, const std::string& requestDescriptor);
     virtual void put(const std::vector<std::string>& values);
     virtual void put(const std::string& value, const std::string& requestDescriptor);
@@ -172,6 +175,7 @@ private:
     static void processingThread(Channel* channel);
     static void issueConnectThread(Channel* channel);
     static void asyncGetThread(Channel* channel);
+    static void asyncPutThread(Channel* channel);
 
     void startProcessingThread();
     void startIssueConnectThread();
@@ -188,6 +192,8 @@ private:
 
     void callSubscriber(const std::string& pySubscriberName, boost::python::object& pySubscriber, PvObject& pvObject);
     void invokePyCallback(boost::python::object& pyCallback, PvObject& pvObject);
+
+    void preparePut(const PvObject& pvObject, epics::pvaClient::PvaClientPutPtr& pvaPut);
 
     static epics::pvaClient::PvaClientPtr pvaClientPtr;
     epics::pvaClient::PvaClientChannelPtr pvaClientChannelPtr;
@@ -224,6 +230,8 @@ private:
 
     boost::python::object asyncGetPyCallback;
     std::string asyncGetRequestDescriptor;
+    epics::pvaClient::PvaClientPutPtr asyncPvaPut;
+    boost::python::object asyncPutPyCallback;
 };
 
 inline std::string Channel::getName() const

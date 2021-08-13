@@ -6,9 +6,10 @@
   PvAlarm (GitHub Issue #65, PR #66)
 - made performance enhancements for channel gets and puts in
   multithreaded applications
-- added asyncGet() interfaces to the Channel class
+- added asyncGet/asyncPut interfaces to the Channel class
 - restricted numpy version to < 1.21 for conda and pip packages until 
-  boot python segfaults are resolved
+  boost python segfaults are resolved
+- added support for access security in the PvaServer class
 - conda/pip package dependencies: 
   - EPICS BASE = 7.0.6
   - BOOST      = 1.76.0

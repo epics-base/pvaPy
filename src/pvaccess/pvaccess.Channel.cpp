@@ -98,7 +98,8 @@ class_<Channel>("Channel",
         "Assigns PV data to the channel process variable.\n\n"
         ":Parameter: *pvObject* (PvObject) - PV object that will be assigned to channel PV according to the specified request descriptor\n\n"
         ":Parameter: *requestDescriptor* (str) - PV request descriptor\n\n"
-        "::\n\n    channel = Channel('enum01')\n\n"
+        "::\n\n"
+        "    channel = Channel('enum01')\n\n"
         "    channel.put(PvInt(1), 'field(value.index)')\n\n")
 
     .def("put", 
@@ -109,6 +110,33 @@ class_<Channel>("Channel",
         "::\n\n"
         "    channel = Channel('exampleInt')\n\n"
         "    channel.put(PvInt(1))\n\n")
+
+#if PVA_API_VERSION >= 482
+
+    .def("asyncPut", 
+        static_cast<void(Channel::*)(const PvObject&, const bp::object&, const std::string&)>(&Channel::asyncPut), 
+        args("pvObject", "pyCallback", "requestDescriptor"), 
+        "Asynchronously assigns PV data to the channel process variable.\n\n"
+        ":Parameter: *pvObject* (PvObject) - PV object that will be assigned to channel PV according to the specified request descriptor\n\n"
+        ":Parameter: *pyCallback* (object) - reference to python callback object (e.g., python function) that will be invoked after PV value is set\n\n"
+        ":Parameter: *requestDescriptor* (str) - PV request descriptor\n\n"
+        "::\n\n"
+        "    def echo(pv):\n\n"
+        "        print('PV set to: %s' % pv)\n\n"
+        "    channel.asyncPut(PvInt(10), echo, 'field(value)')\n\n")
+
+    .def("asyncPut", 
+        static_cast<void(Channel::*)(const PvObject&, const bp::object&)>(&Channel::asyncPut), 
+        args("pvObject", "pyCallback"), 
+        "Asynchronously assigns PV data to the channel process variable using the default request descriptor 'field(value)'.\n\n"
+        ":Parameter: *pvObject* (PvObject) - PV object that will be assigned to the channel process variable\n\n"
+        ":Parameter: *pyCallback* (object) - reference to python callback object (e.g., python function) that will be invoked after PV value is set\n\n"
+        "::\n\n"
+        "    def echo(pv):\n\n"
+        "        print('PV set to: %s' % pv)\n\n"
+        "    channel.asyncPut(PvInt(10), echo)\n\n")
+
+#endif // if PVA_API_VERSION >= 482
 
     .def("putScalarArray", 
         static_cast<void(Channel::*)(const boost::python::list&, const std::string&)>(&Channel::put), 
