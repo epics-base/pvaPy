@@ -14,7 +14,7 @@ if [ ! -f $BUILD_CONF ]; then
 fi
 . $BUILD_CONF
 
-OPT_BOOST_DIR=opt/boost-python-${BOOST_VERSION}
+OPT_BOOST_DIR=boost-python-${BOOST_VERSION}
 LOCAL_BOOST_DIR=$PREFIX/$OPT_BOOST_DIR
 BOOST_DOWNLOAD_VERSION=`echo ${BOOST_VERSION} | sed 's?\.?_?g'`
 BOOST_DOWNLOAD_URL=https://sourceforge.net/projects/boost/files/boost/$BOOST_VERSION/boost_${BOOST_DOWNLOAD_VERSION}.tar.gz

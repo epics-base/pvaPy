@@ -69,20 +69,24 @@ PvObject* MultiChannel::get()
 
 PvObject* MultiChannel::get(const std::string& requestDescriptor)
 {
+    PyThreadState* _pyThreadState = PyEval_SaveThread();
     try {
         epvac::PvaClientNTMultiGetPtr mGet(multiChannelPtr->createNTGet(requestDescriptor));
         mGet->get();
         epvac::PvaClientNTMultiDataPtr mData = mGet->getData();
         epvd::PVStructurePtr pvStructure = mData->getNTMultiChannel()->getPVStructure();
+        PyEval_RestoreThread(_pyThreadState);
         return new PvObject(pvStructure);
     }
     catch (std::runtime_error& ex) {
+        PyEval_RestoreThread(_pyThreadState);
         throw PvaException(ex.what());
     }
 }
 
 boost::python::list MultiChannel::getAsDoubleArray()
 {
+    PyThreadState* _pyThreadState = PyEval_SaveThread();
     try {
         epvac::PvaClientMultiGetDoublePtr mGet(multiChannelPtr->createGet());
         epvd::shared_vector<double> data = mGet->get();
@@ -90,15 +94,18 @@ boost::python::list MultiChannel::getAsDoubleArray()
         for(unsigned int i = 0; i < data.size(); i++) {
             pyList.append(data[i]);
         }
+        PyEval_RestoreThread(_pyThreadState);
         return pyList;
     }
     catch (std::runtime_error& ex) {
+        PyEval_RestoreThread(_pyThreadState);
         throw PvaException(ex.what());
     }
 }
 
 void MultiChannel::put(const bp::list& pyList)
 {
+    PyThreadState* _pyThreadState = NULL;
     try {
         epvac::PvaClientNTMultiPutPtr mPut(multiChannelPtr->createNTPut());
         epvd::shared_vector<epvd::PVUnionPtr> data = mPut->getValues();
@@ -116,15 +123,21 @@ void MultiChannel::put(const bp::list& pyList)
                 PyPvDataUtility::setUnionField(pvFrom, data[i]);
             }
         }
+        _pyThreadState = PyEval_SaveThread();
         mPut->put();
+        PyEval_RestoreThread(_pyThreadState);
     }
     catch (std::runtime_error& ex) {
+        if (_pyThreadState) {
+            PyEval_RestoreThread(_pyThreadState);
+        }
         throw PvaException(ex.what());
     }
 }
 
 void MultiChannel::putAsDoubleArray(const bp::list& pyList)
 {
+    PyThreadState* _pyThreadState = NULL;
     try {
         epvac::PvaClientMultiPutDoublePtr mPut(multiChannelPtr->createPut());
         epvd::shared_vector<double> data(nChannels, 0);
@@ -139,9 +152,14 @@ void MultiChannel::putAsDoubleArray(const bp::list& pyList)
                 data[i] = extractDouble();
             }
         }
+        _pyThreadState = PyEval_SaveThread();
         mPut->put(data);
+        PyEval_RestoreThread(_pyThreadState);
     }
     catch (std::runtime_error& ex) {
+        if (_pyThreadState) {
+            PyEval_RestoreThread(_pyThreadState);
+        }
         throw PvaException(ex.what());
     }
 }

@@ -13,6 +13,7 @@ from pvaccess import PvULong
 from pvaccess import PvFloat
 from pvaccess import PvDouble
 from pvaccess import PvString
+from pvaccess import PvTimeStamp
 from testUtility import TestUtility
 
 class TestChannelPut:
@@ -24,23 +25,29 @@ class TestChannelPut:
     def testPut_PvBoolean(self):
         value = TestUtility.getRandomBoolean()
         c = TestUtility.getBooleanChannel()
+        print('\nSetting value: %s' % (value))
         c.put(PvBoolean(value))
         value2 = c.get().getPyObject()
+        print('Testing equality: %s == %s' % (value2, value))
         assert(value == value2)
 
     # put() must be done using strings 'true'/'false'
     def testPut_Boolean(self):
         value = TestUtility.getRandomBooleanString()
         c = TestUtility.getBooleanChannel()
+        print('\nSetting value: %s' % (value))
         c.put(value)
         value2 = c.get().getPyObject()
+        print('Testing equality: %s == %s' % (value2, value))
         TestUtility.assertBooleanEquality(value,value2)
 
     def testPutBoolean_Boolean(self):
         value = TestUtility.getRandomBoolean()
         c = TestUtility.getBooleanChannel()
+        print('\nSetting value: %s' % (value))
         c.putBoolean(value)
         value2 = c.get().getPyObject()
+        print('Testing equality: %s == %s' % (value2, value))
         assert(value == value2)
 
     #
@@ -51,8 +58,10 @@ class TestChannelPut:
     def testPut_PvByte(self):
         value = chr(TestUtility.getRandomUByte())
         c = TestUtility.getByteChannel()
+        print('\nSetting value: %s' % (value))
         c.put(PvByte(value))
         value2 = c.get().getPyObject()
+        print('Testing equality: %s == %s' % (value2, value))
         assert(value == value2)
 
     # put(byte) must be done using integers
@@ -60,15 +69,19 @@ class TestChannelPut:
     def testPut_Byte(self):
         value = TestUtility.getRandomByte()
         c = TestUtility.getByteChannel()
+        print('\nSetting value: %s' % (value))
         c.put(value)
         value2 = c.get().getPyObject() # Same as: value2 = c.get().getByte()
+        print('Testing equality: %s == %s' % (value2, value))
         TestUtility.assertCharEquality(value,value2)
 
     def testPutByte_Byte(self):
         value = chr(TestUtility.getRandomUByte())
         c = TestUtility.getByteChannel()
+        print('\nSetting value: %s' % (value))
         c.putByte(value)
         value2 = c.get().getPyObject()
+        print('Testing equality: %s == %s' % (value2, value))
         assert(value == value2)
 
     #
@@ -78,22 +91,28 @@ class TestChannelPut:
     def testPut_PvUByte(self):
         value = TestUtility.getRandomUByte()
         c = TestUtility.getUByteChannel()
+        print('\nSetting value: %s' % (value))
         c.put(PvUByte(value))
         value2 = c.get().getPyObject()
+        print('Testing equality: %s == %s' % (value2, value))
         assert(value == value2)
 
     def testPut_UByte(self):
         value = TestUtility.getRandomUByte()
         c = TestUtility.getUByteChannel()
+        print('\nSetting value: %s' % (value))
         c.put(value)
         value2 = c.get().getPyObject() 
+        print('Testing equality: %s == %s' % (value2, value))
         assert(value == value2)
 
     def testPutUByte_UByte(self):
         value = TestUtility.getRandomUByte()
         c = TestUtility.getUByteChannel()
+        print('\nSetting value: %s' % (value))
         c.putUByte(value)
         value2 = c.get().getPyObject()
+        print('Testing equality: %s == %s' % (value2, value))
         assert(value == value2)
 
     #
@@ -226,34 +245,33 @@ class TestChannelPut:
     #
 
     def testPut_PvULong(self):
-        print()
         value = TestUtility.getRandomULong()
         c = TestUtility.getULongChannel()
+        print('\nSetting value: %s' % (value))
         c.put(PvULong(value))
         value2 = c.get().getPyObject()
-        print('Testing equality: %d == %d' % (value2, value))
+        print('Testing equality: %s == %s' % (value2, value))
         assert(value == value2)
 
     def testPut_ULong(self):
-        print()
         # put(ulong) will be mapped to put(long) in python,
         # resulting in overflow errors;
         # simply use positive long for this test
         value = TestUtility.getRandomPositiveLong()
         c = TestUtility.getULongChannel()
-        print('Test value: %d' % (value))
+        print('\nSetting value: %s' % (value))
         c.put(value)
         value2 = c.get().getPyObject() 
-        print('Testing equality: %d == %d' % (value2, value))
+        print('Testing equality: %s == %s' % (value2, value))
         assert(value == value2)
 
     def testPutULong_ULong(self):
-        print()
         value = TestUtility.getRandomULong()
         c = TestUtility.getULongChannel()
+        print('\nSetting value: %s' % (value))
         c.putULong(value)
         value2 = c.get().getPyObject()
-        print('Testing equality: %d == %d' % (value2, value))
+        print('Testing equality: %s == %s' % (value2, value))
         assert(value == value2)
 
     #
@@ -263,22 +281,28 @@ class TestChannelPut:
     def testPut_PvFloat(self):
         value = TestUtility.getRandomFloat()
         c = TestUtility.getFloatChannel()
+        print('\nSetting value: %s' % (value))
         c.put(PvFloat(value))
         value2 = c.get().getPyObject()
+        print('Testing equality: %s == %s' % (value2, value))
         TestUtility.assertFloatEquality(value, value2)
 
     def testPut_Float(self):
         value = TestUtility.getRandomFloat()
         c = TestUtility.getFloatChannel()
+        print('\nSetting value: %f' % (value))
         c.put(value)
         value2 = c.get().getPyObject() 
+        print('Testing equality: %f == %f' % (value2, value))
         TestUtility.assertFloatEquality(value, value2)
 
     def testPutFloat_Float(self):
         value = TestUtility.getRandomFloat()
         c = TestUtility.getFloatChannel()
+        print('\nSetting value: %s' % (value))
         c.putFloat(value)
         value2 = c.get().getPyObject()
+        print('Testing equality: %s == %s' % (value2, value))
         TestUtility.assertFloatEquality(value, value2)
 
     #
@@ -288,22 +312,29 @@ class TestChannelPut:
     def testPut_PvDouble(self):
         value = TestUtility.getRandomDouble()
         c = TestUtility.getDoubleChannel()
+        print('\nSetting value: %s' % (value))
         c.put(PvDouble(value))
         value2 = c.get().getPyObject()
+        print('Testing equality: %s == %s' % (value2, value))
         TestUtility.assertDoubleEquality(value, value2)
 
     def testPut_Double(self):
         value = TestUtility.getRandomDouble()
+        print('testPut_Double: Setting value: %f' % (value))
         c = TestUtility.getDoubleChannel()
+        print('\nSetting value: %s' % (value))
         c.put(value)
         value2 = c.get().getPyObject() 
+        print('Testing equality: %s == %s' % (value2, value))
         TestUtility.assertDoubleEquality(value, value2)
 
     def testPutDouble_Double(self):
         value = TestUtility.getRandomDouble()
         c = TestUtility.getDoubleChannel()
+        print('\nSetting value: %s' % (value))
         c.putDouble(value)
         value2 = c.get().getPyObject()
+        print('Testing equality: %s == %s' % (value2, value))
         TestUtility.assertDoubleEquality(value, value2)
 
     #
@@ -330,4 +361,22 @@ class TestChannelPut:
         c.putString(value)
         value2 = c.get().getPyObject()
         assert(value == value2)
+
+    #
+    # PvObject Put
+    #
+    def testPut_PvTimeStamp(self):
+        s = TestUtility.getRandomUInt()
+        ns = TestUtility.getRandomInt()
+        u = TestUtility.getRandomShort()
+        t = PvTimeStamp(s,ns,u)
+        c = TestUtility.getStructChannel()
+        print('\nSetting timestamp field:\n%s' % (t))
+        c.put(t,'field(timestamp)')
+        t2 = c.get('field(timestamp)')['timestamp']
+        print('Testing equality: %s == %s' % (dict(t), dict(t2)))
+        assert(t['secondsPastEpoch'] == t2['secondsPastEpoch'])
+        assert(t['nanoseconds'] == t2['nanoseconds'])
+        assert(t['userTag'] == t2['userTag'])
+
 

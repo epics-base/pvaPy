@@ -70,17 +70,15 @@ void RpcServer::listen(int seconds)
     if (destroyed) {
         throw InvalidState("Invalid state: server has been shutdown and cannot be restarted.");
     }
-    printInfo();
+    bool verbose = logger.hasLogLevel(PvaPyLogger::PVAPY_LOG_LEVEL_INFO|PvaPyLogger::PVAPY_LOG_LEVEL_DEBUG);
+    if (verbose) {
+        printInfo();
+    }
 
-    // Macros below are equivalent to
-    // PyThreadState *_save;
-    // _save = PyEval_SaveThread();
-    // ...Do some blocking I/O operation...
-    // PyEval_RestoreThread(_save);
-
-    Py_BEGIN_ALLOW_THREADS
+    PyThreadState* _pyThreadState;
+    _pyThreadState = PyEval_SaveThread();
     run(seconds);
-    Py_END_ALLOW_THREADS
+    PyEval_RestoreThread(_pyThreadState);
     destroyed = true;
 }
 

@@ -4,6 +4,8 @@
 #include "Channel.h"
 
 using namespace boost::python;
+namespace bp = boost::python;
+
 
 #ifndef WINDOWS
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(ChannelMonitor, Channel::monitor, 1, 2)
@@ -60,6 +62,31 @@ class_<Channel>("Channel",
         ":Returns: channel PV data\n\n"
         "::\n\n"
         "    pv = channel.get()\n\n")
+
+#if PVA_API_VERSION >= 482
+
+    .def("asyncGet",
+        static_cast<void(Channel::*)(const bp::object&, const std::string&)>(&Channel::asyncGet),
+        args("pyCallback", "requestDescriptor"),
+        "Asynchronously retrieves PV value from the channel and invokes the python callback method.\n\n"
+        ":Parameter: *pyCallback* (object) - reference to python callback object (e.g., python function) that will be invoked after PV value is retrieved\n\n"
+        ":Parameter: *requestDescriptor* (str) - describes what PV data should be sent to the client\n\n"
+        "::\n\n"
+        "    def echo(pv):\n\n"
+        "        print('PV value: %s' % pv)\n\n"
+        "    channel.asyncGet(echo, 'field(value,alarm,timeStamp)')\n\n")
+
+    .def("asyncGet",
+        static_cast<void(Channel::*)(const bp::object&)>(&Channel::asyncGet),
+        args("pyCallback"),
+        "Asynchronously retrieves PV value from the channel and invokes the python callback method. The method uses default request descriptor 'field(value)'.\n\n"
+        ":Parameter: *pyCallback* (object) - reference to python callback object (e.g., python function) that will be invoked after PV value is retrieved\n\n"
+        "::\n\n"
+        "    def echo(pv):\n\n"
+        "        print('PV value: %s' % pv)\n\n"
+        "    channel.asyncGet(echo)\n\n")
+
+#endif // if PVA_API_VERSION >= 482
 
     //
     // Put methods
@@ -525,6 +552,7 @@ class_<Channel>("Channel",
         ":Parameter: *requestDescriptor* (str) - request to pass to createRequest\n\n"
         ":Parameter: *zeroArrayLength* (bool) - if true, call zeroArrayLength before parse\n\n"
         ":returns: channel PV data corresponding to the specified request descriptor\n\n")
+
 #endif // if PVA_API_VERSION >= 482
 
     //

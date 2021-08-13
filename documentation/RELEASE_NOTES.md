@@ -1,3 +1,19 @@
+## Release 3.2.0 (2021/MM/DD)
+
+- disabled info printout for PvaServer unless the debug log level is
+  set to INFO (8) or DEBUG (16) 
+- fixed issue with channel puts involving objects like PvTimeStamp or
+  PvAlarm (GitHub Issue #65, PR #66)
+- made performance enhancements for channel gets and puts in
+  multithreaded applications
+- added asyncGet() interfaces to the Channel class
+- restricted numpy version to < 1.21 for conda and pip packages until 
+  boot python segfaults are resolved
+- conda/pip package dependencies: 
+  - EPICS BASE = 7.0.6
+  - BOOST      = 1.76.0
+  - NUMPY      < 1.21
+
 ## Release 3.1.0 (2021/02/12)
 
 - added support for MultiChannel put and monitor

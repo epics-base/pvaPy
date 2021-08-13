@@ -208,13 +208,13 @@ class TestChannelPutGet:
         assert(value == value2)
 
     def testPutGet_ULong(self):
-        value = TestUtility.getRandomULong()
+        value = TestUtility.getRandomPositiveLong()
         c = TestUtility.getULongChannel()
         value2 = c.putGet(value).getPyObject() 
         assert(value == value2)
 
     def testPutGetULong_ULong(self):
-        value = TestUtility.getRandomULong()
+        value = TestUtility.getRandomPositiveLong()
         c = TestUtility.getULongChannel()
         value2 = c.putGetULong(value).getPyObject()
         assert(value == value2)

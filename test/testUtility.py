@@ -174,6 +174,9 @@ class TestUtility:
     def getStringChannel(cls):
         return Channel(TestServer.STRING_CHANNEL_NAME)
 
+    @classmethod
+    def getStructChannel(cls):
+        return Channel(TestServer.STRUCT_CHANNEL_NAME)
 
     @classmethod
     def getTimeStamp(cls):
