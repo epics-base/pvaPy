@@ -44,6 +44,9 @@ public:
     // Get methods
     virtual PvObject* get(const std::string& requestDescriptor);
     virtual PvObject* get();
+    virtual void asyncGet(const boost::python::object& pyCallback);
+    virtual void asyncGet(const boost::python::object& pyCallback, const std::string& requestDescriptor);
+
     
     // Put methods
     virtual void put(const PvObject& pvObject, const std::string& requestDescriptor);
@@ -168,6 +171,7 @@ private:
 
     static void processingThread(Channel* channel);
     static void issueConnectThread(Channel* channel);
+    static void asyncGetThread(Channel* channel);
 
     void startProcessingThread();
     void startIssueConnectThread();
@@ -183,6 +187,7 @@ private:
     epics::pvaClient::PvaClientPutGetPtr createPutGetPtr(const std::string& requestDescriptor);
 
     void callSubscriber(const std::string& pySubscriberName, boost::python::object& pySubscriber, PvObject& pvObject);
+    void invokePyCallback(boost::python::object& pyCallback, PvObject& pvObject);
 
     static epics::pvaClient::PvaClientPtr pvaClientPtr;
     epics::pvaClient::PvaClientChannelPtr pvaClientChannelPtr;
@@ -216,6 +221,9 @@ private:
     epics::pvaClient::PvaClientChannelStateChangeRequesterPtr stateRequester;
     bool connectionCallbackRequiresThread;
     boost::python::object connectionCallback;
+
+    boost::python::object asyncGetPyCallback;
+    std::string asyncGetRequestDescriptor;
 };
 
 inline std::string Channel::getName() const

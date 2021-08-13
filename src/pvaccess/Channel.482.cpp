@@ -886,6 +886,53 @@ void Channel::callConnectionCallback(bool isConnected)
     PyGilManager::gilStateRelease();
 }
 
+
+void Channel::asyncGet(const bp::object& pyCallback) 
+{
+    asyncGet(pyCallback, PvaConstants::DefaultKey);
+}
+
+void Channel::asyncGet(const bp::object& pyCallback, const std::string& requestDescriptor) 
+{
+    connect();
+    asyncGetPyCallback = pyCallback;
+    asyncGetRequestDescriptor = requestDescriptor;
+    epicsThreadCreate("AsyncGetThread", epicsThreadPriorityHigh, epicsThreadGetStackSize(epicsThreadStackSmall), (EPICSTHREADFUNC)asyncGetThread, this);
+}
+
+void Channel::asyncGetThread(Channel* channel)
+{
+    bp::object pyCallback = channel->asyncGetPyCallback;
+    std::string requestDescriptor = channel->asyncGetRequestDescriptor;
+    try {
+        pvc::PvaClientGetPtr pvaGet = channel->createGetPtr(requestDescriptor);
+        pvaGet->get();
+        pvd::PVStructurePtr pvStructure = pvaGet->getData()->getPVStructure();
+        PvObject pvObject(pvStructure); 
+        channel->invokePyCallback(pyCallback, pvObject);
+    }
+    catch (std::runtime_error& ex) {
+        logger.error(ex.what());
+    }
+}
+
+void Channel::invokePyCallback(boost::python::object& pyCallback, PvObject& pvObject) 
+{
+    PyGilManager::gilStateEnsure();
+    try {
+        pyCallback(pvObject);
+    }
+    catch(const boost::python::error_already_set&) {
+        logger.error("Python callback raised exception.");
+        PyErr_Print();
+        PyErr_Clear();
+    }
+    catch (const std::exception& ex) {
+        logger.error(ex.what());
+    }
+    PyGilManager::gilStateRelease();
+}
+
 void Channel::setMonitorMaxQueueLength(int maxLength)
 {
     pvObjectQueue.setMaxLength(maxLength);
