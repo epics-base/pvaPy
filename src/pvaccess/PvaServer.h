@@ -24,17 +24,28 @@ public:
     PvaServer(const std::string& channelName, const PvObject& pvObject, const boost::python::object& onWriteCallback);
     PvaServer(const PvaServer&);
     virtual ~PvaServer();
+#if PVA_API_VERSION >= 483
     virtual void initAs(const std::string& filePath);
     virtual void initAs(const std::string& filePath, const std::string& substitutions);
     virtual bool isAsActive();
+#endif // if PVA_API_VERSION >= 483
     virtual void update(const PvObject& pvObject);
     virtual void update(const std::string& channelName, const PvObject& pvObject);
+
 #ifndef WINDOWS
     virtual void addRecord(const std::string& channelName, const PvObject& pvObject, const boost::python::object& onWriteCallback = boost::python::object());
 #else
     virtual void addRecord(const std::string& channelName, const PvObject& pvObject, const boost::python::object& onWriteCallback);
-#endif
+#endif // WINDOWS
+
+#if PVA_API_VERSION >= 483
+#ifndef WINDOWS
+    virtual void addRecordWithAs(const std::string& channelName, const PvObject& pvObject, int asLevel, const std::string& asGroup, const boost::python::object& onWriteCallback = boost::python::object());
+#else
     virtual void addRecordWithAs(const std::string& channelName, const PvObject& pvObject, int asLevel, const std::string& asGroup, const boost::python::object& onWriteCallback);
+#endif // WINDOWS
+#endif // if PVA_API_VERSION >= 483
+
     virtual void removeRecord(const std::string& channelName);
     virtual void removeAllRecords();
     virtual bool hasRecord(const std::string& channelName);
@@ -52,7 +63,9 @@ private:
     void notifyCallbackThreadExit();
 
     void initRecord(const std::string& channelName, const PvObject& pvObject, const boost::python::object& onWriteCallback = boost::python::object());
+#if PVA_API_VERSION >= 483
     void initRecord(const std::string& channelName, const PvObject& pvObject, int asLevel, const std::string& asGroup, const boost::python::object& onWriteCallback = boost::python::object());
+#endif // if PVA_API_VERSION >= 483
     PyPvRecordPtr findRecord(const std::string& channelName);
 
     static PvaPyLogger logger;

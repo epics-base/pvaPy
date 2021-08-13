@@ -10,6 +10,7 @@ using namespace boost::python;
 
 #ifndef WINDOWS
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(PvaServerAddRecord, PvaServer::addRecord, 2, 3)
+BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(PvaServerAddRecordWithAs, PvaServer::addRecordWithAs, 4, 5)
 #endif
 
 //
@@ -49,6 +50,8 @@ class_<PvaServer>("PvaServer",
 
     .def(init<std::string, const PvObject&, const boost::python::object&>(args("channelName", "pvObject", "onWriteCallback")))
 
+#if PVA_API_VERSION >= 483
+
     .def("initAs",
         static_cast<void(PvaServer::*)(const std::string&, const std::string&)>(&PvaServer::initAs),
         args("filePath", "substitutions"),
@@ -65,6 +68,8 @@ class_<PvaServer>("PvaServer",
         ":Returns: true if AS is active\n\n"
         "::\n\n"
         "    isActive = pvaServer.isAsActive()\n\n")
+
+#endif // if PVA_API_VERSION >= 483
 
     .def("start",
         static_cast<void(PvaServer::*)()>(&PvaServer::start),
@@ -132,6 +137,27 @@ class_<PvaServer>("PvaServer",
         "    pvaServer.addRecord('pair', pv, echo)\n\n")
 #endif
 
+#if PVA_API_VERSION >= 483
+
+#ifndef WINDOWS
+
+    .def("addRecordWithAs",
+        static_cast<void(PvaServer::*)(const std::string&,const PvObject&,int,const std::string&,const boost::python::object&)>(&PvaServer::addRecordWithAs),
+        PvaServerAddRecordWithAs(args("channelName","pvObject","asLevel","asGroup","onWriteCallback=None"),
+        "Adds PV record with access security to the server database.\n\n"
+        ":Parameter: *channelName* (str) - channel name\n\n"
+        ":Parameter: *pvObject* (PvObject) - PV object that will be exposed on the specified channel. Any changes to object's field values will be reflected on the channel.\n\n"
+        ":Parameter: *asLevel* (int) - access security level\n\n"
+        ":Parameter: *asGroup* (str) - access security group\n\n"
+        ":Parameter: *onWriteCallback* (object) - reference to python object (e.g., python function) that will be executed on channel write.\n\n"
+        ":Raises: *ObjectAlreadyExists* - when database already contains record associated with a given channel name\n\n"
+        ":Raises: *PvaException* - in case of any other errors\n\n"
+        "::\n\n"
+        "    pv = PvObject({'x' : INT, 'y' : INT}, {'x' : 3, 'y' : 5})\n\n"
+        "    def echo(x):\n\n"
+        "        print('New PV value was written: %s' % x)\n\n"
+        "    pvaServer.addRecordWithAs('pair', pv, 1, 'MyGroup', echo)\n\n"))
+#else
     .def("addRecordWithAs",
         static_cast<void(PvaServer::*)(const std::string&,const PvObject&,int,const std::string&,const boost::python::object&)>(&PvaServer::addRecordWithAs),
         args("channelName","pvObject","asLevel","asGroup","onWriteCallback"),
@@ -148,6 +174,10 @@ class_<PvaServer>("PvaServer",
         "    def echo(x):\n\n"
         "        print('New PV value was written: %s' % x)\n\n"
         "    pvaServer.addRecordWithAs('pair', pv, 1, 'MyGroup', echo)\n\n")
+
+#endif // WINDOWS
+
+#endif // if PVA_API_VERSION >= 483
 
     .def("removeRecord",
         static_cast<void(PvaServer::*)(const std::string&)>(&PvaServer::removeRecord),

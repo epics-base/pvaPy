@@ -11,7 +11,7 @@
 #include "Channel.470.h"
 #elif PVA_API_VERSION <= 481
 #include "Channel.480.h"
-#elif PVA_API_VERSION <= 482
+#elif PVA_API_VERSION <= 483
 #include "Channel.482.h"
 #endif // if PVA_API_VERSION <= 440
 

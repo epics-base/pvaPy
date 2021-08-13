@@ -72,6 +72,8 @@ PvaServer::~PvaServer()
     stop();
 }
 
+#if PVA_API_VERSION >= 483
+
 void PvaServer::initAs(const std::string& filePath)
 {
     initAs(filePath, "");
@@ -91,6 +93,8 @@ bool PvaServer::isAsActive()
 {
     return epvdb::ChannelProviderLocal::isAsActive();
 }
+
+#endif // if PVA_API_VERSION >= 483
 
 void PvaServer::start() 
 {
@@ -132,6 +136,8 @@ void PvaServer::initRecord(const std::string& channelName, const PvObject& pvObj
     recordMap[channelName] = record;
 }
 
+#if PVA_API_VERSION >= 483
+
 void PvaServer::initRecord(const std::string& channelName, const PvObject& pvObject, int asLevel, const std::string& asGroup, const boost::python::object& onWriteCallback) 
 {
     PyPvRecordPtr record(PyPvRecord::create(channelName, pvObject, asLevel, asGroup, callbackQueuePtr, onWriteCallback));
@@ -145,6 +151,8 @@ void PvaServer::initRecord(const std::string& channelName, const PvObject& pvObj
     }
     recordMap[channelName] = record;
 }
+
+#endif // if PVA_API_VERSION >= 483
 
 void PvaServer::update(const PvObject& pvObject) 
 {
@@ -178,6 +186,8 @@ void PvaServer::addRecord(const std::string& channelName, const PvObject& pvObje
     initRecord(channelName, pvObject, onWriteCallback);
 }
 
+#if PVA_API_VERSION >= 483
+
 void PvaServer::addRecordWithAs(const std::string& channelName, const PvObject& pvObject, int asLevel, const std::string& asGroup, const boost::python::object& onWriteCallback)
 {
     std::map<std::string, PyPvRecordPtr>::iterator it = recordMap.find(channelName);
@@ -187,6 +197,8 @@ void PvaServer::addRecordWithAs(const std::string& channelName, const PvObject& 
 
     initRecord(channelName, pvObject, asLevel, asGroup, onWriteCallback);
 }
+
+#endif // if PVA_API_VERSION >= 483
 
 void PvaServer::removeRecord(const std::string& channelName)
 {
