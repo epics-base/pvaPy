@@ -10,6 +10,7 @@
 - restricted numpy version to < 1.21 for conda and pip packages until 
   boost python segfaults are resolved
 - added support for access security in the PvaServer class
+- fixed issues with timestamp processing in PyPvRecord class
 - conda/pip package dependencies: 
   - EPICS BASE = 7.0.6
   - BOOST      = 1.76.0
