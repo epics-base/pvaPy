@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import time
 from pvaccess import Channel
 from pvaccess import PvBoolean
 from pvaccess import PvByte
@@ -379,4 +380,18 @@ class TestChannelPut:
         assert(t['nanoseconds'] == t2['nanoseconds'])
         assert(t['userTag'] == t2['userTag'])
 
+    #
+    # PvObject Async Put
+    #
+    def testAsyncPut_PvObject(self):
+        i = TestUtility.getRandomInt()
+        c = TestUtility.getStructChannel()
+        pv = c.get('')
+        pv['int'] = i
+        print('\nAsync setting int field to: %s' % (i))
+        c.asyncPut(pv, None, '')
+        time.sleep(0.1)
+        pv2 = c.get('')
+        print('Testing equality: %s == %s' % (pv['int'], pv2['int']))
+        assert(pv['int'] == pv2['int'])
 
