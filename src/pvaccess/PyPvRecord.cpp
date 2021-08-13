@@ -17,6 +17,8 @@ PyPvRecordPtr PyPvRecord::create(const std::string& name, const PvObject& pvObje
     return pvRecord;
 }
 
+#if PVA_API_VERSION >= 483
+
 PyPvRecordPtr PyPvRecord::create(const std::string& name, const PvObject& pvObject, int asLevel, const std::string& asGroup, const StringQueuePtr& callbackQueuePtr, const boost::python::object& onWriteCallback)
 {
     PyPvRecordPtr pvRecord(new PyPvRecord(name, pvObject, asLevel, asGroup, callbackQueuePtr, onWriteCallback));
@@ -25,6 +27,8 @@ PyPvRecordPtr PyPvRecord::create(const std::string& name, const PvObject& pvObje
     }
     return pvRecord;
 }
+
+#endif // if PVA_API_VERSION >= 483
 
 PyPvRecord::PyPvRecord(const std::string& name, const PvObject& pvObject, const StringQueuePtr& callbackQueuePtr_, const boost::python::object& onWriteCallback_)
     : epics::pvDatabase::PVRecord(name, pvObject.getPvStructurePtr()),
@@ -36,6 +40,8 @@ PyPvRecord::PyPvRecord(const std::string& name, const PvObject& pvObject, const 
     }
 }
 
+#if PVA_API_VERSION >= 483
+
 PyPvRecord::PyPvRecord(const std::string& name, const PvObject& pvObject, int asLevel, const std::string& asGroup, const StringQueuePtr& callbackQueuePtr_, const boost::python::object& onWriteCallback_)
     : epics::pvDatabase::PVRecord(name, pvObject.getPvStructurePtr(), asLevel, asGroup),
     callbackQueuePtr(callbackQueuePtr_),
@@ -45,6 +51,8 @@ PyPvRecord::PyPvRecord(const std::string& name, const PvObject& pvObject, int as
         PyGilManager::evalInitThreads();
     }
 }
+
+#endif // if PVA_API_VERSION >= 483
 
 PyPvRecord::~PyPvRecord()
 {
