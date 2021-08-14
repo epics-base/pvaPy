@@ -1,4 +1,4 @@
-## Release 3.2.0 (2021/MM/DD)
+## Release 4.0.0 (2021/08/12)
 
 - disabled info printout for PvaServer unless the debug log level is
   set to INFO (8) or DEBUG (16) 
@@ -10,10 +10,10 @@
 - restricted numpy version to < 1.21 for conda and pip packages until 
   boost python segfaults are resolved
 - added support for access security in the PvaServer class
-- fixed issues with timestamp processing in PyPvRecord class
+- fixed issue with timestamp processing in the PyPvRecord class
 - conda/pip package dependencies: 
   - EPICS BASE = 7.0.6
-  - BOOST      = 1.76.0
+  - BOOST      = 1.72.0
   - NUMPY      < 1.21
 
 ## Release 3.1.0 (2021/02/12)
