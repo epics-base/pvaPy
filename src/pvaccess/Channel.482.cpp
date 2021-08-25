@@ -926,15 +926,15 @@ void Channel::asyncGetThread(Channel* channel)
     }
 }
 
-void Channel::asyncPut(const PvObject& pvObject, const bp::object& pyCallback)
+void Channel::asyncPut(const PvObject& pvObject, const bp::object& pyCallback, const bp::object& pyErrorCallback)
 {
-    asyncPut(pvObject, pyCallback, PvaConstants::DefaultKey);
+    asyncPut(pvObject, pyCallback, pyErrorCallback, PvaConstants::DefaultKey);
 }
 
-void Channel::asyncPut(const PvObject& pvObject, const bp::object& pyCallback, const std::string& requestDescriptor)
+void Channel::asyncPut(const PvObject& pvObject, const bp::object& pyCallback, const bp::object& pyErrorCallback, const std::string& requestDescriptor)
 {
-    connect();
     asyncPutPyCallback = pyCallback;
+    asyncPutPyErrorCallback = pyErrorCallback;
     try {
         asyncPvaPut = createPutPtr(requestDescriptor);
         preparePut(pvObject, asyncPvaPut);
@@ -948,14 +948,21 @@ void Channel::asyncPut(const PvObject& pvObject, const bp::object& pyCallback, c
 void Channel::asyncPutThread(Channel* channel)
 {
     bp::object pyCallback = channel->asyncPutPyCallback;
+    bp::object pyErrorCallback = channel->asyncPutPyErrorCallback;
     try {
+        channel->connect();
         channel->asyncPvaPut->put();
         pvd::PVStructurePtr pvStructure = channel->asyncPvaPut->getData()->getPVStructure();
         PvObject pvObject(pvStructure);
         channel->invokePyCallback(pyCallback, pvObject);
     }
-    catch (std::runtime_error& ex) {
-        logger.error(ex.what());
+    catch (const std::exception& ex) {
+        if (!PyUtility::isPyNone(pyErrorCallback)) {
+            channel->invokePyCallback(pyErrorCallback, ex.what());
+        }
+        else {
+            logger.error(ex.what());
+        }
     }
 }
 

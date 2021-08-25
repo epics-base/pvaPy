@@ -70,7 +70,7 @@ class_<Channel>("Channel",
         args("pyCallback", "requestDescriptor"),
         "Asynchronously retrieves PV value from the channel and invokes the python callback method.\n\n"
         ":Parameter: *pyCallback* (object) - reference to python callback object (e.g., python function) that will be invoked after PV value is retrieved\n\n"
-        ":Parameter: *pyErrorCallback* (object) - reference to python callback object (e.g., python function) that will be invoked if error acarus during PV value retrieval\n\n"
+        ":Parameter: *pyErrorCallback* (object) - reference to python callback object (e.g., python function) that will be invoked if error occur during PV value retrieval\n\n"
         ":Parameter: *requestDescriptor* (str) - describes what PV data should be sent to the client\n\n"
         "::\n\n"
         "    def echo(pv):\n\n"
@@ -84,7 +84,7 @@ class_<Channel>("Channel",
         args("pyCallback"),
         "Asynchronously retrieves PV value from the channel and invokes the python callback method. The method uses default request descriptor 'field(value)'.\n\n"
         ":Parameter: *pyCallback* (object) - reference to python callback object (e.g., python function) that will be invoked after PV value is retrieved\n\n"
-        ":Parameter: *pyErrorCallback* (object) - reference to python callback object (e.g., python function) that will be invoked if error acarus during PV value retrieval\n\n"
+        ":Parameter: *pyErrorCallback* (object) - reference to python callback object (e.g., python function) that will be invoked if error occur during PV value retrieval\n\n"
         "::\n\n"
         "    def echo(pv):\n\n"
         "        print('PV value: %s' % pv)\n\n"
@@ -120,27 +120,33 @@ class_<Channel>("Channel",
 #if PVA_API_VERSION >= 482
 
     .def("asyncPut",
-        static_cast<void(Channel::*)(const PvObject&, const bp::object&, const std::string&)>(&Channel::asyncPut),
+        static_cast<void(Channel::*)(const PvObject&, const bp::object&, const bp::object&, const std::string&)>(&Channel::asyncPut),
         args("pvObject", "pyCallback", "requestDescriptor"),
         "Asynchronously assigns PV data to the channel process variable.\n\n"
         ":Parameter: *pvObject* (PvObject) - PV object that will be assigned to channel PV according to the specified request descriptor\n\n"
         ":Parameter: *pyCallback* (object) - reference to python callback object (e.g., python function) that will be invoked after PV value is set\n\n"
+        ":Parameter: *pyErrorCallback* (object) - reference to python callback object (e.g., python function) that will be invoked if error occur during PV value retrieval\n\n"
         ":Parameter: *requestDescriptor* (str) - PV request descriptor\n\n"
         "::\n\n"
         "    def echo(pv):\n\n"
         "        print('PV set to: %s' % pv)\n\n"
-        "    channel.asyncPut(PvInt(10), echo, 'field(value)')\n\n")
+        "    def error(code):\n\n"
+        "        print('Returned error code: %s' % code)\n\n"
+        "    channel.asyncPut(PvInt(10), echo, error, 'field(value)')\n\n")
 
     .def("asyncPut",
-        static_cast<void(Channel::*)(const PvObject&, const bp::object&)>(&Channel::asyncPut),
+        static_cast<void(Channel::*)(const PvObject&, const bp::object&, const bp::object&)>(&Channel::asyncPut),
         args("pvObject", "pyCallback"),
         "Asynchronously assigns PV data to the channel process variable using the default request descriptor 'field(value)'.\n\n"
         ":Parameter: *pvObject* (PvObject) - PV object that will be assigned to the channel process variable\n\n"
         ":Parameter: *pyCallback* (object) - reference to python callback object (e.g., python function) that will be invoked after PV value is set\n\n"
+        ":Parameter: *pyErrorCallback* (object) - reference to python callback object (e.g., python function) that will be invoked if error occur during PV value retrieval\n\n"
         "::\n\n"
         "    def echo(pv):\n\n"
         "        print('PV set to: %s' % pv)\n\n"
-        "    channel.asyncPut(PvInt(10), echo)\n\n")
+        "    def error(code):\n\n"
+        "        print('Returned error code: %s' % code)\n\n"
+        "    channel.asyncPut(PvInt(10), echo, error)\n\n")
 
 #endif // if PVA_API_VERSION >= 482
 

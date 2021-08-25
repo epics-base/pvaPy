@@ -50,8 +50,8 @@ public:
     // Put methods
     virtual void put(const PvObject& pvObject, const std::string& requestDescriptor);
     virtual void put(const PvObject& pvObject);
-    virtual void asyncPut(const PvObject& pvObject, const boost::python::object& pyCallback, const std::string& requestDescriptor);
-    virtual void asyncPut(const PvObject& pvObject, const boost::python::object& pyCallback);
+    virtual void asyncPut(const PvObject& pvObject, const boost::python::object& pyCallback, const boost::python::object& pyErrorCallback, const std::string& requestDescriptor);
+    virtual void asyncPut(const PvObject& pvObject, const boost::python::object& pyCallback, const boost::python::object& pyErrorCallback);
 
     virtual void put(const std::vector<std::string>& values, const std::string& requestDescriptor);
     virtual void put(const std::vector<std::string>& values);
@@ -233,6 +233,7 @@ private:
     std::string asyncGetRequestDescriptor;
     epics::pvaClient::PvaClientPutPtr asyncPvaPut;
     boost::python::object asyncPutPyCallback;
+    boost::python::object asyncPutPyErrorCallback;
 };
 
 inline std::string Channel::getName() const
