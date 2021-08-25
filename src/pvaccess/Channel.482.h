@@ -33,7 +33,7 @@ public:
     static const char* DefaultSubscriberName;
     static const double DefaultTimeout;
     static const int DefaultMaxPvObjectQueueLength;
-        
+
     Channel(const std::string& channelName, PvProvider::ProviderType providerType=PvProvider::PvaProviderType);
     Channel(const Channel& channel);
     virtual ~Channel();
@@ -44,10 +44,9 @@ public:
     // Get methods
     virtual PvObject* get(const std::string& requestDescriptor);
     virtual PvObject* get();
-    virtual void asyncGet(const boost::python::object& pyCallback);
-    virtual void asyncGet(const boost::python::object& pyCallback, const std::string& requestDescriptor);
+    virtual void asyncGet(const boost::python::object& pyCallback, const boost::python::object& pyErrorCallback);
+    virtual void asyncGet(const boost::python::object& pyCallback, const boost::python::object& pyErrorCallback, const std::string& requestDescriptor);
 
-    
     // Put methods
     virtual void put(const PvObject& pvObject, const std::string& requestDescriptor);
     virtual void put(const PvObject& pvObject);
@@ -192,6 +191,7 @@ private:
 
     void callSubscriber(const std::string& pySubscriberName, boost::python::object& pySubscriber, PvObject& pvObject);
     void invokePyCallback(boost::python::object& pyCallback, PvObject& pvObject);
+    void invokePyCallback(boost::python::object& pyCallback, std::string errorMsg);
 
     void preparePut(const PvObject& pvObject, epics::pvaClient::PvaClientPutPtr& pvaPut);
 
@@ -229,6 +229,7 @@ private:
     boost::python::object connectionCallback;
 
     boost::python::object asyncGetPyCallback;
+    boost::python::object asyncGetPyErrorCallback;
     std::string asyncGetRequestDescriptor;
     epics::pvaClient::PvaClientPutPtr asyncPvaPut;
     boost::python::object asyncPutPyCallback;
@@ -244,7 +245,7 @@ inline bool Channel::isMonitorActive() const
     return monitorActive;
 }
 
-inline void Channel::setTimeout(double timeout) 
+inline void Channel::setTimeout(double timeout)
 {
     this->timeout = timeout;
 }
@@ -254,7 +255,7 @@ inline double Channel::getTimeout() const
     return timeout;
 }
 
-inline void Channel::setDefaultRequestDescriptor(const std::string& requestDescriptor) 
+inline void Channel::setDefaultRequestDescriptor(const std::string& requestDescriptor)
 {
     this->defaultRequestDescriptor = requestDescriptor;
 }
@@ -264,7 +265,7 @@ inline std::string Channel::getDefaultRequestDescriptor() const
     return defaultRequestDescriptor;
 }
 
-inline void Channel::setDefaultPutGetRequestDescriptor(const std::string& requestDescriptor) 
+inline void Channel::setDefaultPutGetRequestDescriptor(const std::string& requestDescriptor)
 {
     this->defaultPutGetRequestDescriptor = requestDescriptor;
 }
