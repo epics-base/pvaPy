@@ -389,9 +389,10 @@ class TestChannelPut:
         pv = c.get('')
         pv['int'] = i
         print('\nAsync setting int field to: %s' % (i))
-        c.asyncPut(pv, None, '')
+        c.asyncPut(pv, None, None, '')
         time.sleep(0.1)
         pv2 = c.get('')
         print('Testing equality: %s == %s' % (pv['int'], pv2['int']))
         assert(pv['int'] == pv2['int'])
+
 
