@@ -44,8 +44,8 @@ public:
     // Get methods
     virtual PvObject* get(const std::string& requestDescriptor);
     virtual PvObject* get();
-    virtual void asyncGet(const boost::python::object& pyCallback, const boost::python::object& pyErrorCallback);
     virtual void asyncGet(const boost::python::object& pyCallback, const boost::python::object& pyErrorCallback, const std::string& requestDescriptor);
+    virtual void asyncGet(const boost::python::object& pyCallback, const boost::python::object& pyErrorCallback);
 
     // Put methods
     virtual void put(const PvObject& pvObject, const std::string& requestDescriptor);
@@ -182,6 +182,7 @@ private:
     void notifyProcessingThreadExit();
 
     void connect();
+    void asyncConnect();
     void issueConnect();
     bool isChannelConnected();
     void determineDefaultRequestDescriptor();

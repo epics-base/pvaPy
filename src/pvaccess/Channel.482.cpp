@@ -108,7 +108,35 @@ void Channel::connect()
     if (isChannelConnected()) {
         return;
     }
-    PyGilManager::gilStateEnsure();
+
+    PyThreadState* _pyThreadState;
+    _pyThreadState = PyEval_SaveThread();
+    try {
+        //pvaClientChannelPtr->connect(timeout);
+        issueConnect();
+        if (!isChannelConnected()) {
+            epics::pvData::Status status = pvaClientChannelPtr->waitConnect(timeout);
+            if(!status.isOK()) {
+                PyEval_RestoreThread(_pyThreadState);
+                throw ChannelTimeout("Channel %s timed out.", pvaClientChannelPtr->getChannelName().c_str());
+            }
+        }
+        determineDefaultRequestDescriptor();
+    }
+    catch (std::runtime_error&) {
+        PyEval_RestoreThread(_pyThreadState);
+        throw ChannelTimeout("Channel %s timed out.", pvaClientChannelPtr->getChannelName().c_str());
+    }
+    PyEval_RestoreThread(_pyThreadState);
+}
+
+// asyncConnect will be called inside C++ thread only, so there is no need
+// for save/restore thread calls
+void Channel::asyncConnect()
+{
+    if (isChannelConnected()) {
+        return;
+    }
 
     try {
         //pvaClientChannelPtr->connect(timeout);
@@ -116,17 +144,14 @@ void Channel::connect()
         if (!isChannelConnected()) {
             epics::pvData::Status status = pvaClientChannelPtr->waitConnect(timeout);
             if(!status.isOK()) {
-                PyGilManager::gilStateRelease();
                 throw ChannelTimeout("Channel %s timed out.", pvaClientChannelPtr->getChannelName().c_str());
             }
         }
         determineDefaultRequestDescriptor();
     }
     catch (std::runtime_error&) {
-        PyGilManager::gilStateRelease();
         throw ChannelTimeout("Channel %s timed out.", pvaClientChannelPtr->getChannelName().c_str());
     }
-    PyGilManager::gilStateRelease();
 }
 
 void Channel::issueConnect()
@@ -909,7 +934,7 @@ void Channel::asyncGetThread(Channel* channel)
     bp::object pyErrorCallback = channel->asyncGetPyErrorCallback;
     std::string requestDescriptor = channel->asyncGetRequestDescriptor;
     try {
-        channel->connect();
+        channel->asyncConnect();
         pvc::PvaClientGetPtr pvaGet = channel->createGetPtr(requestDescriptor);
         pvaGet->get();
         pvd::PVStructurePtr pvStructure = pvaGet->getData()->getPVStructure();
@@ -950,7 +975,7 @@ void Channel::asyncPutThread(Channel* channel)
     bp::object pyCallback = channel->asyncPutPyCallback;
     bp::object pyErrorCallback = channel->asyncPutPyErrorCallback;
     try {
-        channel->connect();
+        channel->asyncConnect();
         channel->asyncPvaPut->put();
         pvd::PVStructurePtr pvStructure = channel->asyncPvaPut->getData()->getPVStructure();
         PvObject pvObject(pvStructure);
