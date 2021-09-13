@@ -1,3 +1,12 @@
+## Release 4.0.1 (2021/09/12)
+
+- updated asyncGet/asyncPut interfaces to allow exception callbacks, and fixed
+  async connection issue (GitHub Issue #68, PR #69)
+- conda/pip package dependencies: 
+  - EPICS BASE = 7.0.6
+  - BOOST      = 1.72.0
+  - NUMPY      < 1.21
+
 ## Release 4.0.0 (2021/08/12)
 
 - disabled info printout for PvaServer unless the debug log level is
