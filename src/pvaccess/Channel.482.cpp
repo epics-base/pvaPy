@@ -69,7 +69,7 @@ Channel::Channel(const std::string& channelName, PvProvider::ProviderType provid
     stateRequester = epics::pvaClient::PvaClientChannelStateChangeRequesterPtr(new ChannelStateRequesterImpl(isConnected, this));
     pvaClientChannelPtr->setStateChangeRequester(stateRequester);
 }
-    
+
 Channel::Channel(const Channel& c) :
     pvaClientChannelPtr(pvaClientPtr->createChannel(c.pvaClientChannelPtr->getChannelName(),PvProvider::getProviderName(c.providerType))),
     monitorActive(false),
@@ -103,14 +103,14 @@ Channel::~Channel()
     //epicsThreadSleep(ShutdownWaitTime);
 }
 
-void Channel::connect() 
+void Channel::connect()
 {
     if (isChannelConnected()) {
         return;
     }
+
     PyThreadState* _pyThreadState;
     _pyThreadState = PyEval_SaveThread();
-
     try {
         //pvaClientChannelPtr->connect(timeout);
         issueConnect();
@@ -122,7 +122,7 @@ void Channel::connect()
             }
         }
         determineDefaultRequestDescriptor();
-    } 
+    }
     catch (std::runtime_error&) {
         PyEval_RestoreThread(_pyThreadState);
         throw ChannelTimeout("Channel %s timed out.", pvaClientChannelPtr->getChannelName().c_str());
@@ -130,7 +130,31 @@ void Channel::connect()
     PyEval_RestoreThread(_pyThreadState);
 }
 
-void Channel::issueConnect() 
+// asyncConnect will be called inside C++ thread only, so there is no need
+// for save/restore thread calls
+void Channel::asyncConnect()
+{
+    if (isChannelConnected()) {
+        return;
+    }
+
+    try {
+        //pvaClientChannelPtr->connect(timeout);
+        issueConnect();
+        if (!isChannelConnected()) {
+            epics::pvData::Status status = pvaClientChannelPtr->waitConnect(timeout);
+            if(!status.isOK()) {
+                throw ChannelTimeout("Channel %s timed out.", pvaClientChannelPtr->getChannelName().c_str());
+            }
+        }
+        determineDefaultRequestDescriptor();
+    }
+    catch (std::runtime_error&) {
+        throw ChannelTimeout("Channel %s timed out.", pvaClientChannelPtr->getChannelName().c_str());
+    }
+}
+
+void Channel::issueConnect()
 {
     if (hasIssuedConnect) {
         return;
@@ -138,13 +162,13 @@ void Channel::issueConnect()
     try {
         hasIssuedConnect = true;
         pvaClientChannelPtr->issueConnect();
-    } 
+    }
     catch (std::runtime_error& ex) {
         logger.warn("Could not issue connect for channel %s: %s.", pvaClientChannelPtr->getChannelName().c_str(), ex.what());
     }
 }
 
-bool Channel::isChannelConnected() 
+bool Channel::isChannelConnected()
 {
     return isConnected;
 }
@@ -154,7 +178,7 @@ PvObject* Channel::get()
     return get(PvaConstants::DefaultKey);
 }
 
-PvObject* Channel::get(const std::string& requestDescriptor) 
+PvObject* Channel::get(const std::string& requestDescriptor)
 {
     connect();
     PyThreadState* _pyThreadState;
@@ -178,7 +202,7 @@ void Channel::put(const PvObject& pvObject)
     put(pvObject, PvaConstants::DefaultKey);
 }
 
-void Channel::preparePut(const PvObject& pvObject, pvc::PvaClientPutPtr& pvaPut) 
+void Channel::preparePut(const PvObject& pvObject, pvc::PvaClientPutPtr& pvaPut)
 {
     pvd::PVStructurePtr pvSend = pvaPut->getData()->getPVStructure();
     pvd::PVStructurePtr pvSrc = pvObject.getPvStructurePtr();
@@ -207,7 +231,7 @@ void Channel::preparePut(const PvObject& pvObject, pvc::PvaClientPutPtr& pvaPut)
     }
 }
 
-void Channel::put(const PvObject& pvObject, const std::string& requestDescriptor) 
+void Channel::put(const PvObject& pvObject, const std::string& requestDescriptor)
 {
     connect();
     PyThreadState* _pyThreadState = NULL;
@@ -216,7 +240,7 @@ void Channel::put(const PvObject& pvObject, const std::string& requestDescriptor
         preparePut(pvObject, pvaPut);
         _pyThreadState = PyEval_SaveThread();
         pvaPut->put();
-    } 
+    }
     catch (std::runtime_error& ex) {
         if (_pyThreadState) {
             PyEval_RestoreThread(_pyThreadState);
@@ -231,7 +255,7 @@ void Channel::put(const std::vector<std::string>& values)
     put(values, PvaConstants::DefaultKey);
 }
 
-void Channel::put(const std::vector<std::string>& values, const std::string& requestDescriptor) 
+void Channel::put(const std::vector<std::string>& values, const std::string& requestDescriptor)
 {
     connect();
     PyThreadState* _pyThreadState = NULL;
@@ -241,7 +265,7 @@ void Channel::put(const std::vector<std::string>& values, const std::string& req
         pvaData->putStringArray(values);
         _pyThreadState = PyEval_SaveThread();
         pvaPut->put();
-    } 
+    }
     catch (std::runtime_error& ex) {
         if (_pyThreadState) {
             PyEval_RestoreThread(_pyThreadState);
@@ -256,7 +280,7 @@ void Channel::put(const std::string& value)
     put(value, PvaConstants::DefaultKey);
 }
 
-void Channel::put(const std::string& value, const std::string& requestDescriptor) 
+void Channel::put(const std::string& value, const std::string& requestDescriptor)
 {
     connect();
     PyThreadState* _pyThreadState = NULL;
@@ -277,7 +301,7 @@ void Channel::put(const std::string& value, const std::string& requestDescriptor
         }
         _pyThreadState = PyEval_SaveThread();
         pvaPut->put();
-    } 
+    }
     catch (std::runtime_error& ex) {
         if (_pyThreadState) {
             PyEval_RestoreThread(_pyThreadState);
@@ -287,7 +311,7 @@ void Channel::put(const std::string& value, const std::string& requestDescriptor
     PyEval_RestoreThread(_pyThreadState);
 }
 
-void Channel::put(const boost::python::list& pyList, const std::string& requestDescriptor) 
+void Channel::put(const boost::python::list& pyList, const std::string& requestDescriptor)
 {
     int listSize = boost::python::len(pyList);
     std::vector<std::string> values(listSize);
@@ -446,7 +470,7 @@ void Channel::parsePut(
         pvaData->parse(args);
         _pyThreadState = PyEval_SaveThread();
         pvaPut->put();
-    } 
+    }
     catch (std::runtime_error& ex) {
         if (_pyThreadState) {
             PyEval_RestoreThread(_pyThreadState);
@@ -477,7 +501,7 @@ PvObject* Channel::parsePutGet(
         epics::pvData::PVStructurePtr pvGet = pvaPutGet->getGetData()->getPVStructure();
         PyEval_RestoreThread(_pyThreadState);
         return new PvObject(pvGet);
-    } 
+    }
     catch (std::runtime_error& ex) {
         if (_pyThreadState) {
             PyEval_RestoreThread(_pyThreadState);
@@ -489,7 +513,7 @@ PvObject* Channel::parsePutGet(
 
 // PutGet methods
 
-PvObject* Channel::putGet(const PvObject& pvObject, const std::string& requestDescriptor) 
+PvObject* Channel::putGet(const PvObject& pvObject, const std::string& requestDescriptor)
 {
     connect();
     PyThreadState* _pyThreadState = NULL;
@@ -502,7 +526,7 @@ PvObject* Channel::putGet(const PvObject& pvObject, const std::string& requestDe
         epics::pvData::PVStructurePtr pvGet = pvaPutGet->getGetData()->getPVStructure();
         PyEval_RestoreThread(_pyThreadState);
         return new PvObject(pvGet);
-    } 
+    }
     catch (std::runtime_error& ex) {
         if (_pyThreadState) {
             PyEval_RestoreThread(_pyThreadState);
@@ -516,7 +540,7 @@ PvObject* Channel::putGet(const PvObject& pvObject)
     return putGet(pvObject, PvaConstants::DefaultKey);
 }
 
-PvObject* Channel::putGet(const std::vector<std::string>& values, const std::string& requestDescriptor) 
+PvObject* Channel::putGet(const std::vector<std::string>& values, const std::string& requestDescriptor)
 {
     connect();
     PyThreadState* _pyThreadState = NULL;
@@ -528,7 +552,7 @@ PvObject* Channel::putGet(const std::vector<std::string>& values, const std::str
         pvaPutGet->putGet();
         PyEval_RestoreThread(_pyThreadState);
         return new PvObject(pvaPutGet->getGetData()->getPVStructure());
-    } 
+    }
     catch (std::runtime_error& ex) {
         if (_pyThreadState) {
             PyEval_RestoreThread(_pyThreadState);
@@ -542,7 +566,7 @@ PvObject* Channel::putGet(const std::vector<std::string>& values)
     return putGet(values, PvaConstants::DefaultKey);
 }
 
-PvObject* Channel::putGet(const std::string& value, const std::string& requestDescriptor) 
+PvObject* Channel::putGet(const std::string& value, const std::string& requestDescriptor)
 {
     connect();
     PyThreadState* _pyThreadState = NULL;
@@ -565,7 +589,7 @@ PvObject* Channel::putGet(const std::string& value, const std::string& requestDe
         pvaPutGet->putGet();
         PyEval_RestoreThread(_pyThreadState);
         return new PvObject(pvaPutGet->getGetData()->getPVStructure());
-    } 
+    }
     catch (std::runtime_error& ex) {
         if (_pyThreadState) {
             PyEval_RestoreThread(_pyThreadState);
@@ -579,7 +603,7 @@ PvObject* Channel::putGet(const std::string& value)
     return putGet(value, PvaConstants::DefaultKey);
 }
 
-PvObject* Channel::putGet(const boost::python::list& pyList, const std::string& requestDescriptor) 
+PvObject* Channel::putGet(const boost::python::list& pyList, const std::string& requestDescriptor)
 {
     int listSize = boost::python::len(pyList);
     std::vector<std::string> values(listSize);
@@ -723,7 +747,7 @@ PvObject* Channel::getPut()
     return getPut(PvaConstants::DefaultKey);
 }
 
-PvObject* Channel::getPut(const std::string& requestDescriptor) 
+PvObject* Channel::getPut(const std::string& requestDescriptor)
 {
     connect();
     PyThreadState* _pyThreadState = NULL;
@@ -733,7 +757,7 @@ PvObject* Channel::getPut(const std::string& requestDescriptor)
         pvaPutGet->getPut();
         PyEval_RestoreThread(_pyThreadState);
         return new PvObject(pvaPutGet->getPutData()->getPVStructure());
-    } 
+    }
     catch (std::runtime_error& ex) {
         if (_pyThreadState) {
             PyEval_RestoreThread(_pyThreadState);
@@ -833,7 +857,7 @@ void Channel::callSubscribers(PvObject& pvObject)
             epics::pvData::Lock lock(subscriberMutex);
             subscriberMap2 = subscriberMap;
         }
-    
+
         std::map<std::string,boost::python::object>::iterator mIter;
         for (mIter = subscriberMap2.begin(); mIter != subscriberMap2.end(); mIter++) {
             std::string pySubscriberName = mIter->first;
@@ -843,7 +867,7 @@ void Channel::callSubscribers(PvObject& pvObject)
     }
 }
 
-void Channel::callSubscriber(const std::string& pySubscriberName, boost::python::object& pySubscriber, PvObject& pvObject) 
+void Channel::callSubscriber(const std::string& pySubscriberName, boost::python::object& pySubscriber, PvObject& pvObject)
 {
     // Acquire GIL. This is required because callSubscribers()
     // is called in a monitoring thread. Before monitoring thread
@@ -868,13 +892,13 @@ void Channel::callSubscriber(const std::string& pySubscriberName, boost::python:
         logger.error(ex.what());
     }
 
-    // Release GIL. 
+    // Release GIL.
     // PyGILState_Release(gilState);
     // logger.trace("Releasing python GIL after processing monitor data with " + pySubscriberName);
     PyGilManager::gilStateRelease();
 }
 
-void Channel::callConnectionCallback(bool isConnected) 
+void Channel::callConnectionCallback(bool isConnected)
 {
     PyGilManager::gilStateEnsure();
     try {
@@ -891,15 +915,15 @@ void Channel::callConnectionCallback(bool isConnected)
     PyGilManager::gilStateRelease();
 }
 
-void Channel::asyncGet(const bp::object& pyCallback) 
+void Channel::asyncGet(const bp::object& pyCallback, const bp::object& pyErrorCallback)
 {
-    asyncGet(pyCallback, PvaConstants::DefaultKey);
+    asyncGet(pyCallback, pyErrorCallback, PvaConstants::DefaultKey);
 }
 
-void Channel::asyncGet(const bp::object& pyCallback, const std::string& requestDescriptor) 
+void Channel::asyncGet(const bp::object& pyCallback, const bp::object& pyErrorCallback, const std::string& requestDescriptor)
 {
-    connect();
     asyncGetPyCallback = pyCallback;
+    asyncGetPyErrorCallback = pyErrorCallback;
     asyncGetRequestDescriptor = requestDescriptor;
     epicsThreadCreate("AsyncGetThread", epicsThreadPriorityHigh, epicsThreadGetStackSize(epicsThreadStackSmall), (EPICSTHREADFUNC)asyncGetThread, this);
 }
@@ -907,32 +931,39 @@ void Channel::asyncGet(const bp::object& pyCallback, const std::string& requestD
 void Channel::asyncGetThread(Channel* channel)
 {
     bp::object pyCallback = channel->asyncGetPyCallback;
+    bp::object pyErrorCallback = channel->asyncGetPyErrorCallback;
     std::string requestDescriptor = channel->asyncGetRequestDescriptor;
     try {
+        channel->asyncConnect();
         pvc::PvaClientGetPtr pvaGet = channel->createGetPtr(requestDescriptor);
         pvaGet->get();
         pvd::PVStructurePtr pvStructure = pvaGet->getData()->getPVStructure();
-        PvObject pvObject(pvStructure); 
+        PvObject pvObject(pvStructure);
         channel->invokePyCallback(pyCallback, pvObject);
     }
-    catch (std::runtime_error& ex) {
-        logger.error(ex.what());
+    catch (const std::exception& ex) {
+        if (!PyUtility::isPyNone(pyErrorCallback)) {
+            channel->invokePyCallback(pyErrorCallback, ex.what());
+        }
+        else {
+            logger.error(ex.what());
+        }
     }
 }
 
-void Channel::asyncPut(const PvObject& pvObject, const bp::object& pyCallback) 
+void Channel::asyncPut(const PvObject& pvObject, const bp::object& pyCallback, const bp::object& pyErrorCallback)
 {
-    asyncPut(pvObject, pyCallback, PvaConstants::DefaultKey);
+    asyncPut(pvObject, pyCallback, pyErrorCallback, PvaConstants::DefaultKey);
 }
 
-void Channel::asyncPut(const PvObject& pvObject, const bp::object& pyCallback, const std::string& requestDescriptor) 
+void Channel::asyncPut(const PvObject& pvObject, const bp::object& pyCallback, const bp::object& pyErrorCallback, const std::string& requestDescriptor)
 {
-    connect();
     asyncPutPyCallback = pyCallback;
+    asyncPutPyErrorCallback = pyErrorCallback;
     try {
         asyncPvaPut = createPutPtr(requestDescriptor);
         preparePut(pvObject, asyncPvaPut);
-    } 
+    }
     catch (std::runtime_error& ex) {
         throw PvaException(ex.what());
     }
@@ -942,18 +973,25 @@ void Channel::asyncPut(const PvObject& pvObject, const bp::object& pyCallback, c
 void Channel::asyncPutThread(Channel* channel)
 {
     bp::object pyCallback = channel->asyncPutPyCallback;
+    bp::object pyErrorCallback = channel->asyncPutPyErrorCallback;
     try {
+        channel->asyncConnect();
         channel->asyncPvaPut->put();
         pvd::PVStructurePtr pvStructure = channel->asyncPvaPut->getData()->getPVStructure();
-        PvObject pvObject(pvStructure); 
+        PvObject pvObject(pvStructure);
         channel->invokePyCallback(pyCallback, pvObject);
     }
-    catch (std::runtime_error& ex) {
-        logger.error(ex.what());
+    catch (const std::exception& ex) {
+        if (!PyUtility::isPyNone(pyErrorCallback)) {
+            channel->invokePyCallback(pyErrorCallback, ex.what());
+        }
+        else {
+            logger.error(ex.what());
+        }
     }
 }
 
-void Channel::invokePyCallback(boost::python::object& pyCallback, PvObject& pvObject) 
+void Channel::invokePyCallback(boost::python::object& pyCallback, PvObject& pvObject)
 {
     if(PyUtility::isPyNone(pyCallback)) {
         return;
@@ -961,6 +999,26 @@ void Channel::invokePyCallback(boost::python::object& pyCallback, PvObject& pvOb
     PyGilManager::gilStateEnsure();
     try {
         pyCallback(pvObject);
+    }
+    catch(const boost::python::error_already_set&) {
+        logger.error("Python callback raised exception.");
+        PyErr_Print();
+        PyErr_Clear();
+    }
+    catch (const std::exception& ex) {
+        logger.error(ex.what());
+    }
+    PyGilManager::gilStateRelease();
+}
+
+void Channel::invokePyCallback(boost::python::object& pyCallback, std::string errorMsg)
+{
+    if(PyUtility::isPyNone(pyCallback)) {
+        return;
+    }
+    PyGilManager::gilStateEnsure();
+    try {
+        pyCallback(errorMsg);
     }
     catch(const boost::python::error_already_set&) {
         logger.error("Python callback raised exception.");
@@ -1012,7 +1070,7 @@ void Channel::startMonitor(const std::string& requestDescriptor)
     }
 
     // Issue connect if channel is not connected and onChannelConnect() will
-    // be called when channel gets connected; otherwise, 
+    // be called when channel gets connected; otherwise,
     // call onChannelConnect()
     monitorActive = true;
     if (isChannelConnected()) {
@@ -1042,7 +1100,7 @@ void Channel::monitor(const boost::python::object& pySubscriber, const std::stri
     }
 }
 
-void Channel::startProcessingThread() 
+void Channel::startProcessingThread()
 {
     epics::pvData::Lock lock(processingThreadMutex);
     if (!processingThreadRunning) {
@@ -1053,7 +1111,7 @@ void Channel::startProcessingThread()
     }
 }
 
-void Channel::startIssueConnectThread() 
+void Channel::startIssueConnectThread()
 {
     if (hasIssuedConnect) {
         return;
@@ -1061,7 +1119,7 @@ void Channel::startIssueConnectThread()
     epicsThreadCreate("IssueConnectThread", epicsThreadPriorityHigh, epicsThreadGetStackSize(epicsThreadStackSmall), (EPICSTHREADFUNC)issueConnectThread, this);
 }
 
-void Channel::waitForProcessingThreadExit(double timeout) 
+void Channel::waitForProcessingThreadExit(double timeout)
 {
     if (processingThreadRunning) {
         logger.debug("Waiting on processing thread exit, timeout in %f seconds", timeout);
@@ -1103,7 +1161,7 @@ void Channel::processingThread(Channel* channel)
         if (!channel->monitorActive) {
             break;
         }
-    
+
         // Handle possible exceptions while retrieving data from empty queue.
         try {
             PvObject pvObject = channel->pvObjectQueue.frontAndPop(channel->timeout);
@@ -1187,7 +1245,7 @@ void Channel::onChannelConnect()
             pvaClientMonitorPtr->setRequester(pvaClientMonitorRequesterPtr);
             pvaClientMonitorPtr->issueConnect();
             monitorRunning = true;
-        } 
+        }
         catch (PvaException& ex) {
             monitorActive = false;
             logger.error(ex.what());
@@ -1307,6 +1365,3 @@ void Channel::setConnectionCallback(const boost::python::object& callback)
     startIssueConnectThread();
     epicsThreadSleep(ThreadStartWaitTime);
 }
-
-
-
