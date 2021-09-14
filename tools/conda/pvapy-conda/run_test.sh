@@ -2,14 +2,11 @@
 
 echo "Starting test server"
 cd test
-python testServer.py 15  &
+python testServer.py 30 &
 
-for f in PvObject NtTypes ChannelPut MultiChannel; do
-    echo "Starting $f tests"
-    sleep 1
-    nosetests -v test$f.py
-done
+echo "Starting tests"
+nosetests -sv
 
-wait 
+wait
 echo "Tests done"
 
