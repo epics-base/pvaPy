@@ -1,3 +1,11 @@
+## Release 4.0.2 (2021/09/14)
+
+- fixed decoding error for strings that cannot be handled with utf-8 codec
+- conda/pip package dependencies: 
+  - EPICS BASE = 7.0.6
+  - BOOST      = 1.72.0
+  - NUMPY      < 1.21
+
 ## Release 4.0.1 (2021/09/12)
 
 - updated asyncGet/asyncPut interfaces to allow exception callbacks, and fixed
