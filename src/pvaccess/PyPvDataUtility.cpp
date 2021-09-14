@@ -10,7 +10,7 @@
 #include "InvalidArgument.h"
 #include "InvalidRequest.h"
 #include "PvObject.h"
-#include "PvaPyLogger.h"
+
 #if PVA_API_VERSION == 440
 #include "pv/convert.h"
 #endif // if PVA_API_VERSION == 440
