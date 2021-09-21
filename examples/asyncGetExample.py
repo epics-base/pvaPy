@@ -17,13 +17,22 @@ class MyThread(Thread):
 
 def echo(pv):
     print('Got PV: %s' % pv)
+    time.sleep(1)
+
+def error(ex):
+    print('Got error: %s' % ex)
 
 if __name__ == '__main__':
     c = Channel('testInt')
     t = MyThread(10)
     t.start()
     time.sleep(1)
-    c.asyncGet(echo)
-    print('Started Async Get')
-    time.sleep(5)
+    for i in range(0,12):
+        try:
+            c.asyncGet(echo, error)
+            print('Started Async Get #%d' % i)
+        except Exception as ex:
+            print('Error for request #%d: %s' % (i,ex))
+    print('Waiting for callbacks...')
+    time.sleep(30)
     

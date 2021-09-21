@@ -18,12 +18,20 @@ class MyThread(Thread):
 def echo(pv):
     print('Set PV: %s' % pv)
 
+def error(ex):
+    print('Got error: %s' % ex)
+
 if __name__ == '__main__':
     c = Channel('testInt')
     t = MyThread(10)
     t.start()
     time.sleep(1)
-    c.asyncPut(PvInt(42), echo)
-    print('Started Async Put')
-    time.sleep(5)
-    
+    for i in range(0,20):
+        try:
+            c.asyncPut(PvInt(i), echo, error)
+            print('Started Async Put #%d' % i)
+        except Exception as ex:
+            print('Error for request #%d: %s' % (i,ex))
+    print('Waiting for callbacks...')
+    time.sleep(30)
+
