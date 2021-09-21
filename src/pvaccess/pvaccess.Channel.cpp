@@ -1301,6 +1301,14 @@ class_<Channel>("Channel",
         "        print('Channel connected: %s' % (isConnected))\n\n"
         "    channel = Channel('exampleFloat')\n\n"
         "    channel.setConnectionCallback(connectionCallback)\n\n")
+
+    .def("isConnected",
+        &Channel::isChannelConnected,
+        "Returns channel connection status (boolean).\n\n"
+        ":Returns: channel connection status\n\n"
+        "::\n\n"
+        "    connected = channel.isConnected()\n\n")
+
 #endif // if PVA_API_VERSION >= 482
 
 ;
