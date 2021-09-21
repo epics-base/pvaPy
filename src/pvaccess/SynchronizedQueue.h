@@ -19,6 +19,7 @@ public:
     void setMaxLength(int maxLength);
     int getMaxLength();
     bool isFull();
+    bool isEmpty();
     T back() ;
     T front() ;
     T frontAndPop() ;
@@ -76,6 +77,7 @@ void SynchronizedQueue<T>::setMaxLength(int maxLength)
 template <class T>
 bool SynchronizedQueue<T>::isFull() 
 {
+    epics::pvData::Lock lock(mutex);
     int size = std::queue<T>::size();
     if (maxLength > 0 && size >= maxLength) {
         return true;
@@ -84,10 +86,17 @@ bool SynchronizedQueue<T>::isFull()
 }
 
 template <class T>
+bool SynchronizedQueue<T>::isEmpty() 
+{
+    epics::pvData::Lock lock(mutex);
+    return std::queue<T>::empty();
+}
+
+template <class T>
 void SynchronizedQueue<T>::throwInvalidStateIfEmpty() 
 {
     if (std::queue<T>::empty()) {
-        throw InvalidState("Invalid state: queue is empty.");
+        throw InvalidState("Queue is empty.");
     }
 }
 
@@ -154,7 +163,7 @@ void SynchronizedQueue<T>::push(const T& t)
     int size = std::queue<T>::size();
     if (maxLength > 0 && size >= maxLength) {
         // We are full, throw exception
-        throw InvalidState("Invalid state: queue is full.");
+        throw InvalidState("Queue is full.");
         return;
     }
     std::queue<T>::push(t);
