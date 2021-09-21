@@ -1,3 +1,12 @@
+## Release 4.0.3 (2021/09/21)
+
+- added isConnected() method to the Channel class
+- introduced semi-permanent threads for asyncGet/asyncPut interfaces
+- conda/pip package dependencies: 
+  - EPICS BASE = 7.0.6
+  - BOOST      = 1.72.0
+  - NUMPY      < 1.21
+
 ## Release 4.0.2 (2021/09/14)
 
 - fixed decoding error for strings that cannot be handled with utf-8 codec
