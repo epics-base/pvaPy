@@ -33,6 +33,9 @@ public:
     static const char* DefaultSubscriberName;
     static const double DefaultTimeout;
     static const int DefaultMaxPvObjectQueueLength;
+    static const int MaxAsyncRequestQueueLength;
+    static const int MaxAsyncRequestWaitTimeout;
+    static const int AsyncRequestThreadWaitTimeout;
 
     Channel(const std::string& channelName, PvProvider::ProviderType providerType=PvProvider::PvaProviderType);
     Channel(const Channel& channel);
@@ -158,6 +161,7 @@ public:
     virtual void onChannelConnect();
     virtual void onChannelDisconnect();
     virtual void callConnectionCallback(bool isConnected);
+    virtual bool isChannelConnected();
 
     // Introspection
     virtual boost::python::dict getIntrospectionDict();
@@ -173,8 +177,6 @@ private:
 
     static void processingThread(Channel* channel);
     static void issueConnectThread(Channel* channel);
-    static void asyncGetThread(Channel* channel);
-    static void asyncPutThread(Channel* channel);
 
     void startProcessingThread();
     void startIssueConnectThread();
@@ -182,9 +184,7 @@ private:
     void notifyProcessingThreadExit();
 
     void connect();
-    void asyncConnect();
     void issueConnect();
-    bool isChannelConnected();
     void determineDefaultRequestDescriptor();
     epics::pvaClient::PvaClientGetPtr createGetPtr(const std::string& requestDescriptor);
     epics::pvaClient::PvaClientPutPtr createPutPtr(const std::string& requestDescriptor);
@@ -229,12 +229,49 @@ private:
     bool connectionCallbackRequiresThread;
     boost::python::object connectionCallback;
 
-    boost::python::object asyncGetPyCallback;
-    boost::python::object asyncGetPyErrorCallback;
-    std::string asyncGetRequestDescriptor;
-    epics::pvaClient::PvaClientPutPtr asyncPvaPut;
-    boost::python::object asyncPutPyCallback;
-    boost::python::object asyncPutPyErrorCallback;
+    // Async functionality
+    void asyncConnect();
+    static void asyncGetThread(Channel* channel);
+    void startAsyncGetThread();
+    void notifyAsyncGetThreadExit();
+    void waitForAsyncGetThreadExit(double timeout);
+
+    static void asyncPutThread(Channel* channel);
+    void startAsyncPutThread();
+    void notifyAsyncPutThreadExit();
+    void waitForAsyncPutThreadExit(double timeout);
+
+    bool asyncGetThreadRunning;
+    epics::pvData::Mutex asyncGetThreadMutex;
+    epicsEvent asyncGetThreadExitEvent;
+
+    bool asyncPutThreadRunning;
+    epics::pvData::Mutex asyncPutThreadMutex;
+    epicsEvent asyncPutThreadExitEvent;
+
+    struct AsyncRequest {
+        boost::python::object pyCallback;
+        boost::python::object pyErrorCallback;
+        std::string requestDescriptor;
+        epics::pvData::PVStructurePtr pvStructurePtr;
+        AsyncRequest(boost::python::object pyCallback_, boost::python::object pyErrorCallback_, const std::string& requestDescriptor_) 
+        : pyCallback(pyCallback_) 
+        , pyErrorCallback(pyErrorCallback_) 
+        , requestDescriptor(requestDescriptor_) 
+        {}
+        AsyncRequest(const epics::pvData::PVStructurePtr& pvStructurePtr_, boost::python::object pyCallback_, boost::python::object pyErrorCallback_, const std::string& requestDescriptor_) 
+        : pyCallback(pyCallback_) 
+        , pyErrorCallback(pyErrorCallback_) 
+        , requestDescriptor(requestDescriptor_) 
+        , pvStructurePtr(pvStructurePtr_) 
+        {}
+    };
+
+    typedef std::tr1::shared_ptr<AsyncRequest> AsyncRequestPtr;
+    SynchronizedQueue<AsyncRequestPtr> asyncGetRequestQueue;
+    SynchronizedQueue<AsyncRequestPtr> asyncPutRequestQueue;
+
+    bool shutdownInProgress;
 };
 
 inline std::string Channel::getName() const
@@ -280,6 +317,16 @@ inline std::string Channel::getDefaultPutGetRequestDescriptor() const
 inline void Channel::notifyProcessingThreadExit()
 {
     processingThreadExitEvent.signal();
+}
+
+inline void Channel::notifyAsyncGetThreadExit()
+{
+    asyncGetThreadExitEvent.signal();
+}
+
+inline void Channel::notifyAsyncPutThreadExit()
+{
+    asyncPutThreadExitEvent.signal();
 }
 
 #endif
