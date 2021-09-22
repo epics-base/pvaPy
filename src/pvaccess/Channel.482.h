@@ -265,6 +265,17 @@ private:
         , requestDescriptor(requestDescriptor_) 
         , pvStructurePtr(pvStructurePtr_) 
         {}
+
+        // In some cases it seems like boost python object reference counts
+        // go below the minimum before destructor is called
+        ~AsyncRequest() {
+            if (pyCallback.ptr()->ob_refcnt <= 1) {
+                boost::python::incref(pyCallback.ptr());
+            }
+            if (pyErrorCallback.ptr()->ob_refcnt <= 1) {
+                boost::python::incref(pyErrorCallback.ptr());
+            }
+        }
     };
 
     typedef std::tr1::shared_ptr<AsyncRequest> AsyncRequestPtr;

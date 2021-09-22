@@ -19,6 +19,9 @@ from testUtility import TestUtility
 
 class TestChannelPut:
 
+    def putCallback(self, pv):
+        self.putPv = pv.copy()
+
     #
     # Boolean Put
     #
@@ -389,7 +392,7 @@ class TestChannelPut:
         pv = c.get('')
         pv['int'] = i
         print('\nAsync setting int field to: %s' % (i))
-        c.asyncPut(pv, None, None, '')
+        c.asyncPut(pv, self.putCallback, None, '')
         time.sleep(0.1)
         pv2 = c.get('')
         print('Testing equality: %s == %s' % (pv['int'], pv2['int']))

@@ -1368,6 +1368,7 @@ void Channel::asyncGetThread(Channel* channel)
 
         try {
             AsyncRequestPtr asyncRequest = channel->asyncGetRequestQueue.frontAndPop();
+
             // there were queued requests, reset poll counter
             remainingRuntime = MaxAsyncRequestWaitTimeout;
             try {
@@ -1375,10 +1376,9 @@ void Channel::asyncGetThread(Channel* channel)
                 pvd::Lock lock(channel->asyncGetThreadMutex);
 
                 channel->asyncConnect();
-                pvc::PvaClientGetPtr pvaGet = channel->createGetPtr(asyncRequest->requestDescriptor);
-                pvaGet->get();
-                pvd::PVStructurePtr pvStructure = pvaGet->getData()->getPVStructure();
-                PvObject pvObject(pvStructure);
+                pvc::PvaClientGetPtr asyncPvaGet = channel->createGetPtr(asyncRequest->requestDescriptor);
+                asyncPvaGet->get();
+                PvObject pvObject(asyncPvaGet->getData()->getPVStructure());
                 if (!channel->shutdownInProgress) {
                     logger.trace("Invoking async get callback");
                     channel->invokePyCallback(asyncRequest->pyCallback, pvObject);
@@ -1465,6 +1465,7 @@ void Channel::asyncPutThread(Channel* channel)
 
         try {
             AsyncRequestPtr asyncRequest = channel->asyncPutRequestQueue.frontAndPop();
+
             // there were queued requests, reset poll counter
             remainingRuntime = MaxAsyncRequestWaitTimeout;
             try {
@@ -1475,8 +1476,7 @@ void Channel::asyncPutThread(Channel* channel)
                 pvc::PvaClientPutPtr asyncPvaPut = channel->createPutPtr(asyncRequest->requestDescriptor);
                 channel->preparePut(PvObject(asyncRequest->pvStructurePtr), asyncPvaPut);
                 asyncPvaPut->put();
-                pvd::PVStructurePtr pvStructure = asyncPvaPut->getData()->getPVStructure();
-                PvObject pvObject(pvStructure);
+                PvObject pvObject(asyncPvaPut->getData()->getPVStructure());
                 if (!channel->shutdownInProgress) {
                     logger.trace("Invoking async put callback");
                     channel->invokePyCallback(asyncRequest->pyCallback, pvObject);
