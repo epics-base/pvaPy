@@ -1,4 +1,4 @@
-## Release 4.0.3 (2021/09/21)
+## Release 4.0.3 (2021/09/22)
 
 - added isConnected() method to the Channel class
 - introduced semi-permanent threads for asyncGet/asyncPut interfaces
