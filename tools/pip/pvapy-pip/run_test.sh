@@ -4,15 +4,10 @@ TEST_DIR=../../../test
 cd $TEST_DIR
 
 echo "Starting test server"
-python testServer.py 10  &
+python testServer.py 30  &
 
 echo "Starting tests"
-nosetests -v testPvObject.py
-nosetests -v testNtTypes.py
-nosetests -v testNumPyArrays.py
-nosetests -v testChannelPut.py
-nosetests -v testChannelPutGet.py
-nosetests -v testMultiChannel.py
+nosetests -sv 
 
 wait 
 echo "Tests done"

@@ -144,6 +144,18 @@ AC_DEFUN([AX_EPICS4],
     fi
     AC_MSG_RESULT([$EPICS_PVACLIENT_VERSION])
 
+    # check pvDatabase version number
+    AC_MSG_CHECKING(for EPICS_PVDATABASE_VERSION)
+    EPICS_PVDATABASE_VERSION=0
+    pvDatabaseVersionConfigFile=$ac_epics4_dir_path/cfg/CONFIG_PVDATABASE_VERSION
+    if test -f $pvDatabaseVersionConfigFile ; then 
+        pvDatabaseMajorVersion=`cat $pvDatabaseVersionConfigFile | grep MAJOR | grep "=" | awk '{print $NF}'`
+        pvDatabaseMinorVersion=`cat $pvDatabaseVersionConfigFile | grep MINOR | grep "=" | awk '{print $NF}'`
+        pvDatabaseMaintVersion=`cat $pvDatabaseVersionConfigFile | grep MAINT | grep "=" | awk '{print $NF}'`
+        EPICS_PVDATABASE_VERSION=${pvDatabaseMajorVersion}${pvDatabaseMinorVersion}${pvDatabaseMaintVersion}
+    fi
+    AC_MSG_RESULT([$EPICS_PVDATABASE_VERSION])
+
     # test basic libraries
     AC_MSG_CHECKING(for EPICS4 libraries for $EPICS_HOST_ARCH)
     pva_api_version=430
@@ -261,7 +273,11 @@ AC_DEFUN([AX_EPICS4],
         if test "$EPICS_PVACLIENT_VERSION" == "460" ; then
             pva_api_version=481
         else 
-            pva_api_version=482
+            if test $EPICS_PVDATABASE_VERSION -lt 460 ; then
+                pva_api_version=482
+            else
+                pva_api_version=483
+            fi
         fi
     fi
 

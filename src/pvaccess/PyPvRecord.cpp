@@ -6,6 +6,8 @@
 #include "PyUtility.h"
 #include "PyGilManager.h"
 
+namespace epvdb = epics::pvDatabase;
+
 PvaPyLogger PyPvRecord::logger("PyPvRecord");
 
 PyPvRecordPtr PyPvRecord::create(const std::string& name, const PvObject& pvObject, const StringQueuePtr& callbackQueuePtr, const boost::python::object& onWriteCallback)
@@ -17,8 +19,21 @@ PyPvRecordPtr PyPvRecord::create(const std::string& name, const PvObject& pvObje
     return pvRecord;
 }
 
+#if PVA_API_VERSION >= 483
+
+PyPvRecordPtr PyPvRecord::create(const std::string& name, const PvObject& pvObject, int asLevel, const std::string& asGroup, const StringQueuePtr& callbackQueuePtr, const boost::python::object& onWriteCallback)
+{
+    PyPvRecordPtr pvRecord(new PyPvRecord(name, pvObject, asLevel, asGroup, callbackQueuePtr, onWriteCallback));
+    if(!pvRecord->init()) {
+        pvRecord.reset();
+    }
+    return pvRecord;
+}
+
+#endif // if PVA_API_VERSION >= 483
+
 PyPvRecord::PyPvRecord(const std::string& name, const PvObject& pvObject, const StringQueuePtr& callbackQueuePtr_, const boost::python::object& onWriteCallback_)
-    : epics::pvDatabase::PVRecord(name, pvObject.getPvStructurePtr()),
+    : epvdb::PVRecord(name, pvObject.getPvStructurePtr()),
     callbackQueuePtr(callbackQueuePtr_),
     onWriteCallback(onWriteCallback_)
 {
@@ -26,6 +41,20 @@ PyPvRecord::PyPvRecord(const std::string& name, const PvObject& pvObject, const 
         PyGilManager::evalInitThreads();
     }
 }
+
+#if PVA_API_VERSION >= 483
+
+PyPvRecord::PyPvRecord(const std::string& name, const PvObject& pvObject, int asLevel, const std::string& asGroup, const StringQueuePtr& callbackQueuePtr_, const boost::python::object& onWriteCallback_)
+    : epvdb::PVRecord(name, pvObject.getPvStructurePtr(), asLevel, asGroup),
+    callbackQueuePtr(callbackQueuePtr_),
+    onWriteCallback(onWriteCallback_)
+{
+    if(!PyUtility::isPyNone(onWriteCallback)) {
+        PyGilManager::evalInitThreads();
+    }
+}
+
+#endif // if PVA_API_VERSION >= 483
 
 PyPvRecord::~PyPvRecord()
 {
@@ -39,11 +68,10 @@ bool PyPvRecord::init()
 
 void PyPvRecord::process() 
 {
-    if(PyUtility::isPyNone(onWriteCallback)) {
-        return;
+    if(!PyUtility::isPyNone(onWriteCallback)) {
+        callbackQueuePtr->push(getRecordName());
     }
-    callbackQueuePtr->push(getRecordName());
-    //executeCallback();
+    epvdb::PVRecord::process();
 }
 
 void PyPvRecord::executeCallback() 

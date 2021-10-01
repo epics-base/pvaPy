@@ -13,6 +13,8 @@
 #include "PvaServer.h"
 #include "PyGilManager.h"
 
+namespace epvdb = epics::pvDatabase;
+
 const double PvaServer::ShutdownWaitTime(0.1);
 const double PvaServer::RecordUpdateTimeout(10.0);
 PvaPyLogger PvaServer::logger("PvaServer");
@@ -70,6 +72,30 @@ PvaServer::~PvaServer()
     stop();
 }
 
+#if PVA_API_VERSION >= 483
+
+void PvaServer::initAs(const std::string& filePath)
+{
+    initAs(filePath, "");
+}
+
+void PvaServer::initAs(const std::string& filePath, const std::string& substitutions)
+{
+    try {
+        epvdb::ChannelProviderLocal::initAs(filePath, substitutions);
+    }
+    catch(std::runtime_error& ex) {
+        throw PvaException(ex.what());
+    }
+}
+
+bool PvaServer::isAsActive()
+{
+    return epvdb::ChannelProviderLocal::isAsActive();
+}
+
+#endif // if PVA_API_VERSION >= 483
+
 void PvaServer::start() 
 {
     if (isRunning) {
@@ -110,6 +136,24 @@ void PvaServer::initRecord(const std::string& channelName, const PvObject& pvObj
     recordMap[channelName] = record;
 }
 
+#if PVA_API_VERSION >= 483
+
+void PvaServer::initRecord(const std::string& channelName, const PvObject& pvObject, int asLevel, const std::string& asGroup, const boost::python::object& onWriteCallback) 
+{
+    PyPvRecordPtr record(PyPvRecord::create(channelName, pvObject, asLevel, asGroup, callbackQueuePtr, onWriteCallback));
+    if(!record.get()) {
+        throw PvaException("Failed to create PyPvRecord: " + channelName);
+    }
+    
+    epics::pvDatabase::PVDatabasePtr master = epics::pvDatabase::PVDatabase::getMaster();
+    if(!master->addRecord(record)) {
+        throw PvaException("Cannot add record to master database for channel: " + channelName);
+    }
+    recordMap[channelName] = record;
+}
+
+#endif // if PVA_API_VERSION >= 483
+
 void PvaServer::update(const PvObject& pvObject) 
 {
     if (recordMap.size() == 0) {
@@ -141,6 +185,20 @@ void PvaServer::addRecord(const std::string& channelName, const PvObject& pvObje
 
     initRecord(channelName, pvObject, onWriteCallback);
 }
+
+#if PVA_API_VERSION >= 483
+
+void PvaServer::addRecordWithAs(const std::string& channelName, const PvObject& pvObject, int asLevel, const std::string& asGroup, const boost::python::object& onWriteCallback)
+{
+    std::map<std::string, PyPvRecordPtr>::iterator it = recordMap.find(channelName);
+    if (it != recordMap.end()) {
+        throw ObjectAlreadyExists("Master database already has record for channel: " + channelName);
+    }
+
+    initRecord(channelName, pvObject, asLevel, asGroup, onWriteCallback);
+}
+
+#endif // if PVA_API_VERSION >= 483
 
 void PvaServer::removeRecord(const std::string& channelName)
 {

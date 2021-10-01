@@ -22,6 +22,11 @@ class PyPvRecord :
 {
 public:
     static PyPvRecordPtr create(const std::string& name, const PvObject& pvObject, const StringQueuePtr& callbackQueuePtr, const boost::python::object& onWriteCallback = boost::python::object());
+
+#if PVA_API_VERSION >= 483
+    static PyPvRecordPtr create(const std::string& name, const PvObject& pvObject, int asLevel, const std::string& asGroup, const StringQueuePtr& callbackQueuePtr, const boost::python::object& onWriteCallback = boost::python::object());
+#endif // if PVA_API_VERSION >= 483
+
     POINTER_DEFINITIONS(PyPvRecord);
     virtual ~PyPvRecord(); 
     virtual bool init();
@@ -31,6 +36,10 @@ public:
 private:
     static PvaPyLogger logger;
     PyPvRecord(const std::string& name, const PvObject& pvObject, const StringQueuePtr& callbackQueuePtr, const boost::python::object& onWriteCallback = boost::python::object());
+
+#if PVA_API_VERSION >= 483
+    PyPvRecord(const std::string& name, const PvObject& pvObject, int asLevel, const std::string& asGroup, const StringQueuePtr& callbackQueuePtr, const boost::python::object& onWriteCallback = boost::python::object());
+#endif // if PVA_API_VERSION >= 483
 
     StringQueuePtr callbackQueuePtr; 
     boost::python::object onWriteCallback;

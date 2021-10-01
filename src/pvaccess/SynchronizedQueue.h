@@ -19,12 +19,13 @@ public:
     void setMaxLength(int maxLength);
     int getMaxLength();
     bool isFull();
-    T back() throw(InvalidState);
-    T front() throw(InvalidState);
-    T frontAndPop() throw(InvalidState);
-    T frontAndPop(double timeout) throw(InvalidState);
+    bool isEmpty();
+    T back() ;
+    T front() ;
+    T frontAndPop() ;
+    T frontAndPop(double timeout) ;
     void pop();
-    void push(const T& t) throw(InvalidState);
+    void push(const T& t) ;
     void pushIfNotFull(const T& t);
     void waitForItemPushed(double timeout);
     void waitForItemPopped(double timeout);
@@ -34,7 +35,7 @@ public:
     void clear();
 
 private:
-    void throwInvalidStateIfEmpty() throw(InvalidState);
+    void throwInvalidStateIfEmpty() ;
     T frontAndPopUnsynchronized();
 
     epics::pvData::Mutex mutex;
@@ -76,6 +77,7 @@ void SynchronizedQueue<T>::setMaxLength(int maxLength)
 template <class T>
 bool SynchronizedQueue<T>::isFull() 
 {
+    epics::pvData::Lock lock(mutex);
     int size = std::queue<T>::size();
     if (maxLength > 0 && size >= maxLength) {
         return true;
@@ -84,15 +86,22 @@ bool SynchronizedQueue<T>::isFull()
 }
 
 template <class T>
-void SynchronizedQueue<T>::throwInvalidStateIfEmpty() throw(InvalidState)
+bool SynchronizedQueue<T>::isEmpty() 
+{
+    epics::pvData::Lock lock(mutex);
+    return std::queue<T>::empty();
+}
+
+template <class T>
+void SynchronizedQueue<T>::throwInvalidStateIfEmpty() 
 {
     if (std::queue<T>::empty()) {
-        throw InvalidState("Invalid state: queue is empty.");
+        throw InvalidState("Queue is empty.");
     }
 }
 
 template <class T>
-T SynchronizedQueue<T>::back() throw(InvalidState)
+T SynchronizedQueue<T>::back() 
 {
     epics::pvData::Lock lock(mutex);
     throwInvalidStateIfEmpty();
@@ -100,7 +109,7 @@ T SynchronizedQueue<T>::back() throw(InvalidState)
 }
 
 template <class T>
-T SynchronizedQueue<T>::front() throw(InvalidState)
+T SynchronizedQueue<T>::front() 
 {
     epics::pvData::Lock lock(mutex);
     throwInvalidStateIfEmpty();
@@ -117,7 +126,7 @@ T SynchronizedQueue<T>::frontAndPopUnsynchronized()
 }
 
 template <class T>
-T SynchronizedQueue<T>::frontAndPop() throw(InvalidState)
+T SynchronizedQueue<T>::frontAndPop() 
 {
     epics::pvData::Lock lock(mutex);
     throwInvalidStateIfEmpty();
@@ -125,7 +134,7 @@ T SynchronizedQueue<T>::frontAndPop() throw(InvalidState)
 }
 
 template <class T>
-T SynchronizedQueue<T>::frontAndPop(double timeout) throw(InvalidState)
+T SynchronizedQueue<T>::frontAndPop(double timeout) 
 {
     {
         epics::pvData::Lock lock(mutex);
@@ -148,13 +157,13 @@ void SynchronizedQueue<T>::pop()
 }
 
 template <class T>
-void SynchronizedQueue<T>::push(const T& t) throw(InvalidState)
+void SynchronizedQueue<T>::push(const T& t) 
 {
     epics::pvData::Lock lock(mutex);
     int size = std::queue<T>::size();
     if (maxLength > 0 && size >= maxLength) {
         // We are full, throw exception
-        throw InvalidState("Invalid state: queue is full.");
+        throw InvalidState("Queue is full.");
         return;
     }
     std::queue<T>::push(t);

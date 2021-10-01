@@ -33,7 +33,10 @@ public:
     static const char* DefaultSubscriberName;
     static const double DefaultTimeout;
     static const int DefaultMaxPvObjectQueueLength;
-        
+    static const int MaxAsyncRequestQueueLength;
+    static const int MaxAsyncRequestWaitTimeout;
+    static const int AsyncRequestThreadWaitTimeout;
+
     Channel(const std::string& channelName, PvProvider::ProviderType providerType=PvProvider::PvaProviderType);
     Channel(const Channel& channel);
     virtual ~Channel();
@@ -44,10 +47,15 @@ public:
     // Get methods
     virtual PvObject* get(const std::string& requestDescriptor);
     virtual PvObject* get();
-    
+    virtual void asyncGet(const boost::python::object& pyCallback, const boost::python::object& pyErrorCallback, const std::string& requestDescriptor);
+    virtual void asyncGet(const boost::python::object& pyCallback, const boost::python::object& pyErrorCallback);
+
     // Put methods
     virtual void put(const PvObject& pvObject, const std::string& requestDescriptor);
     virtual void put(const PvObject& pvObject);
+    virtual void asyncPut(const PvObject& pvObject, const boost::python::object& pyCallback, const boost::python::object& pyErrorCallback, const std::string& requestDescriptor);
+    virtual void asyncPut(const PvObject& pvObject, const boost::python::object& pyCallback, const boost::python::object& pyErrorCallback);
+
     virtual void put(const std::vector<std::string>& values, const std::string& requestDescriptor);
     virtual void put(const std::vector<std::string>& values);
     virtual void put(const std::string& value, const std::string& requestDescriptor);
@@ -153,6 +161,7 @@ public:
     virtual void onChannelConnect();
     virtual void onChannelDisconnect();
     virtual void callConnectionCallback(bool isConnected);
+    virtual bool isChannelConnected();
 
     // Introspection
     virtual boost::python::dict getIntrospectionDict();
@@ -176,13 +185,16 @@ private:
 
     void connect();
     void issueConnect();
-    bool isChannelConnected();
     void determineDefaultRequestDescriptor();
     epics::pvaClient::PvaClientGetPtr createGetPtr(const std::string& requestDescriptor);
     epics::pvaClient::PvaClientPutPtr createPutPtr(const std::string& requestDescriptor);
     epics::pvaClient::PvaClientPutGetPtr createPutGetPtr(const std::string& requestDescriptor);
 
     void callSubscriber(const std::string& pySubscriberName, boost::python::object& pySubscriber, PvObject& pvObject);
+    void invokePyCallback(boost::python::object& pyCallback, PvObject& pvObject);
+    void invokePyCallback(boost::python::object& pyCallback, std::string errorMsg);
+
+    void preparePut(const PvObject& pvObject, epics::pvaClient::PvaClientPutPtr& pvaPut);
 
     static epics::pvaClient::PvaClientPtr pvaClientPtr;
     epics::pvaClient::PvaClientChannelPtr pvaClientChannelPtr;
@@ -216,6 +228,61 @@ private:
     epics::pvaClient::PvaClientChannelStateChangeRequesterPtr stateRequester;
     bool connectionCallbackRequiresThread;
     boost::python::object connectionCallback;
+
+    // Async functionality
+    void asyncConnect();
+    static void asyncGetThread(Channel* channel);
+    void startAsyncGetThread();
+    void notifyAsyncGetThreadExit();
+    void waitForAsyncGetThreadExit(double timeout);
+
+    static void asyncPutThread(Channel* channel);
+    void startAsyncPutThread();
+    void notifyAsyncPutThreadExit();
+    void waitForAsyncPutThreadExit(double timeout);
+
+    bool asyncGetThreadRunning;
+    epics::pvData::Mutex asyncGetThreadMutex;
+    epicsEvent asyncGetThreadExitEvent;
+
+    bool asyncPutThreadRunning;
+    epics::pvData::Mutex asyncPutThreadMutex;
+    epicsEvent asyncPutThreadExitEvent;
+
+    struct AsyncRequest {
+        boost::python::object pyCallback;
+        boost::python::object pyErrorCallback;
+        std::string requestDescriptor;
+        epics::pvData::PVStructurePtr pvStructurePtr;
+        AsyncRequest(boost::python::object pyCallback_, boost::python::object pyErrorCallback_, const std::string& requestDescriptor_) 
+        : pyCallback(pyCallback_) 
+        , pyErrorCallback(pyErrorCallback_) 
+        , requestDescriptor(requestDescriptor_) 
+        {}
+        AsyncRequest(const epics::pvData::PVStructurePtr& pvStructurePtr_, boost::python::object pyCallback_, boost::python::object pyErrorCallback_, const std::string& requestDescriptor_) 
+        : pyCallback(pyCallback_) 
+        , pyErrorCallback(pyErrorCallback_) 
+        , requestDescriptor(requestDescriptor_) 
+        , pvStructurePtr(pvStructurePtr_) 
+        {}
+
+        // In some cases it seems like boost python object reference counts
+        // go below the minimum before destructor is called
+        ~AsyncRequest() {
+            if (pyCallback.ptr()->ob_refcnt <= 1) {
+                boost::python::incref(pyCallback.ptr());
+            }
+            if (pyErrorCallback.ptr()->ob_refcnt <= 1) {
+                boost::python::incref(pyErrorCallback.ptr());
+            }
+        }
+    };
+
+    typedef std::tr1::shared_ptr<AsyncRequest> AsyncRequestPtr;
+    SynchronizedQueue<AsyncRequestPtr> asyncGetRequestQueue;
+    SynchronizedQueue<AsyncRequestPtr> asyncPutRequestQueue;
+
+    bool shutdownInProgress;
 };
 
 inline std::string Channel::getName() const
@@ -228,7 +295,7 @@ inline bool Channel::isMonitorActive() const
     return monitorActive;
 }
 
-inline void Channel::setTimeout(double timeout) 
+inline void Channel::setTimeout(double timeout)
 {
     this->timeout = timeout;
 }
@@ -238,7 +305,7 @@ inline double Channel::getTimeout() const
     return timeout;
 }
 
-inline void Channel::setDefaultRequestDescriptor(const std::string& requestDescriptor) 
+inline void Channel::setDefaultRequestDescriptor(const std::string& requestDescriptor)
 {
     this->defaultRequestDescriptor = requestDescriptor;
 }
@@ -248,7 +315,7 @@ inline std::string Channel::getDefaultRequestDescriptor() const
     return defaultRequestDescriptor;
 }
 
-inline void Channel::setDefaultPutGetRequestDescriptor(const std::string& requestDescriptor) 
+inline void Channel::setDefaultPutGetRequestDescriptor(const std::string& requestDescriptor)
 {
     this->defaultPutGetRequestDescriptor = requestDescriptor;
 }
@@ -261,6 +328,16 @@ inline std::string Channel::getDefaultPutGetRequestDescriptor() const
 inline void Channel::notifyProcessingThreadExit()
 {
     processingThreadExitEvent.signal();
+}
+
+inline void Channel::notifyAsyncGetThreadExit()
+{
+    asyncGetThreadExitEvent.signal();
+}
+
+inline void Channel::notifyAsyncPutThreadExit()
+{
+    asyncPutThreadExitEvent.signal();
 }
 
 #endif

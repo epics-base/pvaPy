@@ -25,6 +25,7 @@ cd $EPICS_BUILD_DIR
 echo "Building epics base $EPICS_BASE_VERSION"
 EPICS_BASE_TAR_FILE=`basename $EPICS_BASE_DOWNLOAD_URL`
 if [ ! -f $EPICS_BASE_TAR_FILE ]; then
+    echo "Downloading $EPICS_BASE_DOWNLOAD_URL" 
     curl $EPICS_BASE_DOWNLOAD_URL -o $EPICS_BASE_TAR_FILE || exit 1
 fi
 tar zxf $EPICS_BASE_TAR_FILE

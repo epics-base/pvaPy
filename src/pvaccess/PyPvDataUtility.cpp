@@ -10,6 +10,7 @@
 #include "InvalidArgument.h"
 #include "InvalidRequest.h"
 #include "PvObject.h"
+
 #if PVA_API_VERSION == 440
 #include "pv/convert.h"
 #endif // if PVA_API_VERSION == 440
@@ -1052,7 +1053,15 @@ void addScalarFieldToDict(const std::string& fieldName, const pvd::PVStructurePt
         }
         case pvd::pvString: {
             std::string value = getStringField(fieldName, pvStructurePtr)->get();
-            pyDict[fieldName] = value;
+            try {
+                pyDict[fieldName] = value;
+            }
+            catch(const bp::error_already_set& ex) {
+                // String conversion failed, likely encoding issue
+                PyErr_Clear();
+                bp::object o(bp::handle<>(PyBytes_FromStringAndSize(reinterpret_cast<const char*>(value.c_str()), static_cast<Py_ssize_t>(value.size()))));
+                pyDict[fieldName] = o;
+            }
             break;
         }
         default: {

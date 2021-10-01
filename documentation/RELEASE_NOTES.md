@@ -1,7 +1,46 @@
-## Release 3.2.0 (2021/MM/DD)
+## Release 4.0.3 (2021/09/22)
+
+- added isConnected() method to the Channel class
+- introduced semi-permanent threads for asyncGet/asyncPut interfaces
+- conda/pip package dependencies: 
+  - EPICS BASE = 7.0.6
+  - BOOST      = 1.72.0
+  - NUMPY      < 1.21
+
+## Release 4.0.2 (2021/09/14)
+
+- fixed decoding error for strings that cannot be handled with utf-8 codec
+- conda/pip package dependencies: 
+  - EPICS BASE = 7.0.6
+  - BOOST      = 1.72.0
+  - NUMPY      < 1.21
+
+## Release 4.0.1 (2021/09/12)
+
+- updated asyncGet/asyncPut interfaces to allow exception callbacks, and fixed
+  async connection issue (GitHub Issue #68, PR #69)
+- conda/pip package dependencies: 
+  - EPICS BASE = 7.0.6
+  - BOOST      = 1.72.0
+  - NUMPY      < 1.21
+
+## Release 4.0.0 (2021/08/12)
 
 - disabled info printout for PvaServer unless the debug log level is
   set to INFO (8) or DEBUG (16) 
+- fixed issue with channel puts involving objects like PvTimeStamp or
+  PvAlarm (GitHub Issue #65, PR #66)
+- made performance enhancements for channel gets and puts in
+  multithreaded applications
+- added asyncGet/asyncPut interfaces to the Channel class
+- restricted numpy version to < 1.21 for conda and pip packages until 
+  boost python segfaults are resolved
+- added support for access security in the PvaServer class
+- fixed issue with timestamp processing in the PyPvRecord class
+- conda/pip package dependencies: 
+  - EPICS BASE = 7.0.6
+  - BOOST      = 1.72.0
+  - NUMPY      < 1.21
 
 ## Release 3.1.0 (2021/02/12)
 
