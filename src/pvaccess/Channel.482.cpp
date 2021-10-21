@@ -1038,7 +1038,7 @@ void Channel::startMonitor(const std::string& requestDescriptor)
     this->monitorRequestDescriptor = requestDescriptor;
 
     // If queue length is zero, there is no need for processing thread.
-    if (pvObjectQueue.getMaxLength() != 0) {
+    if (pvObjectQueue.getMaxLength() != 0 && !processingThreadRunning) {
         startProcessingThread();
     }
 
@@ -1077,7 +1077,8 @@ void Channel::startProcessingThread()
 {
     pvd::Lock lock(processingThreadMutex);
     if (!processingThreadRunning) {
-        epicsThreadCreate("ProcessingThread", epicsThreadPriorityHigh, epicsThreadGetStackSize(epicsThreadStackSmall), (EPICSTHREADFUNC)processingThread, this);
+        processingThreadRunning = true;
+        epicsThreadCreate("ProcessingThread", epicsThreadPriorityLow, epicsThreadGetStackSize(epicsThreadStackSmall), (EPICSTHREADFUNC)processingThread, this);
     }
     else {
         logger.warn("Processing thread is already running.");
