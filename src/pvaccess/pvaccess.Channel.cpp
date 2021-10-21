@@ -1281,7 +1281,7 @@ class_<Channel>("Channel",
         "Sets maximum monitor queue length. Negative number means unlimited length, while the value of zero disables monitor queue. When monitor queue is disabled, incoming data is processed immediately by all python subscribers (i.e., there is no processing thread running in the background). When monitoring queue is full, channel will not be polled for new data. Default monitor queue length is zero.\n\n"
         ":Parameter: *maxQueueLength* (int) - maximum queue length\n\n"
         "::\n\n"
-        "    channel.setMonitorMaxQueueLengthTimeout(10)\n\n")
+        "    channel.setMonitorMaxQueueLength(10)\n\n")
 
     .def("getIntrospectionDict",
         &Channel::getIntrospectionDict,
