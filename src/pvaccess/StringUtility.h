@@ -25,6 +25,8 @@ std::string trim(const std::string& s);
 std::vector<std::string>& split(const std::string& s, char delimiter, std::vector<std::string>& elements);
 std::vector<std::string> split(const std::string& s, char delimiter='.');
 
+std::string toLowerCase(const std::string& input);
+
 //
 // Template implementation
 //

@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include <sstream>
 #include "StringUtility.h"
 
 namespace StringUtility
@@ -90,6 +91,16 @@ std::vector<std::string> split(const std::string& s, char delimiter)
     std::vector<std::string> elements;
     split(s, delimiter, elements);
     return elements;
+}
+
+std::string toLowerCase(const std::string& input)
+{
+    std::stringstream ss;
+    for (unsigned int i = 0; i < input.size(); i++) {
+        char c = std::tolower(input.at(i));
+        ss << c;
+    }
+    return ss.str();
 }
 
 } // namespace StringUtility
