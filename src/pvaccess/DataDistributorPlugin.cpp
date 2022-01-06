@@ -21,7 +21,6 @@ using std::tr1::static_pointer_cast;
 using std::vector;
 using namespace epics::pvData;
 namespace epvd = epics::pvData;
-//namespace epvc = epics::pvCopy;
 
 namespace epics { namespace pvCopy {
 
@@ -32,15 +31,44 @@ static std::string name("distributor");
 bool DataDistributorPlugin::initialized(DataDistributorPlugin::initialize());
 
 PvaPyLogger DataDistributor::logger("DataDistributor");
+std::map<std::string, DataDistributorPtr> DataDistributor::dataDistributorMap;
+epics::pvData::Mutex DataDistributor::dataDistributorMapMutex;
 
-DataDistributor& DataDistributor::getInstance()
+DataDistributorPtr DataDistributor::getInstance(const std::string& id)
 {
-    static DataDistributor instance;
-    return instance;
+    epvd::Lock lock(dataDistributorMapMutex);
+    std::map<std::string,DataDistributorPtr>::iterator ddit = dataDistributorMap.find(id);
+    if (ddit != dataDistributorMap.end()) {
+        DataDistributorPtr ddPtr = ddit->second;
+        return ddPtr;
+    }
+    else {
+        DataDistributorPtr ddPtr(new DataDistributor(id));
+        dataDistributorMap[id] = ddPtr;
+        logger.debug("Created new data distributor: %s", id.c_str());
+        return ddPtr;
+    }
 }
 
-DataDistributor::DataDistributor()
-    : mutex()
+void DataDistributor::removeUnusedInstance(DataDistributorPtr dataDistributorPtr)
+{
+    epvd::Lock lock(dataDistributorMapMutex);
+    std::string distributorId = dataDistributorPtr->getId();
+    std::map<std::string,DataDistributorPtr>::iterator ddit = dataDistributorMap.find(distributorId);
+    if (ddit != dataDistributorMap.end()) {
+        DataDistributorPtr ddPtr = ddit->second;
+        int nGroups = ddPtr->consumerGroupMap.size();
+        logger.debug("Number of active consumer groups: %d", nGroups);
+        if (nGroups == 0) {
+            dataDistributorMap.erase(ddit);
+            logger.debug("Removed data distributor: %s", distributorId.c_str());
+        }
+    }
+}
+
+DataDistributor::DataDistributor(const std::string& id_)
+    : id(id_)
+    , mutex()
     , consumerGroupMap()
     , consumerGroupIdList()
     , currentGroupIdIter(consumerGroupIdList.end())
@@ -206,7 +234,8 @@ PVFilterPtr DataDistributorPlugin::create(
 
 DataDistributorFilter::~DataDistributorFilter()
 {
-    DataDistributor::getInstance().removeConsumer(consumerId, groupId);
+    dataDistributorPtr->removeConsumer(consumerId, groupId);
+    DataDistributor::removeUnusedInstance(dataDistributorPtr);
 }
 
 DataDistributorFilterPtr DataDistributorFilter::create(
@@ -224,6 +253,7 @@ DataDistributorFilterPtr DataDistributorFilter::create(
     std::vector<std::string> configItems2 = StringUtility::split(requestValue2, ';');
     int nUpdatesPerConsumer = 1;
     int updateMode = DataDistributor::DD_UPDATE_ONE_PER_GROUP;
+    std::string distributorId = "default";
     std::string groupId = "default";
     std::string distinguishingField = "timeStamp";
     for(unsigned int i = 0; i < configItems2.size(); i++) {
@@ -237,6 +267,11 @@ DataDistributorFilterPtr DataDistributorFilter::create(
             std::string svalue = configItem2.substr(ind+1);
             nUpdatesPerConsumer = atoi(svalue.c_str());
             logger.debug("Request spec for nUpdatesPerConsumer: %d", nUpdatesPerConsumer);
+        }
+        else if(configItem2.find("distributorid") == 0) {
+            std::string configItem = configItems[i];
+            distributorId = configItem.substr(ind+1);
+            logger.debug("Request spec for distributorId: %s", distributorId.c_str());
         }
         else if(configItem2.find("groupid") == 0) {
             std::string configItem = configItems[i];
@@ -258,19 +293,20 @@ DataDistributorFilterPtr DataDistributorFilter::create(
         return DataDistributorFilterPtr();
     }
     DataDistributorFilterPtr filter =
-         DataDistributorFilterPtr(new DataDistributorFilter(consumerId, groupId, distinguishingField, nUpdatesPerConsumer, updateMode, pvCopy, master));
+         DataDistributorFilterPtr(new DataDistributorFilter(distributorId, consumerId, groupId, distinguishingField, nUpdatesPerConsumer, updateMode, pvCopy, master));
     return filter;
 }
 
-DataDistributorFilter::DataDistributorFilter(int consumerId_, const std::string& groupId_, const std::string& distinguishingField_, int nUpdatesPerConsumer, int updateMode, const PVCopyPtr& copyPtr_, const epvd::PVFieldPtr& masterFieldPtr_)
-    : consumerId(consumerId_)
+DataDistributorFilter::DataDistributorFilter(const std::string& distributorId_, int consumerId_, const std::string& groupId_, const std::string& distinguishingField_, int nUpdatesPerConsumer, int updateMode, const PVCopyPtr& copyPtr_, const epvd::PVFieldPtr& masterFieldPtr_)
+    : dataDistributorPtr(DataDistributor::getInstance(distributorId_))
+    , consumerId(consumerId_)
     , groupId(groupId_)
     , distinguishingField(distinguishingField_)
     , masterFieldPtr(masterFieldPtr_)
     , distinguishingFieldPtr()
     , firstUpdate(true)
 {
-    distinguishingField = DataDistributor::getInstance().addConsumer(consumerId, groupId, distinguishingField, nUpdatesPerConsumer, updateMode);
+    distinguishingField = dataDistributorPtr->addConsumer(consumerId, groupId, distinguishingField, nUpdatesPerConsumer, updateMode);
     if(masterFieldPtr->getField()->getType() == epvd::structure) {
         epvd::PVStructurePtr pvStructurePtr = static_pointer_cast<epvd::PVStructure>(masterFieldPtr);
         if(pvStructurePtr) {
@@ -300,7 +336,7 @@ bool DataDistributorFilter::filter(const PVFieldPtr& pvCopy, const BitSetPtr& bi
         std::stringstream ss;
         ss << distinguishingFieldPtr;
         std::string distinguishingFieldValue = ss.str();
-        proceedWithUpdate = DataDistributor::getInstance().updateConsumer(consumerId, groupId, distinguishingFieldValue);
+        proceedWithUpdate = dataDistributorPtr->updateConsumer(consumerId, groupId, distinguishingFieldValue);
     }
 
     if(proceedWithUpdate) {

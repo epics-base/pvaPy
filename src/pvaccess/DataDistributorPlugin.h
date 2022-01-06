@@ -20,9 +20,11 @@ namespace epics { namespace pvCopy {
 
 class DataDistributorPlugin;
 class DataDistributorFilter;
+class DataDistributor;
 
 typedef std::tr1::shared_ptr<DataDistributorPlugin> DataDistributorPluginPtr;
 typedef std::tr1::shared_ptr<DataDistributorFilter> DataDistributorFilterPtr;
+typedef std::tr1::shared_ptr<DataDistributor> DataDistributorPtr;
 
 struct ConsumerGroup;
 typedef std::tr1::shared_ptr<ConsumerGroup> ConsumerGroupPtr;
@@ -62,18 +64,25 @@ public:
         DD_N_UPDATE_MODES = 2        // Number of valid update modes
     };
 
-    static DataDistributor& getInstance();
+    static DataDistributorPtr getInstance(const std::string& id);
+    static void removeUnusedInstance(DataDistributorPtr dataDistributorPtr);
+
     virtual ~DataDistributor();
+    std::string getId() const { return id; }
     std::string addConsumer(int consumerId, const std::string& groupId, const std::string& distinguishingField, int nUpdatesPerConsumer, int updateMode);
     void removeConsumer(int consumerId, const std::string& groupId);
     bool updateConsumer(int consumerId, const std::string& groupId, const std::string& distinguishingFieldValue);
 
 private:
-    DataDistributor();
+    DataDistributor(const std::string& id);
     DataDistributor(const DataDistributor& distributor);
     DataDistributor& operator=(const DataDistributor& distributor);
 
     static PvaPyLogger logger;
+    static std::map<std::string, DataDistributorPtr> dataDistributorMap;
+    static epics::pvData::Mutex dataDistributorMapMutex;
+
+    std::string id;
     epics::pvData::Mutex mutex;
     std::map<std::string, ConsumerGroupPtr> consumerGroupMap;
     std::list<std::string> consumerGroupIdList;
@@ -119,6 +128,7 @@ class epicsShareClass DataDistributorFilter : public PVFilter
 private:
     static PvaPyLogger logger;
 
+    DataDistributorPtr dataDistributorPtr;
     int consumerId;
     std::string groupId;
     std::string distinguishingField;
@@ -126,7 +136,7 @@ private:
     epics::pvData::PVFieldPtr distinguishingFieldPtr;
     bool firstUpdate;
 
-    DataDistributorFilter(int consumerId, const std::string& groupId, const std::string& distinguishingField, int nUpdatesPerConsumer, int updateMode, const epics::pvCopy::PVCopyPtr& copyPtr, const epics::pvData::PVFieldPtr& masterFieldPtr);
+    DataDistributorFilter(const std::string& distributorId, int consumerId, const std::string& groupId, const std::string& distinguishingField, int nUpdatesPerConsumer, int updateMode, const epics::pvCopy::PVCopyPtr& copyPtr, const epics::pvData::PVFieldPtr& masterFieldPtr);
 
 public:
     POINTER_DEFINITIONS(DataDistributorFilter);
