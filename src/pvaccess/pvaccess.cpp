@@ -69,6 +69,7 @@ void wrapPvaServer();
 
 #if PVA_API_VERSION >= 481
 void wrapMultiChannel();
+void wrapPvaGwServer();
 #endif // if PVA_API_VERSION >= 481
 
 void wrapScalarArrayPyOwner();
@@ -155,6 +156,7 @@ BOOST_PYTHON_MODULE(pvaccess)
 
 #if PVA_API_VERSION >= 481
     wrapMultiChannel();
+    wrapPvaGwServer();
 #endif // if PVA_API_VERSION >= 481
 
     wrapScalarArrayPyOwner(); 
