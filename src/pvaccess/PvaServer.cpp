@@ -13,6 +13,7 @@
 #include "PvaServer.h"
 #include "PyGilManager.h"
 
+namespace epvd = epics::pvData;
 namespace epvdb = epics::pvDatabase;
 
 const double PvaServer::ShutdownWaitTime(0.1);
@@ -122,6 +123,20 @@ void PvaServer::stop()
     waitForCallbackThreadExit(ShutdownWaitTime);
 }
 
+void PvaServer::initRecord(const std::string& channelName, const epics::pvData::PVStructurePtr& pvStructurePtr)
+{
+    PyPvRecordPtr record(PyPvRecord::create(channelName, pvStructurePtr));
+    if(!record.get()) {
+        throw PvaException("Failed to create PyPvRecord: " + channelName);
+    }
+    
+    epics::pvDatabase::PVDatabasePtr master = epics::pvDatabase::PVDatabase::getMaster();
+    if(!master->addRecord(record)) {
+        throw PvaException("Cannot add record to master database for channel: " + channelName);
+    }
+    recordMap[channelName] = record;
+}
+
 void PvaServer::initRecord(const std::string& channelName, const PvObject& pvObject, const boost::python::object& onWriteCallback) 
 {
     PyPvRecordPtr record(PyPvRecord::create(channelName, pvObject, callbackQueuePtr, onWriteCallback));
@@ -167,6 +182,15 @@ void PvaServer::update(const PvObject& pvObject)
     it->second->update(pvObject);
 }
 
+void PvaServer::update(const std::string& channelName, const epics::pvData::PVStructurePtr& pvStructurePtr)
+{
+    std::map<std::string, PyPvRecordPtr>::iterator it = recordMap.find(channelName);
+    if (it == recordMap.end()) {
+        throw ObjectNotFound("Master database does not have record for channel: " + channelName);
+    }
+    it->second->update(pvStructurePtr);
+}
+
 void PvaServer::update(const std::string& channelName, const PvObject& pvObject) 
 {
     std::map<std::string, PyPvRecordPtr>::iterator it = recordMap.find(channelName);
@@ -174,6 +198,15 @@ void PvaServer::update(const std::string& channelName, const PvObject& pvObject)
         throw ObjectNotFound("Master database does not have record for channel: " + channelName);
     }
     it->second->update(pvObject);
+}
+
+void PvaServer::addRecord(const std::string& channelName, const epics::pvData::PVStructurePtr& pvStructurePtr)
+{
+    std::map<std::string, PyPvRecordPtr>::iterator it = recordMap.find(channelName);
+    if (it != recordMap.end()) {
+        throw ObjectAlreadyExists("Master database already has record for channel: " + channelName);
+    }
+    initRecord(channelName, pvStructurePtr);
 }
 
 void PvaServer::addRecord(const std::string& channelName, const PvObject& pvObject, const boost::python::object& onWriteCallback)
@@ -269,9 +302,9 @@ void PvaServer::callbackThread(PvaServer* server)
             }
             record->executeCallback();
         }
-	catch (ObjectNotFound& ex) {
+        catch (ObjectNotFound& ex) {
             // Record has been deleted before we could get to update
-	}
+        }
         catch (InvalidState& ex) {
             // Queue empty, no PV updates received.
         }

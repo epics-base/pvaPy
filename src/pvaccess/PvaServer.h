@@ -6,15 +6,15 @@
 
 #include <string>
 #include <map>
-#include "boost/python/list.hpp"
-#include "pv/pvData.h"
-#include "pv/pvAccess.h"
-#include "pv/serverContext.h"
+#include <boost/python/list.hpp>
+#include <pv/pvData.h>
+#include <pv/pvAccess.h>
+#include <pv/serverContext.h>
+
 #include "PvObject.h"
 #include "PyPvRecord.h"
 #include "PvaPyLogger.h"
 #include "SynchronizedQueue.h"
-
 
 class PvaServer 
 {
@@ -29,9 +29,11 @@ public:
     virtual void initAs(const std::string& filePath, const std::string& substitutions);
     virtual bool isAsActive();
 #endif // if PVA_API_VERSION >= 483
+    virtual void update(const std::string& channelName, const epics::pvData::PVStructurePtr& pvStructurePtr);
     virtual void update(const PvObject& pvObject);
     virtual void update(const std::string& channelName, const PvObject& pvObject);
 
+    virtual void addRecord(const std::string& channelName, const epics::pvData::PVStructurePtr& pvStructurePtr);
 #ifndef WINDOWS
     virtual void addRecord(const std::string& channelName, const PvObject& pvObject, const boost::python::object& onWriteCallback = boost::python::object());
 #else
@@ -52,6 +54,9 @@ public:
     virtual boost::python::list getRecordNames();
     virtual void start();
     virtual void stop();
+
+protected:
+    void initRecord(const std::string& channelName, const epics::pvData::PVStructurePtr& pvStructurePtr);
 
 private:
     static const double ShutdownWaitTime;

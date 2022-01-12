@@ -21,6 +21,7 @@ class PyPvRecord :
     public epics::pvDatabase::PVRecord
 {
 public:
+    static PyPvRecordPtr create(const std::string& name, const epics::pvData::PVStructurePtr& pvStructurePtr);
     static PyPvRecordPtr create(const std::string& name, const PvObject& pvObject, const StringQueuePtr& callbackQueuePtr, const boost::python::object& onWriteCallback = boost::python::object());
 
 #if PVA_API_VERSION >= 483
@@ -32,9 +33,11 @@ public:
     virtual bool init();
     virtual void process();
     void update (const PvObject& pvObject);
+    void update (const epics::pvData::PVStructurePtr& pvStructurePtr);
     void executeCallback();
 private:
     static PvaPyLogger logger;
+    PyPvRecord(const std::string& name, const epics::pvData::PVStructurePtr& pvStructurePtr);
     PyPvRecord(const std::string& name, const PvObject& pvObject, const StringQueuePtr& callbackQueuePtr, const boost::python::object& onWriteCallback = boost::python::object());
 
 #if PVA_API_VERSION >= 483
