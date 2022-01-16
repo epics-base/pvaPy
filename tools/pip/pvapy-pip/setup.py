@@ -48,7 +48,7 @@ class BuildExt(build_ext):
         os.system(BUILD_SCRIPT)
 
 MODULE_VERSION = get_env_var('PVAPY_VERSION', DEFAULT_PVAPY_VERSION)
-MODULE_FILES = map(lambda f: f.replace('%s/' % MODULE_NAME, ''), find_files(MODULE_NAME))
+MODULE_FILES = list(map(lambda f: f.replace('%s/' % MODULE_NAME, ''), find_files(MODULE_NAME)))
 LONG_DESCRIPTION = open(README_FILE).read()
     
 setup(
