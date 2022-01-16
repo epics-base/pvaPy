@@ -221,6 +221,14 @@ PvaServer
     :members:
     :inherited-members:
 
+PvaGwServer
+-----------
+
+.. autoclass:: pvaccess.PvaGwServer()
+    :show-inheritance: 
+    :members:
+    :inherited-members:
+
 RpcServer
 ---------
 

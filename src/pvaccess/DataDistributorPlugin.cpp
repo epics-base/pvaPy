@@ -27,7 +27,7 @@ namespace epics { namespace pvCopy {
 PvaPyLogger DataDistributorPlugin::logger("DataDistributorPlugin");
 PvaPyLogger DataDistributorFilter::logger("DataDistributorFilter");
 
-static std::string name("distributor");
+static std::string name("pydistributor");
 bool DataDistributorPlugin::initialized(DataDistributorPlugin::initialize());
 
 PvaPyLogger DataDistributor::logger("DataDistributor");

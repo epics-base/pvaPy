@@ -58,31 +58,31 @@ class SrfbMonitor:
         return
 
     def process2(self, pv):
-        floatArray = pv['value'][0]['floatValue']
+        floatArray = pv['value'][0]['ubyteValue']
         return
 
     def process3(self, pv):
         pv.useNumPyArrays = False
-        floatArray = pv['value'][0]['floatValue']
+        floatArray = pv['value'][0]['ubyteValue']
         return
 
     def process4(self, pv):
         pv.useNumPyArrays = False
-        floatArray = pv['value'][0]['floatValue']
+        floatArray = pv['value'][0]['ubyteValue']
         sum = 0
         for value in floatArray:
             sum += value
         return
 
     def process5(self, pv):
-        floatArray = pv['value'][0]['floatValue']
+        floatArray = pv['value'][0]['ubyteValue']
         sum = 0
         for value in floatArray:
             sum += value
         return
 
     def process6(self, pv):
-        floatArray = pv['value'][0]['floatValue']
+        floatArray = pv['value'][0]['ubyteValue']
         sum = floatArray.sum()
         return
 
@@ -98,9 +98,9 @@ class SrfbMonitor:
         self.previousArrayId = arrayId
 
         if not self.arraySize:
-            self.nElements = len(pv['value'][0]['floatValue'])
-            self.arraySize = 4*self.nElements
-            print 'NTNDARRAY Size: %s MB, nElements: %s' % (self.arraySize/float(MEGA_BYTE), self.nElements)
+            self.nElements = len(pv['value'][0]['ubyteValue'])
+            self.arraySize = self.nElements
+            print('NTNDARRAY Size: %s MB, nElements: %s' % (self.arraySize/float(MEGA_BYTE), self.nElements))
 
         # Processing
         self.process(pv)
@@ -119,7 +119,7 @@ class SrfbMonitor:
         self.nReceivedArrays += 1
         nMissedArrays = arrayId - previousArrayId - 1
         if nMissedArrays < 0:
-            print "INVERSION FOR ARRAY ID: ", arrayId, "; PREVIOUS ARRAY ID: ", previousArrayId
+            print("INVERSION FOR ARRAY ID: ", arrayId, "; PREVIOUS ARRAY ID: ", previousArrayId)
         if nMissedArrays > self.maxMissedArrays:
             self.maxMissedArrays = nMissedArrays
         self.nTotalMissedArrays += nMissedArrays 
@@ -128,25 +128,25 @@ class SrfbMonitor:
         averageMissed = self.nTotalMissedArrays/float(self.nReceivedArrays)
         self.missedArraysStats.add(nMissedArrays)
         if self.nReceivedArrays % 100 == 0:
-            print 'NTNDARRAY ID %s; Arrays Missed: %s (Average Missed Per Cycle: %s, Max. Missed Per Cycle: %s, Total Missed: %s), Total Received: %s; Array Receiving Rate: %s [Hz], Data Receiving Rate: %s [MB/s]; Runtime: %s [s]' % (arrayId, nMissedArrays, averageMissed, self.maxMissedArrays, self.nTotalMissedArrays, self.nReceivedArrays, arrayRate, dataRate, deltaT) 
+            print('NTNDARRAY ID %s; Arrays Missed: %s (Average Missed Per Cycle: %s, Max. Missed Per Cycle: %s, Total Missed: %s), Total Received: %s; Array Receiving Rate: %s [Hz], Data Receiving Rate: %s [MB/s]; Runtime: %s [s]' % (arrayId, nMissedArrays, averageMissed, self.maxMissedArrays, self.nTotalMissedArrays, self.nReceivedArrays, arrayRate, dataRate, deltaT) )
             self.missedArraysStats.calculate()
-            print self.missedArraysStats
-            print
+            print(self.missedArraysStats)
+            print()
 
 if __name__ == '__main__':
     maxQueueSize = 10
-    c = Channel('srfb_ndarray')
-    c.setMonitorMaxQueueLength(maxQueueSize)
-    for i in range (0,100):
-        print "TEST: ", i
+    c = Channel('pvapy:image')
+    #c.setMonitorMaxQueueLength(maxQueueSize)
+    for i in range (0,1):
+        print("TEST: ", i)
         srfbMonitor = SrfbMonitor(10*(maxQueueSize+1))
         c.subscribe('monitor', srfbMonitor.monitor)
         c.startMonitor('')
         time.sleep(10)
-        print "Stopping monitor"
+        print("Stopping monitor")
         c.stopMonitor()
-        print "Unsubscribing monitor"
+        print("Unsubscribing monitor")
         c.unsubscribe('monitor')
-        print "TEST: ", i, " DONE"
+        print("TEST: ", i, " DONE")
         time.sleep(3)
 

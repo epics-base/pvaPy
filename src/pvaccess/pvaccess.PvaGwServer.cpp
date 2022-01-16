@@ -43,6 +43,29 @@ class_<PvaGwServer, bases<PvaServer> >("PvaGwServer",
         "::\n\n"
         "    pvaGwServer.removeRecord('gwPair')\n\n")
 
+    .def("removeAllGwRecords",
+        static_cast<void(PvaGwServer::*)()>(&PvaGwServer::removeAllGwRecords),
+        "Removes all gateway PV records from the server database.\n\n"
+        ":Raises: *PvaException* - in case of any errors\n\n"
+        "::\n\n"
+        "    pvaGwServer.removeAllGwRecords()\n\n")
+
+    .def("hasGwRecord",
+        static_cast<bool(PvaGwServer::*)(const std::string&)>(&PvaGwServer::hasGwRecord),
+        args("gwChannelName"),
+        "Determines if server database contains gateway PV record associated with a given channel name.\n\n"
+        ":Parameter: *gwChannelName* (str) - gateway channel name\n\n"
+        ":Returns: True if record exists, false otherwise\n\n"
+        "::\n\n"
+        "    if pvaGwServer.hasGwRecord('pair'): print('Server contains gateway pair channel.)'\n\n")
+
+    .def("getGwRecordNames",
+        static_cast<boost::python::list(PvaGwServer::*)()>(&PvaGwServer::getGwRecordNames),
+        "Retrieves existing gateway channel names from the server's database.\n\n"
+        ":Returns: list of known gateway channel names\n\n"
+        "::\n\n"
+        "    gwRecordNames = pvaGwServer.getGwRecordNames()\n\n")
+
 ;
 } // wrapPvaGwServer()
 

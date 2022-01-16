@@ -210,6 +210,7 @@ PvaGwServer::PvaGwServer(const PvaGwServer& pvaGwServer)
 
 PvaGwServer::~PvaGwServer() 
 {
+    removeAllGwRecords();
     removeAllRecords();
     stop();
 }
@@ -243,5 +244,37 @@ void PvaGwServer::removeGwRecord(const std::string& gwChannelName)
     }
     gwChannelMap.erase(it);
     logger.debug("Removed GW record: " + gwChannelName);
+}
+
+void PvaGwServer::removeAllGwRecords()
+{
+    std::list<std::string> gwRecordNames;
+    typedef std::map<std::string, GwChannelPtr>::iterator MI;
+    for (MI it = gwChannelMap.begin(); it != gwChannelMap.end(); it++) {
+        gwRecordNames.push_back(it->first);
+    }
+
+    typedef std::list<std::string>::iterator LI;
+    for (LI it = gwRecordNames.begin(); it != gwRecordNames.end(); ++it) {
+        removeGwRecord(*it);
+    }
+}
+
+bool PvaGwServer::hasGwRecord(const std::string& gwChannelName)
+{
+    if (gwChannelMap.find(gwChannelName) != gwChannelMap.end()) {
+        return true;
+    }
+    return false;
+}
+
+boost::python::list PvaGwServer::getGwRecordNames()
+{
+    boost::python::list gwRecordNames;
+    typedef std::map<std::string, GwChannelPtr>::iterator MI;
+    for (MI it = gwChannelMap.begin(); it != gwChannelMap.end(); it++) {
+        gwRecordNames.append(it->first);
+    }
+    return gwRecordNames;
 }
 
