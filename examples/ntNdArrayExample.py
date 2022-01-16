@@ -38,21 +38,22 @@ def createImage(id, nx, ny, colorMode, extraFieldsPvObject=None):
 def main():
     server = pva.PvaServer()
     server.start()
-    N_IMAGES = 100
+    N_IMAGES = 100000
     NX = 1024
     NY = 1024
     COLOR_MODE = 0
-    IMAGE_RATE = 1.0 # Hz
+    IMAGE_RATE = 10.0 # Hz
     EXTRA_FIELDS_OBJECT = pva.PvObject({'customField1' : pva.INT, 'customField2' : pva.STRING}, {'customField1' : 10, 'customField2' : 'GeneratedBy: PvaPy'})
     CHANNEL = 'pvapy:image'
     for i in range(0,N_IMAGES):
         print('Image id: {}'.format(i))
         image = createImage(i, NX, NY, COLOR_MODE, EXTRA_FIELDS_OBJECT)
-        time.sleep(1/IMAGE_RATE)
         if i == 0:
             server.addRecord(CHANNEL, image)
+            time.sleep(1)
         else:
             server.update(CHANNEL, image)
+        time.sleep(1/IMAGE_RATE)
 
 
 if __name__ == '__main__':
