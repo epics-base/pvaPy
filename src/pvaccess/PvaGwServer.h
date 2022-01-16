@@ -100,6 +100,10 @@ public:
     virtual void addGwRecord(const std::string& gwChannelName, const std::string& srcChannelName, PvProvider::ProviderType srcProviderType);
     virtual void removeGwRecord(const std::string& gwChannelName);
 
+    virtual void removeAllGwRecords();
+    virtual bool hasGwRecord(const std::string& gwChannelName);
+    virtual boost::python::list getGwRecordNames();
+
 private:
 
     static PvaPyLogger logger;
