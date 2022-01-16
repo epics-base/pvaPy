@@ -1,3 +1,12 @@
+## Release 4.1.0 (2022/01/DD)
+
+- introduced PVA server gateway class
+- added distributor plugin for the PVA server
+- conda/pip package dependencies: 
+  - EPICS BASE = 7.0.6.1
+  - BOOST      = 1.78.0
+  - NUMPY      < 1.21 || >= 1.22
+
 ## Release 4.0.3 (2021/09/22)
 
 - added isConnected() method to the Channel class
