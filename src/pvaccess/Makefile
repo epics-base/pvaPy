@@ -104,7 +104,6 @@ pvaccess_SRCS += ChannelPutRequesterImpl.cpp
 pvaccess_SRCS += ChannelRequesterImpl.cpp
 #pvaccess_SRCS += ChannelRpcServiceImpl.cpp
 pvaccess_SRCS += ChannelTimeout.cpp
-pvaccess_SRCS += DataDistributorPlugin.cpp
 pvaccess_SRCS += FieldNotFound.cpp
 pvaccess_SRCS += GetFieldRequesterImpl.cpp
 pvaccess_SRCS += InvalidArgument.cpp
@@ -164,11 +163,12 @@ pvaccess_SRCS += RpcTimeout.cpp
 pvaccess_SRCS += StringUtility.cpp
 
 with_pvaClient := $(shell $(PERL) -e "print $(PVA_API_VERSION) >= 450")
-pvaccess_1_SRCS += pvaccess.PvaServer.cpp
 pvaccess_1_SRCS += pvaccess.PvaGwServer.cpp
-pvaccess_1_SRCS += PvaServer.cpp
+pvaccess_1_SRCS += pvaccess.PvaServer.cpp
+pvaccess_1_SRCS += DataDistributorPlugin.cpp
 pvaccess_1_SRCS += PvaGwServer.cpp
 pvaccess_1_SRCS += PyPvRecord.cpp
+pvaccess_1_SRCS += PvaServer.cpp
 pvaccess_SRCS += $(pvaccess_$(with_pvaClient)_SRCS)
 
 pvaccess_1_LIBS += pvaClient
