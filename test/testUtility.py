@@ -117,8 +117,8 @@ class TestUtility:
         return random.uniform(-1,1)
 
     @classmethod
-    def getRandomString(cls):
-        size = int(random.uniform(1,256))
+    def getRandomString(cls, nChars=256):
+        size = int(random.uniform(1,nChars))
         allowedValues = string.ascii_uppercase + string.ascii_lowercase + string.digits
         return ''.join(random.choice(allowedValues) for _ in range(size))
 
