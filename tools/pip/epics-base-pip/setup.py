@@ -53,7 +53,7 @@ class BuildExt(build_ext):
     os.system(BUILD_SCRIPT)
 
 MODULE_VERSION = get_env_var('EPICS_BASE_VERSION', DEFAULT_EPICS_BASE_VERSION) 
-MODULE_FILES = map(lambda f: f.replace('%s/' % MODULE_NAME, ''), find_files(MODULE_NAME))
+MODULE_FILES = list(map(lambda f: f.replace('%s/' % MODULE_NAME, ''), find_files(MODULE_NAME)))
 ##MODULE_SCRIPTS = [f for f in find_files('%s/bin' % MODULE_NAME) if os.path.basename(f) in EXECUTABLES]
 
 setup(

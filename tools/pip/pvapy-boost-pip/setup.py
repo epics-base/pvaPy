@@ -38,7 +38,7 @@ class BuildExt(build_ext):
     os.system(BUILD_SCRIPT)
 
 MODULE_VERSION = get_env_var('BOOST_VERSION', DEFAULT_BOOST_VERSION)
-MODULE_FILES = map(lambda f: f.replace('%s/' % MODULE_NAME, ''), find_files(MODULE_NAME))
+MODULE_FILES = list(map(lambda f: f.replace('%s/' % MODULE_NAME, ''), find_files(MODULE_NAME)))
 
 setup(
   name = MODULE_NAME,
