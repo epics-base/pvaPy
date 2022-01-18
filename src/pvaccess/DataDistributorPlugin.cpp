@@ -178,6 +178,7 @@ bool DataDistributor::updateConsumer(int consumerId, const std::string& groupId,
                 groupPtr->currentConsumerIdIter++;
                 groupPtr->updateCounter = 0;
                 currentGroupIdIter++;
+                logger.debug("Group %s is done with updates for the moment", groupId.c_str());
             }
             break;
         }
@@ -185,15 +186,18 @@ bool DataDistributor::updateConsumer(int consumerId, const std::string& groupId,
             proceedWithUpdate = true;
             static unsigned int nConsumersUpdated = 0;
             if (groupPtr->lastUpdateValue != distinguishingFieldValue) {
+                groupPtr->lastUpdateValue = distinguishingFieldValue;
                 groupPtr->updateCounter++;
                 nConsumersUpdated = 0;
             }
             nConsumersUpdated++;
+            logger.debug("Group %s: number of consumers updated: %d, update counter: %d", groupId.c_str(), nConsumersUpdated, groupPtr->updateCounter);
             if (nConsumersUpdated == groupPtr->consumerIdList.size() && groupPtr->updateCounter >= groupPtr->nUpdatesPerConsumer) {
                 // This group is done.
                 lastUpdateValue = distinguishingFieldValue;
                 groupPtr->updateCounter = 0;
                 currentGroupIdIter++;
+                logger.debug("Group %s is done with updates for the moment", groupId.c_str());
             }
             break;
         }
