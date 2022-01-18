@@ -45,7 +45,8 @@ distributed between clients in a group (default: "0"); valid modes are:
 - distributorId: client applications may configure multiple distributors
 (e.g., one per channel in a PVA server), and this parameter designates
 distributor id from which client application wants to receive updates
-(default value: "default")
+(default value: "default"); distributor instances are completely independent
+and have separate sets of client groups
 
 The plugin obeys the following rules:
 
