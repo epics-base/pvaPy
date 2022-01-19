@@ -137,6 +137,15 @@ void PvaServer::initRecord(const std::string& channelName, const epics::pvData::
     recordMap[channelName] = record;
 }
 
+void PvaServer::disableRecordProcessing(const std::string& channelName)
+{
+    std::map<std::string, PyPvRecordPtr>::iterator it = recordMap.find(channelName);
+    if (it == recordMap.end()) {
+        throw ObjectNotFound("Master database does not have record for channel: " + channelName);
+    }
+    it->second->disableProcessing();
+}
+
 void PvaServer::initRecord(const std::string& channelName, const PvObject& pvObject, const boost::python::object& onWriteCallback) 
 {
     PyPvRecordPtr record(PyPvRecord::create(channelName, pvObject, callbackQueuePtr, onWriteCallback));

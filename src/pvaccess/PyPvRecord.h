@@ -35,6 +35,8 @@ public:
     void update (const PvObject& pvObject);
     void update (const epics::pvData::PVStructurePtr& pvStructurePtr);
     void executeCallback();
+    void disableProcessing();
+
 private:
     static PvaPyLogger logger;
     PyPvRecord(const std::string& name, const epics::pvData::PVStructurePtr& pvStructurePtr);
@@ -46,6 +48,7 @@ private:
 
     StringQueuePtr callbackQueuePtr; 
     boost::python::object onWriteCallback;
+    bool processingEnabled;
 
 };
 

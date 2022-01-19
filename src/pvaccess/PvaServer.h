@@ -52,6 +52,8 @@ public:
     virtual void removeAllRecords();
     virtual bool hasRecord(const std::string& channelName);
     virtual boost::python::list getRecordNames();
+    virtual void disableRecordProcessing(const std::string& channelName);
+
     virtual void start();
     virtual void stop();
 

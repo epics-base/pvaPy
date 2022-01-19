@@ -38,6 +38,7 @@ void MirrorChannelDataProcessor::processMonitorData(epvd::PVStructurePtr pvStruc
         epvd::PVStructurePtr pvStructurePtr2(epvd::getPVDataCreate()->createPVStructure(pvStructurePtr->getStructure()));
         pvStructurePtr2->copyUnchecked(*pvStructurePtr);
         pvaMirrorServer->addRecord(mirrorChannelName, pvStructurePtr2);
+        pvaMirrorServer->disableRecordProcessing(mirrorChannelName);
         recordAdded = true;
     }
     else {

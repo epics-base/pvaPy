@@ -45,16 +45,18 @@ PyPvRecordPtr PyPvRecord::create(const std::string& name, const PvObject& pvObje
 #endif // if PVA_API_VERSION >= 483
 
 PyPvRecord::PyPvRecord(const std::string& name, const epics::pvData::PVStructurePtr& pvStructurePtr)
-    : epvdb::PVRecord(name, pvStructurePtr),
-    callbackQueuePtr(),
-    onWriteCallback()
+    : epvdb::PVRecord(name, pvStructurePtr)
+    , callbackQueuePtr()
+    , onWriteCallback()
+    , processingEnabled(true)
 {
 }
 
 PyPvRecord::PyPvRecord(const std::string& name, const PvObject& pvObject, const StringQueuePtr& callbackQueuePtr_, const bp::object& onWriteCallback_)
-    : epvdb::PVRecord(name, pvObject.getPvStructurePtr()),
-    callbackQueuePtr(callbackQueuePtr_),
-    onWriteCallback(onWriteCallback_)
+    : epvdb::PVRecord(name, pvObject.getPvStructurePtr())
+    , callbackQueuePtr(callbackQueuePtr_)
+    , onWriteCallback(onWriteCallback_)
+    , processingEnabled(true)
 {
     if(!PyUtility::isPyNone(onWriteCallback)) {
         PyGilManager::evalInitThreads();
@@ -64,9 +66,10 @@ PyPvRecord::PyPvRecord(const std::string& name, const PvObject& pvObject, const 
 #if PVA_API_VERSION >= 483
 
 PyPvRecord::PyPvRecord(const std::string& name, const PvObject& pvObject, int asLevel, const std::string& asGroup, const StringQueuePtr& callbackQueuePtr_, const bp::object& onWriteCallback_)
-    : epvdb::PVRecord(name, pvObject.getPvStructurePtr(), asLevel, asGroup),
-    callbackQueuePtr(callbackQueuePtr_),
-    onWriteCallback(onWriteCallback_)
+    : epvdb::PVRecord(name, pvObject.getPvStructurePtr(), asLevel, asGroup)
+    , callbackQueuePtr(callbackQueuePtr_)
+    , onWriteCallback(onWriteCallback_)
+    , processingEnabled(true)
 {
     if(!PyUtility::isPyNone(onWriteCallback)) {
         PyGilManager::evalInitThreads();
@@ -87,6 +90,9 @@ bool PyPvRecord::init()
 
 void PyPvRecord::process() 
 {
+    if(!processingEnabled) {
+        return;
+    }
     if(!PyUtility::isPyNone(onWriteCallback)) {
         callbackQueuePtr->push(getRecordName());
     }
@@ -134,5 +140,10 @@ void PyPvRecord::update(const epvd::PVStructurePtr& pvStructurePtr)
         throw;
     }
     unlock();
+}
+
+void PyPvRecord::disableProcessing() 
+{
+    processingEnabled = false;
 }
 
