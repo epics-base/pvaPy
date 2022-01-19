@@ -64,7 +64,7 @@ setup(
         MODULE_NAME :  MODULE_FILES,
     },
     install_requires=[
-        'numpy<1.21',
+        'numpy>=1.22',
     ],
     ext_modules=[MODULE],
     cmdclass = {'build_ext': BuildExt}
