@@ -1,8 +1,8 @@
 // Copyright information and license terms for this software can be
 // found in the file LICENSE that is included with the distribution
 
-#ifndef PVA_GW_SERVER_H
-#define PVA_GW_SERVER_H
+#ifndef PVA_MIRROR_SERVER_H
+#define PVA_MIRROR_SERVER_H
 
 #include <string>
 #include <map>
@@ -21,17 +21,17 @@
 #include "PvaPyLogger.h"
 #include "PvaServer.h"
 
-class PvaGwServer;
-class GwChannelDataProcessor;
-typedef std::tr1::shared_ptr<GwChannelDataProcessor> GwChannelDataProcessorPtr;
-class GwChannel;
-typedef std::tr1::shared_ptr<GwChannel> GwChannelPtr;
+class PvaMirrorServer;
+class MirrorChannelDataProcessor;
+typedef std::tr1::shared_ptr<MirrorChannelDataProcessor> MirrorChannelDataProcessorPtr;
+class MirrorChannel;
+typedef std::tr1::shared_ptr<MirrorChannel> MirrorChannelPtr;
  
-class GwChannelDataProcessor : public ChannelMonitorDataProcessor
+class MirrorChannelDataProcessor : public ChannelMonitorDataProcessor
 {
 public:
-    GwChannelDataProcessor(PvaGwServer* pvaGwServer, const std::string& gwChannelName);
-    virtual ~GwChannelDataProcessor();
+    MirrorChannelDataProcessor(PvaMirrorServer* pvaMirrorServer, const std::string& mirrorChannelName);
+    virtual ~MirrorChannelDataProcessor();
 
     virtual void processMonitorData(epics::pvData::PVStructurePtr pvStructurePtr);
     virtual void onChannelConnect();
@@ -39,8 +39,8 @@ public:
 
 private:
     static PvaPyLogger logger;
-    PvaGwServer *pvaGwServer;
-    std::string gwChannelName;
+    PvaMirrorServer *pvaMirrorServer;
+    std::string mirrorChannelName;
     epics::pvData::Mutex mutex;
     bool recordAdded;
 };
@@ -49,13 +49,13 @@ private:
 // The purpose of this class is to simply establish channel monitor to 
 // provide updates to the PVA server record
 
-class GwChannel : public ChannelMonitorDataProcessor
+class MirrorChannel : public ChannelMonitorDataProcessor
 {
 public:
 
-    GwChannel(const std::string& channelName, PvProvider::ProviderType providerType, GwChannelDataProcessorPtr dataProcessorPtr);
-    GwChannel(const GwChannel& gwChannel);
-    virtual ~GwChannel();
+    MirrorChannel(const std::string& channelName, PvProvider::ProviderType providerType, MirrorChannelDataProcessorPtr dataProcessorPtr);
+    MirrorChannel(const MirrorChannel& mirrorChannel);
+    virtual ~MirrorChannel();
 
     bool isChannelConnected() const;
     std::string getChannelName() const;
@@ -82,7 +82,7 @@ private:
 
     std::string channelName;
     PvProvider::ProviderType providerType;
-    GwChannelDataProcessorPtr dataProcessorPtr;
+    MirrorChannelDataProcessorPtr dataProcessorPtr;
 
     bool isConnected;
     bool hasIssuedConnect;
@@ -90,24 +90,24 @@ private:
     epics::pvaClient::PvaClientChannelStateChangeRequesterPtr stateRequester;
 };
 
-class PvaGwServer : public PvaServer
+class PvaMirrorServer : public PvaServer
 {
 public:
-    PvaGwServer();
-    PvaGwServer(const PvaGwServer&);
-    virtual ~PvaGwServer();
+    PvaMirrorServer();
+    PvaMirrorServer(const PvaMirrorServer&);
+    virtual ~PvaMirrorServer();
 
-    virtual void addGwRecord(const std::string& gwChannelName, const std::string& srcChannelName, PvProvider::ProviderType srcProviderType);
-    virtual void removeGwRecord(const std::string& gwChannelName);
+    virtual void addMirrorRecord(const std::string& mirrorChannelName, const std::string& srcChannelName, PvProvider::ProviderType srcProviderType);
+    virtual void removeMirrorRecord(const std::string& mirrorChannelName);
 
-    virtual void removeAllGwRecords();
-    virtual bool hasGwRecord(const std::string& gwChannelName);
-    virtual boost::python::list getGwRecordNames();
+    virtual void removeAllMirrorRecords();
+    virtual bool hasMirrorRecord(const std::string& mirrorChannelName);
+    virtual boost::python::list getMirrorRecordNames();
 
 private:
 
     static PvaPyLogger logger;
-    std::map<std::string, GwChannelPtr> gwChannelMap;
+    std::map<std::string, MirrorChannelPtr> mirrorChannelMap;
 };
 
 #endif

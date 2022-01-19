@@ -221,10 +221,10 @@ PvaServer
     :members:
     :inherited-members:
 
-PvaGwServer
------------
+PvaMirrorServer
+---------------
 
-.. autoclass:: pvaccess.PvaGwServer()
+.. autoclass:: pvaccess.PvaMirrorServer()
     :show-inheritance: 
     :members:
     :inherited-members:
