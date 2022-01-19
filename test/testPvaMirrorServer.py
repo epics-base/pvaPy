@@ -3,10 +3,10 @@ import time
 import pvaccess as pva
 from testUtility import TestUtility
 
-class TestPvaGwServer:
+class TestPvaMirrorServer:
 
-    def testAddAndRemoveGwRecord(self):
-        s = pva.PvaGwServer()
+    def testAddAndRemoveMirrorRecord(self):
+        s = pva.PvaMirrorServer()
 
         value = TestUtility.getRandomShort()
         c = TestUtility.getShortChannel()
@@ -16,17 +16,17 @@ class TestPvaGwServer:
         print('Retrieved value from channel %s: %s' % (c.getName(), value2))
         assert(value == value2)
 
-        gwChannelName = 'gw_' + TestUtility.getRandomString(5)
-        s.addGwRecord(gwChannelName , c.getName(), pva.PVA)
+        mirrorChannelName = 'mirror_' + TestUtility.getRandomString(5)
+        s.addMirrorRecord(mirrorChannelName , c.getName(), pva.PVA)
         time.sleep(1.0)
-        c2 = pva.Channel(gwChannelName)
+        c2 = pva.Channel(mirrorChannelName)
         value2 = c2.get().getPyObject()
-        print('Retrieved value from gateway channel %s: %s' % (gwChannelName, value2))
+        print('Retrieved value from mirror channel %s: %s' % (mirrorChannelName, value2))
         assert(value == value2)
 
-        assert(len(s.getGwRecordNames()) == 1)
+        assert(len(s.getMirrorRecordNames()) == 1)
         assert(len(s.getRecordNames()) == 1)
-        s.removeGwRecord(gwChannelName)
-        assert(len(s.getGwRecordNames()) == 0)
+        s.removeMirrorRecord(mirrorChannelName)
+        assert(len(s.getMirrorRecordNames()) == 0)
         assert(len(s.getRecordNames()) == 0)
         s.stop()
