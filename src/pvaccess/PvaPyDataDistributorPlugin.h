@@ -1,8 +1,8 @@
 // Copyright information and license terms for this software can be
 // found in the file LICENSE that is included with the distribution
 
-#ifndef DATA_DISTRIBUTOR_PLUGIN_H
-#define DATA_DISTRIBUTOR_PLUGIN_H
+#ifndef PVAPY_DATA_DISTRIBUTOR_PLUGIN_H
+#define PVAPY_DATA_DISTRIBUTOR_PLUGIN_H
 
 
 #include <string>
@@ -18,13 +18,13 @@
 
 namespace epics { namespace pvCopy {
 
-class DataDistributorPlugin;
-class DataDistributorFilter;
-class DataDistributor;
+class PvaPyDataDistributorPlugin;
+class PvaPyDataDistributorFilter;
+class PvaPyDataDistributor;
 
-typedef std::tr1::shared_ptr<DataDistributorPlugin> DataDistributorPluginPtr;
-typedef std::tr1::shared_ptr<DataDistributorFilter> DataDistributorFilterPtr;
-typedef std::tr1::shared_ptr<DataDistributor> DataDistributorPtr;
+typedef std::tr1::shared_ptr<PvaPyDataDistributorPlugin> PvaPyDataDistributorPluginPtr;
+typedef std::tr1::shared_ptr<PvaPyDataDistributorFilter> PvaPyDataDistributorFilterPtr;
+typedef std::tr1::shared_ptr<PvaPyDataDistributor> PvaPyDataDistributorPtr;
 
 struct ConsumerGroup;
 typedef std::tr1::shared_ptr<ConsumerGroup> ConsumerGroupPtr;
@@ -55,7 +55,7 @@ struct ConsumerGroup
     std::list<int>::iterator currentConsumerIdIter;
 };
 
-class DataDistributor 
+class PvaPyDataDistributor 
 {
 public:
     enum ConsumerUpdateMode {
@@ -64,22 +64,22 @@ public:
         DD_N_UPDATE_MODES = 2        // Number of valid update modes
     };
 
-    static DataDistributorPtr getInstance(const std::string& id);
-    static void removeUnusedInstance(DataDistributorPtr dataDistributorPtr);
+    static PvaPyDataDistributorPtr getInstance(const std::string& id);
+    static void removeUnusedInstance(PvaPyDataDistributorPtr dataDistributorPtr);
 
-    virtual ~DataDistributor();
+    virtual ~PvaPyDataDistributor();
     std::string getId() const { return id; }
     std::string addConsumer(int consumerId, const std::string& groupId, const std::string& distinguishingField, int nUpdatesPerConsumer, int updateMode);
     void removeConsumer(int consumerId, const std::string& groupId);
     bool updateConsumer(int consumerId, const std::string& groupId, const std::string& distinguishingFieldValue);
 
 private:
-    DataDistributor(const std::string& id);
-    DataDistributor(const DataDistributor& distributor);
-    DataDistributor& operator=(const DataDistributor& distributor);
+    PvaPyDataDistributor(const std::string& id);
+    PvaPyDataDistributor(const PvaPyDataDistributor& distributor);
+    PvaPyDataDistributor& operator=(const PvaPyDataDistributor& distributor);
 
     static PvaPyLogger logger;
-    static std::map<std::string, DataDistributorPtr> dataDistributorMap;
+    static std::map<std::string, PvaPyDataDistributorPtr> dataDistributorMap;
     static epics::pvData::Mutex dataDistributorMapMutex;
 
     std::string id;
@@ -90,13 +90,13 @@ private:
     std::string lastUpdateValue;
 };
 
-class epicsShareClass DataDistributorPlugin : public PVPlugin
+class epicsShareClass PvaPyDataDistributorPlugin : public PVPlugin
 {
 private:
-    DataDistributorPlugin();
+    PvaPyDataDistributorPlugin();
 public:
-    POINTER_DEFINITIONS(DataDistributorPlugin);
-    virtual ~DataDistributorPlugin();
+    POINTER_DEFINITIONS(PvaPyDataDistributorPlugin);
+    virtual ~PvaPyDataDistributorPlugin();
     /**
      * Factory
      */
@@ -123,12 +123,12 @@ private:
 /**
  * @brief  A Plugin for a filter that gets a sub array from a PVScalarDeadband.
  */
-class epicsShareClass DataDistributorFilter : public PVFilter
+class epicsShareClass PvaPyDataDistributorFilter : public PVFilter
 {
 private:
     static PvaPyLogger logger;
 
-    DataDistributorPtr dataDistributorPtr;
+    PvaPyDataDistributorPtr dataDistributorPtr;
     int consumerId;
     std::string groupId;
     std::string distinguishingField;
@@ -136,19 +136,19 @@ private:
     epics::pvData::PVFieldPtr distinguishingFieldPtr;
     bool firstUpdate;
 
-    DataDistributorFilter(const std::string& distributorId, int consumerId, const std::string& groupId, const std::string& distinguishingField, int nUpdatesPerConsumer, int updateMode, const epics::pvCopy::PVCopyPtr& copyPtr, const epics::pvData::PVFieldPtr& masterFieldPtr);
+    PvaPyDataDistributorFilter(const std::string& distributorId, int consumerId, const std::string& groupId, const std::string& distinguishingField, int nUpdatesPerConsumer, int updateMode, const epics::pvCopy::PVCopyPtr& copyPtr, const epics::pvData::PVFieldPtr& masterFieldPtr);
 
 public:
-    POINTER_DEFINITIONS(DataDistributorFilter);
-    virtual ~DataDistributorFilter();
+    POINTER_DEFINITIONS(PvaPyDataDistributorFilter);
+    virtual ~PvaPyDataDistributorFilter();
     /**
-     * Create a DataDistributorFilter.
+     * Create a PvaPyDataDistributorFilter.
      * @param requestValue The value part of a name=value request option.
      * @param master The field in the master PVStructure to which the PVFilter will be attached.
      * @return The PVFilter.
      * A null is returned if master or requestValue is not appropriate for the plugin.
      */
-    static DataDistributorFilterPtr create(
+    static PvaPyDataDistributorFilterPtr create(
         const std::string& requestValue,
         const PVCopyPtr& pvCopy,
         const epics::pvData::PVFieldPtr & master);

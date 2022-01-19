@@ -165,8 +165,8 @@ pvaccess_SRCS += StringUtility.cpp
 with_pvaClient := $(shell $(PERL) -e "print $(PVA_API_VERSION) >= 450")
 pvaccess_1_SRCS += pvaccess.PvaMirrorServer.cpp
 pvaccess_1_SRCS += pvaccess.PvaServer.cpp
-pvaccess_1_SRCS += DataDistributorPlugin.cpp
-pvaccess_1_SRCS += PvaMirror.cpp
+pvaccess_1_SRCS += PvaPyDataDistributorPlugin.cpp
+pvaccess_1_SRCS += PvaMirrorServer.cpp
 pvaccess_1_SRCS += PyPvRecord.cpp
 pvaccess_1_SRCS += PvaServer.cpp
 pvaccess_SRCS += $(pvaccess_$(with_pvaClient)_SRCS)

@@ -10,7 +10,7 @@
 #include <pv/bitSet.h>
 
 #define epicsExportSharedSymbols
-#include "DataDistributorPlugin.h"
+#include "PvaPyDataDistributorPlugin.h"
 #include "StringUtility.h"
 
 using std::string;
@@ -24,39 +24,39 @@ namespace epvd = epics::pvData;
 
 namespace epics { namespace pvCopy {
 
-PvaPyLogger DataDistributorPlugin::logger("DataDistributorPlugin");
-PvaPyLogger DataDistributorFilter::logger("DataDistributorFilter");
+PvaPyLogger PvaPyDataDistributorPlugin::logger("PvaPyDataDistributorPlugin");
+PvaPyLogger PvaPyDataDistributorFilter::logger("PvaPyDataDistributorFilter");
 
 static std::string name("pydistributor");
-bool DataDistributorPlugin::initialized(DataDistributorPlugin::initialize());
+bool PvaPyDataDistributorPlugin::initialized(PvaPyDataDistributorPlugin::initialize());
 
-PvaPyLogger DataDistributor::logger("DataDistributor");
-std::map<std::string, DataDistributorPtr> DataDistributor::dataDistributorMap;
-epics::pvData::Mutex DataDistributor::dataDistributorMapMutex;
+PvaPyLogger PvaPyDataDistributor::logger("PvaPyDataDistributor");
+std::map<std::string, PvaPyDataDistributorPtr> PvaPyDataDistributor::dataDistributorMap;
+epics::pvData::Mutex PvaPyDataDistributor::dataDistributorMapMutex;
 
-DataDistributorPtr DataDistributor::getInstance(const std::string& id)
+PvaPyDataDistributorPtr PvaPyDataDistributor::getInstance(const std::string& id)
 {
     epvd::Lock lock(dataDistributorMapMutex);
-    std::map<std::string,DataDistributorPtr>::iterator ddit = dataDistributorMap.find(id);
+    std::map<std::string,PvaPyDataDistributorPtr>::iterator ddit = dataDistributorMap.find(id);
     if (ddit != dataDistributorMap.end()) {
-        DataDistributorPtr ddPtr = ddit->second;
+        PvaPyDataDistributorPtr ddPtr = ddit->second;
         return ddPtr;
     }
     else {
-        DataDistributorPtr ddPtr(new DataDistributor(id));
+        PvaPyDataDistributorPtr ddPtr(new PvaPyDataDistributor(id));
         dataDistributorMap[id] = ddPtr;
         logger.debug("Created new data distributor: %s", id.c_str());
         return ddPtr;
     }
 }
 
-void DataDistributor::removeUnusedInstance(DataDistributorPtr dataDistributorPtr)
+void PvaPyDataDistributor::removeUnusedInstance(PvaPyDataDistributorPtr dataDistributorPtr)
 {
     epvd::Lock lock(dataDistributorMapMutex);
     std::string distributorId = dataDistributorPtr->getId();
-    std::map<std::string,DataDistributorPtr>::iterator ddit = dataDistributorMap.find(distributorId);
+    std::map<std::string,PvaPyDataDistributorPtr>::iterator ddit = dataDistributorMap.find(distributorId);
     if (ddit != dataDistributorMap.end()) {
-        DataDistributorPtr ddPtr = ddit->second;
+        PvaPyDataDistributorPtr ddPtr = ddit->second;
         int nGroups = ddPtr->consumerGroupMap.size();
         logger.debug("Number of active consumer groups: %d", nGroups);
         if (nGroups == 0) {
@@ -66,7 +66,7 @@ void DataDistributor::removeUnusedInstance(DataDistributorPtr dataDistributorPtr
     }
 }
 
-DataDistributor::DataDistributor(const std::string& id_)
+PvaPyDataDistributor::PvaPyDataDistributor(const std::string& id_)
     : id(id_)
     , mutex()
     , consumerGroupMap()
@@ -76,14 +76,14 @@ DataDistributor::DataDistributor(const std::string& id_)
 {
 }
 
-DataDistributor::~DataDistributor()
+PvaPyDataDistributor::~PvaPyDataDistributor()
 {
     epvd::Lock lock(mutex);
     consumerGroupMap.clear();
     consumerGroupIdList.clear();
 }
 
-std::string DataDistributor::addConsumer(int consumerId, const std::string& groupId, const std::string& distinguishingField, int nUpdatesPerConsumer, int updateMode)
+std::string PvaPyDataDistributor::addConsumer(int consumerId, const std::string& groupId, const std::string& distinguishingField, int nUpdatesPerConsumer, int updateMode)
 {
     epvd::Lock lock(mutex);
     std::map<std::string,ConsumerGroupPtr>::iterator git = consumerGroupMap.find(groupId);
@@ -103,7 +103,7 @@ std::string DataDistributor::addConsumer(int consumerId, const std::string& grou
     }
 }
 
-void DataDistributor::removeConsumer(int consumerId, const std::string& groupId)
+void PvaPyDataDistributor::removeConsumer(int consumerId, const std::string& groupId)
 {
     epvd::Lock lock(mutex);
     logger.debug("Removing consumer %d from group %s", consumerId, groupId.c_str());
@@ -152,6 +152,10 @@ void DataDistributor::removeConsumer(int consumerId, const std::string& groupId)
         if (groupPtr->consumerIdList.size() == 0) {
             consumerGroupMap.erase(git);
             std::list<std::string>::iterator git2 = std::find(consumerGroupIdList.begin(), consumerGroupIdList.end(), groupId);
+            if (git2 == currentGroupIdIter) {
+                logger.debug("Group %s will be removed, advancing current group iterator", groupId.c_str());
+                currentGroupIdIter++;
+            }
             if (git2 != consumerGroupIdList.end()) {
                 consumerGroupIdList.erase(git2);
             }
@@ -163,7 +167,7 @@ void DataDistributor::removeConsumer(int consumerId, const std::string& groupId)
     }
 }
 
-bool DataDistributor::updateConsumer(int consumerId, const std::string& groupId, const std::string& distinguishingFieldValue)
+bool PvaPyDataDistributor::updateConsumer(int consumerId, const std::string& groupId, const std::string& distinguishingFieldValue)
 {
     epvd::Lock lock(mutex);
     logger.debug("Looking to update consumer %d for group %s", consumerId, groupId.c_str());
@@ -234,41 +238,41 @@ bool DataDistributor::updateConsumer(int consumerId, const std::string& groupId,
     return proceedWithUpdate;
 }
 
-DataDistributorPlugin::DataDistributorPlugin()
+PvaPyDataDistributorPlugin::PvaPyDataDistributorPlugin()
 {
 }
 
-DataDistributorPlugin::~DataDistributorPlugin()
+PvaPyDataDistributorPlugin::~PvaPyDataDistributorPlugin()
 {
 }
 
-void DataDistributorPlugin::create()
+void PvaPyDataDistributorPlugin::create()
 {
     initialize();
 }
 
-bool DataDistributorPlugin::initialize()
+bool PvaPyDataDistributorPlugin::initialize()
 {
-    DataDistributorPluginPtr pvPlugin = DataDistributorPluginPtr(new DataDistributorPlugin());
+    PvaPyDataDistributorPluginPtr pvPlugin = PvaPyDataDistributorPluginPtr(new PvaPyDataDistributorPlugin());
     PVPluginRegistry::registerPlugin(name,pvPlugin);
     return true;
 }
 
-PVFilterPtr DataDistributorPlugin::create(
+PVFilterPtr PvaPyDataDistributorPlugin::create(
      const std::string& requestValue,
      const PVCopyPtr& pvCopy,
      const PVFieldPtr& master)
 {
-    return DataDistributorFilter::create(requestValue,pvCopy,master);
+    return PvaPyDataDistributorFilter::create(requestValue,pvCopy,master);
 }
 
-DataDistributorFilter::~DataDistributorFilter()
+PvaPyDataDistributorFilter::~PvaPyDataDistributorFilter()
 {
     dataDistributorPtr->removeConsumer(consumerId, groupId);
-    DataDistributor::removeUnusedInstance(dataDistributorPtr);
+    PvaPyDataDistributor::removeUnusedInstance(dataDistributorPtr);
 }
 
-DataDistributorFilterPtr DataDistributorFilter::create(
+PvaPyDataDistributorFilterPtr PvaPyDataDistributorFilter::create(
      const std::string& requestValue,
      const PVCopyPtr& pvCopy,
      const PVFieldPtr& master)
@@ -282,7 +286,7 @@ DataDistributorFilterPtr DataDistributorFilter::create(
     std::string requestValue2 = StringUtility::toLowerCase(requestValue); 
     std::vector<std::string> configItems2 = StringUtility::split(requestValue2, ';');
     int nUpdatesPerConsumer = 1;
-    int updateMode = DataDistributor::DD_UPDATE_ONE_PER_GROUP;
+    int updateMode = PvaPyDataDistributor::DD_UPDATE_ONE_PER_GROUP;
     std::string distributorId = "default";
     std::string groupId = "default";
     std::string distinguishingField = "timeStamp";
@@ -320,15 +324,15 @@ DataDistributorFilterPtr DataDistributorFilter::create(
         }
     }
     if(nUpdatesPerConsumer <= 0) {
-        return DataDistributorFilterPtr();
+        return PvaPyDataDistributorFilterPtr();
     }
-    DataDistributorFilterPtr filter =
-         DataDistributorFilterPtr(new DataDistributorFilter(distributorId, consumerId, groupId, distinguishingField, nUpdatesPerConsumer, updateMode, pvCopy, master));
+    PvaPyDataDistributorFilterPtr filter =
+         PvaPyDataDistributorFilterPtr(new PvaPyDataDistributorFilter(distributorId, consumerId, groupId, distinguishingField, nUpdatesPerConsumer, updateMode, pvCopy, master));
     return filter;
 }
 
-DataDistributorFilter::DataDistributorFilter(const std::string& distributorId_, int consumerId_, const std::string& groupId_, const std::string& distinguishingField_, int nUpdatesPerConsumer, int updateMode, const PVCopyPtr& copyPtr_, const epvd::PVFieldPtr& masterFieldPtr_)
-    : dataDistributorPtr(DataDistributor::getInstance(distributorId_))
+PvaPyDataDistributorFilter::PvaPyDataDistributorFilter(const std::string& distributorId_, int consumerId_, const std::string& groupId_, const std::string& distinguishingField_, int nUpdatesPerConsumer, int updateMode, const PVCopyPtr& copyPtr_, const epvd::PVFieldPtr& masterFieldPtr_)
+    : dataDistributorPtr(PvaPyDataDistributor::getInstance(distributorId_))
     , consumerId(consumerId_)
     , groupId(groupId_)
     , distinguishingField(distinguishingField_)
@@ -350,7 +354,7 @@ DataDistributorFilter::DataDistributorFilter(const std::string& distributorId_, 
 }
 
 
-bool DataDistributorFilter::filter(const PVFieldPtr& pvCopy, const BitSetPtr& bitSet, bool toCopy)
+bool PvaPyDataDistributorFilter::filter(const PVFieldPtr& pvCopy, const BitSetPtr& bitSet, bool toCopy)
 {
     if(!toCopy) {
         return false;
@@ -382,7 +386,7 @@ bool DataDistributorFilter::filter(const PVFieldPtr& pvCopy, const BitSetPtr& bi
     return true;
 }
 
-string DataDistributorFilter::getName()
+string PvaPyDataDistributorFilter::getName()
 {
     return name;
 }
