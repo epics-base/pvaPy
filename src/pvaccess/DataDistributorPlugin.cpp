@@ -106,17 +106,43 @@ std::string DataDistributor::addConsumer(int consumerId, const std::string& grou
 void DataDistributor::removeConsumer(int consumerId, const std::string& groupId)
 {
     epvd::Lock lock(mutex);
+    logger.debug("Removing consumer %d from group %s", consumerId, groupId.c_str());
     std::map<std::string,ConsumerGroupPtr>::iterator git = consumerGroupMap.find(groupId);
     if (git != consumerGroupMap.end()) {
         ConsumerGroupPtr groupPtr = git->second;
         std::list<int>::iterator cit = std::find(groupPtr->consumerIdList.begin(), groupPtr->consumerIdList.end(), consumerId);
         if (cit != groupPtr->consumerIdList.end()) {
-            if (cit == groupPtr->currentConsumerIdIter++) {
+            // If we are removing current consumer id, advance iterator
+            if (cit == groupPtr->currentConsumerIdIter) {
                 logger.debug("Advancing current consumer id iterator for group %s", groupId.c_str());
                 groupPtr->currentConsumerIdIter++;
             }
+
+            // Find current consumer id 
+            int currentConsumerId = -1;
+            if (groupPtr->currentConsumerIdIter != groupPtr->consumerIdList.end()) {
+                currentConsumerId = *(groupPtr->currentConsumerIdIter);
+            }
+
+            // Remove consumer id from the list
             groupPtr->consumerIdList.erase(cit);
             logger.debug("Removed consumer %d from group %s", consumerId, groupId.c_str());
+
+             // Reset current consumer id iterator
+            groupPtr->currentConsumerIdIter = groupPtr->consumerIdList.end();
+            if (currentConsumerId < 0) {
+                logger.debug("Current consumer id is not set");
+            }
+            else {
+                std::list<int>::iterator cit2 = std::find(groupPtr->consumerIdList.begin(), groupPtr->consumerIdList.end(), currentConsumerId);
+                if (cit2 != groupPtr->consumerIdList.end()) {
+                    logger.debug("Current consumer id is set to %d", currentConsumerId);
+                    groupPtr->currentConsumerIdIter = cit2;
+                }
+                else {
+                    logger.warn("Could not find current consumer %d in group %s", currentConsumerId, groupId.c_str());
+                }
+            }
         }
         else {
             logger.warn("Could not find consumer %d in group %s", consumerId, groupId.c_str());
@@ -148,7 +174,7 @@ bool DataDistributor::updateConsumer(int consumerId, const std::string& groupId,
     std::string currentGroupId = *currentGroupIdIter;
     if (groupId != currentGroupId) {
         // We are not distributing data to this group at the moment
-        logger.debug("Group %s is not receiving current updates", groupId.c_str());
+        logger.debug("Group %s is not receiving current updates, consumer %d will not be updated", groupId.c_str(), consumerId);
         return proceedWithUpdate;
     }
     ConsumerGroupPtr groupPtr = consumerGroupMap[currentGroupId];
@@ -158,27 +184,27 @@ bool DataDistributor::updateConsumer(int consumerId, const std::string& groupId,
     }
     if (lastUpdateValue == distinguishingFieldValue) {
         // This update was already distributed.
-        logger.debug("Update %s has already been distributed", lastUpdateValue.c_str());
+        logger.debug("Update %s has already been distributed, consumer %d will not be updated", lastUpdateValue.c_str(), consumerId);
         return proceedWithUpdate;
     }
-    logger.debug("Group %s update mode: %d", groupId.c_str(), groupPtr->updateMode);
     switch (groupPtr->updateMode) {
         case(DD_UPDATE_ONE_PER_GROUP): {
             if (consumerId != *(groupPtr->currentConsumerIdIter)) {
                 // Not this consumer's turn.
-                logger.debug("Consumer %d is not being updated, current consumer is %d", consumerId, *(groupPtr->currentConsumerIdIter));
+                logger.debug("Consumer %d will not be updated, current consumer is %d", consumerId, *(groupPtr->currentConsumerIdIter));
                 return proceedWithUpdate;
             }
             proceedWithUpdate = true;
             lastUpdateValue = distinguishingFieldValue;
             groupPtr->lastUpdateValue = distinguishingFieldValue;
             groupPtr->updateCounter++;
+            logger.debug("Consumer %d will be updated", consumerId);
             if (groupPtr->updateCounter >= groupPtr->nUpdatesPerConsumer) {
                 // This consumer and group are done.
+                logger.debug("Group %s is done after %d updates", groupId.c_str(), groupPtr->updateCounter);
                 groupPtr->currentConsumerIdIter++;
                 groupPtr->updateCounter = 0;
                 currentGroupIdIter++;
-                logger.debug("Group %s is done with updates for the moment", groupId.c_str());
             }
             break;
         }
@@ -195,9 +221,9 @@ bool DataDistributor::updateConsumer(int consumerId, const std::string& groupId,
             if (nConsumersUpdated == groupPtr->consumerIdList.size() && groupPtr->updateCounter >= groupPtr->nUpdatesPerConsumer) {
                 // This group is done.
                 lastUpdateValue = distinguishingFieldValue;
+                logger.debug("Group %s is done after %d updates", groupId.c_str(), groupPtr->updateCounter);
                 groupPtr->updateCounter = 0;
                 currentGroupIdIter++;
-                logger.debug("Group %s is done with updates for the moment", groupId.c_str());
             }
             break;
         }
