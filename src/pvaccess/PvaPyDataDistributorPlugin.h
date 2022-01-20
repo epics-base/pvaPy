@@ -34,9 +34,9 @@ struct ConsumerGroup
 {
     POINTER_DEFINITIONS(ConsumerGroup);
 
-    ConsumerGroup(const std::string& groupId_, const std::string distinguishingField_, int nUpdatesPerConsumer_, int updateMode_) 
+    ConsumerGroup(const std::string& groupId_, const std::string uniqueField_, int nUpdatesPerConsumer_, int updateMode_) 
         : groupId(groupId_)
-        , distinguishingField(distinguishingField_)
+        , uniqueField(uniqueField_)
         , nUpdatesPerConsumer(nUpdatesPerConsumer_)
         , updateMode(updateMode_)
         , consumerIdList()
@@ -46,7 +46,7 @@ struct ConsumerGroup
         {}
     ~ConsumerGroup() {}
     std::string groupId;
-    std::string distinguishingField;
+    std::string uniqueField;
     int nUpdatesPerConsumer;
     int updateMode;
     std::list<int> consumerIdList;
@@ -69,9 +69,9 @@ public:
 
     virtual ~PvaPyDataDistributor();
     std::string getId() const { return id; }
-    std::string addConsumer(int consumerId, const std::string& groupId, const std::string& distinguishingField, int nUpdatesPerConsumer, int updateMode);
+    std::string addConsumer(int consumerId, const std::string& groupId, const std::string& uniqueField, int nUpdatesPerConsumer, int updateMode);
     void removeConsumer(int consumerId, const std::string& groupId);
-    bool updateConsumer(int consumerId, const std::string& groupId, const std::string& distinguishingFieldValue);
+    bool updateConsumer(int consumerId, const std::string& groupId, const std::string& uniqueFieldValue);
 
 private:
     PvaPyDataDistributor(const std::string& id);
@@ -131,12 +131,12 @@ private:
     PvaPyDataDistributorPtr dataDistributorPtr;
     int consumerId;
     std::string groupId;
-    std::string distinguishingField;
+    std::string uniqueField;
     epics::pvData::PVFieldPtr masterFieldPtr;
-    epics::pvData::PVFieldPtr distinguishingFieldPtr;
+    epics::pvData::PVFieldPtr uniqueFieldPtr;
     bool firstUpdate;
 
-    PvaPyDataDistributorFilter(const std::string& distributorId, int consumerId, const std::string& groupId, const std::string& distinguishingField, int nUpdatesPerConsumer, int updateMode, const epics::pvCopy::PVCopyPtr& copyPtr, const epics::pvData::PVFieldPtr& masterFieldPtr);
+    PvaPyDataDistributorFilter(const std::string& distributorId, int consumerId, const std::string& groupId, const std::string& uniqueField, int nUpdatesPerConsumer, int updateMode, const epics::pvCopy::PVCopyPtr& copyPtr, const epics::pvData::PVFieldPtr& masterFieldPtr);
 
 public:
     POINTER_DEFINITIONS(PvaPyDataDistributorFilter);

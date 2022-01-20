@@ -83,7 +83,7 @@ PvaPyDataDistributor::~PvaPyDataDistributor()
     consumerGroupIdList.clear();
 }
 
-std::string PvaPyDataDistributor::addConsumer(int consumerId, const std::string& groupId, const std::string& distinguishingField, int nUpdatesPerConsumer, int updateMode)
+std::string PvaPyDataDistributor::addConsumer(int consumerId, const std::string& groupId, const std::string& uniqueField, int nUpdatesPerConsumer, int updateMode)
 {
     epvd::Lock lock(mutex);
     std::map<std::string,ConsumerGroupPtr>::iterator git = consumerGroupMap.find(groupId);
@@ -91,15 +91,15 @@ std::string PvaPyDataDistributor::addConsumer(int consumerId, const std::string&
         ConsumerGroupPtr groupPtr = git->second;
         groupPtr->consumerIdList.push_back(consumerId);
         logger.debug("Added consumer %d to existing group %s", consumerId, groupId.c_str());
-        return groupPtr->distinguishingField;
+        return groupPtr->uniqueField;
     }
     else {
-        ConsumerGroupPtr groupPtr(new ConsumerGroup(groupId, distinguishingField, nUpdatesPerConsumer, updateMode));
+        ConsumerGroupPtr groupPtr(new ConsumerGroup(groupId, uniqueField, nUpdatesPerConsumer, updateMode));
         groupPtr->consumerIdList.push_back(consumerId);
         consumerGroupMap[groupId] = groupPtr;
         consumerGroupIdList.push_back(groupId);
-        logger.debug("Added consumer %d to new group %s (distinguishing field: %s, nUpdatesPerConsumer: %d)", consumerId, groupId.c_str(), distinguishingField.c_str(), nUpdatesPerConsumer);
-        return distinguishingField;
+        logger.debug("Added consumer %d to new group %s (unique field: %s, nUpdatesPerConsumer: %d)", consumerId, groupId.c_str(), uniqueField.c_str(), nUpdatesPerConsumer);
+        return uniqueField;
     }
 }
 
@@ -167,7 +167,7 @@ void PvaPyDataDistributor::removeConsumer(int consumerId, const std::string& gro
     }
 }
 
-bool PvaPyDataDistributor::updateConsumer(int consumerId, const std::string& groupId, const std::string& distinguishingFieldValue)
+bool PvaPyDataDistributor::updateConsumer(int consumerId, const std::string& groupId, const std::string& uniqueFieldValue)
 {
     epvd::Lock lock(mutex);
     logger.debug("Looking to update consumer %d for group %s", consumerId, groupId.c_str());
@@ -186,7 +186,7 @@ bool PvaPyDataDistributor::updateConsumer(int consumerId, const std::string& gro
         // Move current consumer iterator to the beginning of the list
         groupPtr->currentConsumerIdIter = groupPtr->consumerIdList.begin();
     }
-    if (lastUpdateValue == distinguishingFieldValue) {
+    if (lastUpdateValue == uniqueFieldValue) {
         // This update was already distributed.
         logger.debug("Update %s has already been distributed, consumer %d will not be updated", lastUpdateValue.c_str(), consumerId);
         return proceedWithUpdate;
@@ -199,8 +199,8 @@ bool PvaPyDataDistributor::updateConsumer(int consumerId, const std::string& gro
                 return proceedWithUpdate;
             }
             proceedWithUpdate = true;
-            lastUpdateValue = distinguishingFieldValue;
-            groupPtr->lastUpdateValue = distinguishingFieldValue;
+            lastUpdateValue = uniqueFieldValue;
+            groupPtr->lastUpdateValue = uniqueFieldValue;
             groupPtr->updateCounter++;
             logger.debug("Consumer %d will be updated", consumerId);
             if (groupPtr->updateCounter >= groupPtr->nUpdatesPerConsumer) {
@@ -215,8 +215,8 @@ bool PvaPyDataDistributor::updateConsumer(int consumerId, const std::string& gro
         case(DD_UPDATE_ALL_IN_GROUP): {
             proceedWithUpdate = true;
             static unsigned int nConsumersUpdated = 0;
-            if (groupPtr->lastUpdateValue != distinguishingFieldValue) {
-                groupPtr->lastUpdateValue = distinguishingFieldValue;
+            if (groupPtr->lastUpdateValue != uniqueFieldValue) {
+                groupPtr->lastUpdateValue = uniqueFieldValue;
                 groupPtr->updateCounter++;
                 nConsumersUpdated = 0;
             }
@@ -224,7 +224,7 @@ bool PvaPyDataDistributor::updateConsumer(int consumerId, const std::string& gro
             logger.debug("Group %s: number of consumers updated: %d, update counter: %d", groupId.c_str(), nConsumersUpdated, groupPtr->updateCounter);
             if (nConsumersUpdated == groupPtr->consumerIdList.size() && groupPtr->updateCounter >= groupPtr->nUpdatesPerConsumer) {
                 // This group is done.
-                lastUpdateValue = distinguishingFieldValue;
+                lastUpdateValue = uniqueFieldValue;
                 logger.debug("Group %s is done after %d updates", groupId.c_str(), groupPtr->updateCounter);
                 groupPtr->updateCounter = 0;
                 currentGroupIdIter++;
@@ -289,7 +289,9 @@ PvaPyDataDistributorFilterPtr PvaPyDataDistributorFilter::create(
     int updateMode = PvaPyDataDistributor::DD_UPDATE_ONE_PER_GROUP;
     std::string distributorId = "default";
     std::string groupId = "default";
-    std::string distinguishingField = "timeStamp";
+    std::string uniqueField = "timeStamp";
+    bool hasUpdateMode = false;
+    bool hasGroupId = false;
     for(unsigned int i = 0; i < configItems2.size(); i++) {
         std::string configItem2 = configItems2[i];
         size_t ind = configItem2.find(':');
@@ -310,46 +312,55 @@ PvaPyDataDistributorFilterPtr PvaPyDataDistributorFilter::create(
         else if(configItem2.find("groupid") == 0) {
             std::string configItem = configItems[i];
             groupId = configItem.substr(ind+1);
+            hasGroupId = true;
             logger.debug("Request spec for groupId: %s", groupId.c_str());
         }
         else if(configItem2.find("updatemode") == 0) {
             std::string svalue = configItem2.substr(ind+1);
             updateMode = atoi(svalue.c_str());
+            hasUpdateMode = true;
             logger.debug("Request spec for updateMode: %d", updateMode);
         }
-        else if(configItem2.find("distinguishingfield") == 0) {
+        else if(configItem2.find("uniquefield") == 0) {
             std::string configItem = configItems[i];
-            distinguishingField = configItem.substr(ind+1);
-            logger.debug("Request spec for distinguishing field: %s", distinguishingField.c_str());
+            uniqueField = configItem.substr(ind+1);
+            logger.debug("Request spec for unique field: %s", uniqueField.c_str());
         }
     }
+    // If request does not have update mode specified, but has group id
+    // then use a different update mode
+    if(!hasUpdateMode && hasGroupId) {
+        updateMode = PvaPyDataDistributor::DD_UPDATE_ALL_IN_GROUP;
+    }
+
+    // Make sure request is valid
     if(nUpdatesPerConsumer <= 0) {
         return PvaPyDataDistributorFilterPtr();
     }
     PvaPyDataDistributorFilterPtr filter =
-         PvaPyDataDistributorFilterPtr(new PvaPyDataDistributorFilter(distributorId, consumerId, groupId, distinguishingField, nUpdatesPerConsumer, updateMode, pvCopy, master));
+         PvaPyDataDistributorFilterPtr(new PvaPyDataDistributorFilter(distributorId, consumerId, groupId, uniqueField, nUpdatesPerConsumer, updateMode, pvCopy, master));
     return filter;
 }
 
-PvaPyDataDistributorFilter::PvaPyDataDistributorFilter(const std::string& distributorId_, int consumerId_, const std::string& groupId_, const std::string& distinguishingField_, int nUpdatesPerConsumer, int updateMode, const PVCopyPtr& copyPtr_, const epvd::PVFieldPtr& masterFieldPtr_)
+PvaPyDataDistributorFilter::PvaPyDataDistributorFilter(const std::string& distributorId_, int consumerId_, const std::string& groupId_, const std::string& uniqueField_, int nUpdatesPerConsumer, int updateMode, const PVCopyPtr& copyPtr_, const epvd::PVFieldPtr& masterFieldPtr_)
     : dataDistributorPtr(PvaPyDataDistributor::getInstance(distributorId_))
     , consumerId(consumerId_)
     , groupId(groupId_)
-    , distinguishingField(distinguishingField_)
+    , uniqueField(uniqueField_)
     , masterFieldPtr(masterFieldPtr_)
-    , distinguishingFieldPtr()
+    , uniqueFieldPtr()
     , firstUpdate(true)
 {
-    distinguishingField = dataDistributorPtr->addConsumer(consumerId, groupId, distinguishingField, nUpdatesPerConsumer, updateMode);
+    uniqueField = dataDistributorPtr->addConsumer(consumerId, groupId, uniqueField, nUpdatesPerConsumer, updateMode);
     if(masterFieldPtr->getField()->getType() == epvd::structure) {
         epvd::PVStructurePtr pvStructurePtr = static_pointer_cast<epvd::PVStructure>(masterFieldPtr);
         if(pvStructurePtr) {
-            distinguishingFieldPtr = pvStructurePtr->getSubField(distinguishingField);
+            uniqueFieldPtr = pvStructurePtr->getSubField(uniqueField);
         }
     }
-    if(!distinguishingFieldPtr) {
-        logger.debug("Using master field as distinguishing field");
-        distinguishingFieldPtr = masterFieldPtr;
+    if(!uniqueFieldPtr) {
+        logger.debug("Using master field as unique field");
+        uniqueFieldPtr = masterFieldPtr;
     }
 }
 
@@ -368,9 +379,9 @@ bool PvaPyDataDistributorFilter::filter(const PVFieldPtr& pvCopy, const BitSetPt
     }
     else {
         std::stringstream ss;
-        ss << distinguishingFieldPtr;
-        std::string distinguishingFieldValue = ss.str();
-        proceedWithUpdate = dataDistributorPtr->updateConsumer(consumerId, groupId, distinguishingFieldValue);
+        ss << uniqueFieldPtr;
+        std::string uniqueFieldValue = ss.str();
+        proceedWithUpdate = dataDistributorPtr->updateConsumer(consumerId, groupId, uniqueFieldValue);
     }
 
     if(proceedWithUpdate) {
