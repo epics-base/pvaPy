@@ -108,8 +108,9 @@ echo "Installing pvapy library"
 rsync -arv $PVACCESS_BUILD_LIB_DIR/$PVACCESS_LIB $PVACCESS_DIR/
 
 echo "Generating python module init files"
-echo "from .pvaccess import *" > $PVACCESS_DIR/__init__.py
-echo "from pvaccess import *" > $PVAPY_DIR/__init__.py
+INIT_FILE=$PVACCESS_DIR/__init__.py
+cmd="cat $INIT_FILE | sed 's?__version__.*=.*?__version__ = \"$PVAPY_VERSION\" > $INIT_FILE.2 && mv $INIT_FILE.2 $INIT_FILE'"
+eval $cmd
 
 echo "Copying dependencies"
 EPICS_LIBS=`ls -c1 $EPICS_BASE_DIR/lib/$EPICS_HOST_ARCH/*.so`
