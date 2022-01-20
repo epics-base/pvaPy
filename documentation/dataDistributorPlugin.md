@@ -13,6 +13,29 @@ Once all consumers in a group receive updates, the distributor plugin will
 start updating next group of consumers, moving from group to group in a 
 round-robin fashion.
 
+## Requirements
+
+This plugin is packaged with PvaPy version 4.1.0 or later, and requires 
+epics base version > 7.0.6.1. One can use it with PVA servers that do not use 
+pvDatabase, or with servers built using older versions of epics, with a
+help of the PvaPy mirror server. The mirror server clones existing PVA or CA
+channels and makes their data available on a mirrored channel. For example,
+the following command will create 'pvapy:image' channel as a mirror of the
+original area detector '13SIM1:Pva1:Image' channel:
+
+```
+$ pvapy-mirror-server --channel-map="(pvapy:image,13SIM1:Pva1:Image,PVA)"
+```
+
+Alternatively, the mirror server class can also be used directly from
+python in the following fashion:
+
+```
+>>> import pvaccess as pva
+>>> s = pva.PvaMirrorServer()
+>>> s.addMirrorRecord('pvapy:image', '13SIM1:Pva1:Image', pva.PVA)
+```
+
 ## Usage
 
 The PV request string which triggers plugin instantiation is defined below:
