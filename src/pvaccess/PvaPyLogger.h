@@ -33,6 +33,7 @@ public:
 
     static const int MaxTimeStampLength;
     static const char* LogLevelEnvVarName;
+    static const char* EpicsLogLevelEnvVarName;
     static const char* TimeStampFormat;
 
     static void setLogFile(FILE* file);
@@ -81,7 +82,7 @@ public:
 
 private:
     static int getLogLevelMaskFromEnvVar();
-    static epics::pvAccess::pvAccessLogLevel getEpicsLogLevel(int logLevelMask);
+    static epics::pvAccess::pvAccessLogLevel getEpicsLogLevelFromEnvVar();
 
     static void prepareTimeStamp(char* timeStamp, int timeStampLength, const char* timeStampFormat);
     static FILE* logFile;    

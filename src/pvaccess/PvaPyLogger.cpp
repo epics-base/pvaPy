@@ -20,6 +20,7 @@ const char* PvaPyLogger::LogLevelTrace("TRACE");
 
 const int PvaPyLogger::MaxTimeStampLength(64);
 const char* PvaPyLogger::LogLevelEnvVarName("PVAPY_LOG_LEVEL");
+const char* PvaPyLogger::EpicsLogLevelEnvVarName("PVAPY_EPICS_LOG_LEVEL");
 const char* PvaPyLogger::TimeStampFormat("%Y/%m/%d %H:%M:%S.%03f");
 
 FILE* PvaPyLogger::logFile(stdout);
@@ -44,32 +45,14 @@ int PvaPyLogger::getLogLevelMaskFromEnvVar()
     return logLevelMask;
 }
 
-epva::pvAccessLogLevel PvaPyLogger::getEpicsLogLevel(int logLevelMask)
+epva::pvAccessLogLevel PvaPyLogger::getEpicsLogLevelFromEnvVar()
 {
-    if (logLevelMask == PVAPY_LOG_LEVEL_NONE) {
-        return epva::logLevelOff;
-    }
-
-    if ((logLevelMask & PVAPY_LOG_LEVEL_ALL)) {
-        return epva::logLevelAll;
-    }
-    else if ((logLevelMask & PVAPY_LOG_LEVEL_TRACE)) {
-        return epva::logLevelTrace;
-    }
-    else if ((logLevelMask & PVAPY_LOG_LEVEL_DEBUG)) {
-        return epva::logLevelDebug;
-    }
-    else if ((logLevelMask & PVAPY_LOG_LEVEL_INFO)) {
-        return epva::logLevelInfo;
-    }
-    else if ((logLevelMask & PVAPY_LOG_LEVEL_WARN)) {
-        return epva::logLevelWarn;
-    }
-    else if ((logLevelMask & PVAPY_LOG_LEVEL_ERROR)) {
-        return epva::logLevelError;
-    }
-    else if ((logLevelMask & PVAPY_LOG_LEVEL_CRITICAL)) {
-        return epva::logLevelFatal;
+    const char* logLevelString = getenv(EpicsLogLevelEnvVarName);
+    if (logLevelString) {
+        int logLevel = atoi(logLevelString);
+        if (logLevel >= epva::logLevelAll && logLevel <= epva::logLevelOff) {
+            return epva::pvAccessLogLevel(logLevel);
+        }
     }
     return epva::logLevelOff;
 }
@@ -79,7 +62,7 @@ PvaPyLogger::PvaPyLogger(const char* name_) :
     logLevelMask(getLogLevelMaskFromEnvVar()),
     useEpicsLog(false)
 {
-    epva::pvAccessSetLogLevel(getEpicsLogLevel(logLevelMask));
+    epva::pvAccessSetLogLevel(getEpicsLogLevelFromEnvVar());
 }
 
 PvaPyLogger::PvaPyLogger(const char* name_, int logLevelMask_) :
@@ -87,7 +70,7 @@ PvaPyLogger::PvaPyLogger(const char* name_, int logLevelMask_) :
     logLevelMask(logLevelMask_),
     useEpicsLog(false)
 {
-    epva::pvAccessSetLogLevel(getEpicsLogLevel(logLevelMask));
+    epva::pvAccessSetLogLevel(getEpicsLogLevelFromEnvVar());
 }
 
 PvaPyLogger::~PvaPyLogger()
