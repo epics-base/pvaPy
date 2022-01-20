@@ -1,8 +1,8 @@
 ## Release 4.1.0 (2022/01/DD)
 
 - introduced PVA server mirror class
-- added distributor plugin for the PVA server (see 
-  [dataDistributorPlugin.md](the plugin documentation))
+- added distributor plugin for the PVA server (see the
+  [plugin documentation](dataDistributorPlugin.md))
 - restricted numpy version to >= 1.22, as these versions resolve
   issues with boost python segfaults
 - introduced PVAPY_EPICS_LOG_LEVEL environment variable to control 
