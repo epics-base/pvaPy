@@ -1,7 +1,13 @@
 ## Release 4.1.0 (2022/01/DD)
 
 - introduced PVA server mirror class
-- added distributor plugin for the PVA server
+- added distributor plugin for the PVA server (see 
+  [dataDistributorPlugin.md](the plugin documentation))
+- restricted numpy version to >= 1.22, as these versions resolve
+  issues with boost python segfaults
+- introduced PVAPY_EPICS_LOG_LEVEL environment variable to control 
+  logging in the epics PVA libraries; allowed log levels correspond to 
+  pvAccess library logger: 0 (all messages) to 7 (no messages; default)
 - conda/pip package dependencies: 
   - EPICS BASE = 7.0.6.1
   - BOOST      = 1.78.0
