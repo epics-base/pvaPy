@@ -4,7 +4,7 @@ import time, threading, queue, argparse
 import numpy as np
 import pvaccess as pva
 
-class PvaPyAdSimServer:
+class AdSimServer:
 
     def __init__(self, input_file, frame_rate, nf, nx, ny, runtime, channel_name, start_delay, report_frequency):
         self.arraySize = None
@@ -33,6 +33,7 @@ class PvaPyAdSimServer:
         self.last_published_time = 0
         self.next_publish_time = 0
         self.start_delay = start_delay
+        self.is_done = False
 
     def get_timestamp(self):
         s = time.time()
@@ -42,6 +43,8 @@ class PvaPyAdSimServer:
 
     def frame_producer(self, extraFieldsPvObject=None):
         for frame_id in range(0, self.n_generated_frames):
+            if self.is_done:
+               return
 
             if extraFieldsPvObject is None:
                 nda = pva.NtNdArray()
@@ -67,6 +70,8 @@ class PvaPyAdSimServer:
             self.frame_map[frame_id] = nda
 
     def frame_publisher(self):
+        if self.is_done:
+            return
         entry_time = time.time()
         cached_frame_id = self.current_frame_id % self.n_generated_frames
         frame = self.frame_map[cached_frame_id]
@@ -95,11 +100,11 @@ class PvaPyAdSimServer:
                 delta_t_correction *= 10
 
             frame_rate = 1.0/delta_t
-            if self.report_frequency > 0 and self.n_published_frames % self.report_frequency == 0:
+            if self.report_frequency > 0 and (self.n_published_frames % self.report_frequency) == 0:
                 print("Published frame id %6d @ %.3f (frame rate: %.4f fps)" % (self.current_frame_id, self.last_published_time, frame_rate))
         else:
             self.start_time = self.last_published_time
-            if self.report_frequency > 0 and self.n_published_frames % self.report_frequency == 0:
+            if self.report_frequency > 0 and (self.n_published_frames % self.report_frequency) == 0:
                 print("Published frame id %6d @ %.3f" % (self.current_frame_id, self.last_published_time))
         if runtime > self.runtime:
             print("Server will exit after reaching runtime of %s seconds" % (self.runtime))
@@ -113,6 +118,7 @@ class PvaPyAdSimServer:
         threading.Timer(self.start_delay, self.frame_publisher).start()
 
     def stop(self):
+        self.is_done = True
         self.server.stop()
         runtime = self.last_published_time - self.start_time
         delta_t = runtime/(self.n_published_frames - 1)
@@ -126,7 +132,7 @@ def main():
     parser.add_argument('--frame-rate', '-fps', type=float, dest='frame_rate', default=20, help='Frames per second (default: 20 fps)')
     parser.add_argument('--n-x-pixels', '-nx', type=int, dest='n_x_pixels', default=2048, help='Number of pixels in x dimension (default: 256 pixels; does not apply if input_file file is given)')
     parser.add_argument('--n-y-pixels', '-ny', type=int, dest='n_y_pixels', default=256, help='Number of pixels in x dimension (default: 256 pixels; does not apply if hdf5 file is given)')
-    parser.add_argument('--n-frames', '-nf', type=int, dest='n_frames', default=1000, help='Number of frames to generate')
+    parser.add_argument('--n-frames', '-nf', type=int, dest='n_frames', default=1000, help='Number of different frames to generate and cache; those images will be published over and over again as long as the server is running')
     parser.add_argument('--runtime', '-rt', type=float, dest='runtime', default=300, help='Server runtime in seconds (default: 300 seconds)')
     parser.add_argument('--channel-name', '-cn', type=str, dest='channel_name', default='pvapy:image', help='Server PVA channel name (default: pvapy:image)')
     parser.add_argument('--start-delay', '-sd', type=float, dest='start_delay',  default=10.0, help='Server start delay in seconds (default: 10 seconds)')
@@ -137,11 +143,14 @@ def main():
         print('Unrecognized argument(s): %s' % ' '.join(unparsed))
         exit(1)
 
-    server = PvaPyAdSimServer(input_file=args.input_file, frame_rate=args.frame_rate, nf=args.n_frames, nx=args.n_x_pixels, ny=args.n_y_pixels, runtime=args.runtime, channel_name=args.channel_name, start_delay=args.start_delay, report_frequency=args.report_frequency)
+    server = AdSimServer(input_file=args.input_file, frame_rate=args.frame_rate, nf=args.n_frames, nx=args.n_x_pixels, ny=args.n_y_pixels, runtime=args.runtime, channel_name=args.channel_name, start_delay=args.start_delay, report_frequency=args.report_frequency)
 
     server.start()
-    runtime = args.runtime + 2*args.start_delay
-    time.sleep(runtime)
+    try:
+        runtime = args.runtime + 2*args.start_delay
+        time.sleep(runtime)
+    except KeyboardInterrupt as ex:
+        pass
     server.stop()
     
 if __name__ == '__main__':
