@@ -4,9 +4,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "epicsTime.h"
-#include "errlog.h"
+#include <epicsTime.h>
+#include <errlog.h>
 #include "PvaPyLogger.h"
+
+namespace epva = epics::pvAccess;
 
 // Constants.
 const char* PvaPyLogger::LogLevelCritical("CRITICAL");
@@ -42,11 +44,42 @@ int PvaPyLogger::getLogLevelMaskFromEnvVar()
     return logLevelMask;
 }
 
+epva::pvAccessLogLevel PvaPyLogger::getEpicsLogLevel(int logLevelMask)
+{
+    if (logLevelMask == PVAPY_LOG_LEVEL_NONE) {
+        return epva::logLevelOff;
+    }
+
+    if ((logLevelMask & PVAPY_LOG_LEVEL_ALL)) {
+        return epva::logLevelAll;
+    }
+    else if ((logLevelMask & PVAPY_LOG_LEVEL_TRACE)) {
+        return epva::logLevelTrace;
+    }
+    else if ((logLevelMask & PVAPY_LOG_LEVEL_DEBUG)) {
+        return epva::logLevelDebug;
+    }
+    else if ((logLevelMask & PVAPY_LOG_LEVEL_INFO)) {
+        return epva::logLevelInfo;
+    }
+    else if ((logLevelMask & PVAPY_LOG_LEVEL_WARN)) {
+        return epva::logLevelWarn;
+    }
+    else if ((logLevelMask & PVAPY_LOG_LEVEL_ERROR)) {
+        return epva::logLevelError;
+    }
+    else if ((logLevelMask & PVAPY_LOG_LEVEL_CRITICAL)) {
+        return epva::logLevelFatal;
+    }
+    return epva::logLevelOff;
+}
+
 PvaPyLogger::PvaPyLogger(const char* name_) :
     name(name_),
     logLevelMask(getLogLevelMaskFromEnvVar()),
     useEpicsLog(false)
 {
+    epva::pvAccessSetLogLevel(getEpicsLogLevel(logLevelMask));
 }
 
 PvaPyLogger::PvaPyLogger(const char* name_, int logLevelMask_) :
@@ -54,6 +87,7 @@ PvaPyLogger::PvaPyLogger(const char* name_, int logLevelMask_) :
     logLevelMask(logLevelMask_),
     useEpicsLog(false)
 {
+    epva::pvAccessSetLogLevel(getEpicsLogLevel(logLevelMask));
 }
 
 PvaPyLogger::~PvaPyLogger()

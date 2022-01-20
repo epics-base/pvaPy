@@ -8,6 +8,8 @@
 #include <cstdarg>
 #include <cstdio>
 
+#include <pv/logger.h>
+
 class PvaPyLogger
 {
 public:
@@ -79,6 +81,8 @@ public:
 
 private:
     static int getLogLevelMaskFromEnvVar();
+    static epics::pvAccess::pvAccessLogLevel getEpicsLogLevel(int logLevelMask);
+
     static void prepareTimeStamp(char* timeStamp, int timeStampLength, const char* timeStampFormat);
     static FILE* logFile;    
     static bool usePrintf;
