@@ -15,12 +15,13 @@ round-robin fashion.
 
 ## Requirements
 
-This plugin is packaged with PvaPy version 4.1.0 or later, and requires 
-epics base version > 7.0.6.1. One can use it with PVA servers that do not use 
-pvDatabase, or with servers built using older versions of epics, with a
-help of the PvaPy mirror server. The mirror server clones existing PVA or CA
+This plugin is packaged with PvaPy version 4.1.0 or later. It relies on the 
+pvDatabase plugin framework and requires epics base version > 7.0.6.1. 
+With a help of the PvaPy mirror server, one can use it with PVA servers 
+that do not use pvDatabase, or with servers built using older versions of 
+epics. As its name indicates, the mirror server clones existing PVA or CA
 channels and makes their data available on a mirrored channel. For example,
-the following command will create 'pvapy:image' channel as a mirror of the
+the following command will create 'pvapy:image' channel as the mirror of the
 original area detector '13SIM1:Pva1:Image' channel:
 
 ```
@@ -158,7 +159,7 @@ receive updates (4,5), group G2 receives updates (6,7,8), etc.
 
 Consumer 1 and Consumer 2/Group G2:
 ```
-$ (daq) bluegill2> pvget -m -r "_[pydistributor=groupId:G2;uniqueField:uniqueId;nUpdatesPerConsumer:3]" pvapy:image  | grep uniqueId
+$ pvget -m -r "_[pydistributor=groupId:G2;uniqueField:uniqueId;nUpdatesPerConsumer:3]" pvapy:image  | grep uniqueId
     int uniqueId 0
     int uniqueId 1
     int uniqueId 2
