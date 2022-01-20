@@ -297,7 +297,6 @@ PvaPyDataDistributorFilterPtr PvaPyDataDistributorFilter::create(
         size_t ind = configItem2.find(':');
         if (ind == string::npos) {
             logger.debug("No value specified for request option: %s", configItem2.c_str());
-   
         }
         if(configItem2.find("nupdatesperconsumer") == 0) {
             std::string svalue = configItem2.substr(ind+1);
@@ -331,6 +330,7 @@ PvaPyDataDistributorFilterPtr PvaPyDataDistributorFilter::create(
     // then use a different update mode
     if(!hasUpdateMode && hasGroupId) {
         updateMode = PvaPyDataDistributor::DD_UPDATE_ALL_IN_GROUP;
+        logger.debug("Request specifies group id but does not specify update mode; using update mode: %d", updateMode);
     }
 
     // Make sure request is valid
