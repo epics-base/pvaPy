@@ -10,12 +10,14 @@ import platform
 import fnmatch
 
 DEFAULT_PVAPY_VERSION = 'master'
-PACKAGE_NAME = 'pvapy'
-MODULE_NAME = 'pvaccess'
-MODULE = Extension(MODULE_NAME, [])
+PVACCESS_MODULE = Extension('pvaccess', [])
 PLATFORM = platform.uname()[0].lower()
 MY_DIR = os.path.abspath(os.path.dirname(__file__))
+
 BUILD_SCRIPT = './build.%s.sh' % PLATFORM
+if PLATFORM == 'windows':
+    BUILD_SCRIPT = 'build.%s.bat' % PLATFORM
+
 README_FILE = 'pvaccess/doc/README.md'
 if not os.path.exists(README_FILE):
     README_FILE = os.path.join(MY_DIR, '../../../README.md')
@@ -44,28 +46,40 @@ def find_files(rootDir='.', pattern='*'):
 
 class BuildExt(build_ext):
     def build_extension(self, ext):
-        print('Building %s' % MODULE_NAME)
+        print('Building pvaccess module')
         os.system(BUILD_SCRIPT)
 
-MODULE_VERSION = get_env_var('PVAPY_VERSION', DEFAULT_PVAPY_VERSION)
-MODULE_FILES = list(map(lambda f: f.replace('%s/' % MODULE_NAME, ''), find_files(MODULE_NAME)))
+PVAPY_VERSION = get_env_var('PVAPY_VERSION', DEFAULT_PVAPY_VERSION)
+if PLATFORM == 'windows':
+    PVACCESS_FILES = list(map(lambda f: f.replace('pvaccess\\', ''), find_files('pvaccess')))
+    PVAPY_FILES = list(map(lambda f: f.replace('pvapy\\', ''), find_files('pvapy')))
+else:
+    PVACCESS_FILES = list(map(lambda f: f.replace('pvaccess/', ''), find_files('pvaccess')))
+    PVAPY_FILES = list(map(lambda f: f.replace('pvapy/', ''), find_files('pvapy')))
 LONG_DESCRIPTION = open(README_FILE).read()
     
 setup(
-    name = PACKAGE_NAME,
-    version = MODULE_VERSION,
+    name = 'pvapy',
+    version = PVAPY_VERSION,
     description = 'Python library for EPICS PV Access',
     long_description = LONG_DESCRIPTION,
     long_description_content_type='text/markdown',
     url = 'https://github.com/epics-base/pvaPy',
     license = 'EPICS Open License',
-    packages = [PACKAGE_NAME, MODULE_NAME],
+    packages = ['pvapy', 'pvaccess'],
     package_data = {
-        MODULE_NAME :  MODULE_FILES,
+        'pvaccess' :  PVACCESS_FILES,
+        'pvapy' :  PVAPY_FILES,
     },
     install_requires=[
         'numpy>=1.22',
     ],
-    ext_modules=[MODULE],
+    entry_points = {
+        'console_scripts': [
+            'pvapy-mirror-server=pvapy.cli.mirrorServer:main',
+            'pvapy-ad-sim-server=pvapy.cli.adSimServer:main'
+        ],
+    },
+    ext_modules=[PVACCESS_MODULE],
     cmdclass = {'build_ext': BuildExt}
 )

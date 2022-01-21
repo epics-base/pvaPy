@@ -112,7 +112,7 @@ echo "Installing pvapy library"
 rsync -arv $PVACCESS_BUILD_LIB_DIR/$PVACCESS_LIB $PVACCESS_DIR/
 
 echo "Copying module files"
-rsync -arvl pvapy pvaccess $TOP
+rsync -arvl pvapy pvaccess $TOP_DIR/
 
 echo "Updating python module init files"
 INIT_FILE=$PVACCESS_DIR/__init__.py
