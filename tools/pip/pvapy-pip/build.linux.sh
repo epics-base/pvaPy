@@ -103,7 +103,6 @@ make $BUILD_FLAGS || exit 1
 echo "Building pvapy docs"
 make doc || exit 1
 mkdir -p $PVACCESS_DOC_DIR
-mkdir -p $PVAPY_DIR
 rsync -arvl documentation/sphinx/_build/html $PVACCESS_DOC_DIR/
 
 echo "Copying data files"
@@ -112,7 +111,10 @@ rsync -arvl README.md $PVACCESS_DOC_DIR/
 echo "Installing pvapy library"
 rsync -arv $PVACCESS_BUILD_LIB_DIR/$PVACCESS_LIB $PVACCESS_DIR/
 
-echo "Generating python module init files"
+echo "Copying module files"
+rsync -arvl pvapy pvaccess $TOP
+
+echo "Updating python module init files"
 INIT_FILE=$PVACCESS_DIR/__init__.py
 cmd="cat $INIT_FILE | sed 's?__version__.*=.*?__version__ = \"$PVAPY_VERSION\"?' > $INIT_FILE.2 && mv $INIT_FILE.2 $INIT_FILE"
 eval $cmd
