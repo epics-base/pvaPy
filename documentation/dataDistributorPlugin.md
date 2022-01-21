@@ -195,9 +195,9 @@ $ pvget -m -r "_[pydistributor=groupId:G1;uniqueField:uniqueId;nUpdatesPerConsum
 ### Example 3
 
 This example illustrates what happens if multiple distributors are used
-for the same channel. Distributor D1 has 2 consumers belonging
+for the same channel. Distributor D1 has two consumers belonging
 to the same default group, and receiving one update per consumer, while
-distributor D2 has 2 consumers in the default group receiving three
+distributor D2 has two consumers in the default group receiving three
 sequential updates per consumer.
 
 In this case the first consumer using distributor D1 receives updates
