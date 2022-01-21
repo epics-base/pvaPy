@@ -28,19 +28,22 @@ echo "Using BUILD_FLAGS: $BUILD_FLAGS"
 make $BUILD_FLAGS
 
 echo "Building pvapy docs"
+f=documentation/sphinx/conf.py
+cmd="cat $f | sed 's?version.*=.*?version = \"$PVAPY_VERSION\"?' | sed 's?release.*=.*?release = \"$PVAPY_VERSION\"?' > $f.2 && mv $f.2 $f"
+eval $cmd
 make doc
 mkdir -p $CONDA_PVAPY_DOC_DIR
 rsync -arvlP documentation/sphinx/_build/html $CONDA_PVAPY_DOC_DIR/
 
-echo "Generating pvapy modules"
+echo "Updating python module files"
 SITE_PACKAGES_DIR=$PREFIX/lib/python$PYTHON_MAJOR_MINOR_VERSION/site-packages
+rsync -arvlP pvaccess pvapy $SITE_PACKAGES_DIR
 PVACCESS_DIR=$SITE_PACKAGES_DIR/pvaccess
 PVAPY_DIR=$SITE_PACKAGES_DIR/pvapy
-mkdir -p $PVACCESS_DIR
-mkdir -p $PVAPY_DIR
-
-echo "from .pvaccess import *" > $PVACCESS_DIR/__init__.py
-echo "from pvaccess import *" > $PVAPY_DIR/__init__.py
+for f in $PVACCESS_DIR/__init__.py $PVAPY_DIR/__init__.py; do
+    cmd="cat $f | sed 's?__version__.*=.*?__version__ = \"$PVAPY_VERSION\"?' > $f.2 && mv $f.2 $f"
+    eval $cmd
+done
 
 echo "Installing pvapy library"
 #rsync -arv $PVACCESS_LIB_DIR/pvaccess.so $PREFIX/lib/python$PYTHON_MAJOR_MINOR_VERSION/lib-dynload
