@@ -4,6 +4,8 @@ import time, threading, queue, argparse
 import numpy as np
 import pvaccess as pva
 
+__version__ = pva.__version__
+
 class AdSimServer:
 
     def __init__(self, input_file, frame_rate, nf, nx, ny, runtime, channel_name, start_delay, report_frequency):
@@ -137,6 +139,7 @@ def main():
     parser.add_argument('--channel-name', '-cn', type=str, dest='channel_name', default='pvapy:image', help='Server PVA channel name (default: pvapy:image)')
     parser.add_argument('--start-delay', '-sd', type=float, dest='start_delay',  default=10.0, help='Server start delay in seconds (default: 10 seconds)')
     parser.add_argument('--report-frequency', '-rf', type=int, dest='report_frequency', default=1, help='Reporting frequency for publishing frames; if set to <=0 no frames will be reported as published (default: 1)')
+    parser.add_argument('-v', '--version', action='version', version='%(prog)s {version}'.format(version=__version__))
 
     args, unparsed = parser.parse_known_args()
     if len(unparsed) > 0:

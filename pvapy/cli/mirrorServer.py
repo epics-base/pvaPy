@@ -5,10 +5,13 @@ import time
 import numpy as np
 import pvaccess as pva
 
+__version__ = pva.__version__
+
 def main():
     parser = argparse.ArgumentParser(description='PvaPy Mirror Server')
-    parser.add_argument('--runtime', '-rt', type=float, dest='runtime', default=300, help='Server runtime in seconds; values <=0 indicate infinite runtime (default: 0 seconds)')
     parser.add_argument('--channel-map', '-cm', dest='channel_map', default=None, help='Channel map specification given as a comma-separated list of tuples of the form (<mirror_channel>,<source_channel>[,source_provider]); if specified, source provider must be either "pva" or "ca" (default: pva)')
+    parser.add_argument('--runtime', '-rt', type=float, dest='runtime', default=300, help='Server runtime in seconds; values <=0 indicate infinite runtime (default: 0 seconds)')
+    parser.add_argument('-v', '--version', action='version', version='%(prog)s {version}'.format(version=__version__))
 
     args, unparsed = parser.parse_known_args()
     if len(unparsed) > 0:
