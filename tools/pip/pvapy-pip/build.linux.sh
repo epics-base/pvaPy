@@ -54,7 +54,7 @@ PVACCESS_LIB=pvaccess.so
 
 echo "Building pvapy $PVAPY_VERSION"
 echo "Recreating build directory $BUILD_DIR"
-rm -rf $BUILD_DIR
+#rm -rf $BUILD_DIR
 mkdir -p $BUILD_DIR
 cd $BUILD_DIR
 
@@ -76,6 +76,9 @@ if [ ! -f $PVAPY_TAR_FILE ]; then
         tar zxf $PVAPY_TAR_FILE || exit 1
     fi
 fi
+if [ ! -d $PVAPY_BUILD_DIR ]; then
+    tar zxf $PVAPY_TAR_FILE || exit 1
+fi
 
 export PATH=$PYTHON_DIR/bin:$PATH
 export LD_LIBRARY_PATH=$PYTHON_DIR/lib:$LD_LIBRARY_PATH:$BOOST_DIR/lib/$EPICS_HOST_ARCH:$PVAPY_DIR/lib/$EPICS_HOST_ARCH
@@ -92,7 +95,9 @@ PVACCESS_BUILD_LIB_DIR=$PVAPY_BUILD_DIR/lib/python/$PYTHON_MAJOR_MINOR_VERSION/$
 echo "Building pvapy"
 echo "Using BUILD_FLAGS: $BUILD_FLAGS"
 cd $PVAPY_BUILD_DIR
+echo "Running: make configure $PVAPY_FLAGS"
 make configure $PVAPY_FLAGS || exit 1
+echo "Runinng: make $BUILD_FLAGS"
 make $BUILD_FLAGS || exit 1
 
 echo "Building pvapy docs"
@@ -109,7 +114,7 @@ rsync -arv $PVACCESS_BUILD_LIB_DIR/$PVACCESS_LIB $PVACCESS_DIR/
 
 echo "Generating python module init files"
 INIT_FILE=$PVACCESS_DIR/__init__.py
-cmd="cat $INIT_FILE | sed 's?__version__.*=.*?__version__ = \"$PVAPY_VERSION\" > $INIT_FILE.2 && mv $INIT_FILE.2 $INIT_FILE'"
+cmd="cat $INIT_FILE | sed 's?__version__.*=.*?__version__ = \"$PVAPY_VERSION\"?' > $INIT_FILE.2 && mv $INIT_FILE.2 $INIT_FILE"
 eval $cmd
 
 echo "Copying dependencies"
