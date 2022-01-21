@@ -95,7 +95,7 @@ this means that channel updates sent to consumers that belong to
 group G/distributor D1 do not interfere with updates sent to consumers
 that belong to group G.distributor D2.
 
-- A distributor instance is removed once there are no more active groups.
+- A distributor instance is removed once it has no more active groups.
 
 - The current channel PV object is always distributed to a consumer on an 
 initial connect. 
