@@ -1,7 +1,7 @@
 # Data Distributor Plugin
 
 In most cases (i.e., without any filters applied) all PVA or CA channel 
-updates are served to all consumer applications. This model breaks down when
+updates are served to all consumer applications. This can become a problem if
 the network bandwidth is simply not large enough to send all updates to all 
 consumers continuously, or when data processing in consumer applications cannot 
 keep up with channel updates.
@@ -82,12 +82,20 @@ The plugin obeys the following rules:
 are not. For example, "groupId=abc" and "groupId=ABC" would indicate two
 different groups of consumers. 
 
-- Updates for a group of consumers are configured when the first consumer in a 
-group requests data. Configuration values passed in the PV request by
-the subsequent consumers are ignored.
+- Updates for a group of consumers are configured when the first consumer in
+the group requests data. Group configuration values (uniqueId, 
+nUpdatesPerConsumer, and updateMode), passed in the PV request by
+the subsequent group consumers are ignored.
 
 - A group is removed from the distributor once the last consumer in that
 group disconnects. 
+
+- Different distributor instances are completely independent of each other.
+this means that channel updates sent to consumers that belong to 
+group G/distributor D1 do not interfere with updates sent to consumers
+that belong to group G.distributor D2.
+
+- A distributor instance is removed once there are no more active groups.
 
 - The current channel PV object is always distributed to a consumer on an 
 initial connect. 
@@ -101,7 +109,7 @@ to give one sequential update per consumer, three consumers would each be
 receiving every third update; after consumer number four connects, all 
 consumers would start receiving every fourth update; if one of those then
 disconnects, remaining three consumers would again be receiving every third
-update.
+update. 
 
 ## Examples
 
@@ -186,57 +194,62 @@ $ pvget -m -r "_[pydistributor=groupId:G1;uniqueField:uniqueId;nUpdatesPerConsum
 
 ### Example 3
 
-This example illustrates mixed update mode in which we have two groups of 
-two consumers: the group G1 receives two sequential updates in the 
-"update single consumer per group" mode, while the group G2 receives 
-three sequential updates in the "update all consumers per 
-group" mode (the default mode when group id parameters are present in the
-PV request string). 
+This example illustrates what happens if multiple distributors are used
+for the same channel. Distributor D1 has 2 consumers belonging
+to the same default group, and receiving one update per consumer, while
+distributor D2 has 2 consumers in the default group receiving three
+sequential updates per consumer.
 
-Group G2 connected first, and hence it is the first to receive data.
-In this case both consumers in the group G2 receive three sequential updates
-(1,2,3), the first consumer in the group G1 receives two sequential updates
-(4,5), both consumers in the group G2 receive updates (6,7,8)
-the second consumer in the group G1 receives updates (9,10), etc.
+In this case the first consumer using distributor D1 receives updates
+(1,3,5,...), while the second one receives updates (2,4,6,...). On the
+other hand, the first consumer using distributor D2 receives updates
+(1,2,3,7,8,9,...), while the second one receives updates (4,5,6,10,11,12,...).
 
-Consumer 1 and Consumer 2/Group G2:
+Consumer 1/Default Group/Distributor D1:
 ```
-$ pvget -m -r "_[pydistributor=groupId:G2;uniqueField:uniqueId;nUpdatesPerConsumer:3]" pvapy:image  | grep uniqueId
+$ pvget -m -r "_[pydistributor=distributorId:D1;uniqueField:uniqueId]" pvapy:image  | grep uniqueId
+    int uniqueId 0
+    int uniqueId 1
+    int uniqueId 3
+    int uniqueId 5
+    int uniqueId 7
+    int uniqueId 9
+```
+
+Consumer 2/Default Group/Distributor D1:
+```
+pvget -m -r "_[pydistributor=distributorId:D1;uniqueField:uniqueId]" pvapy:image  | grep uniqueId
+    int uniqueId 0
+    int uniqueId 2
+    int uniqueId 4
+    int uniqueId 6
+    int uniqueId 8
+```
+
+Consumer 1/Default Group/Distributor D2:
+```
+$ pvget -m -r "_[pydistributor=distributorId:D2;uniqueField:uniqueId;nUpdatesPerConsumer:3]" pvapy:image  | grep uniqueId
     int uniqueId 0
     int uniqueId 1
     int uniqueId 2
     int uniqueId 3
-    int uniqueId 6
     int uniqueId 7
     int uniqueId 8
-    int uniqueId 11
-    int uniqueId 12
-    int uniqueId 13
-    int uniqueId 16
-    int uniqueId 17
-    int uniqueId 18
+    int uniqueId 9
 ```
 
-Consumer 1/Group G1:
+Consumer 2/Default Group/Distributor D1:
 ```
-$ pvget -m -r "_[pydistributor=groupId:G1;uniqueField:uniqueId;nUpdatesPerConsumer:2;updateMode=0]" pvapy:image  | grep uniqueId
-
+$ pvget -m -r "_[pydistributor=distributorId:D2;uniqueField:uniqueId;nUpdatesPerConsumer:3]" pvapy:image  | grep uniqueId
     int uniqueId 0
     int uniqueId 4
     int uniqueId 5
-    int uniqueId 14
-    int uniqueId 15
-    int uniqueId 24
-    int uniqueId 25
+    int uniqueId 6
+    int uniqueId 10
+    int uniqueId 11
+    int uniqueId 12
 ```
 
-Consumer 2/Group G1:
-```
-$ pvget -m -r "_[pydistributor=groupId:G1;uniqueField:uniqueId;nUpdatesPerConsumer:2;updateMode=0]" pvapy:image  | grep uniqueId
-    int uniqueId 0
-    int uniqueId 9
-    int uniqueId 10
-    int uniqueId 19
-    int uniqueId 20
-```
+The above shows that the two distributor instances do not interfere with each 
+other.
 
