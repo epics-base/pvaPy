@@ -22,13 +22,13 @@ requirements:
     - python
     - sphinx
     - sphinx_rtd_theme
-    - numpy<1.21
+    - numpy>=1.22
     - epics-base=EPICS_BASE_VERSION
     - pvapy-boost=BOOST_VERSION
 
   run:
     - python
-    - numpy<1.21
+    - numpy>=1.22
     - epics-base=EPICS_BASE_VERSION
     - pvapy-boost=BOOST_VERSION
 
