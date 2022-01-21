@@ -101,6 +101,9 @@ echo "Runinng: make $BUILD_FLAGS"
 make $BUILD_FLAGS || exit 1
 
 echo "Building pvapy docs"
+f=documentation/sphinx/conf.py 
+cmd="cat $f | sed 's?version.*=.*?version = \"$PVAPY_VERSION\"?' | sed 's?release.*=.*?release = \"$PVAPY_VERSION\"?' > $f.2 && mv $f.2 $f"
+eval $cmd
 make doc || exit 1
 mkdir -p $PVACCESS_DOC_DIR
 rsync -arvl documentation/sphinx/_build/html $PVACCESS_DOC_DIR/
@@ -115,9 +118,10 @@ echo "Copying module files"
 rsync -arvl pvapy pvaccess $TOP_DIR/
 
 echo "Updating python module init files"
-INIT_FILE=$PVACCESS_DIR/__init__.py
-cmd="cat $INIT_FILE | sed 's?__version__.*=.*?__version__ = \"$PVAPY_VERSION\"?' > $INIT_FILE.2 && mv $INIT_FILE.2 $INIT_FILE"
-eval $cmd
+for f in $PVACCESS_DIR/__init__.py $PVAPY_DIR/__init__.py; do
+    cmd="cat $f | sed 's?__version__.*=.*?__version__ = \"$PVAPY_VERSION\"?' > $f.2 && mv $f.2 $f"
+    eval $cmd
+done
 
 echo "Copying dependencies"
 EPICS_LIBS=`ls -c1 $EPICS_BASE_DIR/lib/$EPICS_HOST_ARCH/*.so`
