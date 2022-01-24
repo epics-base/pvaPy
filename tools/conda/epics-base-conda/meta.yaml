@@ -1,9 +1,9 @@
 package:
   name: epics-base
-  version: 7.0.4.1
+  version: 7.0.6.1
 
 source:
-  url: https://epics.anl.gov/download/base/base-7.0.4.1.tar.gz
+  url: https://epics.anl.gov/download/base/base-7.0.6.1.tar.gz
 
 build:
   number: 1
