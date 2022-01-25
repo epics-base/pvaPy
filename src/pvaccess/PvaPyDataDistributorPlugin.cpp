@@ -34,18 +34,18 @@ PvaPyLogger PvaPyDataDistributor::logger("PvaPyDataDistributor");
 std::map<std::string, PvaPyDataDistributorPtr> PvaPyDataDistributor::dataDistributorMap;
 epics::pvData::Mutex PvaPyDataDistributor::dataDistributorMapMutex;
 
-PvaPyDataDistributorPtr PvaPyDataDistributor::getInstance(const std::string& id)
+PvaPyDataDistributorPtr PvaPyDataDistributor::getInstance(const std::string& groupId)
 {
     epvd::Lock lock(dataDistributorMapMutex);
-    std::map<std::string,PvaPyDataDistributorPtr>::iterator ddit = dataDistributorMap.find(id);
+    std::map<std::string,PvaPyDataDistributorPtr>::iterator ddit = dataDistributorMap.find(groupId);
     if (ddit != dataDistributorMap.end()) {
         PvaPyDataDistributorPtr ddPtr = ddit->second;
         return ddPtr;
     }
     else {
-        PvaPyDataDistributorPtr ddPtr(new PvaPyDataDistributor(id));
-        dataDistributorMap[id] = ddPtr;
-        logger.debug("Created new data distributor: %s", id.c_str());
+        PvaPyDataDistributorPtr ddPtr(new PvaPyDataDistributor(groupId));
+        dataDistributorMap[groupId] = ddPtr;
+        logger.debug("Created new data distributor with group id: %s", groupId.c_str());
         return ddPtr;
     }
 }
@@ -53,25 +53,25 @@ PvaPyDataDistributorPtr PvaPyDataDistributor::getInstance(const std::string& id)
 void PvaPyDataDistributor::removeUnusedInstance(PvaPyDataDistributorPtr dataDistributorPtr)
 {
     epvd::Lock lock(dataDistributorMapMutex);
-    std::string distributorId = dataDistributorPtr->getId();
-    std::map<std::string,PvaPyDataDistributorPtr>::iterator ddit = dataDistributorMap.find(distributorId);
+    std::string groupId = dataDistributorPtr->getGroupId();
+    std::map<std::string,PvaPyDataDistributorPtr>::iterator ddit = dataDistributorMap.find(groupId);
     if (ddit != dataDistributorMap.end()) {
         PvaPyDataDistributorPtr ddPtr = ddit->second;
-        int nGroups = ddPtr->consumerGroupMap.size();
-        logger.debug("Number of active consumer groups: %d", nGroups);
-        if (nGroups == 0) {
+        int nSets = ddPtr->clientSetMap.size();
+        logger.debug("Number of active client sets: %d", nSets);
+        if (nSets == 0) {
             dataDistributorMap.erase(ddit);
-            logger.debug("Removed data distributor: %s", distributorId.c_str());
+            logger.debug("Removed data distributor for group: %s", groupId.c_str());
         }
     }
 }
 
-PvaPyDataDistributor::PvaPyDataDistributor(const std::string& id_)
-    : id(id_)
+PvaPyDataDistributor::PvaPyDataDistributor(const std::string& groupId_)
+    : groupId(groupId_)
     , mutex()
-    , consumerGroupMap()
-    , consumerGroupIdList()
-    , currentGroupIdIter(consumerGroupIdList.end())
+    , clientSetMap()
+    , clientSetIdList()
+    , currentSetIdIter(clientSetIdList.end())
     , lastUpdateValue()
 {
 }
@@ -79,155 +79,155 @@ PvaPyDataDistributor::PvaPyDataDistributor(const std::string& id_)
 PvaPyDataDistributor::~PvaPyDataDistributor()
 {
     epvd::Lock lock(mutex);
-    consumerGroupMap.clear();
-    consumerGroupIdList.clear();
+    clientSetMap.clear();
+    clientSetIdList.clear();
 }
 
-std::string PvaPyDataDistributor::addConsumer(int consumerId, const std::string& groupId, const std::string& uniqueField, int nUpdatesPerConsumer, int updateMode)
+std::string PvaPyDataDistributor::addClient(int clientId, const std::string& setId, const std::string& triggerField, int nUpdatesPerClient, int updateMode)
 {
     epvd::Lock lock(mutex);
-    std::map<std::string,ConsumerGroupPtr>::iterator git = consumerGroupMap.find(groupId);
-    if (git != consumerGroupMap.end()) {
-        ConsumerGroupPtr groupPtr = git->second;
-        groupPtr->consumerIdList.push_back(consumerId);
-        logger.debug("Added consumer %d to existing group %s", consumerId, groupId.c_str());
-        return groupPtr->uniqueField;
+    std::map<std::string,ClientSetPtr>::iterator git = clientSetMap.find(setId);
+    if (git != clientSetMap.end()) {
+        ClientSetPtr setPtr = git->second;
+        setPtr->clientIdList.push_back(clientId);
+        logger.debug("Added client %d to existing set %s", clientId, setId.c_str());
+        return setPtr->triggerField;
     }
     else {
-        ConsumerGroupPtr groupPtr(new ConsumerGroup(groupId, uniqueField, nUpdatesPerConsumer, updateMode));
-        groupPtr->consumerIdList.push_back(consumerId);
-        consumerGroupMap[groupId] = groupPtr;
-        consumerGroupIdList.push_back(groupId);
-        logger.debug("Added consumer %d to new group %s (unique field: %s, nUpdatesPerConsumer: %d)", consumerId, groupId.c_str(), uniqueField.c_str(), nUpdatesPerConsumer);
-        return uniqueField;
+        ClientSetPtr setPtr(new ClientSet(setId, triggerField, nUpdatesPerClient, updateMode));
+        setPtr->clientIdList.push_back(clientId);
+        clientSetMap[setId] = setPtr;
+        clientSetIdList.push_back(setId);
+        logger.debug("Added client %d to new set %s (triggerField: %s, nUpdatesPerClient: %d)", clientId, setId.c_str(), triggerField.c_str(), nUpdatesPerClient);
+        return triggerField;
     }
 }
 
-void PvaPyDataDistributor::removeConsumer(int consumerId, const std::string& groupId)
+void PvaPyDataDistributor::removeClient(int clientId, const std::string& setId)
 {
     epvd::Lock lock(mutex);
-    logger.debug("Removing consumer %d from group %s", consumerId, groupId.c_str());
-    std::map<std::string,ConsumerGroupPtr>::iterator git = consumerGroupMap.find(groupId);
-    if (git != consumerGroupMap.end()) {
-        ConsumerGroupPtr groupPtr = git->second;
-        std::list<int>::iterator cit = std::find(groupPtr->consumerIdList.begin(), groupPtr->consumerIdList.end(), consumerId);
-        if (cit != groupPtr->consumerIdList.end()) {
-            // If we are removing current consumer id, advance iterator
-            if (cit == groupPtr->currentConsumerIdIter) {
-                logger.debug("Advancing current consumer id iterator for group %s", groupId.c_str());
-                groupPtr->currentConsumerIdIter++;
+    logger.debug("Removing client %d from set %s", clientId, setId.c_str());
+    std::map<std::string,ClientSetPtr>::iterator git = clientSetMap.find(setId);
+    if (git != clientSetMap.end()) {
+        ClientSetPtr setPtr = git->second;
+        std::list<int>::iterator cit = std::find(setPtr->clientIdList.begin(), setPtr->clientIdList.end(), clientId);
+        if (cit != setPtr->clientIdList.end()) {
+            // If we are removing current client id, advance iterator
+            if (cit == setPtr->currentClientIdIter) {
+                logger.debug("Advancing current client id iterator for set %s", setId.c_str());
+                setPtr->currentClientIdIter++;
             }
 
-            // Find current consumer id 
-            int currentConsumerId = -1;
-            if (groupPtr->currentConsumerIdIter != groupPtr->consumerIdList.end()) {
-                currentConsumerId = *(groupPtr->currentConsumerIdIter);
+            // Find current client id 
+            int currentClientId = -1;
+            if (setPtr->currentClientIdIter != setPtr->clientIdList.end()) {
+                currentClientId = *(setPtr->currentClientIdIter);
             }
 
-            // Remove consumer id from the list
-            groupPtr->consumerIdList.erase(cit);
-            logger.debug("Removed consumer %d from group %s", consumerId, groupId.c_str());
+            // Remove client id from the list
+            setPtr->clientIdList.erase(cit);
+            logger.debug("Removed client %d from set %s", clientId, setId.c_str());
 
-             // Reset current consumer id iterator
-            groupPtr->currentConsumerIdIter = groupPtr->consumerIdList.end();
-            if (currentConsumerId < 0) {
-                logger.debug("Current consumer id is not set");
+             // Reset current client id iterator
+            setPtr->currentClientIdIter = setPtr->clientIdList.end();
+            if (currentClientId < 0) {
+                logger.debug("Current client id is not set");
             }
             else {
-                std::list<int>::iterator cit2 = std::find(groupPtr->consumerIdList.begin(), groupPtr->consumerIdList.end(), currentConsumerId);
-                if (cit2 != groupPtr->consumerIdList.end()) {
-                    logger.debug("Current consumer id is set to %d", currentConsumerId);
-                    groupPtr->currentConsumerIdIter = cit2;
+                std::list<int>::iterator cit2 = std::find(setPtr->clientIdList.begin(), setPtr->clientIdList.end(), currentClientId);
+                if (cit2 != setPtr->clientIdList.end()) {
+                    logger.debug("Current client id is set to %d", currentClientId);
+                    setPtr->currentClientIdIter = cit2;
                 }
                 else {
-                    logger.warn("Could not find current consumer %d in group %s", currentConsumerId, groupId.c_str());
+                    logger.warn("Could not find current client %d in set %s", currentClientId, setId.c_str());
                 }
             }
         }
         else {
-            logger.warn("Could not find consumer %d in group %s", consumerId, groupId.c_str());
+            logger.warn("Could not find client %d in set %s", clientId, setId.c_str());
         }
        
-        logger.debug("Number of consumers in group %s: %d", groupId.c_str(), groupPtr->consumerIdList.size());
-        if (groupPtr->consumerIdList.size() == 0) {
-            consumerGroupMap.erase(git);
-            std::list<std::string>::iterator git2 = std::find(consumerGroupIdList.begin(), consumerGroupIdList.end(), groupId);
-            if (git2 == currentGroupIdIter) {
-                logger.debug("Group %s will be removed, advancing current group iterator", groupId.c_str());
-                currentGroupIdIter++;
+        logger.debug("Number of clients in set %s: %d", setId.c_str(), setPtr->clientIdList.size());
+        if (setPtr->clientIdList.size() == 0) {
+            clientSetMap.erase(git);
+            std::list<std::string>::iterator git2 = std::find(clientSetIdList.begin(), clientSetIdList.end(), setId);
+            if (git2 == currentSetIdIter) {
+                logger.debug("Set %s will be removed, advancing current set iterator", setId.c_str());
+                currentSetIdIter++;
             }
-            if (git2 != consumerGroupIdList.end()) {
-                consumerGroupIdList.erase(git2);
+            if (git2 != clientSetIdList.end()) {
+                clientSetIdList.erase(git2);
             }
-            logger.debug("Removed empty group %s", groupId.c_str());
+            logger.debug("Removed empty set %s", setId.c_str());
         }
     }
     else {
-        logger.warn("Could not find group %s", groupId.c_str());
+        logger.warn("Could not find set %s", setId.c_str());
     }
 }
 
-bool PvaPyDataDistributor::updateConsumer(int consumerId, const std::string& groupId, const std::string& uniqueFieldValue)
+bool PvaPyDataDistributor::updateClient(int clientId, const std::string& setId, const std::string& triggerFieldValue)
 {
     epvd::Lock lock(mutex);
-    logger.debug("Looking to update consumer %d for group %s", consumerId, groupId.c_str());
+    logger.debug("Looking to update client %d for set %s", clientId, setId.c_str());
     bool proceedWithUpdate = false;
-    if (currentGroupIdIter == consumerGroupIdList.end()) {
-        currentGroupIdIter = consumerGroupIdList.begin();
+    if (currentSetIdIter == clientSetIdList.end()) {
+        currentSetIdIter = clientSetIdList.begin();
     }
-    std::string currentGroupId = *currentGroupIdIter;
-    if (groupId != currentGroupId) {
-        // We are not distributing data to this group at the moment
-        logger.debug("Group %s is not receiving current updates, consumer %d will not be updated", groupId.c_str(), consumerId);
+    std::string currentSetId = *currentSetIdIter;
+    if (setId != currentSetId) {
+        // We are not distributing data to this set at the moment
+        logger.debug("Set %s is not receiving current updates, client %d will not be updated", setId.c_str(), clientId);
         return proceedWithUpdate;
     }
-    ConsumerGroupPtr groupPtr = consumerGroupMap[currentGroupId];
-    if (groupPtr->currentConsumerIdIter == groupPtr->consumerIdList.end()) {
-        // Move current consumer iterator to the beginning of the list
-        groupPtr->currentConsumerIdIter = groupPtr->consumerIdList.begin();
+    ClientSetPtr setPtr = clientSetMap[currentSetId];
+    if (setPtr->currentClientIdIter == setPtr->clientIdList.end()) {
+        // Move current client iterator to the beginning of the list
+        setPtr->currentClientIdIter = setPtr->clientIdList.begin();
     }
-    if (lastUpdateValue == uniqueFieldValue) {
+    if (lastUpdateValue == triggerFieldValue) {
         // This update was already distributed.
-        logger.debug("Update %s has already been distributed, consumer %d will not be updated", lastUpdateValue.c_str(), consumerId);
+        logger.debug("Update %s has already been distributed, client %d will not be updated", lastUpdateValue.c_str(), clientId);
         return proceedWithUpdate;
     }
-    switch (groupPtr->updateMode) {
+    switch (setPtr->updateMode) {
         case(DD_UPDATE_ONE_PER_GROUP): {
-            if (consumerId != *(groupPtr->currentConsumerIdIter)) {
-                // Not this consumer's turn.
-                logger.debug("Consumer %d will not be updated, current consumer is %d", consumerId, *(groupPtr->currentConsumerIdIter));
+            if (clientId != *(setPtr->currentClientIdIter)) {
+                // Not this client's turn.
+                logger.debug("Client %d will not be updated, current client is %d", clientId, *(setPtr->currentClientIdIter));
                 return proceedWithUpdate;
             }
             proceedWithUpdate = true;
-            lastUpdateValue = uniqueFieldValue;
-            groupPtr->lastUpdateValue = uniqueFieldValue;
-            groupPtr->updateCounter++;
-            logger.debug("Consumer %d will be updated", consumerId);
-            if (groupPtr->updateCounter >= groupPtr->nUpdatesPerConsumer) {
-                // This consumer and group are done.
-                logger.debug("Group %s is done after %d updates", groupId.c_str(), groupPtr->updateCounter);
-                groupPtr->currentConsumerIdIter++;
-                groupPtr->updateCounter = 0;
-                currentGroupIdIter++;
+            lastUpdateValue = triggerFieldValue;
+            setPtr->lastUpdateValue = triggerFieldValue;
+            setPtr->updateCounter++;
+            logger.debug("Client %d will be updated", clientId);
+            if (setPtr->updateCounter >= setPtr->nUpdatesPerClient) {
+                // This client and set are done.
+                logger.debug("Set %s is done after %d updates", setId.c_str(), setPtr->updateCounter);
+                setPtr->currentClientIdIter++;
+                setPtr->updateCounter = 0;
+                currentSetIdIter++;
             }
             break;
         }
         case(DD_UPDATE_ALL_IN_GROUP): {
             proceedWithUpdate = true;
-            static unsigned int nConsumersUpdated = 0;
-            if (groupPtr->lastUpdateValue != uniqueFieldValue) {
-                groupPtr->lastUpdateValue = uniqueFieldValue;
-                groupPtr->updateCounter++;
-                nConsumersUpdated = 0;
+            static unsigned int nClientsUpdated = 0;
+            if (setPtr->lastUpdateValue != triggerFieldValue) {
+                setPtr->lastUpdateValue = triggerFieldValue;
+                setPtr->updateCounter++;
+                nClientsUpdated = 0;
             }
-            nConsumersUpdated++;
-            logger.debug("Group %s: number of consumers updated: %d, update counter: %d", groupId.c_str(), nConsumersUpdated, groupPtr->updateCounter);
-            if (nConsumersUpdated == groupPtr->consumerIdList.size() && groupPtr->updateCounter >= groupPtr->nUpdatesPerConsumer) {
-                // This group is done.
-                lastUpdateValue = uniqueFieldValue;
-                logger.debug("Group %s is done after %d updates", groupId.c_str(), groupPtr->updateCounter);
-                groupPtr->updateCounter = 0;
-                currentGroupIdIter++;
+            nClientsUpdated++;
+            logger.debug("Set %s: number of clients updated: %d, update counter: %d", setId.c_str(), nClientsUpdated, setPtr->updateCounter);
+            if (nClientsUpdated == setPtr->clientIdList.size() && setPtr->updateCounter >= setPtr->nUpdatesPerClient) {
+                // This set is done.
+                lastUpdateValue = triggerFieldValue;
+                logger.debug("Set %s is done after %d updates", setId.c_str(), setPtr->updateCounter);
+                setPtr->updateCounter = 0;
+                currentSetIdIter++;
             }
             break;
         }
@@ -268,7 +268,7 @@ PVFilterPtr PvaPyDataDistributorPlugin::create(
 
 PvaPyDataDistributorFilter::~PvaPyDataDistributorFilter()
 {
-    dataDistributorPtr->removeConsumer(consumerId, groupId);
+    dataDistributorPtr->removeClient(clientId, setId);
     PvaPyDataDistributor::removeUnusedInstance(dataDistributorPtr);
 }
 
@@ -277,90 +277,102 @@ PvaPyDataDistributorFilterPtr PvaPyDataDistributorFilter::create(
      const PVCopyPtr& pvCopy,
      const PVFieldPtr& master)
 {
-    static int consumerId = 0;
-    consumerId++;
+    static int clientId = 0;
+    clientId++;
       
     logger.debug("Creating distributor filter with request: %s", requestValue.c_str());
     std::vector<std::string> configItems = StringUtility::split(requestValue, ';');
     // Use lowercase keys if possible.
     std::string requestValue2 = StringUtility::toLowerCase(requestValue); 
     std::vector<std::string> configItems2 = StringUtility::split(requestValue2, ';');
-    int nUpdatesPerConsumer = 1;
+    int nUpdatesPerClient = 1;
     int updateMode = PvaPyDataDistributor::DD_UPDATE_ONE_PER_GROUP;
-    std::string distributorId = "default";
     std::string groupId = "default";
-    std::string uniqueField = "timeStamp";
+    std::string setId = "default";
+    std::string triggerField = "timeStamp";
     bool hasUpdateMode = false;
-    bool hasGroupId = false;
+    bool hasSetId = false;
     for(unsigned int i = 0; i < configItems2.size(); i++) {
         std::string configItem2 = configItems2[i];
         size_t ind = configItem2.find(':');
         if (ind == string::npos) {
             logger.debug("No value specified for request option: %s", configItem2.c_str());
+            continue;
         }
-        if(configItem2.find("nupdatesperconsumer") == 0) {
+        if(configItem2.find("updates") == 0) {
             std::string svalue = configItem2.substr(ind+1);
-            nUpdatesPerConsumer = atoi(svalue.c_str());
-            logger.debug("Request spec for nUpdatesPerConsumer: %d", nUpdatesPerConsumer);
+            nUpdatesPerClient = atoi(svalue.c_str());
+            logger.debug("Request spec for nUpdatesPerClient: %d", nUpdatesPerClient);
         }
-        else if(configItem2.find("distributorid") == 0) {
-            std::string configItem = configItems[i];
-            distributorId = configItem.substr(ind+1);
-            logger.debug("Request spec for distributorId: %s", distributorId.c_str());
-        }
-        else if(configItem2.find("groupid") == 0) {
+        else if(configItem2.find("group") == 0) {
             std::string configItem = configItems[i];
             groupId = configItem.substr(ind+1);
-            hasGroupId = true;
             logger.debug("Request spec for groupId: %s", groupId.c_str());
         }
-        else if(configItem2.find("updatemode") == 0) {
-            std::string svalue = configItem2.substr(ind+1);
-            updateMode = atoi(svalue.c_str());
-            hasUpdateMode = true;
-            logger.debug("Request spec for updateMode: %d", updateMode);
-        }
-        else if(configItem2.find("uniquefield") == 0) {
+        else if(configItem2.find("set") == 0) {
             std::string configItem = configItems[i];
-            uniqueField = configItem.substr(ind+1);
-            logger.debug("Request spec for unique field: %s", uniqueField.c_str());
+            setId = configItem.substr(ind+1);
+            hasSetId = true;
+            logger.debug("Request spec for setId: %s", setId.c_str());
+        }
+        else if(configItem2.find("mode") == 0) {
+            std::string svalue = StringUtility::toLowerCase(configItem2.substr(ind+1));
+            if (svalue == "one") {
+                updateMode = PvaPyDataDistributor::DD_UPDATE_ONE_PER_GROUP;
+                hasUpdateMode = true;
+            }
+            else if (svalue == "all") {
+                updateMode = PvaPyDataDistributor::DD_UPDATE_ALL_IN_GROUP;
+                hasUpdateMode = true;
+            }
+            if (!hasUpdateMode) {
+                logger.debug("Invalid request spec for updateMode: %s", svalue.c_str());
+            }
+            else {
+                logger.debug("Request spec for updateMode: %d", updateMode);
+            }
+        }
+        else if(configItem2.find("trigger") == 0) {
+            std::string configItem = configItems[i];
+            triggerField = configItem.substr(ind+1);
+            logger.debug("Request spec for trigger field: %s", triggerField.c_str());
         }
     }
-    // If request does not have update mode specified, but has group id
+    // If request does not have update mode specified, but has set id
     // then use a different update mode
-    if(!hasUpdateMode && hasGroupId) {
+    if(!hasUpdateMode && hasSetId) {
         updateMode = PvaPyDataDistributor::DD_UPDATE_ALL_IN_GROUP;
-        logger.debug("Request specifies group id but does not specify update mode; using update mode: %d", updateMode);
+        logger.debug("Request specifies set id but does not specify update mode; using update mode: %d", updateMode);
     }
 
     // Make sure request is valid
-    if(nUpdatesPerConsumer <= 0) {
+    if(nUpdatesPerClient <= 0) {
         return PvaPyDataDistributorFilterPtr();
     }
     PvaPyDataDistributorFilterPtr filter =
-         PvaPyDataDistributorFilterPtr(new PvaPyDataDistributorFilter(distributorId, consumerId, groupId, uniqueField, nUpdatesPerConsumer, updateMode, pvCopy, master));
+         PvaPyDataDistributorFilterPtr(new PvaPyDataDistributorFilter(groupId, clientId, setId, triggerField, nUpdatesPerClient, updateMode, pvCopy, master));
     return filter;
 }
 
-PvaPyDataDistributorFilter::PvaPyDataDistributorFilter(const std::string& distributorId_, int consumerId_, const std::string& groupId_, const std::string& uniqueField_, int nUpdatesPerConsumer, int updateMode, const PVCopyPtr& copyPtr_, const epvd::PVFieldPtr& masterFieldPtr_)
-    : dataDistributorPtr(PvaPyDataDistributor::getInstance(distributorId_))
-    , consumerId(consumerId_)
-    , groupId(groupId_)
-    , uniqueField(uniqueField_)
+PvaPyDataDistributorFilter::PvaPyDataDistributorFilter(const std::string& groupId_, int clientId_, const std::string& setId_, const std::string& triggerField_, int nUpdatesPerClient, int updateMode, const PVCopyPtr& copyPtr_, const epvd::PVFieldPtr& masterFieldPtr_)
+    : dataDistributorPtr(PvaPyDataDistributor::getInstance(groupId_))
+    , clientId(clientId_)
+    , setId(setId_)
+    , triggerField(triggerField_)
     , masterFieldPtr(masterFieldPtr_)
-    , uniqueFieldPtr()
+    , triggerFieldPtr()
     , firstUpdate(true)
 {
-    uniqueField = dataDistributorPtr->addConsumer(consumerId, groupId, uniqueField, nUpdatesPerConsumer, updateMode);
+    triggerField = dataDistributorPtr->addClient(clientId, setId, triggerField, nUpdatesPerClient, updateMode);
     if(masterFieldPtr->getField()->getType() == epvd::structure) {
         epvd::PVStructurePtr pvStructurePtr = static_pointer_cast<epvd::PVStructure>(masterFieldPtr);
         if(pvStructurePtr) {
-            uniqueFieldPtr = pvStructurePtr->getSubField(uniqueField);
+            triggerFieldPtr = pvStructurePtr->getSubField(triggerField);
         }
     }
-    if(!uniqueFieldPtr) {
-        logger.debug("Using master field as unique field");
-        uniqueFieldPtr = masterFieldPtr;
+    if(!triggerFieldPtr) {
+        logger.debug("Using master field as trigger field");
+        triggerFieldPtr = masterFieldPtr;
     }
 }
 
@@ -379,9 +391,9 @@ bool PvaPyDataDistributorFilter::filter(const PVFieldPtr& pvCopy, const BitSetPt
     }
     else {
         std::stringstream ss;
-        ss << uniqueFieldPtr;
-        std::string uniqueFieldValue = ss.str();
-        proceedWithUpdate = dataDistributorPtr->updateConsumer(consumerId, groupId, uniqueFieldValue);
+        ss << triggerFieldPtr;
+        std::string triggerFieldValue = ss.str();
+        proceedWithUpdate = dataDistributorPtr->updateClient(clientId, setId, triggerFieldValue);
     }
 
     if(proceedWithUpdate) {

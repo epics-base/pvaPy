@@ -26,52 +26,52 @@ typedef std::tr1::shared_ptr<PvaPyDataDistributorPlugin> PvaPyDataDistributorPlu
 typedef std::tr1::shared_ptr<PvaPyDataDistributorFilter> PvaPyDataDistributorFilterPtr;
 typedef std::tr1::shared_ptr<PvaPyDataDistributor> PvaPyDataDistributorPtr;
 
-struct ConsumerGroup;
-typedef std::tr1::shared_ptr<ConsumerGroup> ConsumerGroupPtr;
-typedef std::tr1::shared_ptr<const ConsumerGroup> ConsumerGroupConstPtr;
+struct ClientSet;
+typedef std::tr1::shared_ptr<ClientSet> ClientSetPtr;
+typedef std::tr1::shared_ptr<const ClientSet> ClientSetConstPtr;
 
-struct ConsumerGroup
+struct ClientSet
 {
-    POINTER_DEFINITIONS(ConsumerGroup);
+    POINTER_DEFINITIONS(ClientSet);
 
-    ConsumerGroup(const std::string& groupId_, const std::string uniqueField_, int nUpdatesPerConsumer_, int updateMode_) 
-        : groupId(groupId_)
-        , uniqueField(uniqueField_)
-        , nUpdatesPerConsumer(nUpdatesPerConsumer_)
+    ClientSet(const std::string& setId_, const std::string triggerField_, int nUpdatesPerClient_, int updateMode_) 
+        : setId(setId_)
+        , triggerField(triggerField_)
+        , nUpdatesPerClient(nUpdatesPerClient_)
         , updateMode(updateMode_)
-        , consumerIdList()
+        , clientIdList()
         , lastUpdateValue()
         , updateCounter(0)
-        , currentConsumerIdIter(consumerIdList.end())
+        , currentClientIdIter(clientIdList.end())
         {}
-    ~ConsumerGroup() {}
-    std::string groupId;
-    std::string uniqueField;
-    int nUpdatesPerConsumer;
+    ~ClientSet() {}
+    std::string setId;
+    std::string triggerField;
+    int nUpdatesPerClient;
     int updateMode;
-    std::list<int> consumerIdList;
+    std::list<int> clientIdList;
     std::string lastUpdateValue;
     int updateCounter;
-    std::list<int>::iterator currentConsumerIdIter;
+    std::list<int>::iterator currentClientIdIter;
 };
 
 class PvaPyDataDistributor 
 {
 public:
-    enum ConsumerUpdateMode {
-        DD_UPDATE_ONE_PER_GROUP = 0, // Update goes to one consumer per group
-        DD_UPDATE_ALL_IN_GROUP = 1,  // Update goes to all consumers in group
+    enum ClientUpdateMode {
+        DD_UPDATE_ONE_PER_GROUP = 0, // Update goes to one client per set
+        DD_UPDATE_ALL_IN_GROUP = 1,  // Update goes to all clients in set
         DD_N_UPDATE_MODES = 2        // Number of valid update modes
     };
 
-    static PvaPyDataDistributorPtr getInstance(const std::string& id);
+    static PvaPyDataDistributorPtr getInstance(const std::string& groupId);
     static void removeUnusedInstance(PvaPyDataDistributorPtr dataDistributorPtr);
 
     virtual ~PvaPyDataDistributor();
-    std::string getId() const { return id; }
-    std::string addConsumer(int consumerId, const std::string& groupId, const std::string& uniqueField, int nUpdatesPerConsumer, int updateMode);
-    void removeConsumer(int consumerId, const std::string& groupId);
-    bool updateConsumer(int consumerId, const std::string& groupId, const std::string& uniqueFieldValue);
+    std::string getGroupId() const { return groupId; }
+    std::string addClient(int clientId, const std::string& setId, const std::string& triggerField, int nUpdatesPerClient, int updateMode);
+    void removeClient(int clientId, const std::string& setId);
+    bool updateClient(int clientId, const std::string& setId, const std::string& triggerFieldValue);
 
 private:
     PvaPyDataDistributor(const std::string& id);
@@ -82,11 +82,11 @@ private:
     static std::map<std::string, PvaPyDataDistributorPtr> dataDistributorMap;
     static epics::pvData::Mutex dataDistributorMapMutex;
 
-    std::string id;
+    std::string groupId;
     epics::pvData::Mutex mutex;
-    std::map<std::string, ConsumerGroupPtr> consumerGroupMap;
-    std::list<std::string> consumerGroupIdList;
-    std::list<std::string>::iterator currentGroupIdIter;
+    std::map<std::string, ClientSetPtr> clientSetMap;
+    std::list<std::string> clientSetIdList;
+    std::list<std::string>::iterator currentSetIdIter;
     std::string lastUpdateValue;
 };
 
@@ -129,14 +129,14 @@ private:
     static PvaPyLogger logger;
 
     PvaPyDataDistributorPtr dataDistributorPtr;
-    int consumerId;
-    std::string groupId;
-    std::string uniqueField;
+    int clientId;
+    std::string setId;
+    std::string triggerField;
     epics::pvData::PVFieldPtr masterFieldPtr;
-    epics::pvData::PVFieldPtr uniqueFieldPtr;
+    epics::pvData::PVFieldPtr triggerFieldPtr;
     bool firstUpdate;
 
-    PvaPyDataDistributorFilter(const std::string& distributorId, int consumerId, const std::string& groupId, const std::string& uniqueField, int nUpdatesPerConsumer, int updateMode, const epics::pvCopy::PVCopyPtr& copyPtr, const epics::pvData::PVFieldPtr& masterFieldPtr);
+    PvaPyDataDistributorFilter(const std::string& groupId, int clientId, const std::string& setId, const std::string& triggerField, int nUpdatesPerClient, int updateMode, const epics::pvCopy::PVCopyPtr& copyPtr, const epics::pvData::PVFieldPtr& masterFieldPtr);
 
 public:
     POINTER_DEFINITIONS(PvaPyDataDistributorFilter);
