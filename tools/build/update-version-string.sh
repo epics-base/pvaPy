@@ -1,9 +1,10 @@
 #!/bin/sh
 
-MY_DIR=`dirname $0` && MY_DIR=`realpath $MY_DIR`
-TOP_DIR=`realpath $MY_DIR/../..`
+MY_DIR=`dirname $0` && cd $MY_DIR && MY_DIR=`pwd`
+TOP_DIR=`cd $MY_DIR/../.. && pwd`
 VERSION=${1:-dev}
 
+cd $TOP_DIR
 echo "Top directory: $TOP_DIR"
 echo "Updating version string to: $VERSION"
 
