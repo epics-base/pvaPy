@@ -14,6 +14,9 @@ build: configure
 	python setup.py build_ext 
 
 clean: 
-	rm -rf $(BUILD_DIR) $(DIST_DIR) $(PACKAGE_DIR)
+	rm -rf $(BUILD_DIR) $(PACKAGE_DIR) *.egg-info
 
-distclean: clean
+tidy: clean
+	rm -rf $(DIST_DIR) 
+
+distclean: tidy

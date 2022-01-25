@@ -103,4 +103,4 @@ done
 
 # Save build so we can reuse it
 BOOST_SAVE_DIR=$BUILD_SAVE_DIR/pvapy-boost-${BOOST_VERSION}-py${PYTHON_MAJOR_MINOR_VERSION}
-rsync -arlP $BOOST_DIR/ $BOOST_SAVE_DIR/
+rsync -arlP --exclude 'cmake' $BOOST_DIR/ $BOOST_SAVE_DIR/
