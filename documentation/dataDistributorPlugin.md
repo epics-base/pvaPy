@@ -136,7 +136,7 @@ and every third object afterward:
 
 Client 1:
 ```
-$ pvget -m -r _[pydistributor=trigger:uniqueId] pvapy:image  | grep uniqueId
+$ pvget -m -r _[pydistributor=trigger:uniqueId] pvapy:image | grep uniqueId
     int uniqueId 0
     int uniqueId 1
     int uniqueId 4
@@ -146,7 +146,7 @@ $ pvget -m -r _[pydistributor=trigger:uniqueId] pvapy:image  | grep uniqueId
 
 Client 2:
 ```
-$ pvget -m -r _[pydistributor=trigger:uniqueId] pvapy:image  | grep uniqueId
+$ pvget -m -r _[pydistributor=trigger:uniqueId] pvapy:image | grep uniqueId
     int uniqueId 0
     int uniqueId 2
     int uniqueId 5
@@ -156,7 +156,7 @@ $ pvget -m -r _[pydistributor=trigger:uniqueId] pvapy:image  | grep uniqueId
 
 Client 3:
 ```
-$ pvget -m -r _[pydistributor=trigger:uniqueId] pvapy:image  | grep uniqueId 
+$ pvget -m -r _[pydistributor=trigger:uniqueId] pvapy:image | grep uniqueId 
     int uniqueId 0
     int uniqueId 3
     int uniqueId 6
@@ -188,7 +188,7 @@ $ pvget -m -r "_[pydistributor=set:S1;trigger:uniqueId;updates:3]" pvapy:image  
 
 Client 3 and Client 4/Set 2:
 ```
-$ pvget -m -r "_[pydistributor=set:S2;trigger:uniqueId;updates:2]" pvapy:image  | grep uniqueId
+$ pvget -m -r "_[pydistributor=set:S2;trigger:uniqueId;updates:3]" pvapy:image  | grep uniqueId
     int uniqueId 0
     int uniqueId 4
     int uniqueId 5
@@ -216,7 +216,7 @@ other hand, the first client in group G2 receives updates
 
 Client 1/Group G1:
 ```
-$ pvget -m -r "_[pydistributor=group:G1;trigger:uniqueId]" pvapy:image  | grep uniqueId
+$ pvget -m -r "_[pydistributor=group:G1;trigger:uniqueId]" pvapy:image | grep uniqueId
     int uniqueId 0
     int uniqueId 1
     int uniqueId 3
@@ -227,7 +227,7 @@ $ pvget -m -r "_[pydistributor=group:G1;trigger:uniqueId]" pvapy:image  | grep u
 
 Client 2/Group G1:
 ```
-pvget -m -r "_[pydistributor=group:G1;trigger:uniqueId]" pvapy:image  | grep uniqueId
+pvget -m -r "_[pydistributor=group:G1;trigger:uniqueId]" pvapy:image | grep uniqueId
     int uniqueId 0
     int uniqueId 2
     int uniqueId 4
@@ -237,7 +237,7 @@ pvget -m -r "_[pydistributor=group:G1;trigger:uniqueId]" pvapy:image  | grep uni
 
 Client 1/Group G2:
 ```
-$ pvget -m -r "_[pydistributor=group:G2;trigger:uniqueId;updates:3]" pvapy:image  | grep uniqueId
+$ pvget -m -r "_[pydistributor=group:G2;trigger:uniqueId;updates:3]" pvapy:image | grep uniqueId
     int uniqueId 0
     int uniqueId 1
     int uniqueId 2
@@ -249,7 +249,7 @@ $ pvget -m -r "_[pydistributor=group:G2;trigger:uniqueId;updates:3]" pvapy:image
 
 Client 2/Group G2:
 ```
-$ pvget -m -r "_[pydistributor=group:D2;trigger:uniqueId;updates:3]" pvapy:image  | grep uniqueId
+$ pvget -m -r "_[pydistributor=group:D2;trigger:uniqueId;updates:3]" pvapy:image | grep uniqueId
     int uniqueId 0
     int uniqueId 4
     int uniqueId 5
