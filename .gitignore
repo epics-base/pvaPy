@@ -24,9 +24,10 @@ tools/pip/pvapy-boost-pip/pvapy-boost
 tools/pip/pvapy-pip/pvapy
 tools/pip/pvapy-pip/pvaccess*
 tools/pip/pvapy-pip/README.md
-tool/conda/epics-base-conda/meta.yaml
-tool/conda/pvapy-boost-conda/meta.yaml
-tool/conda/pvapy-conda/meta.yaml
+tools/pip/**/*.egg-info
+tools/conda/epics-base-conda/meta.yaml
+tools/conda/pvapy-boost-conda/meta.yaml
+tools/conda/pvapy-conda/meta.yaml
 wheelhouse
 
 
