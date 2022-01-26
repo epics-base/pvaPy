@@ -1,4 +1,4 @@
-## Release 4.1.0 (2022/01/DD)
+## Release 4.1.0 (2022/01/26)
 
 - introduced PVA server mirror class
 - added distributor plugin for the PVA server (see the
