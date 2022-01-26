@@ -28,6 +28,7 @@ tools/pip/**/*.egg-info
 tools/conda/epics-base-conda/meta.yaml
 tools/conda/pvapy-boost-conda/meta.yaml
 tools/conda/pvapy-conda/meta.yaml
+pvaccess/pvaccess.so
 wheelhouse
 
 
