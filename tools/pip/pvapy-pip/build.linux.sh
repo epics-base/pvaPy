@@ -111,17 +111,17 @@ rsync -arvl documentation/sphinx/_build/html $PVACCESS_DOC_DIR/
 echo "Copying data files"
 rsync -arvl README.md $PVACCESS_DOC_DIR/
 
-echo "Installing pvapy library"
-rsync -arv $PVACCESS_BUILD_LIB_DIR/$PVACCESS_LIB $PVACCESS_DIR/
-
 echo "Copying module files"
-rsync -arvl pvapy pvaccess $TOP_DIR/
+rsync -arvl --exclude '*.so' pvapy pvaccess $TOP_DIR/
 
 echo "Updating python module init files"
 for f in $PVACCESS_DIR/__init__.py $PVAPY_DIR/__init__.py; do
     cmd="cat $f | sed 's?__version__.*=.*?__version__ = \"$PVAPY_VERSION\"?' > $f.2 && mv $f.2 $f"
     eval $cmd
 done
+
+echo "Installing pvaccess library"
+rsync -arv $PVACCESS_BUILD_LIB_DIR/$PVACCESS_LIB $PVACCESS_DIR/
 
 echo "Copying dependencies"
 EPICS_LIBS=`ls -c1 $EPICS_BASE_DIR/lib/$EPICS_HOST_ARCH/*.so`

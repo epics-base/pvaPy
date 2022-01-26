@@ -23,6 +23,7 @@ BOOST_DOWNLOAD_VERSION=`echo ${BOOST_VERSION} | sed 's?\.?_?g'`
 BOOST_DOWNLOAD_URL=https://sourceforge.net/projects/boost/files/boost/$BOOST_VERSION/boost_${BOOST_DOWNLOAD_VERSION}.tar.gz
 
 mkdir -p $BUILD_SAVE_DIR
+mkdir -p $BOOST_DIR
 mkdir -p $BUILD_DIR
 cd $BUILD_DIR
 
@@ -103,4 +104,4 @@ done
 
 # Save build so we can reuse it
 BOOST_SAVE_DIR=$BUILD_SAVE_DIR/pvapy-boost-${BOOST_VERSION}-py${PYTHON_MAJOR_MINOR_VERSION}
-rsync -arlP $BOOST_DIR/ $BOOST_SAVE_DIR/
+rsync -arlP --exclude 'cmake' $BOOST_DIR/ $BOOST_SAVE_DIR/

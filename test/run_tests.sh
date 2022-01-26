@@ -4,7 +4,7 @@ echo "Starting test server"
 python testServer.py 30 &
 
 echo "Starting tests"
-nosetests -sv
+nose2 -v
 
 wait
 echo "Tests done"

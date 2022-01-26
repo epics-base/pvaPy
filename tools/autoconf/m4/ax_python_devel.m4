@@ -191,7 +191,7 @@ EOD`
 				ac_python_version=$PYTHON_VERSION
 			else
 				ac_python_version=`$PYTHON -c "import sys; \
-					print (sys.version[[:3]])"`
+					print('.'.join(sys.version.split()[[0]].split('.')[[0:2]]))"`
 			fi
 		fi
 

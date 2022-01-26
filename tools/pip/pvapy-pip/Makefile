@@ -17,7 +17,11 @@ build: configure
 
 test: 
 	./run_test.sh
-clean: 
-	rm -rf $(BUILD_DIR) $(DIST_DIR) $(PACKAGE_DIRS) MANIFEST
 
-distclean: clean
+clean: 
+	rm -rf $(BUILD_DIR) $(PACKAGE_DIRS) MANIFEST *.egg-info
+
+tidy: clean
+	rm -rf $(DIST_DIR) 
+
+distclean: tidy
