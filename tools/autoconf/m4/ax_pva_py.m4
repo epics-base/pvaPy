@@ -242,11 +242,12 @@ AC_DEFUN([AX_PVAPY],
     setup_csh_local=$LOCAL_SETUP_DIR/pvapy_setup_full.$PYTHON_MAJOR_MINOR_VERSION.csh
     eval "cat $setup_csh | sed 's?PVAPY_PYTHON_DIR?$PVAPY_PYTHON_DIR?g' | sed 's?PVAPY_PYTHONPATH?$PVAPY_PYTHONPATH?g' | sed 's?PVAPY_LD_LIBRARY_PATH?$PVAPY_LD_LIBRARY_PATH?g' | sed 's?setenv PVAPY_SPHINX_BUILD.*?setenv PVAPY_SPHINX_BUILD $PVAPY_SPHINX_BUILD?g' > $setup_csh_local"
     AC_MSG_NOTICE([Created $setup_csh_local file])
-])
 
     # configure pvaccess module
     cd $PVAPY_TOP/pvaccess > /dev/null 
     rm -f pvaccess.so
     ln -s $PVAPY_PYTHONPATH/pvaccess.so .
     cd $current_dir > /dev/null
+    AC_MSG_NOTICE([Created link $PVAPY_PYTHONPATH/pvaccess.so])
+])
     
