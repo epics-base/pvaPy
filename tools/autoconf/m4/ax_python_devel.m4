@@ -67,7 +67,8 @@
 #   modified version of the Autoconf Macro, you may extend this special
 #   exception to the GPL to apply to your modified version as well.
 
-#serial 16
+# modifications needed due to distutils being deprecated
+#serial 116
 
 AU_ALIAS([AC_PYTHON_DEVEL], [AX_PYTHON_DEVEL])
 AC_DEFUN([AX_PYTHON_DEVEL],[
@@ -112,51 +113,14 @@ to something else than an empty string.
 	fi
 
 	#
-	# if the macro parameter ``version'' is set, honour it
-	#
-	if test -n "$1"; then
-		AC_MSG_CHECKING([for a version of Python $1 $2])
-		ac_supports_python_ver=`$PYTHON -c "import sys; \
-            from distutils.version import LooseVersion; \
-			ver = sys.version.split ()[[0]]; \
-			print (LooseVersion(ver) $1 LooseVersion('$2'))"`
-		if test "$ac_supports_python_ver" = "True"; then
-		   AC_MSG_RESULT([yes])
-		else
-			AC_MSG_RESULT([no])
-			AC_MSG_ERROR([this package requires Python $1 $2.
-If you have it installed, but it isn't the default Python
-interpreter in your system path, please pass the PYTHON_VERSION
-variable to configure. See ``configure --help'' for reference.
-])
-			PYTHON_VERSION=""
-		fi
-	fi
-
-	#
-	# Check if you have distutils, else fail
-	#
-	AC_MSG_CHECKING([for the distutils Python package])
-	ac_distutils_result=`$PYTHON -c "import distutils" 2>&1`
-	if test -z "$ac_distutils_result"; then
-		AC_MSG_RESULT([yes])
-	else
-		AC_MSG_RESULT([no])
-		AC_MSG_ERROR([cannot import Python module "distutils".
-Please check your Python installation. The error was:
-$ac_distutils_result])
-		PYTHON_VERSION=""
-	fi
-
-	#
 	# Check for Python include path
 	#
 	AC_MSG_CHECKING([for Python include path])
 	if test -z "$PYTHON_CPPFLAGS"; then
-		python_path=`$PYTHON -c "import distutils.sysconfig; \
-			print (distutils.sysconfig.get_python_inc ());"`
-		plat_python_path=`$PYTHON -c "import distutils.sysconfig; \
-			print (distutils.sysconfig.get_python_inc (plat_specific=1));"`
+		python_path=`$PYTHON -c "import sysconfig; \
+			print(sysconfig.get_paths()[['include']]);"`
+		plat_python_path=`$PYTHON -c "import sysconfig; \
+			print(sysconfig.get_paths()[['platinclude']]);"`
 		if test -n "${python_path}"; then
 			if test "${plat_python_path}" != "${python_path}"; then
 				python_path="-I$python_path -I$plat_python_path"
@@ -180,8 +144,8 @@ $ac_distutils_result])
 
 # join all versioning strings, on some systems
 # major/minor numbers could be in different list elements
-from distutils.sysconfig import *
-e = get_config_var('VERSION')
+import sysconfig 
+e = sysconfig.get_config_vars().get('VERSION')
 if e is not None:
 	print(e)
 EOD`
@@ -203,8 +167,8 @@ EOD`
 		ac_python_libdir=`cat<<EOD | $PYTHON -
 
 # There should be only one
-import distutils.sysconfig
-e = distutils.sysconfig.get_config_var('LIBDIR')
+import sysconfig
+e = sysconfig.get_config_vars().get('LIBDIR')
 if e is not None:
 	print (e)
 EOD`
@@ -212,8 +176,8 @@ EOD`
 		# Now, for the library:
 		ac_python_library=`cat<<EOD | $PYTHON -
 
-import distutils.sysconfig
-c = distutils.sysconfig.get_config_vars()
+import sysconfig
+c = sysconfig.get_config_vars()
 if 'LDVERSION' in c:
 	print ('python'+c[['LDVERSION']])
 else:
@@ -232,9 +196,8 @@ EOD`
 		else
 			# old way: use libpython from python_configdir
 			ac_python_libdir=`$PYTHON -c \
-			  "from distutils.sysconfig import get_python_lib as f; \
-			  import os; \
-			  print (os.path.join(f(plat_specific=1, standard_lib=1), 'config'));"`
+			  "import sysconfig; \
+			  print(sysconfig.get_paths()[['platstdlib']]);"`
 			PYTHON_LDFLAGS="-L$ac_python_libdir -lpython$ac_python_version"
 		fi
 
@@ -253,8 +216,8 @@ EOD`
 	#
 	AC_MSG_CHECKING([for Python site-packages path])
 	if test -z "$PYTHON_SITE_PKG"; then
-		PYTHON_SITE_PKG=`$PYTHON -c "import distutils.sysconfig; \
-			print (distutils.sysconfig.get_python_lib(0,0));"`
+		PYTHON_SITE_PKG=`$PYTHON -c "import sysconfig; \
+			print(sysconfig.get_paths()[['purelib']]);"`
 	fi
 	AC_MSG_RESULT([$PYTHON_SITE_PKG])
 	AC_SUBST([PYTHON_SITE_PKG])
@@ -264,9 +227,8 @@ EOD`
 	#
 	AC_MSG_CHECKING(python extra libraries)
 	if test -z "$PYTHON_EXTRA_LIBS"; then
-	   PYTHON_EXTRA_LIBS=`$PYTHON -c "import distutils.sysconfig; \
-                conf = distutils.sysconfig.get_config_var; \
-                print (conf('LIBS'))"`
+	   PYTHON_EXTRA_LIBS=`$PYTHON -c "import sysconfig; \
+		print(sysconfig.get_config_vars().get('LIBS', ''))"`
 	fi
 	AC_MSG_RESULT([$PYTHON_EXTRA_LIBS])
 	AC_SUBST(PYTHON_EXTRA_LIBS)
@@ -276,9 +238,8 @@ EOD`
 	#
 	AC_MSG_CHECKING(python extra linking flags)
 	if test -z "$PYTHON_EXTRA_LDFLAGS"; then
-		PYTHON_EXTRA_LDFLAGS=`$PYTHON -c "import distutils.sysconfig; \
-			conf = distutils.sysconfig.get_config_var; \
-			print (conf('LINKFORSHARED'))"`
+		PYTHON_EXTRA_LDFLAGS=`$PYTHON -c "import sysconfig; \
+			print(sysconfig.get_config_vars().get('LINKFORSHARED', ''))"`
 	fi
 	AC_MSG_RESULT([$PYTHON_EXTRA_LDFLAGS])
 	AC_SUBST(PYTHON_EXTRA_LDFLAGS)
