@@ -1,3 +1,7 @@
+## Release 4.1.x (2022/MM/DD)
+
+- added pip support for OSX
+
 ## Release 4.1.0 (2022/01/26)
 
 - introduced PVA server mirror class
