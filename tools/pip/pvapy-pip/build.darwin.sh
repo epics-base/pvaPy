@@ -62,6 +62,9 @@ if [ ! -f $PVAPY_TAR_FILE ]; then
         tar zxf $PVAPY_TAR_FILE || exit 1
     fi
 fi
+if [ ! -d $PVAPY_BUILD_DIR ]; then
+    tar zxf $PVAPY_TAR_FILE || exit 1
+fi
 
 PYTHON_BIN=`which python$PYTHON_VERSION 2> /dev/null`
 if [ -z "$PYTHON_BIN" ]; then
@@ -98,17 +101,21 @@ cd $PVAPY_BUILD_DIR
 make configure $PVAPY_FLAGS || exit 1
 make -j || exit 1
 
-echo "Installing pvapy library"
-mkdir -p $PVACCESS_DOC_DIR
-mkdir -p $PVAPY_DIR
-rsync -ar $PVACCESS_BUILD_LIB_DIR/$PVACCESS_LIB $PVACCESS_DIR/
-
 echo "Copying data files"
+mkdir -p $PVACCESS_DOC_DIR
 rsync -arvl README.md $PVACCESS_DOC_DIR/
 
-echo "Generating python module init files"
-echo "from .pvaccess import *" > $PVACCESS_DIR/__init__.py
-echo "from pvaccess import *" > $PVAPY_DIR/__init__.py
+echo "Copying module files"
+rsync -arvl --exclude '*.so' pvapy pvaccess $TOP_DIR/
+
+echo "Updating python module init files"
+for f in $PVACCESS_DIR/__init__.py $PVAPY_DIR/__init__.py; do
+    cmd="cat $f | sed 's?__version__.*=.*?__version__ = \"$PVAPY_VERSION\"?' > $f.2 && mv $f.2 $f"
+    eval $cmd
+done
+
+echo "Installing pvaccess library"
+rsync -arv $PVACCESS_BUILD_LIB_DIR/$PVACCESS_LIB $PVACCESS_DIR/
 
 echo "Copying dependencies"
 EPICS_LIBS=`ls -c1 $EPICS_BASE_DIR/lib/$EPICS_HOST_ARCH/*.dylib`
@@ -161,6 +168,9 @@ done
 
 cd $PVAPY_BUILD_DIR
 echo "Building pvapy docs"
+f=documentation/sphinx/conf.py
+cmd="cat $f | sed 's?version.*=.*?version = \"$PVAPY_VERSION\"?' | sed 's?release.*=.*?release = \"$PVAPY_VERSION\"?' > $f.2 && mv $f.2 $f"
+eval $cmd
 make doc || exit 1
 rsync -arvl documentation/sphinx/_build/html $PVACCESS_DOC_DIR/
 
