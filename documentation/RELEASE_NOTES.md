@@ -1,6 +1,6 @@
 ## Release 4.1.x (2022/MM/DD)
 
-- added pip support for OSX
+- added pip support for OSX and ARM64
 
 ## Release 4.1.0 (2022/01/26)
 
