@@ -4,6 +4,7 @@
 
 TOP=`dirname $0` && cd $TOP && TOP=`pwd`
 BUILD_DIR=$TOP/build
+BUILD_SAVE_DIR=$TOP/../build
 EPICS_BUILD_DIR=$BUILD_DIR/epics
 EPICS_BASE_DIR=$TOP/epics-base
 BUILD_CONF=$TOP/../../../configure/BUILD.conf
@@ -16,6 +17,7 @@ fi
 EPICS_BASE_DOWNLOAD_URL=https://epics.anl.gov/download/base/base-${EPICS_BASE_VERSION}.tar.gz
 
 
+mkdir -p $BUILD_SAVE_DIR
 mkdir -p $EPICS_BUILD_DIR
 cd $EPICS_BUILD_DIR
 
@@ -65,4 +67,7 @@ for lib in `find . -type f -name '*.dylib'`; do
     done
 done
 
+# Save build so we can reuse it
+EPICS_BASE_SAVE_DIR=$BUILD_SAVE_DIR/epics-base-${EPICS_BASE_VERSION}
+rsync -arlP $EPICS_BASE_DIR/ $EPICS_BASE_SAVE_DIR/
 

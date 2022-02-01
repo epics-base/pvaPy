@@ -1,7 +1,7 @@
 
 TOP = ../../..
 BUILD_CONF = ${CURDIR}/../../../configure/BUILD.conf
-PVAPY_VERSION=$(shell cat $(BUILD_CONF) | grep PVAPY_VERSION | cut -f2 -d'=')
+include $(BUILD_CONF)
 DIST_DIR = dist
 BUILD_DIR = build
 

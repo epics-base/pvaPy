@@ -4,6 +4,7 @@
 
 TOP=`dirname $0` && cd $TOP && TOP=`pwd`
 BUILD_DIR=$TOP/build
+BUILD_SAVE_DIR=$TOP/../build
 BOOST_DIR=$TOP/pvapy-boost
 BOOST_HOST_ARCH=`uname | tr [A-Z] [a-z]`-`uname -m`
 BUILD_CONF=$TOP/../../../configure/BUILD.conf
@@ -27,6 +28,7 @@ BOOST_DOWNLOAD_VERSION=`echo ${BOOST_VERSION} | sed 's?\.?_?g'`
 BOOST_TAR_FILE=boost_${BOOST_DOWNLOAD_VERSION}.tar.gz
 BOOST_DOWNLOAD_URL=https://sourceforge.net/projects/boost/files/boost/$BOOST_VERSION/${BOOST_TAR_FILE}/download
 
+mkdir -p $BUILD_SAVE_DIR
 mkdir -p $BUILD_DIR
 cd $BUILD_DIR
 
@@ -112,4 +114,9 @@ if [ ! -f libboost_python$BOOST_LIB_LINK_SUFFIX.dylib ]; then
     ln -s libboost_python*.dylib libboost_python$BOOST_LIB_LINK_SUFFIX.dylib
     ln -s libboost_numpy*.dylib libboost_numpy$BOOST_LIB_LINK_SUFFIX.dylib
 fi
+
+
+# Save build so we can reuse it
+BOOST_SAVE_DIR=$BUILD_SAVE_DIR/pvapy-boost-${BOOST_VERSION}-py${PYTHON_MAJOR_MINOR_VERSION}
+rsync -arlP --exclude 'cmake' $BOOST_DIR/ $BOOST_SAVE_DIR/
 
