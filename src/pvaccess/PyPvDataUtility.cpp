@@ -1631,11 +1631,11 @@ bp::list createStructureList(const bp::dict& pyDict)
     return pyList;
 }
 
-pvd::StructureConstPtr createStructureFromDict(const bp::dict& pyDict, const std::string& structureId)
+pvd::StructureConstPtr createStructureFromDict(const bp::dict& pyDict, const std::string& structureId, const bp::dict& structureFieldIdDict)
 {
     pvd::FieldConstPtrArray fields;
     pvd::StringArray names;
-    updateFieldArrayFromDict(pyDict, fields, names);
+    updateFieldArrayFromDict(pyDict, fields, names, structureFieldIdDict);
 
     std::string structureName = StringUtility::trim(structureId);
     if (structureName.length()) {
@@ -1657,7 +1657,7 @@ pvd::UnionConstPtr createUnionFromDict(const bp::dict& pyDict, const std::string
     return pvd::getFieldCreate()->createUnion(names, fields);
 }
 
-void updateFieldArrayFromDict(const bp::dict& pyDict, pvd::FieldConstPtrArray& fields, pvd::StringArray& names)
+void updateFieldArrayFromDict(const bp::dict& pyDict, pvd::FieldConstPtrArray& fields, pvd::StringArray& names, const bp::dict& structureFieldIdDict)
 {
     bp::list fieldNames = pyDict.keys();
     for (int i = 0; i < bp::len(fieldNames); i++) {
@@ -1698,12 +1698,12 @@ void updateFieldArrayFromDict(const bp::dict& pyDict, pvd::FieldConstPtrArray& f
             }   
 
             // [{}] => StructureArray
-            if (updateFieldArrayFromDictList(pyList[0], fieldName, fields, names)) {
+            if (updateFieldArrayFromDictList(pyList[0], fieldName, fields, names, structureFieldIdDict)) {
                 continue;
             }   
 
             // [PvObject] => StructureArray
-            if (updateFieldArrayFromPvObjectList(pyList[0], fieldName, fields, names)) {
+            if (updateFieldArrayFromPvObjectList(pyList[0], fieldName, fields, names, structureFieldIdDict)) {
                 continue;
             }
 
@@ -1717,12 +1717,12 @@ void updateFieldArrayFromDict(const bp::dict& pyDict, pvd::FieldConstPtrArray& f
         }
 
         // Check for dict: {} => Structure
-        if (updateFieldArrayFromDict(valueObject, fieldName, fields, names)) {
+        if (updateFieldArrayFromDict(valueObject, fieldName, fields, names, structureFieldIdDict)) {
             continue;
         }
 
         // Check for PvObject: PvObject => Structure
-        if (updateFieldArrayFromPvObject(valueObject, fieldName, fields, names)) {
+        if (updateFieldArrayFromPvObject(valueObject, fieldName, fields, names, structureFieldIdDict)) {
             continue;
         }
 
@@ -1776,9 +1776,9 @@ void addScalarArrayField(const std::string& fieldName, pvd::ScalarType scalarTyp
     names.push_back(fieldName);
 }
 
-void addStructureField(const std::string& fieldName, const bp::dict& pyDict, pvd::FieldConstPtrArray& fields, pvd::StringArray& names)
+void addStructureField(const std::string& fieldName, const bp::dict& pyDict, pvd::FieldConstPtrArray& fields, pvd::StringArray& names, const std::string& structureId)
 {
-    fields.push_back(createStructureFromDict(pyDict));
+    fields.push_back(createStructureFromDict(pyDict, structureId));
     names.push_back(fieldName);
 }
 
@@ -1788,9 +1788,9 @@ void addStructureField(const std::string& fieldName, const PvObject & pvObject, 
     names.push_back(fieldName);   
 }
 
-void addStructureArrayField(const std::string& fieldName, const bp::dict& pyDict, pvd::FieldConstPtrArray& fields, pvd::StringArray& names)
+void addStructureArrayField(const std::string& fieldName, const bp::dict& pyDict, pvd::FieldConstPtrArray& fields, pvd::StringArray& names, const std::string& structureId)
 {
-    fields.push_back(pvd::getFieldCreate()->createStructureArray(createStructureFromDict(pyDict)));
+    fields.push_back(pvd::getFieldCreate()->createStructureArray(createStructureFromDict(pyDict, structureId)));
     names.push_back(fieldName);
 }
 
@@ -1850,7 +1850,7 @@ bool updateFieldArrayFromIntList(const bp::object& pyObject, const std::string& 
     return true;
 }
 
-bool updateFieldArrayFromDict(const bp::object& pyObject, const std::string& fieldName, pvd::FieldConstPtrArray& fields, pvd::StringArray& names)
+bool updateFieldArrayFromDict(const bp::object& pyObject, const std::string& fieldName, pvd::FieldConstPtrArray& fields, pvd::StringArray& names, const bp::dict& structureFieldIdDict)
 {
     bp::extract<bp::dict> dictExtract(pyObject);
     if (!dictExtract.check()) {
@@ -1862,11 +1862,13 @@ bool updateFieldArrayFromDict(const bp::object& pyObject, const std::string& fie
     if (!dictSize) {
         throw InvalidArgument("PV type dict provided for field name %s must be non-empty.", fieldName.c_str());
     }
-    addStructureField(fieldName, pyDict2, fields, names);
+
+    std::string structureFieldId = PyUtility::extractKeyValueFromPyDict<std::string>(fieldName, structureFieldIdDict, std::string());
+    addStructureField(fieldName, pyDict2, fields, names, structureFieldId);
     return true;
 }
 
-bool updateFieldArrayFromDictList(const bp::object& pyObject, const std::string& fieldName, pvd::FieldConstPtrArray& fields, pvd::StringArray& names)
+bool updateFieldArrayFromDictList(const bp::object& pyObject, const std::string& fieldName, pvd::FieldConstPtrArray& fields, pvd::StringArray& names, const bp::dict& structureFieldIdDict)
 {
     bp::extract<bp::dict> dictExtract(pyObject);
     if (!dictExtract.check()) {
@@ -1878,7 +1880,8 @@ bool updateFieldArrayFromDictList(const bp::object& pyObject, const std::string&
     if (!dictSize) {
         throw InvalidArgument("PV type dict provided for field name %s must be non-empty.", fieldName.c_str());
     }
-    addStructureArrayField(fieldName, pyDict2, fields, names);
+    std::string structureFieldId = PyUtility::extractKeyValueFromPyDict<std::string>(fieldName, structureFieldIdDict, std::string());
+    addStructureArrayField(fieldName, pyDict2, fields, names, structureFieldId);
     return true;
 }
 
@@ -1952,7 +1955,7 @@ bool updateFieldArrayFromTupleList(const bp::object& pyObject, const std::string
     return true;
 }
 
-bool updateFieldArrayFromPvObject(const bp::object& pyObject, const std::string& fieldName, pvd::FieldConstPtrArray& fields, pvd::StringArray& names)
+bool updateFieldArrayFromPvObject(const bp::object& pyObject, const std::string& fieldName, pvd::FieldConstPtrArray& fields, pvd::StringArray& names, const bp::dict& structureFieldIdDict)
 {
     bp::extract<PvObject> pvObjectExtract(pyObject);
     if (!pvObjectExtract.check()) {
@@ -1976,13 +1979,14 @@ bool updateFieldArrayFromPvObject(const bp::object& pyObject, const std::string&
             break;
         }
         default: {
-            addStructureField(fieldName, pvObject, fields, names);
+            std::string structureFieldId = PyUtility::extractKeyValueFromPyDict<std::string>(fieldName, structureFieldIdDict, std::string());
+            addStructureField(fieldName, pvObject, fields, names, structureFieldId);
         }
     }
     return true;
 }
 
-bool updateFieldArrayFromPvObjectList(const bp::object& pyObject, const std::string& fieldName, pvd::FieldConstPtrArray& fields, pvd::StringArray& names)
+bool updateFieldArrayFromPvObjectList(const bp::object& pyObject, const std::string& fieldName, pvd::FieldConstPtrArray& fields, pvd::StringArray& names, const bp::dict& structureFieldIdDict)
 {
     bp::extract<PvObject> pvObjectExtract(pyObject);
     if (!pvObjectExtract.check()) {
