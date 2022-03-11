@@ -49,6 +49,7 @@ public:
 
     // Static methods
     static boost::python::dict createStructureDict(const boost::python::dict& extraFieldsDict = boost::python::dict());
+    static boost::python::dict createStructureFieldIdDict();
 
     // Instance methods
     NtNdArray();

@@ -17,7 +17,7 @@ public:
     NtType(const NtType& ntType); 
     virtual ~NtType();
 protected:
-    NtType(const boost::python::dict& pyDict, const std::string& structureId=StructureId);
+    NtType(const boost::python::dict& pyDict, const std::string& structureId=StructureId, const boost::python::dict& structureFieldIdDict=boost::python::dict());
     NtType(const epics::pvData::PVStructurePtr& pvStructurePtr);
 };
 

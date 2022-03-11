@@ -85,13 +85,26 @@ bp::dict NtNdArray::createStructureDict(const bp::dict& extraFieldsDict)
     return structureDict;
 }
 
+bp::dict NtNdArray::createStructureFieldIdDict()
+{
+    bp::dict structureFieldIdDict;
+    structureFieldIdDict[CodecFieldKey] = PvCodec::StructureId;
+    structureFieldIdDict[DataTimeStampFieldKey] = PvTimeStamp::StructureId;
+    structureFieldIdDict[DimensionFieldKey] = PvDimension::StructureId;
+    structureFieldIdDict[AttributeFieldKey] = NtAttribute::StructureId;
+    structureFieldIdDict[AlarmFieldKey] = PvAlarm::StructureId;
+    structureFieldIdDict[TimeStampFieldKey] = PvTimeStamp::StructureId;
+    structureFieldIdDict[DisplayFieldKey] = PvDisplay::StructureId;
+    return structureFieldIdDict;
+}
+
 NtNdArray::NtNdArray()
-    : NtType(createStructureDict(), StructureId)
+    : NtType(createStructureDict(), StructureId, createStructureFieldIdDict())
 {
 }
 
 NtNdArray::NtNdArray(const bp::dict& extraFieldsDict)
-    : NtType(createStructureDict(extraFieldsDict), StructureId)
+    : NtType(createStructureDict(extraFieldsDict), StructureId, createStructureFieldIdDict())
 {
 }
 

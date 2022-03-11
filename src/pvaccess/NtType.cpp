@@ -3,10 +3,12 @@
 
 #include "NtType.h"
 
+namespace bp = boost::python;
+
 const char* NtType::StructureId("epics:nt/NTType:1.0");
 
-NtType::NtType(const boost::python::dict& pyDict, const std::string& structureId)
-    : PvObject(pyDict, structureId)
+NtType::NtType(const bp::dict& pyDict, const std::string& structureId, const bp::dict& structureFieldIdDict)
+    : PvObject(pyDict, structureId, structureFieldIdDict)
 {
 }
 
