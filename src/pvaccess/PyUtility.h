@@ -49,15 +49,24 @@ PyType extractValueFromPyObject(const boost::python::object& pyObject)
 template<typename PyType>
 PyType extractKeyValueFromPyDict(const std::string& key, const boost::python::dict& pyDict)
 {
-    boost::python::object pyObject = pyDict[key];
-    if (!pyObject.ptr()) {
+    if (!pyDict.has_key(key)) {
         throw FieldNotFound("Dictionary does not have field " + key);
     }
+    boost::python::object pyObject = pyDict[key];
+    return extractValueFromPyObject<PyType>(pyObject);
+}
+
+template<typename PyType>
+PyType extractKeyValueFromPyDict(const std::string& key, const boost::python::dict& pyDict, PyType defaultValue)
+{
+    if (!pyDict.has_key(key)) {
+        return defaultValue;
+    }
+    boost::python::object pyObject = pyDict[key];
     return extractValueFromPyObject<PyType>(pyObject);
 }
 
 std::string getErrorMessageFromTraceback(boost::python::error_already_set& ex);
- 
 } // namespace PyUtility
 
 #endif 
