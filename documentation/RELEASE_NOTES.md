@@ -1,6 +1,9 @@
 ## Release 4.1.x (2022/MM/DD)
 
 - added pip support for OSX and ARM64
+- enabled assigning IDs for structure fields
+- updated NtNdArray object with IDs for structure fields to
+  make it compatible with standard normative type
 
 ## Release 4.1.0 (2022/01/26)
 
