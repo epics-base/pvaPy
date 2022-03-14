@@ -75,10 +75,17 @@ class AdSimServer:
         if self.is_done:
             return
         entry_time = time.time()
+
+        # Get cached frame
         cached_frame_id = self.current_frame_id % self.n_generated_frames
         frame = self.frame_map[cached_frame_id]
+
+        # Correct image id and timeestamps
         self.current_frame_id += 1
         frame['uniqueId'] = self.current_frame_id
+        ts = self.get_timestamp()
+        frame['timeStamp'] = ts
+        frame['dataTimeStamp'] = ts
 
         # Make sure we do not go too fast
         now = time.time()
