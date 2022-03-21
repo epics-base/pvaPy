@@ -8,9 +8,13 @@ __version__ = pva.__version__
 
 class AdSimServer:
 
+    DELAY_CORRECTION = 0.0001
+
     def __init__(self, input_file, frame_rate, nf, nx, ny, runtime, channel_name, start_delay, report_frequency):
         self.arraySize = None
-        self.delta_t = 1.0/frame_rate
+        self.delta_t = 0
+        if frame_rate > 0:
+            self.delta_t = 1.0/frame_rate
         self.runtime = runtime
         self.report_frequency = report_frequency 
         
@@ -33,7 +37,6 @@ class AdSimServer:
         self.n_published_frames = 0
         self.start_time = 0
         self.last_published_time = 0
-        self.next_publish_time = 0
         self.start_delay = start_delay
         self.is_done = False
 
@@ -71,11 +74,7 @@ class AdSimServer:
                 nda.set(extraFieldsPvObject)
             self.frame_map[frame_id] = nda
 
-    def frame_publisher(self):
-        if self.is_done:
-            return
-        entry_time = time.time()
-
+    def prepare_frame(self):
         # Get cached frame
         cached_frame_id = self.current_frame_id % self.n_generated_frames
         frame = self.frame_map[cached_frame_id]
@@ -86,40 +85,40 @@ class AdSimServer:
         ts = self.get_timestamp()
         frame['timeStamp'] = ts
         frame['dataTimeStamp'] = ts
+        return frame
 
-        # Make sure we do not go too fast
-        now = time.time()
-        delay = (self.next_publish_time - now)*0.99
-        if delay > 0:
-            time.sleep(delay)
-        self.server.update(self.channel_name, frame)
-        self.last_published_time = time.time()
-        self.next_publish_time = self.last_published_time + self.delta_t
-        self.n_published_frames += 1
+    def frame_publisher(self):
+        while True:
+            if self.is_done:
+                return
 
-        runtime = 0
-        delta_t_correction = 0
-        if self.n_published_frames > 1:
-            runtime = self.last_published_time - self.start_time
-            delta_t = runtime/(self.n_published_frames - 1)
+            frame = self.prepare_frame()
+            self.server.update(self.channel_name, frame)
+            self.last_published_time = time.time()
+            self.n_published_frames += 1
 
-            # Attempt to correct rate with a bit of magic
-            delta_t_correction = delta_t - self.delta_t
-            if delta_t_correction > 0:
-                delta_t_correction *= 10
+            runtime = 0
+            if self.n_published_frames > 1:
+                runtime = self.last_published_time - self.start_time
+                delta_t = runtime/(self.n_published_frames - 1)
+                frame_rate = 1.0/delta_t
+                if self.report_frequency > 0 and (self.n_published_frames % self.report_frequency) == 0:
+                    print("Published frame id %6d @ %.3f (frame rate: %.4f fps)" % (self.current_frame_id, self.last_published_time, frame_rate))
+            else:
+                self.start_time = self.last_published_time
+                if self.report_frequency > 0 and (self.n_published_frames % self.report_frequency) == 0:
+                    print("Published frame id %6d @ %.3f" % (self.current_frame_id, self.last_published_time))
 
-            frame_rate = 1.0/delta_t
-            if self.report_frequency > 0 and (self.n_published_frames % self.report_frequency) == 0:
-                print("Published frame id %6d @ %.3f (frame rate: %.4f fps)" % (self.current_frame_id, self.last_published_time, frame_rate))
-        else:
-            self.start_time = self.last_published_time
-            if self.report_frequency > 0 and (self.n_published_frames % self.report_frequency) == 0:
-                print("Published frame id %6d @ %.3f" % (self.current_frame_id, self.last_published_time))
-        if runtime > self.runtime:
-            print("Server will exit after reaching runtime of %s seconds" % (self.runtime))
-        else:
-            delay = self.delta_t - (time.time()- entry_time) - delta_t_correction
-            threading.Timer(delay, self.frame_publisher).start()
+            if runtime > self.runtime:
+                print("Server will exit after reaching runtime of %s seconds" % (self.runtime))
+                return
+
+            if self.delta_t > 0:
+                next_publish_time = self.start_time + self.n_published_frames*self.delta_t
+                delay = next_publish_time - time.time() - self.DELAY_CORRECTION
+                if delay > 0:
+                    threading.Timer(delay, self.frame_publisher).start()
+                    return
 
     def start(self):
         threading.Thread(target=self.frame_producer, daemon=True).start()
