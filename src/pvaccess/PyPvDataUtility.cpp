@@ -1980,7 +1980,7 @@ bool updateFieldArrayFromPvObject(const bp::object& pyObject, const std::string&
         }
         default: {
             std::string structureFieldId = PyUtility::extractKeyValueFromPyDict<std::string>(fieldName, structureFieldIdDict, std::string());
-            addStructureField(fieldName, pvObject, fields, names, structureFieldId);
+            addStructureField(fieldName, pvObject, fields, names);
         }
     }
     return true;
