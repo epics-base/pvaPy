@@ -38,15 +38,21 @@ class AdSimServer:
             input_files.append(input_file)
         self.frames = None
         for f in input_files:
-            new_frames = np.load(f)
-            if self.frames is None:
-                self.frames = new_frames
-            else:
-                self.frames = np.append(self.frames, new_frames, axis=0)
+            try:
+                new_frames = np.load(f)
+                if self.frames is None:
+                    self.frames = new_frames
+                else:
+                    self.frames = np.append(self.frames, new_frames, axis=0)
+                print('Loaded input file %s' % (f))
+            except Exception as ex:
+                print('Cannot load input file %s, skipping it: %s' % (f, ex))
         if self.frames is None:
+            print('Generating random frames')
             self.frames = np.random.randint(0, 256, size=(nf, nx, ny), dtype=np.uint8)
-        self.n_generated_frames, self.rows, self.cols = self.frames.shape
+        self.n_input_frames, self.rows, self.cols = self.frames.shape
         self.pva_type_key = self.PVA_TYPE_KEY_MAP.get(self.frames.dtype)
+        print('Number of input frames: %s (size: %sx%s, type: %s)' % (self.n_input_frames, self.rows, self.cols, self.frames.dtype))
 
         self.channel_name = channel_name
         self.frame_rate = frame_rate
@@ -67,7 +73,7 @@ class AdSimServer:
         return pva.PvTimeStamp(s,ns)
 
     def frame_producer(self, extraFieldsPvObject=None):
-        for frame_id in range(0, self.n_generated_frames):
+        for frame_id in range(0, self.n_input_frames):
             if self.is_done:
                return
 
@@ -96,7 +102,7 @@ class AdSimServer:
 
     def prepare_frame(self):
         # Get cached frame
-        cached_frame_id = self.current_frame_id % self.n_generated_frames
+        cached_frame_id = self.current_frame_id % self.n_input_frames
         frame = self.frame_map[cached_frame_id]
 
         # Correct image id and timeestamps

@@ -5,6 +5,7 @@
 - updated NtNdArray object with IDs for structure fields to
   make it compatible with standard normative type
 - improved frame rate accuracy for area detector simulator 
+- added ability to read image data from a given folder
 
 ## Release 4.1.0 (2022/01/26)
 
