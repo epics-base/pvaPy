@@ -1,3 +1,12 @@
+## Release 4.1.x (2022/MM/DD)
+
+- added pip support for OSX and ARM64
+- enabled assigning IDs for structure fields
+- updated NtNdArray object with IDs for structure fields to
+  make it compatible with standard normative type
+- improved frame rate accuracy for area detector simulator 
+- added ability to read image data from a given folder
+
 ## Release 4.1.0 (2022/01/26)
 
 - introduced PVA server mirror class

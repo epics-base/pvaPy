@@ -18,15 +18,21 @@ fi
 #    PYTHON_VERSION=$DEFAULT_PYTHON_VERSION
 #fi
 
+PYTHON_BIN=`which python$PYTHON_VERSION 2> /dev/null`
+PYTHON_MAJOR_MINOR_VERSION=`$PYTHON_BIN --version 2>&1 | cut -f2 -d ' ' | cut -f1,2 -d '.'`
+PYTHON_MAJOR_VERSION=`echo $PYTHON_MAJOR_MINOR_VERSION | cut -f1 -d '.'`
+
 BUILD_DIR=$TOP_DIR/build
+BUILD_SAVE_DIR=$TOP_DIR/../build
 PVAPY_DIR=$TOP_DIR/pvapy
 PVACCESS_DIR=$TOP_DIR/pvaccess
 PVACCESS_DOC_DIR=$PVACCESS_DIR/doc
 PVACCESS_LIB_DIR=$PVACCESS_DIR/lib
 PVAPY_BUILD_DIR=$BUILD_DIR/pvaPy-$PVAPY_VERSION
-EPICS_BASE_DIR=$TOP_DIR/../epics-base-pip/epics-base
+EPICS_BASE_DIR=$BUILD_SAVE_DIR/epics-base-${EPICS_BASE_VERSION}
 EPICS_HOST_ARCH=`$EPICS_BASE_DIR/startup/EpicsHostArch`
-BOOST_DIR=$TOP_DIR/../pvapy-boost-pip/pvapy-boost
+BOOST_DIR=$BUILD_SAVE_DIR/pvapy-boost-${BOOST_VERSION}-py${PYTHON_MAJOR_MINOR_VERSION}
+
 BOOST_HOST_ARCH=`uname | tr [A-Z] [a-z]`-`uname -m`
 PVACCESS_LIB=pvaccess.so
 
@@ -56,6 +62,9 @@ if [ ! -f $PVAPY_TAR_FILE ]; then
         tar zxf $PVAPY_TAR_FILE || exit 1
     fi
 fi
+if [ ! -d $PVAPY_BUILD_DIR ]; then
+    tar zxf $PVAPY_TAR_FILE || exit 1
+fi
 
 PYTHON_BIN=`which python$PYTHON_VERSION 2> /dev/null`
 if [ -z "$PYTHON_BIN" ]; then
@@ -77,8 +86,6 @@ fi
 export PATH=$PYTHON_DIR/bin:$PATH
 export LD_LIBRARY_PATH=$PYTHON_DIR/lib:$LD_LIBRARY_PATH:$BOOST_DIR/lib/$EPICS_HOST_ARCH:$PVAPY_DIR/lib/$EPICS_HOST_ARCH
 
-PYTHON_MAJOR_MINOR_VERSION=`$PYTHON_BIN --version 2>&1 | cut -f2 -d ' ' | cut -f1,2 -d '.'`
-PYTHON_MAJOR_VERSION=`echo $PYTHON_MAJOR_MINOR_VERSION | cut -f1 -d '.'`
 PYTHON_LIB=`ls -c1 $PYTHON_DIR/lib/libpython${PYTHON_MAJOR_MINOR_VERSION}*.so.* 2> /dev/null` 
 
 PVAPY_FLAGS=""
@@ -89,21 +96,26 @@ PVAPY_FLAGS="EPICS_BASE=$EPICS_BASE_DIR BOOST_ROOT=$BOOST_DIR PVAPY_ROOT=$PVAPY_
 PVACCESS_BUILD_LIB_DIR=$PVAPY_BUILD_DIR/lib/python/$PYTHON_MAJOR_MINOR_VERSION/$EPICS_HOST_ARCH
 
 echo "Building pvapy"
+echo "Running: make configure $PVAPY_FLAGS"
 cd $PVAPY_BUILD_DIR
 make configure $PVAPY_FLAGS || exit 1
 make -j || exit 1
 
-echo "Installing pvapy library"
-mkdir -p $PVACCESS_DOC_DIR
-mkdir -p $PVAPY_DIR
-rsync -ar $PVACCESS_BUILD_LIB_DIR/$PVACCESS_LIB $PVACCESS_DIR/
-
 echo "Copying data files"
+mkdir -p $PVACCESS_DOC_DIR
 rsync -arvl README.md $PVACCESS_DOC_DIR/
 
-echo "Generating python module init files"
-echo "from .pvaccess import *" > $PVACCESS_DIR/__init__.py
-echo "from pvaccess import *" > $PVAPY_DIR/__init__.py
+echo "Copying module files"
+rsync -arvl --exclude '*.so' pvapy pvaccess $TOP_DIR/
+
+echo "Updating python module init files"
+for f in $PVACCESS_DIR/__init__.py $PVAPY_DIR/__init__.py; do
+    cmd="cat $f | sed 's?__version__.*=.*?__version__ = \"$PVAPY_VERSION\"?' > $f.2 && mv $f.2 $f"
+    eval $cmd
+done
+
+echo "Installing pvaccess library"
+rsync -arv $PVACCESS_BUILD_LIB_DIR/$PVACCESS_LIB $PVACCESS_DIR/
 
 echo "Copying dependencies"
 EPICS_LIBS=`ls -c1 $EPICS_BASE_DIR/lib/$EPICS_HOST_ARCH/*.dylib`
@@ -156,6 +168,9 @@ done
 
 cd $PVAPY_BUILD_DIR
 echo "Building pvapy docs"
+f=documentation/sphinx/conf.py
+cmd="cat $f | sed 's?version.*=.*?version = \"$PVAPY_VERSION\"?' | sed 's?release.*=.*?release = \"$PVAPY_VERSION\"?' > $f.2 && mv $f.2 $f"
+eval $cmd
 make doc || exit 1
 rsync -arvl documentation/sphinx/_build/html $PVACCESS_DOC_DIR/
 

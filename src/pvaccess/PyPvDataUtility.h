@@ -284,17 +284,17 @@ void copyScalarArrayToStructure(const std::string& fieldName, epics::pvData::Sca
 //
 boost::python::list createStructureList(PvType::ScalarType pvType);
 boost::python::list createStructureList(const boost::python::dict& pyDict);
-epics::pvData::StructureConstPtr createStructureFromDict(const boost::python::dict& pyDict, const std::string& structureId="");
+epics::pvData::StructureConstPtr createStructureFromDict(const boost::python::dict& pyDict, const std::string& structureId="", const boost::python::dict& structureFieldIdDict=boost::python::dict());
 epics::pvData::UnionConstPtr createUnionFromDict(const boost::python::dict& pyDict, const std::string& structureId="");
-void updateFieldArrayFromDict(const boost::python::dict& pyDict, epics::pvData::FieldConstPtrArray& fields, epics::pvData::StringArray& names);
+void updateFieldArrayFromDict(const boost::python::dict& pyDict, epics::pvData::FieldConstPtrArray& fields, epics::pvData::StringArray& names, const boost::python::dict& structureFieldIdDict=boost::python::dict());
 epics::pvData::PVStructurePtr createUnionPvStructure(const epics::pvData::PVUnionPtr& pvUnion, const std::string& fieldName); 
 epics::pvData::PVStructurePtr createUnionFieldPvStructure(epics::pvData::UnionConstPtr unionPtr, const std::string& fieldName);
 
 void addScalarField(const std::string& fieldName, epics::pvData::ScalarType scalarType, epics::pvData::FieldConstPtrArray& fields, epics::pvData::StringArray& names);
 void addScalarArrayField(const std::string& fieldName, epics::pvData::ScalarType scalarType, epics::pvData::FieldConstPtrArray& fields, epics::pvData::StringArray& names);
-void addStructureField(const std::string& fieldName, const boost::python::dict& pyDict, epics::pvData::FieldConstPtrArray& fields, epics::pvData::StringArray& names);
+void addStructureField(const std::string& fieldName, const boost::python::dict& pyDict, epics::pvData::FieldConstPtrArray& fields, epics::pvData::StringArray& names, const std::string& structureId="");
 void addStructureField(const std::string& fieldName, const PvObject & pvObject, epics::pvData::FieldConstPtrArray& fields, epics::pvData::StringArray& names);
-void addStructureArrayField(const std::string& fieldName, const boost::python::dict& pyDict, epics::pvData::FieldConstPtrArray& fields, epics::pvData::StringArray& names);
+void addStructureArrayField(const std::string& fieldName, const boost::python::dict& pyDict, epics::pvData::FieldConstPtrArray& fields, epics::pvData::StringArray& names, const std::string& structureId="");
 void addStructureArrayField(const std::string& fieldName, const PvObject & pvObject, epics::pvData::FieldConstPtrArray& fields, epics::pvData::StringArray& names);
 void addUnionField(const std::string& fieldName, const boost::python::dict& pyDict, epics::pvData::FieldConstPtrArray& fields, epics::pvData::StringArray& names);
 void addUnionArrayField(const std::string& fieldName, const boost::python::dict& pyDict, epics::pvData::FieldConstPtrArray& fields, epics::pvData::StringArray& names);
@@ -303,12 +303,12 @@ void addVariantUnionArrayField(const std::string& fieldName, epics::pvData::Fiel
 
 bool updateFieldArrayFromInt(const boost::python::object& pyObject, const std::string& fieldName, epics::pvData::FieldConstPtrArray& fields, epics::pvData::StringArray& names);
 bool updateFieldArrayFromIntList(const boost::python::object& pyObject, const std::string& fieldName, epics::pvData::FieldConstPtrArray& fields, epics::pvData::StringArray& names);
-bool updateFieldArrayFromDict(const boost::python::object& pyObject, const std::string& fieldName, epics::pvData::FieldConstPtrArray& fields, epics::pvData::StringArray& names);
-bool updateFieldArrayFromDictList(const boost::python::object& pyObject, const std::string& fieldName, epics::pvData::FieldConstPtrArray& fields, epics::pvData::StringArray& names);
+bool updateFieldArrayFromDict(const boost::python::object& pyObject, const std::string& fieldName, epics::pvData::FieldConstPtrArray& fields, epics::pvData::StringArray& names, const boost::python::dict& structureFieldIdDict=boost::python::dict());
+bool updateFieldArrayFromDictList(const boost::python::object& pyObject, const std::string& fieldName, epics::pvData::FieldConstPtrArray& fields, epics::pvData::StringArray& names, const boost::python::dict& structureFieldIdDict=boost::python::dict());
 bool updateFieldArrayFromTuple(const boost::python::object& pyObject, const std::string& fieldName, epics::pvData::FieldConstPtrArray& fields, epics::pvData::StringArray& names);
 bool updateFieldArrayFromTupleList(const boost::python::object& pyObject, const std::string& fieldName, epics::pvData::FieldConstPtrArray& fields, epics::pvData::StringArray& names);
-bool updateFieldArrayFromPvObject(const boost::python::object& pyObject, const std::string& fieldName, epics::pvData::FieldConstPtrArray& fields, epics::pvData::StringArray& names);
-bool updateFieldArrayFromPvObjectList(const boost::python::object& pyObject, const std::string& fieldName, epics::pvData::FieldConstPtrArray& fields, epics::pvData::StringArray& names);
+bool updateFieldArrayFromPvObject(const boost::python::object& pyObject, const std::string& fieldName, epics::pvData::FieldConstPtrArray& fields, epics::pvData::StringArray& names, const boost::python::dict& structureFieldIdDict=boost::python::dict());
+bool updateFieldArrayFromPvObjectList(const boost::python::object& pyObject, const std::string& fieldName, epics::pvData::FieldConstPtrArray& fields, epics::pvData::StringArray& names, const boost::python::dict& structureFieldIdDict=boost::python::dict());
 
 //
 // Extract union structure dict 

@@ -49,9 +49,9 @@ PvObject::PvObject(const pvd::PVStructurePtr& pvStructurePtr_)
 {
 }
 
-PvObject::PvObject(const bp::dict& structureDict, const std::string& structureId)
+PvObject::PvObject(const bp::dict& structureDict, const std::string& structureId, const boost::python::dict& structureFieldIdDict)
     : numPyInitialized(initializeBoostNumPy()),
-    pvStructurePtr(pvd::getPVDataCreate()->createPVStructure(PyPvDataUtility::createStructureFromDict(structureDict, structureId))),
+    pvStructurePtr(pvd::getPVDataCreate()->createPVStructure(PyPvDataUtility::createStructureFromDict(structureDict, structureId, structureFieldIdDict))),
     dataType(PvType::Structure),
     useNumPyArrays(UseNumPyArraysDefault)
 {

@@ -29,7 +29,7 @@ Conda packages.
 
 ### PyPI
 
-- Supported platforms: Linux (64-bit), Windows (64-bit)
+- Supported platforms: Linux (64-bit), Windows (64-bit), OSX (64-bit), ARM (64-bit)
 - Supported Python versions: Python2, Python3
 
 Make sure `pip` command is in your path, and execute the following command:
