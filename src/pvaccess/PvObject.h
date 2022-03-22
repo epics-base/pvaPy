@@ -29,8 +29,11 @@ public:
 
     // Constructors
     PvObject(const epics::pvData::PVStructurePtr& pvStructurePtr);
-    PvObject(const boost::python::dict& structureDict, const std::string& structureId=StructureId, const boost::python::dict& structureFieldIdDict=boost::python::dict());
-    PvObject(const boost::python::dict& structureDict, const boost::python::dict& valueDict, const std::string& structureId=StructureId);
+    PvObject(const boost::python::dict& structureDict);
+    PvObject(const boost::python::dict& structureDict, const std::string& structureId);
+    PvObject(const boost::python::dict& structureDict, const std::string& structureId, const boost::python::dict& structureFieldIdDict);
+    PvObject(const boost::python::dict& structureDict, const boost::python::dict& valueDict);
+    PvObject(const boost::python::dict& structureDict, const boost::python::dict& valueDict, const std::string& structureId);
     PvObject(const PvObject& pvObject);
 
     // Destructor
