@@ -1,4 +1,4 @@
-## Release 4.1.x (2022/MM/DD)
+## Release 4.1.1 (2022/03/22)
 
 - added pip support for OSX and ARM64
 - enabled assigning IDs for structure fields
