@@ -141,12 +141,12 @@ AC_DEFUN([AX_PVAPY],
         AC_MSG_RESULT([yes])
     fi
 
+    # Remove -lpythonX.Ym from PVAPY_LDFLAGS as it may cause packaging problems
+    PYTHON_LDFLAGS2=`echo $PYTHON_LDFLAGS | sed 's?-lpython.*??'`
     PVAPY_CPPFLAGS="$BOOST_CPPFLAGS $PYTHON_CPPFLAGS $BOOST_NUMPY_CPPFLAGS $BOOST_PYTHON_NUMPY_CPPFLAGS"
     PVAPY_CPPFLAGS=`echo $(printf "%s\n" $PVAPY_CPPFLAGS | sort -u)`
-    PVAPY_LDFLAGS="$BOOST_LDFLAGS $PYTHON_LDFLAGS $BOOST_NUMPY_LDFLAGS $BOOST_PYTHON_NUMPY_LDFLAGS"
+    PVAPY_LDFLAGS="$BOOST_LDFLAGS $PYTHON_LDFLAGS2 $BOOST_NUMPY_LDFLAGS $BOOST_PYTHON_NUMPY_LDFLAGS"
     PVAPY_LDFLAGS=`echo $(printf "%s\n" $PVAPY_LDFLAGS | sort -u)`
-    # Remove -lpythonX.Y from LDFLAGS as it may cause packaging problems
-    PVAPY_LDFLAGS=`echo $PVAPY_LDFLAGS | sed 's/-lpython.*//'`
     PVAPY_LD_LIBRARY_PATH=`echo $PVAPY_LDFLAGS | sed 's?-L??g' | sed 's? ?:?g' | sed 's?:-l.*:?:?g' | sed 's?:-l.*??g'`
 
     PYTHON_MAJOR_VERSION=`python$PYTHON_VERSION -c "import sys; print(sys.version.split()[[0]].split('.')[[0]])"`
