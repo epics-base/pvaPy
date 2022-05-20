@@ -19,9 +19,6 @@ public:
 
     static const char* NameFieldKey;
     static const char* TagsFieldKey;
-    static const char* DescriptorFieldKey;
-    static const char* AlarmFieldKey;
-    static const char* TimeStampFieldKey;
     static const char* SourceTypeFieldKey;
     static const char* SourceFieldKey;
 

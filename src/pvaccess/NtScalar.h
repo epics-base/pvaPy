@@ -21,9 +21,6 @@ public:
     // Constants
     static const char* StructureId;
 
-    static const char* DescriptorFieldKey;
-    static const char* TimeStampFieldKey;
-    static const char* AlarmFieldKey;
     static const char* DisplayFieldKey;
     static const char* ControlFieldKey;
 

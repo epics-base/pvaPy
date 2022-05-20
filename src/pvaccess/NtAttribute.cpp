@@ -14,9 +14,6 @@ const char* NtAttribute::StructureId(nt::NTAttribute::URI.c_str());
 
 const char* NtAttribute::NameFieldKey("name");
 const char* NtAttribute::TagsFieldKey("tags");
-const char* NtAttribute::DescriptorFieldKey("descriptor");
-const char* NtAttribute::AlarmFieldKey("alarm");
-const char* NtAttribute::TimeStampFieldKey("timeStamp");
 const char* NtAttribute::SourceTypeFieldKey("sourceType");
 const char* NtAttribute::SourceFieldKey("source");
 

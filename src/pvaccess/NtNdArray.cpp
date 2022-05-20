@@ -27,15 +27,12 @@ const char* NtNdArray::ULongValueFieldKey("ulongValue");
 const char* NtNdArray::FloatValueFieldKey("floatValue");
 const char* NtNdArray::DoubleValueFieldKey("doubleValue");
 
-const char* NtNdArray::AlarmFieldKey("alarm");
 const char* NtNdArray::AttributeFieldKey("attribute");
 const char* NtNdArray::CodecFieldKey("codec");
 const char* NtNdArray::CompressedSizeFieldKey("compressedSize");
 const char* NtNdArray::DataTimeStampFieldKey("dataTimeStamp");
-const char* NtNdArray::DescriptorFieldKey("descriptor");
 const char* NtNdArray::DimensionFieldKey("dimension");
 const char* NtNdArray::DisplayFieldKey("display");
-const char* NtNdArray::TimeStampFieldKey("timeStamp");
 const char* NtNdArray::UncompressedSizeFieldKey("uncompressedSize");
 const char* NtNdArray::UniqueIdFieldKey("uniqueId");
 

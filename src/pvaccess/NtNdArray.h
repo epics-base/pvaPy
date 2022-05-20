@@ -35,15 +35,12 @@ public:
     static const char* FloatValueFieldKey;
     static const char* DoubleValueFieldKey;
 
-    static const char* AlarmFieldKey;
     static const char* AttributeFieldKey;
     static const char* CodecFieldKey;
     static const char* CompressedSizeFieldKey;
     static const char* DataTimeStampFieldKey;
-    static const char* DescriptorFieldKey;
     static const char* DimensionFieldKey;
     static const char* DisplayFieldKey;
-    static const char* TimeStampFieldKey;
     static const char* UncompressedSizeFieldKey;
     static const char* UniqueIdFieldKey;
 

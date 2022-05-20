@@ -20,9 +20,6 @@ public:
     static const char* StructureId;
 
     static const char* LabelsFieldKey;
-    static const char* DescriptorFieldKey;
-    static const char* TimeStampFieldKey;
-    static const char* AlarmFieldKey;
 
     // Static methods
     static std::string getColumnName(int column);

@@ -6,6 +6,9 @@
 namespace bp = boost::python;
 
 const char* NtType::StructureId("epics:nt/NTType:1.0");
+const char* NtType::AlarmFieldKey("alarm");
+const char* NtType::DescriptorFieldKey("descriptor");
+const char* NtType::TimeStampFieldKey("timeStamp");
 
 NtType::NtType(const bp::dict& pyDict, const std::string& structureId, const bp::dict& structureFieldIdDict)
     : PvObject(pyDict, structureId, structureFieldIdDict)

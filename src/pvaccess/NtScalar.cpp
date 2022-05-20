@@ -11,9 +11,6 @@ namespace bp = boost::python;
 namespace epvd = epics::pvData;
 
 const char* NtScalar::StructureId("epics:nt/NTScalar:1.0");
-const char* NtScalar::DescriptorFieldKey("descriptor");
-const char* NtScalar::TimeStampFieldKey("timeStamp");
-const char* NtScalar::AlarmFieldKey("alarm");
 const char* NtScalar::DisplayFieldKey("display");
 const char* NtScalar::ControlFieldKey("control");
 

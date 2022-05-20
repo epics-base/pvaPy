@@ -9,9 +9,6 @@
 
 const char* NtTable::StructureId("epics:nt/NTTable:1.0");
 const char* NtTable::LabelsFieldKey("labels");
-const char* NtTable::DescriptorFieldKey("descriptor");
-const char* NtTable::TimeStampFieldKey("timeStamp");
-const char* NtTable::AlarmFieldKey("alarm");
 
 boost::python::dict NtTable::createStructureDict(int nColumns, PvType::ScalarType scalarType)
 {

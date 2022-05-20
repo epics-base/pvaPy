@@ -12,6 +12,9 @@ class NtType : public PvObject
 public:
     // Constants
     static const char* StructureId;
+    static const char* AlarmFieldKey;
+    static const char* DescriptorFieldKey;
+    static const char* TimeStampFieldKey;
 
     // Instance methods
     NtType(const NtType& ntType); 

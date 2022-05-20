@@ -51,6 +51,7 @@ void wrapPvCodec();
 void wrapPvControl();
 void wrapPvDimension();
 void wrapPvDisplay();
+void wrapPvEnum();
 void wrapPvValueAlarm();
 
 void wrapNtType();
@@ -138,6 +139,7 @@ BOOST_PYTHON_MODULE(pvaccess)
     wrapPvControl();
     wrapPvDimension();
     wrapPvDisplay();
+    wrapPvEnum();
     wrapPvValueAlarm();
 
     wrapNtType();
