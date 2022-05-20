@@ -26,6 +26,8 @@ public:
 
     // Static methods
     static boost::python::dict createStructureDict(PvType::ScalarType scalarType);
+    static boost::python::dict createStructureFieldIdDict();
+
 
     // Instance methods
     NtScalar(PvType::ScalarType scalarType);

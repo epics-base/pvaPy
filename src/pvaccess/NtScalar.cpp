@@ -26,13 +26,23 @@ boost::python::dict NtScalar::createStructureDict(PvType::ScalarType scalarType)
     return pyDict;
 }
 
+bp::dict NtScalar::createStructureFieldIdDict()
+{
+    bp::dict structureFieldIdDict;
+    structureFieldIdDict[AlarmFieldKey] = PvAlarm::StructureId;
+    structureFieldIdDict[TimeStampFieldKey] = PvTimeStamp::StructureId;
+    structureFieldIdDict[DisplayFieldKey] = PvDisplay::StructureId;
+    structureFieldIdDict[ControlFieldKey] = PvControl::StructureId;
+    return structureFieldIdDict;
+}
+
 NtScalar::NtScalar(PvType::ScalarType scalarType)
-    : NtType(createStructureDict(scalarType), StructureId)
+    : NtType(createStructureDict(scalarType), StructureId, createStructureFieldIdDict())
 {
 }
 
 NtScalar::NtScalar(PvType::ScalarType scalarType, const boost::python::object& pyObject)
-    : NtType(createStructureDict(scalarType), StructureId)
+    : NtType(createStructureDict(scalarType), StructureId, createStructureFieldIdDict())
 {
     setPyObject(ValueFieldKey, pyObject);
 }
