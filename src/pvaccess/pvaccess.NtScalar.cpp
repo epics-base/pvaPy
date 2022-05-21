@@ -62,7 +62,7 @@ class_<NtScalar, bases<NtType> >("NtScalar",
         "Sets scalar descriptor.\n\n"
         ":Parameter: *descriptor* (str) - scalar descriptor\n\n"
         "::\n\n"
-        "    scalar.setDescriptor('myTable')\n\n")
+        "    scalar.setDescriptor('myScalar')\n\n")
 
     .def("getTimeStamp", 
         &NtScalar::getTimeStamp, 
