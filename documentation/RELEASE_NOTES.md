@@ -1,3 +1,8 @@
+## Release 4.2.0 (2022/MM/DD)
+
+- added support for NtEnum 
+- updated structure IDs for NtScalar fields
+
 ## Release 4.1.1 (2022/03/22)
 
 - added pip support for OSX and ARM64

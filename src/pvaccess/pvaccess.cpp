@@ -56,6 +56,7 @@ void wrapPvValueAlarm();
 
 void wrapNtType();
 void wrapNtAttribute();
+void wrapNtEnum();
 void wrapNtNdArray();
 void wrapNtScalar();
 void wrapNtTable();
@@ -144,6 +145,7 @@ BOOST_PYTHON_MODULE(pvaccess)
 
     wrapNtType();
     wrapNtAttribute();
+    wrapNtEnum();
     wrapNtNdArray();
     wrapNtScalar();
     wrapNtTable();
