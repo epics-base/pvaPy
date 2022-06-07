@@ -176,6 +176,13 @@ NtAttribute
     :show-inheritance: 
     :members: 
 
+NtEnum
+------
+
+.. autoclass:: pvaccess.NtEnum()
+    :show-inheritance: 
+    :members: 
+
 NtNdArray
 ---------
 
