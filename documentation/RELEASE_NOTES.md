@@ -1,4 +1,4 @@
-## Release 4.2.0 (2022/MM/DD)
+## Release 4.2.0 (2022/06/07)
 
 - added support for NtEnum 
 - updated structure IDs for NtScalar fields
