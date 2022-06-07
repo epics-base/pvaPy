@@ -2,6 +2,10 @@
 
 - added support for NtEnum 
 - updated structure IDs for NtScalar fields
+- conda/pip package dependencies: 
+  - EPICS BASE = 7.0.6.1
+  - BOOST      = 1.78.0
+  - NUMPY      >= 1.22
 
 ## Release 4.1.1 (2022/03/22)
 
@@ -11,6 +15,10 @@
   make it compatible with standard normative type
 - improved frame rate accuracy for area detector simulator 
 - added ability to read image data from a given folder
+- conda/pip package dependencies: 
+  - EPICS BASE = 7.0.6.1
+  - BOOST      = 1.78.0
+  - NUMPY      >= 1.22
 
 ## Release 4.1.0 (2022/01/26)
 
