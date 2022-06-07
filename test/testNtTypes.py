@@ -6,6 +6,8 @@ import math
 from pvaccess import NtTable
 from pvaccess import NtNdArray
 from pvaccess import NtAttribute
+from pvaccess import NtEnum
+from pvaccess import NtScalar
 from pvaccess import PvDimension
 from pvaccess import PvCodec
 from pvaccess import PvInt
@@ -69,6 +71,32 @@ class TestNtTypes:
         value2 = nda['value'][0]['ubyteValue']
         print('Comparing image arrays {} to {}'.format(value2, value))
         assert(np.array_equiv(value, value2))
-        
 
+    #
+    # NtScalar
+    #
+    def test_NtScalar(self):
+        print()
+        value = random.randint(0,100000)
+        s = NtScalar(INT, value)
+        value2 = s['value']
+        print('Comparing scalar value {} to {}'.format(value2, value))
+        assert(value==value2)
 
+    #
+    # NtEnum
+    #
+    def test_NtEnum(self):
+        print()
+        maxInt = random.randint(1,100)
+        indices = list(range(0,maxInt))
+        choices = list(map(lambda i: 'Ch%d' % i, indices))
+        current = random.randint(0,maxInt)
+        e = NtEnum(choices, current) 
+        current2 = e['value.index']
+        print('Comparing enum choice {} to {}'.format(current2, current))
+        assert(current==current2)
+        current = random.randint(0,maxInt)
+        e['value.index'] = current
+        current2 = e['value.index']
+        print('Comparing enum choice {} to {}'.format(current2, current))
