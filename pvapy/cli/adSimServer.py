@@ -23,7 +23,7 @@ class AdSimServer:
         np.dtype('float64') : 'doubleValue'
     }
 
-    def __init__(self, input_directory, input_file, frame_rate, nf, nx, ny, runtime, channel_name, start_delay, report_frequency):
+    def __init__(self, input_directory, input_file, frame_rate, nf, nx, ny, datatype, runtime, channel_name, start_delay, report_frequency):
         self.arraySize = None
         self.delta_t = 0
         if frame_rate > 0:
@@ -39,7 +39,7 @@ class AdSimServer:
         self.frames = None
         for f in input_files:
             try:
-                new_frames = np.load(f)
+                new_frames = np.load(f, mmap_mode='r')
                 if self.frames is None:
                     self.frames = new_frames
                 else:
@@ -49,10 +49,23 @@ class AdSimServer:
                 print('Cannot load input file %s, skipping it: %s' % (f, ex))
         if self.frames is None:
             print('Generating random frames')
-            self.frames = np.random.randint(0, 256, size=(nf, nx, ny), dtype=np.uint8)
+            # Example frame:
+            # frame = np.array([[0,0,0,0,0,0,0,0,0,0],
+            #                  [0,0,0,0,1,1,0,0,0,0],
+            #                  [0,0,0,1,2,3,2,0,0,0],
+            #                  [0,0,0,1,2,3,2,0,0,0],
+            #                  [0,0,0,1,2,3,2,0,0,0],
+            #                  [0,0,0,0,0,0,0,0,0,0]], dtype=np.uint16)
+            dt = np.dtype(datatype)
+            dtinfo = np.iinfo(dt)
+            if datatype != 'float32' and datatype != 'float64':
+                self.frames = np.random.randint(dtinfo.min, dtinfo.max, size=(nf, ny, nx), dtype=dt)
+            else:
+                self.frames = np.random.uniform(dtinfo.min, dtinfo.max, size=(nf, ny, nx), dtype=dt)
+            print('Generated frame shape: {}'.format(self.frames[0].shape))
         self.n_input_frames, self.rows, self.cols = self.frames.shape
         self.pva_type_key = self.PVA_TYPE_KEY_MAP.get(self.frames.dtype)
-        print('Number of input frames: %s (size: %sx%s, type: %s)' % (self.n_input_frames, self.rows, self.cols, self.frames.dtype))
+        print('Number of input frames: %s (size: %sx%s, type: %s)' % (self.n_input_frames, self.cols, self.rows, self.frames.dtype))
 
         self.channel_name = channel_name
         self.frame_rate = frame_rate
@@ -82,18 +95,19 @@ class AdSimServer:
             else:
                 nda = pva.NtNdArray(extraFieldsPvObject.getStructureDict())
 
+            data = self.frames[frame_id].flatten()
             nda['uniqueId'] = frame_id
-            nda['codec'] = pva.PvCodec('pvapyc', pva.PvInt(5))
-            dims = [pva.PvDimension(self.rows, 0, self.rows, 1, False), \
-                    pva.PvDimension(self.cols, 0, self.cols, 1, False)]
+            #nda['codec'] = pva.PvCodec('pvapyc', pva.PvInt(6))
+            dims = [pva.PvDimension(self.cols, 0, self.cols, 1, False), \
+                    pva.PvDimension(self.rows, 0, self.rows, 1, False)]
             nda['dimension'] = dims
-            nda['compressedSize'] = self.rows*self.cols
-            nda['uncompressedSize'] = self.rows*self.cols
+            nda['compressedSize'] = self.rows*self.cols*data.itemsize
+            nda['uncompressedSize'] = self.rows*self.cols*data.itemsize
             ts = self.get_timestamp()
             nda['timeStamp'] = ts
             nda['dataTimeStamp'] = ts
             nda['descriptor'] = 'PvaPy Simulated Image'
-            nda['value'] = {self.pva_type_key : self.frames[frame_id].flatten()}
+            nda['value'] = {self.pva_type_key : data}
             attrs = [pva.NtAttribute('ColorMode', pva.PvInt(0))]
             nda['attribute'] = attrs
             if extraFieldsPvObject is not None:
@@ -165,8 +179,9 @@ def main():
     parser.add_argument('--input-directory', '-id', type=str, dest='input_directory', default=None, help='Directory containing input files to be streamed; if input directory or input file are not provided, random images will be generated')
     parser.add_argument('--input-file', '-if', type=str, dest='input_file', default=None, help='Input file to be streamed; if input directory or input file are not provided, random images will be generated')
     parser.add_argument('--frame-rate', '-fps', type=float, dest='frame_rate', default=20, help='Frames per second (default: 20 fps)')
-    parser.add_argument('--n-x-pixels', '-nx', type=int, dest='n_x_pixels', default=2048, help='Number of pixels in x dimension (default: 256 pixels; does not apply if input_file file is given)')
-    parser.add_argument('--n-y-pixels', '-ny', type=int, dest='n_y_pixels', default=256, help='Number of pixels in x dimension (default: 256 pixels; does not apply if hdf5 file is given)')
+    parser.add_argument('--n-x-pixels', '-nx', type=int, dest='n_x_pixels', default=2048, help='Number of pixels in x dimension (default: 256 pixels; does not apply if input file file is given)')
+    parser.add_argument('--n-y-pixels', '-ny', type=int, dest='n_y_pixels', default=256, help='Number of pixels in x dimension (default: 256 pixels; does not apply if input file is given)')
+    parser.add_argument('--datatype', '-dt', type=str, dest='datatype', default='uint8', help='Generated datatype. Possible options are int8, uint8, int16, uint16, int32, uint32, float32, float64 (default: uint8; does not apply if input file is given)')
     parser.add_argument('--n-frames', '-nf', type=int, dest='n_frames', default=1000, help='Number of different frames to generate and cache; those images will be published over and over again as long as the server is running')
     parser.add_argument('--runtime', '-rt', type=float, dest='runtime', default=300, help='Server runtime in seconds (default: 300 seconds)')
     parser.add_argument('--channel-name', '-cn', type=str, dest='channel_name', default='pvapy:image', help='Server PVA channel name (default: pvapy:image)')
@@ -179,7 +194,7 @@ def main():
         print('Unrecognized argument(s): %s' % ' '.join(unparsed))
         exit(1)
 
-    server = AdSimServer(input_directory=args.input_directory, input_file=args.input_file, frame_rate=args.frame_rate, nf=args.n_frames, nx=args.n_x_pixels, ny=args.n_y_pixels, runtime=args.runtime, channel_name=args.channel_name, start_delay=args.start_delay, report_frequency=args.report_frequency)
+    server = AdSimServer(input_directory=args.input_directory, input_file=args.input_file, frame_rate=args.frame_rate, nf=args.n_frames, nx=args.n_x_pixels, ny=args.n_y_pixels, datatype=args.datatype, runtime=args.runtime, channel_name=args.channel_name, start_delay=args.start_delay, report_frequency=args.report_frequency)
 
     server.start()
     try:
