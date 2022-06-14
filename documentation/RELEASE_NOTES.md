@@ -1,7 +1,11 @@
 ## Release 4.2.1 (2022/MM/DD)
 
-- Added ability to generate frames with different data types using
-  the area detector simulator
+- added ability for the area detector simulator to generate frames 
+  with different data types and in specified ranges
+- conda/pip package dependencies: 
+  - EPICS BASE = 7.0.6.1
+  - BOOST      = 1.78.0
+  - NUMPY      >= 1.22
 
 ## Release 4.2.0 (2022/06/07)
 
