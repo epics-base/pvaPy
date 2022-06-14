@@ -1,3 +1,8 @@
+## Release 4.2.1 (2022/MM/DD)
+
+- Added ability to generate frames with different data types using
+  the area detector simulator
+
 ## Release 4.2.0 (2022/06/07)
 
 - added support for NtEnum 
