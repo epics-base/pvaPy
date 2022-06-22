@@ -1,7 +1,9 @@
 ## Release 4.2.1 (2022/MM/DD)
 
-- added ability for the area detector simulator to generate frames 
-  with different data types and in specified ranges
+- added new area detector simulator features:
+  - option to generate frames with different data types and in the specified ranges
+  - option to use numpy memory map for oading input files
+  - option to notify channel access PV when server start
 - conda/pip package dependencies: 
   - EPICS BASE = 7.0.6.1
   - BOOST      = 1.78.0

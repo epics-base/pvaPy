@@ -10,6 +10,7 @@ __version__ = pva.__version__
 class AdSimServer:
 
     DELAY_CORRECTION = 0.0001
+    NOTIFICATION_DELAY = 0.1
     PVA_TYPE_KEY_MAP = {
         np.dtype('uint8')   : 'ubyteValue',
         np.dtype('int8')    : 'byteValue',
@@ -23,7 +24,7 @@ class AdSimServer:
         np.dtype('float64') : 'doubleValue'
     }
 
-    def __init__(self, input_directory, input_file, frame_rate, nf, nx, ny, datatype, minimum, maximum, runtime, channel_name, start_delay, report_frequency):
+    def __init__(self, input_directory, input_file, mmap_mode, frame_rate, nf, nx, ny, datatype, minimum, maximum, runtime, channel_name, notify_pv, notify_pv_value, start_delay, report_frequency):
         self.arraySize = None
         self.delta_t = 0
         if frame_rate > 0:
@@ -39,14 +40,17 @@ class AdSimServer:
         self.frames = None
         for f in input_files:
             try:
-                new_frames = np.load(f, mmap_mode='r')
+                if mmap_mode:
+                    new_frames = np.load(f, mmap_mode='r')
+                else:
+                    new_frames = np.load(f)
                 if self.frames is None:
                     self.frames = new_frames
                 else:
                     self.frames = np.append(self.frames, new_frames, axis=0)
-                print('Loaded input file %s' % (f))
+                print('Loaded input file {}'.format(f))
             except Exception as ex:
-                print('Cannot load input file %s, skipping it: %s' % (f, ex))
+                print('Cannot load input file {}, skipping it: {}'.format(f, str(ex)))
         if self.frames is None:
             print('Generating random frames')
             # Example frame:
@@ -83,12 +87,21 @@ class AdSimServer:
             print('Range of generated values: [{},{}]'.format(mn,mx))
         self.n_input_frames, self.rows, self.cols = self.frames.shape
         self.pva_type_key = self.PVA_TYPE_KEY_MAP.get(self.frames.dtype)
-        print('Number of input frames: %s (size: %sx%s, type: %s)' % (self.n_input_frames, self.cols, self.rows, self.frames.dtype))
+        print('Number of input frames: {} (size: {}x{}, type: {})'.format(self.n_input_frames, self.cols, self.rows, self.frames.dtype))
 
         self.channel_name = channel_name
         self.frame_rate = frame_rate
         self.server = pva.PvaServer()
         self.server.addRecord(self.channel_name, pva.NtNdArray())
+        if notify_pv and notify_pv_value:
+            try:
+                time.sleep(self.NOTIFICATION_DELAY)
+                notifyChannel = pva.Channel(notify_pv, pva.CA)
+                notifyChannel.put(notify_pv_value)
+                print('Set notification PV {} to {}'.format(notify_pv, notify_pv_value))
+            except Exception as ex:
+                print('Could not set notification PV {} to {}: {}'.format(notify_pv, notify_pv_value, ex))
+
         self.frame_map = {}
         self.current_frame_id = 0
         self.n_published_frames = 0
@@ -168,7 +181,7 @@ class AdSimServer:
                     print("Published frame id %6d @ %.3f" % (self.current_frame_id, self.last_published_time))
 
             if runtime > self.runtime:
-                print("Server will exit after reaching runtime of %s seconds" % (self.runtime))
+                print("Server will exit after reaching runtime of {} seconds".format(self.runtime))
                 return
 
             if self.delta_t > 0:
@@ -196,6 +209,7 @@ def main():
     parser = argparse.ArgumentParser(description='PvaPy Area Detector Simulator')
     parser.add_argument('--input-directory', '-id', type=str, dest='input_directory', default=None, help='Directory containing input files to be streamed; if input directory or input file are not provided, random images will be generated')
     parser.add_argument('--input-file', '-if', type=str, dest='input_file', default=None, help='Input file to be streamed; if input directory or input file are not provided, random images will be generated')
+    parser.add_argument('--mmap-mode', '-mm', action='store_true', dest='mmap_mode', default=False, help='Use NumPy memory map to load the specified input file. This flag typically results in faster startup and lower memory usage for large files.')
     parser.add_argument('--frame-rate', '-fps', type=float, dest='frame_rate', default=20, help='Frames per second (default: 20 fps)')
     parser.add_argument('--n-x-pixels', '-nx', type=int, dest='n_x_pixels', default=2048, help='Number of pixels in x dimension (default: 256 pixels; does not apply if input file file is given)')
     parser.add_argument('--n-y-pixels', '-ny', type=int, dest='n_y_pixels', default=256, help='Number of pixels in x dimension (default: 256 pixels; does not apply if input file is given)')
@@ -205,6 +219,8 @@ def main():
     parser.add_argument('--n-frames', '-nf', type=int, dest='n_frames', default=1000, help='Number of different frames to generate and cache; those images will be published over and over again as long as the server is running')
     parser.add_argument('--runtime', '-rt', type=float, dest='runtime', default=300, help='Server runtime in seconds (default: 300 seconds)')
     parser.add_argument('--channel-name', '-cn', type=str, dest='channel_name', default='pvapy:image', help='Server PVA channel name (default: pvapy:image)')
+    parser.add_argument('--notify-pv', '-npv', type=str, dest='notify_pv', default=None, help='CA channel that should be notified on start; for the default Area Detector PVA driver PV that controls image acquisition is 13PVA1:cam1:Acquire')
+    parser.add_argument('--notify-pv-value', '-nvl', type=str, dest='notify_pv_value', default='1', help='Value for the notification channel; for the Area Detector PVA driver PV this should be set to "Acquire" (default: 1)')
     parser.add_argument('--start-delay', '-sd', type=float, dest='start_delay',  default=10.0, help='Server start delay in seconds (default: 10 seconds)')
     parser.add_argument('--report-frequency', '-rf', type=int, dest='report_frequency', default=1, help='Reporting frequency for publishing frames; if set to <=0 no frames will be reported as published (default: 1)')
     parser.add_argument('-v', '--version', action='version', version='%(prog)s {version}'.format(version=__version__))
@@ -214,7 +230,7 @@ def main():
         print('Unrecognized argument(s): %s' % ' '.join(unparsed))
         exit(1)
 
-    server = AdSimServer(input_directory=args.input_directory, input_file=args.input_file, frame_rate=args.frame_rate, nf=args.n_frames, nx=args.n_x_pixels, ny=args.n_y_pixels, datatype=args.datatype, minimum=args.minimum, maximum=args.maximum, runtime=args.runtime, channel_name=args.channel_name, start_delay=args.start_delay, report_frequency=args.report_frequency)
+    server = AdSimServer(input_directory=args.input_directory, input_file=args.input_file, mmap_mode=args.mmap_mode, frame_rate=args.frame_rate, nf=args.n_frames, nx=args.n_x_pixels, ny=args.n_y_pixels, datatype=args.datatype, minimum=args.minimum, maximum=args.maximum, runtime=args.runtime, channel_name=args.channel_name, notify_pv=args.notify_pv, notify_pv_value=args.notify_pv_value, start_delay=args.start_delay, report_frequency=args.report_frequency)
 
     server.start()
     try:
@@ -223,6 +239,6 @@ def main():
     except KeyboardInterrupt as ex:
         pass
     server.stop()
-    
+
 if __name__ == '__main__':
     main()
