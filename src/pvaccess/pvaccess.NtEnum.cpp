@@ -16,7 +16,7 @@ class_<NtEnum, bases<NtType> >("NtEnum",
     "NtEnum represents NT enum structure.\n\n"
     "**NtEnum()**\n\n"
     "\t::\n\n"
-    "\t\enum1 = NtEnum()\n\n"
+    "\t\tenum1 = NtEnum()\n\n"
     "**NtEnum(choices [, index=0])**\n\n"
     "\t:Parameter: *choices* ([str]) - list of choices\n\n"
     "\t:Parameter: *index* (int) - current choice\n\n"
@@ -45,7 +45,7 @@ class_<NtEnum, bases<NtType> >("NtEnum",
         "Sets enum object index value.\n\n"
         ":Parameter: *index* (int) - current choice index\n\n"
         "::\n\n"
-        "    enum.setValue(2})\n\n")
+        "    enum.setValue(2)\n\n")
 
     .def("setValue", 
         static_cast<void(NtEnum::*)(const boost::python::dict&)>(&NtEnum::setValue),
