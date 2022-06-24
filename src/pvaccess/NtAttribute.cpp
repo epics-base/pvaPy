@@ -33,13 +33,21 @@ bp::dict NtAttribute::createStructureDict()
     return structureDict;
 }
 
+bp::dict NtAttribute::createStructureFieldIdDict()
+{
+    bp::dict structureFieldIdDict;
+    structureFieldIdDict[AlarmFieldKey] = PvAlarm::StructureId;
+    structureFieldIdDict[TimeStampFieldKey] = PvTimeStamp::StructureId;
+    return structureFieldIdDict;
+}
+
 NtAttribute::NtAttribute()
-    : NtType(createStructureDict(), StructureId)
+    : NtType(createStructureDict(), StructureId, createStructureFieldIdDict())
 {
 }
 
 NtAttribute::NtAttribute(const std::string& name, const PvObject& value)
-    : NtType(createStructureDict(), StructureId)
+    : NtType(createStructureDict(), StructureId, createStructureFieldIdDict())
 {
     setName(name);
     setValue(value);

@@ -24,6 +24,7 @@ public:
 
     // Static methods
     static boost::python::dict createStructureDict();
+    static boost::python::dict createStructureFieldIdDict();
 
     // Instance methods
     NtAttribute();
