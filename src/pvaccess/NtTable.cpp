@@ -7,22 +7,25 @@
 #include "PyPvDataUtility.h"
 #include "InvalidArgument.h"
 
+namespace pvd = epics::pvData;
+namespace bp = boost::python;
+
 const char* NtTable::StructureId("epics:nt/NTTable:1.0");
 const char* NtTable::LabelsFieldKey("labels");
 
-boost::python::dict NtTable::createStructureDict(int nColumns, PvType::ScalarType scalarType)
+bp::dict NtTable::createStructureDict(int nColumns, PvType::ScalarType scalarType)
 {
     if (nColumns < 0) {
         throw InvalidArgument("Number of columns cannot be negative.");
     }
-    boost::python::list pyList;
+    bp::list pyList;
     pyList.append(PvType::String);
-    boost::python::dict pyDict;
+    bp::dict pyDict;
     pyDict[LabelsFieldKey] = pyList;
-    boost::python::dict pyDict2;
+    bp::dict pyDict2;
     for (int column = 0; column < nColumns; column++) {
         std::string columnName = getColumnName(column);
-        boost::python::list pyList2;
+        bp::list pyList2;
         pyList2.append(scalarType);
         pyDict2[columnName] = pyList2;
     }
@@ -33,18 +36,18 @@ boost::python::dict NtTable::createStructureDict(int nColumns, PvType::ScalarTyp
     return pyDict;
 }
 
-boost::python::dict NtTable::createStructureDict(const boost::python::list& scalarTypePyList)
+bp::dict NtTable::createStructureDict(const bp::list& scalarTypePyList)
 {
-    boost::python::list pyList;
+    bp::list pyList;
     pyList.append(PvType::String);
-    boost::python::dict pyDict;
+    bp::dict pyDict;
     pyDict[LabelsFieldKey] = pyList;
-    boost::python::dict pyDict2;
-    for (int column = 0; column < boost::python::len(scalarTypePyList); column++) {
-        boost::python::extract<int> scalarTypeExtract(scalarTypePyList[column]);
+    bp::dict pyDict2;
+    for (int column = 0; column < bp::len(scalarTypePyList); column++) {
+        bp::extract<int> scalarTypeExtract(scalarTypePyList[column]);
         if (scalarTypeExtract.check()) {
             PvType::ScalarType scalarType = static_cast<PvType::ScalarType>(scalarTypeExtract());
-            boost::python::list pyList2;
+            bp::list pyList2;
             pyList2.append(scalarType);
             std::string columnName = getColumnName(column);
             pyDict2[columnName] = pyList2;
@@ -60,6 +63,14 @@ boost::python::dict NtTable::createStructureDict(const boost::python::list& scal
     return pyDict;
 }
 
+bp::dict NtTable::createStructureFieldIdDict()
+{
+    bp::dict structureFieldIdDict;
+    structureFieldIdDict[AlarmFieldKey] = PvAlarm::StructureId;
+    structureFieldIdDict[TimeStampFieldKey] = PvTimeStamp::StructureId;
+    return structureFieldIdDict;
+}
+
 std::string NtTable::getColumnName(int column) 
 {
     std::string columnName = "column" + StringUtility::toString(column);
@@ -67,14 +78,14 @@ std::string NtTable::getColumnName(int column)
 }
 
 NtTable::NtTable(int nColumns_, PvType::ScalarType scalarType)
-    : NtType(createStructureDict(nColumns_, scalarType), StructureId),
+    : NtType(createStructureDict(nColumns_, scalarType), StructureId, createStructureFieldIdDict()),
     nColumns(nColumns_)
 {
 }
 
-NtTable::NtTable(const boost::python::list& scalarTypePyList)
-    : NtType(createStructureDict(scalarTypePyList), StructureId),
-    nColumns(boost::python::len(scalarTypePyList))
+NtTable::NtTable(const bp::list& scalarTypePyList)
+    : NtType(createStructureDict(scalarTypePyList), StructureId, createStructureFieldIdDict()),
+    nColumns(bp::len(scalarTypePyList))
 {
 }
 
@@ -85,7 +96,7 @@ NtTable::NtTable(const PvObject& pvObject)
     PyPvDataUtility::checkFieldExists(LabelsFieldKey, pvStructurePtr);
     PyPvDataUtility::checkFieldExists(ValueFieldKey, pvStructurePtr);
     set(pvObject);
-    epics::pvData::PVScalarArrayPtr pvScalarArrayPtr = PyPvDataUtility::getScalarArrayField(LabelsFieldKey, epics::pvData::pvString, pvStructurePtr);
+    pvd::PVScalarArrayPtr pvScalarArrayPtr = PyPvDataUtility::getScalarArrayField(LabelsFieldKey, pvd::pvString, pvStructurePtr);
     nColumns = pvScalarArrayPtr->getLength();
 }
 
@@ -103,50 +114,50 @@ int NtTable::getNColumns() const
     return nColumns;
 }
 
-void NtTable::setLabels(const boost::python::list& pyList)
+void NtTable::setLabels(const bp::list& pyList)
 {
-    if (boost::python::len(pyList) != nColumns) {
+    if (bp::len(pyList) != nColumns) {
         throw InvalidArgument("Number of column labels must be %d.", nColumns);
     }
     PyPvDataUtility::pyListToScalarArrayField(pyList, LabelsFieldKey, pvStructurePtr);
 }
 
-void NtTable::setColumn(int column, const boost::python::list& pyList)
+void NtTable::setColumn(int column, const bp::list& pyList)
 {
     if (column < 0 || column >= nColumns) {
         throw InvalidArgument("Column index must be in range [0,%d].", nColumns-1);
     }
     std::string columnName = getColumnName(column);
-    epics::pvData::PVStructurePtr pvStructurePtr2 = PyPvDataUtility::getStructureField(ValueFieldKey, pvStructurePtr);
+    pvd::PVStructurePtr pvStructurePtr2 = PyPvDataUtility::getStructureField(ValueFieldKey, pvStructurePtr);
     PyPvDataUtility::pyListToScalarArrayField(pyList, columnName, pvStructurePtr2);
 }
 
-boost::python::list NtTable::getLabels() const
+bp::list NtTable::getLabels() const
 {
-    boost::python::list pyList;
+    bp::list pyList;
     PyPvDataUtility::scalarArrayFieldToPyList(LabelsFieldKey, pvStructurePtr, pyList);
     return pyList;
 }
 
-boost::python::list NtTable::getColumn(int column) const
+bp::list NtTable::getColumn(int column) const
 {
     if (column < 0 || column >= nColumns) {
         throw InvalidArgument("Column index must be in range [0,%d].", nColumns-1);
     }
     std::string columnName = getColumnName(column);
-    boost::python::list pyList;
-    epics::pvData::PVStructurePtr pvStructurePtr2 = PyPvDataUtility::getStructureField(ValueFieldKey, pvStructurePtr);
+    bp::list pyList;
+    pvd::PVStructurePtr pvStructurePtr2 = PyPvDataUtility::getStructureField(ValueFieldKey, pvStructurePtr);
     PyPvDataUtility::scalarArrayFieldToPyList(columnName, pvStructurePtr2, pyList);
     return pyList;
 }
 void NtTable::setDescriptor(const std::string& descriptor)
 {
-    pvStructurePtr->getSubField<epics::pvData::PVString>(DescriptorFieldKey)->put(descriptor);
+    pvStructurePtr->getSubField<pvd::PVString>(DescriptorFieldKey)->put(descriptor);
 }
 
 std::string NtTable::getDescriptor() const
 {
-    return pvStructurePtr->getSubField<epics::pvData::PVString>(DescriptorFieldKey)->get();
+    return pvStructurePtr->getSubField<pvd::PVString>(DescriptorFieldKey)->get();
 }
 
 PvTimeStamp NtTable::getTimeStamp() const

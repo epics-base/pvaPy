@@ -25,6 +25,7 @@ public:
     static std::string getColumnName(int column);
     static boost::python::dict createStructureDict(int nColumns, PvType::ScalarType scalarType);
     static boost::python::dict createStructureDict(const boost::python::list& scalarTypePyList);
+    static boost::python::dict createStructureFieldIdDict();
 
     // Instance methods
     NtTable(int nColumns, PvType::ScalarType scalarType);
