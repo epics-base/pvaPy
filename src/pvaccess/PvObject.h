@@ -34,6 +34,7 @@ public:
     PvObject(const boost::python::dict& structureDict, const std::string& structureId, const boost::python::dict& structureFieldIdDict);
     PvObject(const boost::python::dict& structureDict, const boost::python::dict& valueDict);
     PvObject(const boost::python::dict& structureDict, const boost::python::dict& valueDict, const std::string& structureId);
+    PvObject(const boost::python::dict& structureDict, const boost::python::dict& valueDict, const std::string& structureId, const boost::python::dict& structureFieldIdDict);
     PvObject(const PvObject& pvObject);
 
     // Destructor

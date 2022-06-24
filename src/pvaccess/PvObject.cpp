@@ -65,7 +65,7 @@ PvObject::PvObject(const bp::dict& structureDict, const std::string& structureId
 {
 }
 
-PvObject::PvObject(const bp::dict& structureDict, const std::string& structureId, const boost::python::dict& structureFieldIdDict)
+PvObject::PvObject(const bp::dict& structureDict, const std::string& structureId, const bp::dict& structureFieldIdDict)
     : numPyInitialized(initializeBoostNumPy()),
     pvStructurePtr(pvd::getPVDataCreate()->createPVStructure(PyPvDataUtility::createStructureFromDict(structureDict, structureId, structureFieldIdDict))),
     dataType(PvType::Structure),
@@ -85,6 +85,15 @@ PvObject::PvObject(const bp::dict& structureDict, const bp::dict& valueDict)
 PvObject::PvObject(const bp::dict& structureDict, const bp::dict& valueDict, const std::string& structureId)
     : numPyInitialized(initializeBoostNumPy()),
     pvStructurePtr(pvd::getPVDataCreate()->createPVStructure(PyPvDataUtility::createStructureFromDict(structureDict, structureId))),
+    dataType(PvType::Structure),
+    useNumPyArrays(UseNumPyArraysDefault)
+{
+    PyPvDataUtility::pyDictToStructure(valueDict, pvStructurePtr);
+}
+
+PvObject::PvObject(const bp::dict& structureDict, const bp::dict& valueDict, const std::string& structureId, const bp::dict& structureFieldIdDict)
+    : numPyInitialized(initializeBoostNumPy()),
+    pvStructurePtr(pvd::getPVDataCreate()->createPVStructure(PyPvDataUtility::createStructureFromDict(structureDict, structureId, structureFieldIdDict))),
     dataType(PvType::Structure),
     useNumPyArrays(UseNumPyArraysDefault)
 {

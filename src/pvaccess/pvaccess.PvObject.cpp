@@ -41,6 +41,9 @@ class_<PvObject>("PvObject",
     "\t\tpv5 = PvObject({'anUnion' : ({'anInt' : INT, 'aDouble' : DOUBLE},)})\n\n" 
     "\t\tpv6 = PvObject({'aVariant' : ()})\n\n" 
     "\t\tpv7 = PvObject({'value' : DOUBLE}, 'epics:nt/NTScalar:1.0')\n\n"
+    "\t\tpv8 = PvObject({'x' : DOUBLE, 'y' : DOUBLE}, {'x' : 1, 'y' : 2}, 'pair_t:1.0')\n\n"
+    "\t\tpv9 = PvObject({'id' : ULONG, 'pair' : {'x' : DOUBLE, 'y' : DOUBLE}}, 'pair_with_id_t:1.0', {'pair' : 'pair_t'})\n\n"
+    "\t\tpv10 = PvObject({'id' : ULONG, 'pair' : {'x' : DOUBLE, 'y' : DOUBLE}}, {'id' : 1, 'pair' : {'x' : 1, 'y' : 2}}, 'pair_with_id_t:1.0', {'pair' : 'pair_t'})\n\n"
     "\tIn addition to various set/get methods described below,\n"
     "\tPvObject elements can be accessed and manipulated similar to dictionaries: ::\n\n"
     "\t\t>>> pv = PvObject({'a' : {'b' : STRING, 'c' : FLOAT}}, {'a' : {'b' : 'my string', 'c' : 10.1}})\n"
@@ -102,12 +105,16 @@ class_<PvObject>("PvObject",
     "\n\n", 
     init<boost::python::dict>(args("structureDict")))
 
-    .def(init<boost::python::dict,const std::string &>(args("structureDict","typeId")))
+    .def(init<boost::python::dict,const std::string&>(args("structureDict","typeId")))
+
+    .def(init<boost::python::dict,const std::string&,boost::python::dict>(args("structureDict","typeId","fieldTypeIdDict")))
 
     .def(init<boost::python::dict,boost::python::dict>(args("structureDict","valueDict")))
 
 
-    .def(init<boost::python::dict,boost::python::dict,const std::string>(args("structureDict","valueDict","typeId")))
+    .def(init<boost::python::dict,boost::python::dict,const std::string&>(args("structureDict","valueDict","typeId")))
+
+    .def(init<boost::python::dict,boost::python::dict,const std::string&,boost::python::dict>(args("structureDict","valueDict","typeId","fieldTypeIdDict")))
 
     .def_pickle(PvObjectPickleSuite())
 
