@@ -1,7 +1,11 @@
-## Release 4.2.1 (2022/MM/DD)
+## Release 4.3.0 (2022/MM/DD)
 
+- added Channel monitoring methods that push PV updates into the
+  PvObject queue and allow python processing to be done elsewhere
+- updated structure IDs for NtTable and NtAttribute fields
 - added new area detector simulator features:
-  - option to generate frames with different data types and in the specified ranges
+  - option to generate frames with different data types and in the specified 
+    ranges
   - option to use numpy memory map for oading input files
   - option to notify channel access PV when server start
 - conda/pip package dependencies: 
