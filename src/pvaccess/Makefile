@@ -93,6 +93,7 @@ pvaccess_SRCS += pvaccess.NtType.cpp
 
 pvaccess_SRCS += pvaccess.Channel.cpp
 pvaccess_SRCS += pvaccess.MultiChannel.cpp
+pvaccess_SRCS += pvaccess.PvObjectQueue.cpp
 pvaccess_SRCS += pvaccess.RpcClient.cpp
 pvaccess_SRCS += pvaccess.RpcServer.cpp
 
@@ -139,6 +140,7 @@ pvaccess_SRCS += PvFloat.cpp
 pvaccess_SRCS += PvInt.cpp
 pvaccess_SRCS += PvLong.cpp
 pvaccess_SRCS += PvObject.cpp
+pvaccess_SRCS += PvObjectQueue.cpp
 pvaccess_SRCS += PvProvider.cpp
 pvaccess_SRCS += PvScalar.cpp
 pvaccess_SRCS += PvScalarArray.cpp
