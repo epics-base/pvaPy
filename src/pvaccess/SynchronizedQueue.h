@@ -5,52 +5,106 @@
 #define SYNCHRONIZED_QUEUE_H
 
 #include <queue>
-#include "epicsEvent.h"
-#include "pv/pvData.h"
-#include "InvalidState.h"
+#include <string>
+#include <map>
+#include <epicsEvent.h>
+#include <pv/pvData.h>
+#include "InvalidRequest.h"
 
 template <class T>
 class SynchronizedQueue : public std::queue<T>
 {
 public:
+    POINTER_DEFINITIONS(SynchronizedQueue<T>);
+
     static const int Unlimited = -1;
+    static const char* NumAcceptedCounterKey;
+    static const char* NumRejectedCounterKey;
+    static const char* NumRetrievedCounterKey;
+
     SynchronizedQueue(int maxLength=Unlimited);
+    SynchronizedQueue(const SynchronizedQueue& q);
     virtual ~SynchronizedQueue();
     void setMaxLength(int maxLength);
     int getMaxLength();
     bool isFull();
     bool isEmpty();
-    T back() ;
-    T front() ;
-    T frontAndPop() ;
-    T frontAndPop(double timeout) ;
+    unsigned int size();
+    T back();
+    T front();
+    T frontAndPop();
+    T frontAndPop(double timeout);
     void pop();
-    void push(const T& t) ;
-    void pushIfNotFull(const T& t);
+    void push(const T& t);
+    void push(const T& t, double timeout);
+
+    // No exception, return true if operation succeeded
+    bool popIfNotEmpty();
+    bool pushIfNotFull(const T& t);
+
     void waitForItemPushed(double timeout);
+    void waitForItemPushedIfEmpty(double timeout);
     void waitForItemPopped(double timeout);
     void waitForItemPoppedIfFull(double timeout);
     void cancelWaitForItemPushed();
     void cancelWaitForItemPopped();
     void clear();
 
+    // Statistics
+    void resetCounters();
+    const std::map<std::string,unsigned int>& getCounterMap();
+    void setCounter(const std::string& key, unsigned int value);
+    void addToCounter(const std::string& key, unsigned int value);
+
 private:
-    void throwInvalidStateIfEmpty() ;
+    void throwInvalidRequestIfEmpty() ;
     T frontAndPopUnsynchronized();
+    void pushUnsynchronized(const T& t);
 
     epics::pvData::Mutex mutex;
     epicsEvent itemPushedEvent;
     epicsEvent itemPoppedEvent;
     int maxLength;
+
+    // Statistics counters
+    std::map<std::string, unsigned int> counterMap;
+    unsigned int nAccepted;
+    unsigned int nRejected;
+    unsigned int nRetrieved;
 };
 
 template <class T>
-SynchronizedQueue<T>::SynchronizedQueue(int maxLength_) :
-    std::queue<T>(),
-    mutex(),
-    itemPushedEvent(),
-    itemPoppedEvent(),
-    maxLength(maxLength_)
+const char* SynchronizedQueue<T>::NumAcceptedCounterKey("nAccepted");
+template <class T>
+const char* SynchronizedQueue<T>::NumRejectedCounterKey("nRejected");
+template <class T>
+const char* SynchronizedQueue<T>::NumRetrievedCounterKey("nRetrieved");
+
+template <class T>
+SynchronizedQueue<T>::SynchronizedQueue(int maxLength_) 
+    : std::queue<T>()
+    , mutex()
+    , itemPushedEvent()
+    , itemPoppedEvent()
+    , maxLength(maxLength_)
+    , counterMap()
+    , nAccepted(0)
+    , nRejected(0)
+    , nRetrieved(0)
+{
+}
+
+template <class T>
+SynchronizedQueue<T>::SynchronizedQueue(const SynchronizedQueue<T>& q) 
+    : std::queue<T>(q)
+    , mutex()
+    , itemPushedEvent()
+    , itemPoppedEvent()
+    , maxLength(q.maxLength)
+    , counterMap(q.counterMap)
+    , nAccepted(q.nAccepted)
+    , nRejected(q.nRejected)
+    , nRetrieved(q.nRetrieved)
 {
 }
 
@@ -93,18 +147,25 @@ bool SynchronizedQueue<T>::isEmpty()
 }
 
 template <class T>
-void SynchronizedQueue<T>::throwInvalidStateIfEmpty() 
+void SynchronizedQueue<T>::throwInvalidRequestIfEmpty() 
 {
     if (std::queue<T>::empty()) {
-        throw InvalidState("Queue is empty.");
+        throw InvalidRequest("Queue is empty.");
     }
+}
+
+template <class T>
+unsigned int SynchronizedQueue<T>::size() 
+{
+    epics::pvData::Lock lock(mutex);
+    return std::queue<T>::size();
 }
 
 template <class T>
 T SynchronizedQueue<T>::back() 
 {
     epics::pvData::Lock lock(mutex);
-    throwInvalidStateIfEmpty();
+    throwInvalidRequestIfEmpty();
     return std::queue<T>::back();
 }
 
@@ -112,7 +173,7 @@ template <class T>
 T SynchronizedQueue<T>::front() 
 {
     epics::pvData::Lock lock(mutex);
-    throwInvalidStateIfEmpty();
+    throwInvalidRequestIfEmpty();
     return std::queue<T>::front();
 }
 
@@ -121,15 +182,24 @@ T SynchronizedQueue<T>::frontAndPopUnsynchronized()
 {
     T t = std::queue<T>::front();
     std::queue<T>::pop();
+    nRetrieved++;
     itemPoppedEvent.signal();
     return t;
+}
+
+template <class T>
+void SynchronizedQueue<T>::pushUnsynchronized(const T& t) 
+{
+    std::queue<T>::push(t);
+    nAccepted++;
+    itemPushedEvent.signal();
 }
 
 template <class T>
 T SynchronizedQueue<T>::frontAndPop() 
 {
     epics::pvData::Lock lock(mutex);
-    throwInvalidStateIfEmpty();
+    throwInvalidRequestIfEmpty();
     return frontAndPopUnsynchronized();
 }
 
@@ -152,8 +222,25 @@ void SynchronizedQueue<T>::pop()
     epics::pvData::Lock lock(mutex);
     if (!std::queue<T>::empty()) {
         std::queue<T>::pop();
+        nRetrieved++;
         itemPoppedEvent.signal();
     }
+    else {
+        throw InvalidRequest("Queue is empty.");
+    }
+}
+
+template <class T>
+bool SynchronizedQueue<T>::popIfNotEmpty()
+{
+    epics::pvData::Lock lock(mutex);
+    if (!std::queue<T>::empty()) {
+        std::queue<T>::pop();
+        nRetrieved++;
+        itemPoppedEvent.signal();
+        return true;
+    }
+    return false;
 }
 
 template <class T>
@@ -163,29 +250,59 @@ void SynchronizedQueue<T>::push(const T& t)
     int size = std::queue<T>::size();
     if (maxLength > 0 && size >= maxLength) {
         // We are full, throw exception
-        throw InvalidState("Queue is full.");
-        return;
+        nRejected++;
+        throw InvalidRequest("Queue is full.");
     }
-    std::queue<T>::push(t);
-    itemPushedEvent.signal();
+    pushUnsynchronized(t);
 }
 
 template <class T>
-void SynchronizedQueue<T>::pushIfNotFull(const T& t)
+void SynchronizedQueue<T>::push(const T& t, double timeout) 
+{
+    {
+        epics::pvData::Lock lock(mutex);
+        int size = std::queue<T>::size();
+        if (maxLength <= 0 || size < maxLength) {
+            pushUnsynchronized(t);
+        }
+    }
+    waitForItemPopped(timeout);
+    push(t);
+}
+
+template <class T>
+bool SynchronizedQueue<T>::pushIfNotFull(const T& t)
 {
     epics::pvData::Lock lock(mutex);
     int size = std::queue<T>::size();
     if (maxLength > 0 && size >= maxLength) {
         // We are full, ignore push request
-        return;
+        nRejected++;
+        return false;
     }
     std::queue<T>::push(t);
+    nAccepted++;
     itemPushedEvent.signal();
+    return true;
 }
 
 template <class T>
 void SynchronizedQueue<T>::waitForItemPushed(double timeout) 
 {
+    itemPushedEvent.wait(timeout);
+}
+
+template <class T>
+void SynchronizedQueue<T>::waitForItemPushedIfEmpty(double timeout) 
+{
+    {
+        epics::pvData::Lock lock(mutex);
+        int size = std::queue<T>::size();
+        if (size > 0) {
+            return;
+        }
+    }
+    // Queue is empty, wait for push 
     itemPushedEvent.wait(timeout);
 }
 
@@ -198,11 +315,15 @@ void SynchronizedQueue<T>::waitForItemPopped(double timeout)
 template <class T>
 void SynchronizedQueue<T>::waitForItemPoppedIfFull(double timeout) 
 {
-    // Wait for pop only if we are full
-    int size = std::queue<T>::size();
-    if (maxLength > 0 && size >= maxLength) {
-        itemPoppedEvent.wait(timeout);
+    {
+        epics::pvData::Lock lock(mutex);
+        int size = std::queue<T>::size();
+        if (maxLength <= 0 || size < maxLength) {
+            return;
+        }
     }
+    // Queue is full, wait for pop
+    itemPoppedEvent.wait(timeout);
 }
 
 template <class T>
@@ -224,6 +345,49 @@ void SynchronizedQueue<T>::clear()
     while (!std::queue<T>::empty()) {
         std::queue<T>::pop();
         itemPoppedEvent.signal();
+    }
+}
+
+template <class T>
+void SynchronizedQueue<T>::resetCounters() 
+{
+    epics::pvData::Lock lock(mutex);
+    typedef std::map<std::string, unsigned int>::iterator MI;
+    for (MI it = counterMap.begin(); it != counterMap.end(); it++) {
+        it->second = 0;
+    }
+    nAccepted = 0;
+    nRejected = 0;
+    nRetrieved = 0;
+}
+
+template <class T>
+const std::map<std::string,unsigned int>& SynchronizedQueue<T>::getCounterMap()
+{
+    epics::pvData::Lock lock(mutex);
+    counterMap[NumAcceptedCounterKey] = nAccepted;
+    counterMap[NumRejectedCounterKey] = nRejected;
+    counterMap[NumRetrievedCounterKey] = nRetrieved;
+    return counterMap;
+}
+
+template <class T>
+void SynchronizedQueue<T>::setCounter(const std::string& key, unsigned int value) 
+{
+    epics::pvData::Lock lock(mutex);
+    counterMap[key] = value;
+}
+
+template <class T>
+void SynchronizedQueue<T>::addToCounter(const std::string& key, unsigned int value) 
+{
+    epics::pvData::Lock lock(mutex);
+    std::map<std::string,unsigned int>::iterator it = counterMap.find(key);
+    if (it != counterMap.end()) {
+        it->second = it->second + value;
+    }
+    else {
+        counterMap[key] = value;
     }
 }
 
