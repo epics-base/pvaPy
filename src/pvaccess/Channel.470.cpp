@@ -846,7 +846,7 @@ void Channel::processingThread(Channel* channel)
             }
             channel->callSubscribers(pvObject);
         }
-        catch (InvalidState& ex) {
+        catch (InvalidRequest& ex) {
             // Queue empty, no PV changes received.
         }
         catch (const std::exception& ex) {
