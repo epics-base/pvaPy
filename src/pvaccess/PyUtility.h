@@ -5,6 +5,7 @@
 #define PY_UTILITY_H
 
 #include <string>
+#include <map>
 #include <boost/python.hpp>
 #include <boost/python/extract.hpp>
 #include <boost/python/object.hpp>
@@ -67,6 +68,18 @@ PyType extractKeyValueFromPyDict(const std::string& key, const boost::python::di
 }
 
 std::string getErrorMessageFromTraceback(boost::python::error_already_set& ex);
+
+template<typename CppKeyType, typename CppValueType>
+boost::python::dict mapToDict(const std::map<CppKeyType, CppValueType>& m)
+{
+    boost::python::dict pyDict;
+    typename std::map<CppKeyType,CppValueType>::const_iterator it;
+    for (it = m.begin(); it != m.end(); it++) {
+        pyDict[it->first] = it->second;
+    }
+    return pyDict;
+}
+
 } // namespace PyUtility
 
 #endif 
