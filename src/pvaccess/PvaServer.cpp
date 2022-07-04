@@ -314,7 +314,7 @@ void PvaServer::callbackThread(PvaServer* server)
         catch (ObjectNotFound& ex) {
             // Record has been deleted before we could get to update
         }
-        catch (InvalidState& ex) {
+        catch (InvalidRequest& ex) {
             // Queue empty, no PV updates received.
         }
         catch (const std::exception& ex) {
