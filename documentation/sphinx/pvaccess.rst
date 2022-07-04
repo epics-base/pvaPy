@@ -220,6 +220,14 @@ MultiChannel
     :members:
     :inherited-members:
 
+PvObjectQueue
+-------------
+
+.. autoclass:: pvaccess.PvObjectQueue()
+    :show-inheritance: 
+    :members:
+    :inherited-members:
+
 PvaServer
 ---------
 
