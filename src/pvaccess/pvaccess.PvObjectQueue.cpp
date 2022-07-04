@@ -8,7 +8,6 @@
 #include "PvObjectQueue.h"
 
 using namespace boost::python;
-namespace bp = boost::python;
 
 
 //
@@ -17,7 +16,7 @@ namespace bp = boost::python;
 void wrapPvObjectQueue()
 {
 
-bp::class_<PvObjectQueue>("PvObjectQueue", 
+class_<PvObjectQueue>("PvObjectQueue", 
     "PvObjectQueue is a class that can be used for receiving channel updates.\n\n"
     "**PvObjectQueue([maxLength])**\n\n"
     "\t:Parameter: *maxLength* (int) - (optional) maximum queue length; if not provided, queue length will be unlimited\n\n"
@@ -110,7 +109,7 @@ bp::class_<PvObjectQueue>("PvObjectQueue",
         "    pvq.resetCounters()\n\n")
 
     .def("getCounters",
-        static_cast<bp::dict(PvObjectQueue::*)()>(&PvObjectQueue::getCounters),
+        static_cast<dict(PvObjectQueue::*)()>(&PvObjectQueue::getCounters),
         "Retrieve dictionary with all statistics counters, which include number of PvObjects accepted (pushed into the queue), rejected (not pushed into the queue) and retrieved (popped from the queue). The dictionary might also contain user defined counters, or other system counters, such as the number of PVA chanel monitor overruns.\n\n"
         ":Returns: dictionary containing available statistics counters\n\n"
         "::\n\n"
