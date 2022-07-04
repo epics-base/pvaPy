@@ -71,8 +71,8 @@ epics::pvAccess::RPCClient::shared_pointer RpcClient::getRpcClient(const epics::
 
 epics::pvData::PVStructure::shared_pointer RpcClient::request(const epics::pvData::PVStructurePtr& arguments, double timeout)
 {
-  PyThreadState *state;
-  state = PyEval_SaveThread();
+    PyThreadState *state;
+    state = PyEval_SaveThread();
   
     try {
         epics::pvAccess::RPCClient::shared_pointer client = getRpcClient(pvRequest, timeout);
