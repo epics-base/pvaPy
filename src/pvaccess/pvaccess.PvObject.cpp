@@ -19,7 +19,7 @@ void wrapPvObject()
 
 class_<PvObject>("PvObject", 
     "PvObject represents a generic PV structure.\n\n"
-    "**PvObject(structureDict [,valueDict][,typeId])**\n\n"
+    "**PvObject(structureDict [,valueDict][,typeId][,fieldTypeIdDict])**\n\n"
     "\t:Parameter: *structureDict* (dict) - dictionary of key:value pairs describing the underlying PV structure in terms of field names and their types\n\n"
     "\tThe dictionary key is a string (PV field name), and value is one of:\n\n"
     "\t- PVTYPE: scalar type, can be BOOLEAN, BYTE, UBYTE, SHORT, USHORT, INT, UINT, LONG, ULONG, FLOAT, DOUBLE, or STRING\n"
@@ -31,8 +31,9 @@ class_<PvObject>("PvObject",
     "\t- ({key:value, ...},): restricted union\n"
     "\t- [({key:value, ...},)]: single element list representing restricted union array\n\n"
     "\t:Parameter: *valueDict* (dict) - (optional) dictionary of key:value pairs to be used to set field values in the underlying PV structure\n\n"
-    "\t:Raises: *InvalidArgument* - in case structure dictionary cannot be parsed\n\n"
     "\t:Parameter: *typeId* (str) - (optional) The type ID string of the PV structure\n\n"
+    "\t:Parameter: *typeIdDict* (dict) - (optional) dictionary of key:value pairs to be used to set field type IDs in the underlying PV structure\n\n"
+    "\t:Raises: *InvalidArgument* - in case structure dictionary cannot be parsed\n\n"
     "\tExamples of PvObject initialization: ::\n\n"
     "\t\tpv1 = PvObject({'anInt' : INT})\n\n"
     "\t\tpv2 = PvObject({'aShort' : SHORT, 'anUInt' : UINT, 'aString' : STRING})\n\n"
