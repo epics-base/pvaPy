@@ -82,7 +82,7 @@ PvObject ChannelMonitorRequesterImpl::getQueuedPvObject(double timeout) throw(Ch
     try {
         return pvObjectQueue.frontAndPop(timeout);
     }
-    catch (InvalidState& ex) {
+    catch (InvalidRequest& ex) {
         throw ChannelTimeout("No PV changes for channel %s received.", channelName.c_str());
     }
 }
@@ -100,7 +100,7 @@ void ChannelMonitorRequesterImpl::clearPvObjectQueue()
             pvObjectQueue.frontAndPop();
         }
     }
-    catch (const InvalidState& ex) {
+    catch (InvalidRequest& ex) {
         // OK, we are done.
     }
 }
