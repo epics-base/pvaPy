@@ -1240,6 +1240,36 @@ class_<Channel>("Channel",
         "    channel.monitor(echo, 'field(value,alarm,timeStamp)')\n\n")
 #endif
 
+#if PVA_API_VERSION >= 482
+
+    .def("qMonitor",
+        static_cast<void(Channel::*)(PvObjectQueue&, const std::string&)>(&Channel::monitor),
+        args("pvObjectQueue", "requestDescriptor"),
+        "Starts queueing channel monitor. This method results in channel updates being pushed into the provided PvObject queue. PvObjects can be retrieved from the queue and processed separately. This monitor can be stopped using the stopMonitor() method.\n\n"
+        ":Parameter: *pvObjectQueue* (PvObjectQueue) - PvObject queue that will be receive PV value updated\n\n"
+        ":Parameter: *requestDescriptor* (str) - describes what PV data should be sent to the channel monitor\n\n"
+        "::\n\n"
+        "    pvq = PvObjectQueue(10000)\n\n"
+        "    channel.qMonitor(pvq, 'field(value,alarm,timeStamp)')\n\n"
+        "    while True:\n\n"
+        "        try:\n\n"
+        "            pv = pvq.get()\n\n"
+        "            print(pv)\n\n"
+        "        except InvalidRequest as ex:\n\n"
+        "            # queue is empty\n\n"
+        "            pv = pvq.waitForPut(1)\n\n")
+
+    .def("qMonitor",
+        static_cast<void(Channel::*)(PvObjectQueue&)>(&Channel::monitor),
+        args("pvObjectQueue"),
+        "Starts queueing channel monitor with the default request descriptor 'field(value)'. This method results in channel updates being pushed into the provided PvObject queue. PvObjects can be retrieved from the queue and processed separately. This monitor can be stopped using the stopMonitor() method.\n\n"
+        ":Parameter: *pvObjectQueue* (PvObjectQueue) - PvObject queue that will be receive PV value updated\n\n"
+        "::\n\n"
+        "    pvq = PvObjectQueue(10000)\n\n"
+        "    channel.qMonitor(pvq)\n\n")
+
+#endif // if PVA_API_VERSION >= 482
+
     .def("stopMonitor",
         &Channel::stopMonitor,
         "Stops channel monitor for PV value changes.\n\n"

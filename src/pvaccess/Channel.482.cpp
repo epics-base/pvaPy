@@ -30,6 +30,7 @@ namespace pvc = epics::pvaClient;
 namespace bp = boost::python;
 
 const char* Channel::DefaultSubscriberName("defaultSubscriber");
+const char* Channel::MonitorOverrunCounterKey("nOverruns");
 
 const double Channel::DefaultTimeout(3.0);
 const int Channel::DefaultMaxPvObjectQueueLength(0);
@@ -51,6 +52,7 @@ Channel::Channel(const std::string& channelName, PvProvider::ProviderType provid
     , monitorRunning(false)
     , processingThreadRunning(false)
     , pvObjectQueue(DefaultMaxPvObjectQueueLength)
+    , useInternalPvObjectQueue(true)
     , subscriberName()
     , subscriber()
     , subscriberMap()
@@ -87,6 +89,7 @@ Channel::Channel(const Channel& c)
     , monitorRunning(false)
     , processingThreadRunning(false)
     , pvObjectQueue(DefaultMaxPvObjectQueueLength)
+    , useInternalPvObjectQueue(true)
     , subscriberName()
     , subscriber()
     , subscriberMap()
@@ -336,9 +339,9 @@ void Channel::put(const std::string& value, const std::string& requestDescriptor
     PyEval_RestoreThread(_pyThreadState);
 }
 
-void Channel::put(const boost::python::list& pyList, const std::string& requestDescriptor)
+void Channel::put(const bp::list& pyList, const std::string& requestDescriptor)
 {
-    int listSize = boost::python::len(pyList);
+    int listSize = bp::len(pyList);
     std::vector<std::string> values(listSize);
     for (int i = 0; i < listSize; i++) {
         values[i] = PyUtility::extractStringFromPyObject(pyList[i]);
@@ -346,7 +349,7 @@ void Channel::put(const boost::python::list& pyList, const std::string& requestD
     put(values, requestDescriptor);
 }
 
-void Channel::put(const boost::python::list& pyList)
+void Channel::put(const bp::list& pyList)
 {
     put(pyList, PvaConstants::DefaultKey);
 }
@@ -479,11 +482,11 @@ void Channel::put(double value)
 }
 
 void Channel::parsePut(
-    const boost::python::list& pyList, const std::string& requestDescriptor,bool zeroArrayLength)
+    const bp::list& pyList, const std::string& requestDescriptor,bool zeroArrayLength)
 {
     connect();
     PyThreadState* _pyThreadState = NULL;
-    int listSize = boost::python::len(pyList);
+    int listSize = bp::len(pyList);
     std::vector<std::string> args(listSize);
     for (int i = 0; i < listSize; i++) {
         args[i] = PyUtility::extractStringFromPyObject(pyList[i]);
@@ -507,11 +510,11 @@ void Channel::parsePut(
 
 
 PvObject* Channel::parsePutGet(
-    const boost::python::list& pyList, const std::string& requestDescriptor,bool zeroArrayLength)
+    const bp::list& pyList, const std::string& requestDescriptor,bool zeroArrayLength)
 {
     connect();
     PyThreadState* _pyThreadState = NULL;
-    int listSize = boost::python::len(pyList);
+    int listSize = bp::len(pyList);
     std::vector<std::string> args(listSize);
     for (int i = 0; i < listSize; i++) {
         args[i] = PyUtility::extractStringFromPyObject(pyList[i]);
@@ -628,9 +631,9 @@ PvObject* Channel::putGet(const std::string& value)
     return putGet(value, PvaConstants::DefaultKey);
 }
 
-PvObject* Channel::putGet(const boost::python::list& pyList, const std::string& requestDescriptor)
+PvObject* Channel::putGet(const bp::list& pyList, const std::string& requestDescriptor)
 {
-    int listSize = boost::python::len(pyList);
+    int listSize = bp::len(pyList);
     std::vector<std::string> values(listSize);
     for (int i = 0; i < listSize; i++) {
         values[i] = PyUtility::extractStringFromPyObject(pyList[i]);
@@ -638,7 +641,7 @@ PvObject* Channel::putGet(const boost::python::list& pyList, const std::string& 
     return putGet(values, requestDescriptor);
 }
 
-PvObject* Channel::putGet(const boost::python::list& pyList)
+PvObject* Channel::putGet(const bp::list& pyList)
 {
     return putGet(pyList, PvaConstants::DefaultKey);
 }
@@ -794,7 +797,7 @@ PvObject* Channel::getPut(const std::string& requestDescriptor)
 //
 // Monitor methods
 //
-void Channel::subscribe(const std::string& subscriberName, const boost::python::object& pySubscriber)
+void Channel::subscribe(const std::string& subscriberName, const bp::object& pySubscriber)
 {
     pvd::Lock lock(subscriberMutex);
 
@@ -817,7 +820,7 @@ void Channel::subscribe(const std::string& subscriberName, const boost::python::
         }
         else {
             // More than one subscribers already
-            std::map<std::string,boost::python::object>::const_iterator iterator = subscriberMap.find(subscriberName);
+            std::map<std::string,bp::object>::const_iterator iterator = subscriberMap.find(subscriberName);
             if (iterator != subscriberMap.end()) {
                 throw ObjectAlreadyExists("Subscriber " + subscriberName + " is already registered for channel " + getName() + ".");
             }
@@ -826,10 +829,10 @@ void Channel::subscribe(const std::string& subscriberName, const boost::python::
     }
     logger.trace("Subscribed " + subscriberName + " to monitor channel " + getName() + ".");
 
-    //boost::python::incref(pySubscriber.ptr());
+    //bp::incref(pySubscriber.ptr());
     //PyObject* pyObject = pySubscriber.ptr();
     //int refCount = pyObject->ob_refcnt;
-    //boost::python::decref(pySubscriber.ptr());
+    //bp::decref(pySubscriber.ptr());
 }
 
 void Channel::unsubscribe(const std::string& subscriberName)
@@ -847,18 +850,18 @@ void Channel::unsubscribe(const std::string& subscriberName)
     }
     else {
         // More than 1 subscriber.
-        std::map<std::string,boost::python::object>::const_iterator iterator = subscriberMap.find(subscriberName);
+        std::map<std::string,bp::object>::const_iterator iterator = subscriberMap.find(subscriberName);
         if (iterator == subscriberMap.end()) {
             throw ObjectNotFound("Subscriber " + subscriberName + " is not registered for channel " + getName() + ".");
         }
-        boost::python::object pySubscriber = subscriberMap[subscriberName];
+        bp::object pySubscriber = subscriberMap[subscriberName];
         subscriberMap.erase(subscriberName);
     }
     logger.trace("Unsubscribed " + subscriberName + " from channel " + getName() + ".");
 
     // If there is only one subscriber left, stop using map.
     if (subscriberMap.size() == 1) {
-        std::map<std::string,boost::python::object>::iterator it = subscriberMap.begin();
+        std::map<std::string,bp::object>::iterator it = subscriberMap.begin();
         this->subscriberName = it->first;
         this->subscriber = it->second;
         subscriberMap.erase(this->subscriberName);
@@ -870,12 +873,12 @@ void Channel::callSubscribers(PvObject& pvObject)
     std::string pySubscriberName = this->subscriberName;
     if (pySubscriberName.size()) {
         // Single subscriber
-        boost::python::object pySubscriber = this->subscriber;
+        bp::object pySubscriber = this->subscriber;
         callSubscriber(pySubscriberName, pySubscriber, pvObject);
     }
     else {
         // Multiple subscribers
-        std::map<std::string,boost::python::object> subscriberMap2;
+        std::map<std::string,bp::object> subscriberMap2;
         {
             // Cannot lock entire call, as subscribers may be added/deleted at
             // any time, causing deadlock
@@ -883,16 +886,16 @@ void Channel::callSubscribers(PvObject& pvObject)
             subscriberMap2 = subscriberMap;
         }
 
-        std::map<std::string,boost::python::object>::iterator mIter;
+        std::map<std::string,bp::object>::iterator mIter;
         for (mIter = subscriberMap2.begin(); mIter != subscriberMap2.end(); mIter++) {
             std::string pySubscriberName = mIter->first;
-            boost::python::object pySubscriber = mIter->second;
+            bp::object pySubscriber = mIter->second;
             callSubscriber(pySubscriberName, pySubscriber, pvObject);
         }
     }
 }
 
-void Channel::callSubscriber(const std::string& pySubscriberName, boost::python::object& pySubscriber, PvObject& pvObject)
+void Channel::callSubscriber(const std::string& pySubscriberName, bp::object& pySubscriber, PvObject& pvObject)
 {
     // Acquire GIL. This is required because callSubscribers()
     // is called in a monitoring thread. Before monitoring thread
@@ -908,7 +911,7 @@ void Channel::callSubscriber(const std::string& pySubscriberName, boost::python:
     try {
         pySubscriber(pvObject);
     }
-    catch(const boost::python::error_already_set&) {
+    catch(const bp::error_already_set&) {
         logger.error("Channel subscriber " + pySubscriberName + " raised python exception.");
         PyErr_Print();
         PyErr_Clear();
@@ -929,7 +932,7 @@ void Channel::callConnectionCallback(bool isConnected)
     try {
         connectionCallback(isConnected);
     }
-    catch(const boost::python::error_already_set&) {
+    catch(const bp::error_already_set&) {
         logger.error("Connection callback raised python exception.");
         PyErr_Print();
         PyErr_Clear();
@@ -964,7 +967,7 @@ void Channel::asyncPut(const PvObject& pvObject, const bp::object& pyCallback, c
     startAsyncPutThread();
 }
 
-void Channel::invokePyCallback(boost::python::object& pyCallback, PvObject& pvObject)
+void Channel::invokePyCallback(bp::object& pyCallback, PvObject& pvObject)
 {
     if(PyUtility::isPyNone(pyCallback)) {
         return;
@@ -973,7 +976,7 @@ void Channel::invokePyCallback(boost::python::object& pyCallback, PvObject& pvOb
     try {
         pyCallback(pvObject);
     }
-    catch(const boost::python::error_already_set&) {
+    catch(const bp::error_already_set&) {
         logger.error("Python callback raised exception.");
         PyErr_Print();
         PyErr_Clear();
@@ -984,7 +987,7 @@ void Channel::invokePyCallback(boost::python::object& pyCallback, PvObject& pvOb
     PyGilManager::gilStateRelease();
 }
 
-void Channel::invokePyCallback(boost::python::object& pyCallback, std::string errorMsg)
+void Channel::invokePyCallback(bp::object& pyCallback, std::string errorMsg)
 {
     if(PyUtility::isPyNone(pyCallback)) {
         return;
@@ -993,7 +996,7 @@ void Channel::invokePyCallback(boost::python::object& pyCallback, std::string er
     try {
         pyCallback(errorMsg);
     }
-    catch(const boost::python::error_already_set&) {
+    catch(const bp::error_already_set&) {
         logger.error("Python callback raised exception.");
         PyErr_Print();
         PyErr_Clear();
@@ -1007,7 +1010,7 @@ void Channel::invokePyCallback(boost::python::object& pyCallback, std::string er
 void Channel::setMonitorMaxQueueLength(int maxLength)
 {
     pvObjectQueue.setMaxLength(maxLength);
-    if (maxLength != 0 && !processingThreadRunning) {
+    if (useInternalPvObjectQueue && maxLength != 0 && !processingThreadRunning) {
         startProcessingThread();
     }
 }
@@ -1037,8 +1040,9 @@ void Channel::startMonitor(const std::string& requestDescriptor)
     PyGilManager::evalInitThreads();
     this->monitorRequestDescriptor = requestDescriptor;
 
-    // If queue length is zero, there is no need for processing thread.
-    if (pvObjectQueue.getMaxLength() != 0 && !processingThreadRunning) {
+    // Unless internal queue is used, and queue length is not zero, 
+    // there is no need for processing thread.
+    if (useInternalPvObjectQueue && pvObjectQueue.getMaxLength() != 0 && !processingThreadRunning) {
         startProcessingThread();
     }
 
@@ -1054,7 +1058,7 @@ void Channel::startMonitor(const std::string& requestDescriptor)
     }
 }
 
-void Channel::monitor(const boost::python::object& pySubscriber, const std::string& requestDescriptor)
+void Channel::monitor(const bp::object& pySubscriber, const std::string& requestDescriptor)
 {
     // Unsubscribe default subscriber.
     try {
@@ -1071,6 +1075,25 @@ void Channel::monitor(const boost::python::object& pySubscriber, const std::stri
     else {
         startMonitor(requestDescriptor);
     }
+}
+
+// Monitoring methods with PvObjectQueue result in objects being 
+// added into the external queue, and all processing done elsewhere.
+void Channel::monitor(PvObjectQueue& pvObjectQueue, const std::string& requestDescriptor)
+{
+    this->pvObjectQueue = pvObjectQueue;
+    useInternalPvObjectQueue = false;
+    if (requestDescriptor == PvaConstants::DefaultKey) {
+        startMonitor();
+    }
+    else {
+        startMonitor(requestDescriptor);
+    }
+}
+
+void Channel::monitor(PvObjectQueue& pvObjectQueue) 
+{
+    monitor(pvObjectQueue, PvaConstants::DefaultKey);
 }
 
 void Channel::startProcessingThread()
@@ -1144,7 +1167,7 @@ void Channel::processingThread(Channel* channel)
             }
             channel->callSubscribers(pvObject);
         }
-        catch (InvalidState& ex) {
+        catch (InvalidRequest& ex) {
             // Queue empty, no PV changes received.
         }
         catch (const std::exception& ex) {
@@ -1172,7 +1195,7 @@ void Channel::issueConnectThread(Channel* channel)
 //
 void Channel::processMonitorData(pvd::PVStructurePtr pvStructurePtr)
 {
-    if (pvObjectQueue.getMaxLength() == 0) {
+    if (useInternalPvObjectQueue && pvObjectQueue.getMaxLength() == 0) {
         // Process object directly
         try {
             PvObject pvObject(pvStructurePtr);
@@ -1184,24 +1207,21 @@ void Channel::processMonitorData(pvd::PVStructurePtr pvStructurePtr)
         }
     }
     else {
-        // Loop until object is queued, or monitor becomes inactive.
-        while (true) {
-            if (!monitorActive) {
-                break;
-            }
-
-            if (pvObjectQueue.isFull()) {
-                // Cannot queue object
-                pvObjectQueue.waitForItemPopped(timeout);
-            }
-            else {
-                // Copy and queue object.
-                pvd::PVStructurePtr pvStructurePtr2(pvd::getPVDataCreate()->createPVStructure(pvStructurePtr)); // copy
-                PvObject pvObject(pvStructurePtr2);
-                pvObjectQueue.pushIfNotFull(pvObject);
-                logger.trace("Pushed new monitor element into the queue: %d elements have not been processed.", pvObjectQueue.size());
-                break;
-            }
+        // Copy and queue object if possible.
+        // It will be either processed by internal thread, or elsewhere.
+        if (!monitorStructurePtr) {
+            // Cache structure on first update
+            monitorStructurePtr = pvStructurePtr->getStructure();
+        }
+        pvd::PVStructurePtr pvStructurePtr2(pvd::getPVDataCreate()->createPVStructure(monitorStructurePtr));
+        pvStructurePtr2->copyUnchecked(*pvStructurePtr); // copy
+        PvObject pvObject(pvStructurePtr2);
+        bool isPushed = pvObjectQueue.pushIfNotFull(pvObject);
+        if (isPushed) {
+            logger.trace("Pushed new monitor element into the queue: %d elements have not been processed.", pvObjectQueue.size());
+        }
+        else {
+            logger.trace("Could not push new monitor element into the full queue: %d elements have not been processed.", pvObjectQueue.size());
         }
     }
 }
@@ -1243,10 +1263,16 @@ void Channel::onChannelDisconnect()
     if(!PyUtility::isPyNone(connectionCallback)) {
         callConnectionCallback(false);
     }
+    monitorStructurePtr = pvd::StructureConstPtr();
+}
+
+void Channel::onMonitorOverrun(epics::pvData::BitSetPtr bitSetPtr)
+{
+    pvObjectQueue.addToCounter(MonitorOverrunCounterKey, 1);
 }
 
 // Introspection
-boost::python::dict Channel::getIntrospectionDict()
+bp::dict Channel::getIntrospectionDict()
 {
     connect();
     epics::pvAccess::Channel::shared_pointer channelPtr = pvaClientChannelPtr->getChannel();
@@ -1265,7 +1291,7 @@ boost::python::dict Channel::getIntrospectionDict()
     pvd::Structure::const_shared_pointer structurePtr =
         std::tr1::dynamic_pointer_cast<const pvd::Structure>(getFieldRequesterImpl->getField());
 
-    boost::python::dict pyDict;
+    bp::dict pyDict;
     PyPvDataUtility::structureToPyDict(structurePtr, pyDict);
     return pyDict;
 }
@@ -1333,7 +1359,7 @@ pvc::PvaClientPutGetPtr Channel::createPutGetPtr(const std::string& requestDescr
     }
 }
 
-void Channel::setConnectionCallback(const boost::python::object& callback)
+void Channel::setConnectionCallback(const bp::object& callback)
 {
     connectionCallback = callback;
     startIssueConnectThread();
@@ -1395,7 +1421,7 @@ void Channel::asyncGetThread(Channel* channel)
                 }
             }
         }
-        catch (InvalidState& ex) {
+        catch (InvalidRequest& ex) {
             // Queue empty.
             if (remainingRuntime <= 0) {
                 // Do not wait any longer for new requests.
@@ -1493,7 +1519,7 @@ void Channel::asyncPutThread(Channel* channel)
                 }
             }
         }
-        catch (InvalidState& ex) {
+        catch (InvalidRequest& ex) {
             // Queue empty.
             if (remainingRuntime <= 0) {
                 // Do not wait any longer for new requests.

@@ -13,6 +13,7 @@ public:
     virtual void processMonitorData(epics::pvData::PVStructurePtr pvStructurePtr)=0;
     virtual void onChannelConnect()=0;
     virtual void onChannelDisconnect()=0;
+    virtual void onMonitorOverrun(epics::pvData::BitSetPtr bitSetPtr) {}
 };
 
 #endif // CHANNEL_MONITOR_DATA_PROCESSOR_H

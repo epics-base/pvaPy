@@ -5,6 +5,8 @@
 #include "ChannelMonitorRequesterImpl.h"
 
 using namespace epics::pvaClient;
+namespace pvc = epics::pvaClient;
+namespace pvd = epics::pvData;
 
 PvaPyLogger ChannelMonitorRequesterImpl::logger("ChannelMonitorRequesterImpl");
 
@@ -34,7 +36,11 @@ void ChannelMonitorRequesterImpl::event(const PvaClientMonitorPtr& monitor)
                 break;
             }
             if (isActive) {
-                epics::pvaClient::PvaClientMonitorDataPtr pvaData = monitor->getData();
+                pvc::PvaClientMonitorDataPtr pvaData = monitor->getData();
+                pvd::BitSetPtr overrunBitSet = pvaData->getOverrunBitSet();
+                if (!overrunBitSet->isEmpty()) {
+                    processor->onMonitorOverrun(overrunBitSet);
+                }
                 processor->processMonitorData(pvaData->getPVStructure()); 
             }
             monitor->releaseEvent();

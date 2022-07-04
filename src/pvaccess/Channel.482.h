@@ -19,6 +19,7 @@
 #include "ChannelMonitorDataProcessor.h"
 #include "ChannelRequesterImpl.h"
 #include "SynchronizedQueue.h"
+#include "PvObjectQueue.h"
 #include "PvaClient.h"
 #include "CaClient.h"
 #include "PvObject.h"
@@ -31,6 +32,7 @@ class Channel : public ChannelMonitorDataProcessor
 public:
 
     static const char* DefaultSubscriberName;
+    static const char* MonitorOverrunCounterKey;
     static const double DefaultTimeout;
     static const int DefaultMaxPvObjectQueueLength;
     static const int MaxAsyncRequestQueueLength;
@@ -142,8 +144,12 @@ public:
     virtual void startMonitor();
 #ifndef WINDOWS
     virtual void monitor(const boost::python::object& pySubscriber, const std::string& requestDescriptor=PvaConstants::DefaultKey);
+    virtual void monitor(PvObjectQueue& pyObjectQueue);
+    virtual void monitor(PvObjectQueue& pyObjectQueue, const std::string& requestDescriptor);
 #else
     virtual void monitor(const boost::python::object& pySubscriber, const std::string& requestDescriptor);
+    virtual void monitor(PvObjectQueue& pyObjectQueue);
+    virtual void monitor(PvObjectQueue& pyObjectQueue, const std::string& requestDescriptor);
 #endif
     virtual void stopMonitor();
     virtual bool isMonitorActive() const;
@@ -160,6 +166,7 @@ public:
     virtual void processMonitorData(epics::pvData::PVStructurePtr pvStructurePtr);
     virtual void onChannelConnect();
     virtual void onChannelDisconnect();
+    virtual void onMonitorOverrun(epics::pvData::BitSetPtr bitSetPtr);
     virtual void callConnectionCallback(bool isConnected);
     virtual bool isChannelConnected();
 
@@ -201,11 +208,13 @@ private:
     epics::pvaClient::PvaClientMonitorRequesterPtr pvaClientMonitorRequesterPtr;
     epics::pvaClient::PvaClientMonitorPtr pvaClientMonitorPtr;
     std::string monitorRequestDescriptor;
+    epics::pvData::StructureConstPtr monitorStructurePtr;
 
     bool monitorActive;
     bool monitorRunning;
     bool processingThreadRunning;
-    SynchronizedQueue<PvObject> pvObjectQueue;
+    PvObjectQueue pvObjectQueue;
+    bool useInternalPvObjectQueue;
 
     // Use for single subscriber only
     std::string subscriberName;

@@ -29,6 +29,7 @@ void wrapPvProvider();
 void wrapPvType();
 
 void wrapPvObject();
+void wrapPvObjectQueue();
 void wrapPvScalar();
 void wrapPvBoolean();
 void wrapPvByte();
@@ -151,6 +152,7 @@ BOOST_PYTHON_MODULE(pvaccess)
     wrapNtTable();
 
     wrapChannel();
+    wrapPvObjectQueue();
     wrapRpcClient();
     wrapRpcServer(); 
 
