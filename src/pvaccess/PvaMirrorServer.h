@@ -53,7 +53,7 @@ class MirrorChannel : public ChannelMonitorDataProcessor
 {
 public:
 
-    MirrorChannel(const std::string& channelName, PvProvider::ProviderType providerType, MirrorChannelDataProcessorPtr dataProcessorPtr);
+    MirrorChannel(const std::string& channelName, PvProvider::ProviderType providerType, unsigned int serverQueueSize, MirrorChannelDataProcessorPtr dataProcessorPtr);
     MirrorChannel(const MirrorChannel& mirrorChannel);
     virtual ~MirrorChannel();
 
@@ -82,6 +82,7 @@ private:
 
     std::string channelName;
     PvProvider::ProviderType providerType;
+    unsigned int serverQueueSize;
     MirrorChannelDataProcessorPtr dataProcessorPtr;
 
     bool isConnected;
@@ -98,6 +99,7 @@ public:
     virtual ~PvaMirrorServer();
 
     virtual void addMirrorRecord(const std::string& mirrorChannelName, const std::string& srcChannelName, PvProvider::ProviderType srcProviderType);
+    virtual void addMirrorRecord(const std::string& mirrorChannelName, const std::string& srcChannelName, PvProvider::ProviderType srcProviderType, unsigned int srcQueueSize);
     virtual void removeMirrorRecord(const std::string& mirrorChannelName);
 
     virtual void removeAllMirrorRecords();

@@ -33,6 +33,19 @@ class_<PvaMirrorServer, bases<PvaServer> >("PvaMirrorServer",
         "::\n\n"
         "    pvaMirrorServer.addMirrorRecord('mirrorPair', 'pair', PVA)\n\n")
 
+    .def("addMirrorRecord",
+        static_cast<void(PvaMirrorServer::*)(const std::string&,const std::string&,PvProvider::ProviderType, unsigned int)>(&PvaMirrorServer::addMirrorRecord),
+        args("mirrorChannelName", "srcChannelName", "srcProviderType", "srcQueueSize"),
+        "Adds mirror PV record to the server database.\n\n"
+        ":Parameter: *mirrorChannelName* (str) - mirror channel name\n\n"
+        ":Parameter: *srcChannelName* (str) - source channel name\n\n"
+        ":Parameter: *srcProviderType* (PROVIDERTYPE) - provider type, either PVA (PV Access) or CA (Channel Access)\n\n"
+        ":Parameter: *srcQueueSize* (int) - source queue size (should be >= 0)\n\n"
+        ":Raises: *ObjectAlreadyExists* - when database already contains record associated with a given mirror channel name\n\n"
+        ":Raises: *PvaException* - in case of any other errors\n\n"
+        "::\n\n"
+        "    pvaMirrorServer.addMirrorRecord('mirrorPair', 'pair', PVA, 10)\n\n")
+
     .def("removeMirrorRecord",
         static_cast<void(PvaMirrorServer::*)(const std::string&)>(&PvaMirrorServer::removeMirrorRecord),
         args("mirrorChannelName"),
