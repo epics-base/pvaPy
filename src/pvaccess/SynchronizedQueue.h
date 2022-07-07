@@ -18,9 +18,9 @@ public:
     POINTER_DEFINITIONS(SynchronizedQueue<T>);
 
     static const int Unlimited = -1;
-    static const char* NumAcceptedCounterKey;
+    static const char* NumReceivedCounterKey;
     static const char* NumRejectedCounterKey;
-    static const char* NumRetrievedCounterKey;
+    static const char* NumDeliveredCounterKey;
 
     SynchronizedQueue(int maxLength=Unlimited);
     SynchronizedQueue(const SynchronizedQueue& q);
@@ -68,17 +68,17 @@ private:
 
     // Statistics counters
     std::map<std::string, unsigned int> counterMap;
-    unsigned int nAccepted;
+    unsigned int nReceived;
     unsigned int nRejected;
-    unsigned int nRetrieved;
+    unsigned int nDelivered;
 };
 
 template <class T>
-const char* SynchronizedQueue<T>::NumAcceptedCounterKey("nAccepted");
+const char* SynchronizedQueue<T>::NumReceivedCounterKey("nReceived");
 template <class T>
 const char* SynchronizedQueue<T>::NumRejectedCounterKey("nRejected");
 template <class T>
-const char* SynchronizedQueue<T>::NumRetrievedCounterKey("nRetrieved");
+const char* SynchronizedQueue<T>::NumDeliveredCounterKey("nDelivered");
 
 template <class T>
 SynchronizedQueue<T>::SynchronizedQueue(int maxLength_) 
@@ -88,9 +88,9 @@ SynchronizedQueue<T>::SynchronizedQueue(int maxLength_)
     , itemPoppedEvent()
     , maxLength(maxLength_)
     , counterMap()
-    , nAccepted(0)
+    , nReceived(0)
     , nRejected(0)
-    , nRetrieved(0)
+    , nDelivered(0)
 {
 }
 
@@ -102,9 +102,9 @@ SynchronizedQueue<T>::SynchronizedQueue(const SynchronizedQueue<T>& q)
     , itemPoppedEvent()
     , maxLength(q.maxLength)
     , counterMap(q.counterMap)
-    , nAccepted(q.nAccepted)
+    , nReceived(q.nReceived)
     , nRejected(q.nRejected)
-    , nRetrieved(q.nRetrieved)
+    , nDelivered(q.nDelivered)
 {
 }
 
@@ -182,7 +182,7 @@ T SynchronizedQueue<T>::frontAndPopUnsynchronized()
 {
     T t = std::queue<T>::front();
     std::queue<T>::pop();
-    nRetrieved++;
+    nDelivered++;
     itemPoppedEvent.signal();
     return t;
 }
@@ -191,7 +191,7 @@ template <class T>
 void SynchronizedQueue<T>::pushUnsynchronized(const T& t) 
 {
     std::queue<T>::push(t);
-    nAccepted++;
+    nReceived++;
     itemPushedEvent.signal();
 }
 
@@ -222,7 +222,7 @@ void SynchronizedQueue<T>::pop()
     epics::pvData::Lock lock(mutex);
     if (!std::queue<T>::empty()) {
         std::queue<T>::pop();
-        nRetrieved++;
+        nDelivered++;
         itemPoppedEvent.signal();
     }
     else {
@@ -236,7 +236,7 @@ bool SynchronizedQueue<T>::popIfNotEmpty()
     epics::pvData::Lock lock(mutex);
     if (!std::queue<T>::empty()) {
         std::queue<T>::pop();
-        nRetrieved++;
+        nDelivered++;
         itemPoppedEvent.signal();
         return true;
     }
@@ -281,7 +281,7 @@ bool SynchronizedQueue<T>::pushIfNotFull(const T& t)
         return false;
     }
     std::queue<T>::push(t);
-    nAccepted++;
+    nReceived++;
     itemPushedEvent.signal();
     return true;
 }
@@ -356,18 +356,18 @@ void SynchronizedQueue<T>::resetCounters()
     for (MI it = counterMap.begin(); it != counterMap.end(); it++) {
         it->second = 0;
     }
-    nAccepted = 0;
+    nReceived = 0;
     nRejected = 0;
-    nRetrieved = 0;
+    nDelivered = 0;
 }
 
 template <class T>
 const std::map<std::string,unsigned int>& SynchronizedQueue<T>::getCounterMap()
 {
     epics::pvData::Lock lock(mutex);
-    counterMap[NumAcceptedCounterKey] = nAccepted;
+    counterMap[NumReceivedCounterKey] = nReceived;
     counterMap[NumRejectedCounterKey] = nRejected;
-    counterMap[NumRetrievedCounterKey] = nRetrieved;
+    counterMap[NumDeliveredCounterKey] = nDelivered;
     return counterMap;
 }
 
