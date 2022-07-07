@@ -118,7 +118,7 @@ class_<PvObjectQueue>("PvObjectQueue",
     .def("setCounter",
         static_cast<void(PvObjectQueue::*)(const std::string&, unsigned int)>(&PvObjectQueue::setCounter),
         args("key", "value"),
-        "Sets value for the statistics counter identified with a given key. Note that setting system managed counters (nAccepted, nRejected, nRetrieved) will not work.\n\n"
+        "Sets value for the statistics counter identified with a given key. Note that setting system managed counters (nReceived, nRejected, nDelivered) will not work.\n\n"
         ":Parameter: *key* (str) - counter key\n\n"
         ":Parameter: *value* (int) - counter value (should be >= 0)\n\n"
         "::\n\n"
@@ -127,7 +127,7 @@ class_<PvObjectQueue>("PvObjectQueue",
     .def("addToCounter",
         static_cast<void(PvObjectQueue::*)(const std::string&, unsigned int)>(&PvObjectQueue::addToCounter),
         args("key", "value"),
-        "Adds value to the statistics counter identified with a given key. Note that manipulating system managed counters (nAccepted, nRejected, nRetrieved) will not work.\n\n"
+        "Adds value to the statistics counter identified with a given key. Note that manipulating system managed counters (nReceived, nRejected, nDelivered) will not work.\n\n"
         ":Parameter: *key* (str) - counter key\n\n"
         ":Parameter: *value* (int) - counter value (should be >= 0)\n\n"
         "::\n\n"
