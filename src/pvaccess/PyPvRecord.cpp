@@ -142,6 +142,22 @@ void PyPvRecord::update(const epvd::PVStructurePtr& pvStructurePtr)
     unlock();
 }
 
+void PyPvRecord::updateUnchecked(const epvd::PVStructurePtr& pvStructurePtr)
+{
+    lock();
+    try {
+        beginGroupPut();
+        getPVStructure()->copyUnchecked(*pvStructurePtr);
+        endGroupPut();
+    }
+    catch(...) {
+        endGroupPut();
+        unlock();
+        throw;
+    }
+    unlock();
+}
+
 void PyPvRecord::disableProcessing() 
 {
     processingEnabled = false;
