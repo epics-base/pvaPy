@@ -200,6 +200,15 @@ void PvaServer::update(const std::string& channelName, const epics::pvData::PVSt
     it->second->update(pvStructurePtr);
 }
 
+void PvaServer::updateUnchecked(const std::string& channelName, const epics::pvData::PVStructurePtr& pvStructurePtr)
+{
+    std::map<std::string, PyPvRecordPtr>::iterator it = recordMap.find(channelName);
+    if (it == recordMap.end()) {
+        throw ObjectNotFound("Master database does not have record for channel: " + channelName);
+    }
+    it->second->updateUnchecked(pvStructurePtr);
+}
+
 void PvaServer::update(const std::string& channelName, const PvObject& pvObject) 
 {
     std::map<std::string, PyPvRecordPtr>::iterator it = recordMap.find(channelName);

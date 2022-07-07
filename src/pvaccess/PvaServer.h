@@ -30,6 +30,7 @@ public:
     virtual bool isAsActive();
 #endif // if PVA_API_VERSION >= 483
     virtual void update(const std::string& channelName, const epics::pvData::PVStructurePtr& pvStructurePtr);
+    virtual void updateUnchecked(const std::string& channelName, const epics::pvData::PVStructurePtr& pvStructurePtr);
     virtual void update(const PvObject& pvObject);
     virtual void update(const std::string& channelName, const PvObject& pvObject);
 
