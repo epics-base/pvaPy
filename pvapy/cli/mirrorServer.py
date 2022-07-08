@@ -86,6 +86,7 @@ def main():
             break
     server.stop()
     print('\nFinal Channel Statistics:')
+    now = time.time()
     for c in channel_list:
         print('Channel %s @ %.3f: %s' % (c, now, server.getMirrorRecordCounters(c)))
     
