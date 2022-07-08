@@ -24,13 +24,13 @@ class AdSimServer:
         np.dtype('float64') : 'doubleValue'
     }
 
-    def __init__(self, input_directory, input_file, mmap_mode, frame_rate, nf, nx, ny, datatype, minimum, maximum, runtime, channel_name, notify_pv, notify_pv_value, start_delay, report_frequency):
+    def __init__(self, input_directory, input_file, mmap_mode, frame_rate, nf, nx, ny, datatype, minimum, maximum, runtime, channel_name, notify_pv, notify_pv_value, start_delay, report_period):
         self.arraySize = None
         self.delta_t = 0
         if frame_rate > 0:
             self.delta_t = 1.0/frame_rate
         self.runtime = runtime
-        self.report_frequency = report_frequency 
+        self.report_period = report_period 
 
         input_files = []
         if input_directory is not None:
@@ -173,11 +173,11 @@ class AdSimServer:
                 runtime = self.last_published_time - self.start_time
                 delta_t = runtime/(self.n_published_frames - 1)
                 frame_rate = 1.0/delta_t
-                if self.report_frequency > 0 and (self.n_published_frames % self.report_frequency) == 0:
+                if self.report_period > 0 and (self.n_published_frames % self.report_period) == 0:
                     print("Published frame id %6d @ %.3f (frame rate: %.4f fps)" % (self.current_frame_id, self.last_published_time, frame_rate))
             else:
                 self.start_time = self.last_published_time
-                if self.report_frequency > 0 and (self.n_published_frames % self.report_frequency) == 0:
+                if self.report_period > 0 and (self.n_published_frames % self.report_period) == 0:
                     print("Published frame id %6d @ %.3f" % (self.current_frame_id, self.last_published_time))
 
             if runtime > self.runtime:
@@ -207,6 +207,7 @@ class AdSimServer:
 
 def main():
     parser = argparse.ArgumentParser(description='PvaPy Area Detector Simulator')
+    parser.add_argument( '-v', '--version', action='version', version='%(prog)s {version}'.format(version=__version__))
     parser.add_argument('--input-directory', '-id', type=str, dest='input_directory', default=None, help='Directory containing input files to be streamed; if input directory or input file are not provided, random images will be generated')
     parser.add_argument('--input-file', '-if', type=str, dest='input_file', default=None, help='Input file to be streamed; if input directory or input file are not provided, random images will be generated')
     parser.add_argument('--mmap-mode', '-mm', action='store_true', dest='mmap_mode', default=False, help='Use NumPy memory map to load the specified input file. This flag typically results in faster startup and lower memory usage for large files.')
@@ -222,15 +223,14 @@ def main():
     parser.add_argument('--notify-pv', '-npv', type=str, dest='notify_pv', default=None, help='CA channel that should be notified on start; for the default Area Detector PVA driver PV that controls image acquisition is 13PVA1:cam1:Acquire')
     parser.add_argument('--notify-pv-value', '-nvl', type=str, dest='notify_pv_value', default='1', help='Value for the notification channel; for the Area Detector PVA driver PV this should be set to "Acquire" (default: 1)')
     parser.add_argument('--start-delay', '-sd', type=float, dest='start_delay',  default=10.0, help='Server start delay in seconds (default: 10 seconds)')
-    parser.add_argument('--report-frequency', '-rf', type=int, dest='report_frequency', default=1, help='Reporting frequency for publishing frames; if set to <=0 no frames will be reported as published (default: 1)')
-    parser.add_argument('-v', '--version', action='version', version='%(prog)s {version}'.format(version=__version__))
+    parser.add_argument('--report-period', '-rp', type=int, dest='report_period', default=1, help='Reporting period for publishing frames; if set to <=0 no frames will be reported as published (default: 1)')
 
     args, unparsed = parser.parse_known_args()
     if len(unparsed) > 0:
         print('Unrecognized argument(s): %s' % ' '.join(unparsed))
         exit(1)
 
-    server = AdSimServer(input_directory=args.input_directory, input_file=args.input_file, mmap_mode=args.mmap_mode, frame_rate=args.frame_rate, nf=args.n_frames, nx=args.n_x_pixels, ny=args.n_y_pixels, datatype=args.datatype, minimum=args.minimum, maximum=args.maximum, runtime=args.runtime, channel_name=args.channel_name, notify_pv=args.notify_pv, notify_pv_value=args.notify_pv_value, start_delay=args.start_delay, report_frequency=args.report_frequency)
+    server = AdSimServer(input_directory=args.input_directory, input_file=args.input_file, mmap_mode=args.mmap_mode, frame_rate=args.frame_rate, nf=args.n_frames, nx=args.n_x_pixels, ny=args.n_y_pixels, datatype=args.datatype, minimum=args.minimum, maximum=args.maximum, runtime=args.runtime, channel_name=args.channel_name, notify_pv=args.notify_pv, notify_pv_value=args.notify_pv_value, start_delay=args.start_delay, report_period=args.report_period)
 
     server.start()
     try:
