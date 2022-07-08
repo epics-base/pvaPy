@@ -10,10 +10,12 @@
 #include "InvalidRequest.h"
 #include "PvaMirrorServer.h"
 #include "PvaConstants.h"
+#include "PvaPyConstants.h"
 
 namespace epvd = epics::pvData;
 namespace epvdb = epics::pvDatabase;
 namespace epvc = epics::pvaClient;
+namespace bp = boost::python;
 
 // Mirror Channel Data Processor class
 
@@ -199,6 +201,24 @@ void MirrorChannel::stopMonitor()
     monitorActive = false;
 }
 
+void MirrorChannel::resetMonitorCounters()
+{
+    if (pvaClientMonitorRequesterPtr) {
+        ChannelMonitorRequesterImpl* requesterImpl = static_cast<ChannelMonitorRequesterImpl*>(pvaClientMonitorRequesterPtr.get());
+        requesterImpl->resetCounters();
+    }
+}
+
+bp::dict MirrorChannel::getMonitorCounters()
+{
+    bp::dict pyDict;
+    if (pvaClientMonitorRequesterPtr) {
+        ChannelMonitorRequesterImpl* requesterImpl = static_cast<ChannelMonitorRequesterImpl*>(pvaClientMonitorRequesterPtr.get());
+        pyDict[PvaPyConstants::NumReceivedCounterKey] = requesterImpl->getNumReceived();
+        pyDict[PvaPyConstants::NumOverrunsCounterKey] = requesterImpl->getNumOverruns();
+    }
+    return pyDict;
+}
 
 // PVA Mirror Server class
 
@@ -282,9 +302,29 @@ bool PvaMirrorServer::hasMirrorRecord(const std::string& mirrorChannelName)
     return false;
 }
 
-boost::python::list PvaMirrorServer::getMirrorRecordNames()
+void PvaMirrorServer::resetMirrorRecordCounters(const std::string& mirrorChannelName)
 {
-    boost::python::list mirrorRecordNames;
+    std::map<std::string, MirrorChannelPtr>::iterator it = mirrorChannelMap.find(mirrorChannelName);
+    if (it == mirrorChannelMap.end()) {
+        throw ObjectNotFound("Master database does not have mirror record for channel: " + mirrorChannelName);
+    }
+    MirrorChannelPtr mirrorChannel = it->second;
+    mirrorChannel->resetMonitorCounters();
+}
+
+bp::dict PvaMirrorServer::getMirrorRecordCounters(const std::string& mirrorChannelName)
+{
+    std::map<std::string, MirrorChannelPtr>::iterator it = mirrorChannelMap.find(mirrorChannelName);
+    if (it == mirrorChannelMap.end()) {
+        throw ObjectNotFound("Master database does not have mirror record for channel: " + mirrorChannelName);
+    }
+    MirrorChannelPtr mirrorChannel = it->second;
+    return mirrorChannel->getMonitorCounters();
+}
+
+bp::list PvaMirrorServer::getMirrorRecordNames()
+{
+    bp::list mirrorRecordNames;
     typedef std::map<std::string, MirrorChannelPtr>::iterator MI;
     for (MI it = mirrorChannelMap.begin(); it != mirrorChannelMap.end(); it++) {
         mirrorRecordNames.append(it->first);

@@ -65,6 +65,9 @@ public:
     virtual void onChannelConnect();
     virtual void onChannelDisconnect();
 
+    virtual void resetMonitorCounters();
+    virtual boost::python::dict getMonitorCounters();
+
 private:
 
     static PvaPyLogger logger;
@@ -104,6 +107,8 @@ public:
 
     virtual void removeAllMirrorRecords();
     virtual bool hasMirrorRecord(const std::string& mirrorChannelName);
+    virtual void resetMirrorRecordCounters(const std::string& mirrorChannelName);
+    virtual boost::python::dict getMirrorRecordCounters(const std::string& mirrorChannelName);
     virtual boost::python::list getMirrorRecordNames();
 
 private:

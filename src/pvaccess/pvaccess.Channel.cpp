@@ -1268,6 +1268,20 @@ class_<Channel>("Channel",
         "    pvq = PvObjectQueue(10000)\n\n"
         "    channel.qMonitor(pvq)\n\n")
 
+
+    .def("resetMonitorCounters",
+        static_cast<void(Channel::*)()>(&Channel::resetMonitorCounters),
+        "Reset all monitor counters to zero.\n\n"
+        "::\n\n"
+        "    channel.resetMonitorCounters()\n\n")
+
+    .def("getMonitorCounters",
+        static_cast<dict(Channel::*)()>(&Channel::getMonitorCounters),
+        "Retrieve dictionary with monitor counters, which include number of updates received and number of monitor overruns.\n\n"
+        ":Returns: dictionary containing available statistics counters\n\n"
+        "::\n\n"
+        "    counterDict = channel.getMonitorCounters()\n\n")
+
 #endif // if PVA_API_VERSION >= 482
 
     .def("stopMonitor",

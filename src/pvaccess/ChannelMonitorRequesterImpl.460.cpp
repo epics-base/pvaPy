@@ -10,17 +10,21 @@ namespace pvd = epics::pvData;
 
 PvaPyLogger ChannelMonitorRequesterImpl::logger("ChannelMonitorRequesterImpl");
 
-ChannelMonitorRequesterImpl::ChannelMonitorRequesterImpl(const std::string& channelName_, ChannelMonitorDataProcessor* processor_) : 
-    channelName(channelName_),
-    processor(processor_),
-    isActive(true)
+ChannelMonitorRequesterImpl::ChannelMonitorRequesterImpl(const std::string& channelName_, ChannelMonitorDataProcessor* processor_)
+    : channelName(channelName_)
+    , processor(processor_)
+    , isActive(true)
+    , nReceived(0)
+    , nOverruns(0)
 {
 }
 
-ChannelMonitorRequesterImpl::ChannelMonitorRequesterImpl(const ChannelMonitorRequesterImpl& channelMonitor) : 
-    channelName(channelMonitor.channelName),
-    processor(channelMonitor.processor),
-    isActive(true)
+ChannelMonitorRequesterImpl::ChannelMonitorRequesterImpl(const ChannelMonitorRequesterImpl& channelMonitor)
+    : channelName(channelMonitor.channelName)
+    , processor(channelMonitor.processor)
+    , isActive(true)
+    , nReceived(channelMonitor.nReceived)
+    , nOverruns(channelMonitor.nOverruns)
 {
 }
 
@@ -36,9 +40,11 @@ void ChannelMonitorRequesterImpl::event(const PvaClientMonitorPtr& monitor)
                 break;
             }
             if (isActive) {
+                nReceived++;
                 pvc::PvaClientMonitorDataPtr pvaData = monitor->getData();
                 pvd::BitSetPtr overrunBitSet = pvaData->getOverrunBitSet();
                 if (!overrunBitSet->isEmpty()) {
+                    nOverruns++;
                     processor->onMonitorOverrun(overrunBitSet);
                 }
                 processor->processMonitorData(pvaData->getPVStructure()); 
@@ -55,5 +61,4 @@ void ChannelMonitorRequesterImpl::unlisten()
 {
     isActive = false;
 }
-
 

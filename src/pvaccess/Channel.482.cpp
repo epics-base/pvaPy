@@ -21,6 +21,7 @@
 #include "PyUtility.h"
 #include "PyPvDataUtility.h"
 #include "PvaClientUtility.h"
+#include "PvaPyConstants.h"
 
 #include "GetFieldRequesterImpl.h"
 
@@ -30,7 +31,6 @@ namespace pvc = epics::pvaClient;
 namespace bp = boost::python;
 
 const char* Channel::DefaultSubscriberName("defaultSubscriber");
-const char* Channel::MonitorOverrunCounterKey("nOverruns");
 
 const double Channel::DefaultTimeout(3.0);
 const int Channel::DefaultMaxPvObjectQueueLength(0);
@@ -1096,6 +1096,25 @@ void Channel::monitor(PvObjectQueue& pvObjectQueue)
     monitor(pvObjectQueue, PvaConstants::DefaultKey);
 }
 
+void Channel::resetMonitorCounters()
+{
+    if (pvaClientMonitorRequesterPtr) {
+        ChannelMonitorRequesterImpl* requesterImpl = static_cast<ChannelMonitorRequesterImpl*>(pvaClientMonitorRequesterPtr.get());
+        requesterImpl->resetCounters();
+    }
+}
+
+bp::dict Channel::getMonitorCounters()
+{
+    bp::dict pyDict;
+    if (pvaClientMonitorRequesterPtr) {
+        ChannelMonitorRequesterImpl* requesterImpl = static_cast<ChannelMonitorRequesterImpl*>(pvaClientMonitorRequesterPtr.get());
+        pyDict[PvaPyConstants::NumReceivedCounterKey] = requesterImpl->getNumReceived();
+        pyDict[PvaPyConstants::NumOverrunsCounterKey] = requesterImpl->getNumOverruns();
+    }
+    return pyDict;
+}
+
 void Channel::startProcessingThread()
 {
     pvd::Lock lock(processingThreadMutex);
@@ -1268,7 +1287,6 @@ void Channel::onChannelDisconnect()
 
 void Channel::onMonitorOverrun(epics::pvData::BitSetPtr bitSetPtr)
 {
-    pvObjectQueue.addToCounter(MonitorOverrunCounterKey, 1);
 }
 
 // Introspection

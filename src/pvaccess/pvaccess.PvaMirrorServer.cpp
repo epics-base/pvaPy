@@ -72,6 +72,21 @@ class_<PvaMirrorServer, bases<PvaServer> >("PvaMirrorServer",
         "::\n\n"
         "    if pvaMirrorServer.hasMirrorRecord('pair'): print('Server contains mirror pair channel.)'\n\n")
 
+    .def("resetMirrorRecordCounters",
+        static_cast<void(PvaMirrorServer::*)(const std::string&)>(&PvaMirrorServer::resetMirrorRecordCounters),
+        "Reset all record counters to zero.\n\n"
+        ":Parameter: *mirrorChannelName* (str) - mirror channel name\n\n"
+        "::\n\n"
+        "    pvaMirrorServer.resetMirrorRecordCounters('pair')\n\n")
+
+    .def("getMirrorRecordCounters",
+        static_cast<dict(PvaMirrorServer::*)(const std::string&)>(&PvaMirrorServer::getMirrorRecordCounters),
+        "Retrieve dictionary with record counters, which include number of updates received and number of monitor overruns.\n\n"
+        ":Parameter: *mirrorChannelName* (str) - mirror channel name\n\n"
+        ":Returns: dictionary containing available statistics counters\n\n"
+        "::\n\n"
+        "    counterDict = pvaMirrorServer.getMirrorRecordCounters('pair')\n\n")
+
     .def("getMirrorRecordNames",
         static_cast<boost::python::list(PvaMirrorServer::*)()>(&PvaMirrorServer::getMirrorRecordNames),
         "Retrieves existing mirror channel names from the server's database.\n\n"

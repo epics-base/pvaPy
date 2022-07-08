@@ -124,6 +124,7 @@ pvaccess_SRCS += ObjectAlreadyExists.cpp
 pvaccess_SRCS += ObjectNotFound.cpp
 pvaccess_SRCS += PvaClient.cpp
 pvaccess_SRCS += PvaConstants.cpp
+pvaccess_SRCS += PvaPyConstants.cpp
 pvaccess_SRCS += PvaException.cpp
 pvaccess_SRCS += PvaExceptionTranslator.cpp
 pvaccess_SRCS += PvaPyLogger.cpp

@@ -32,7 +32,6 @@ class Channel : public ChannelMonitorDataProcessor
 public:
 
     static const char* DefaultSubscriberName;
-    static const char* MonitorOverrunCounterKey;
     static const double DefaultTimeout;
     static const int DefaultMaxPvObjectQueueLength;
     static const int MaxAsyncRequestQueueLength;
@@ -144,15 +143,16 @@ public:
     virtual void startMonitor();
 #ifndef WINDOWS
     virtual void monitor(const boost::python::object& pySubscriber, const std::string& requestDescriptor=PvaConstants::DefaultKey);
-    virtual void monitor(PvObjectQueue& pyObjectQueue);
-    virtual void monitor(PvObjectQueue& pyObjectQueue, const std::string& requestDescriptor);
 #else
     virtual void monitor(const boost::python::object& pySubscriber, const std::string& requestDescriptor);
+#endif
     virtual void monitor(PvObjectQueue& pyObjectQueue);
     virtual void monitor(PvObjectQueue& pyObjectQueue, const std::string& requestDescriptor);
-#endif
     virtual void stopMonitor();
     virtual bool isMonitorActive() const;
+    virtual void resetMonitorCounters();
+    virtual boost::python::dict getMonitorCounters();
+
     virtual void setTimeout(double timeout);
     virtual double getTimeout() const;
     virtual void setDefaultRequestDescriptor(const std::string& requestDescriptor);
