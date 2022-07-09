@@ -1255,7 +1255,7 @@ class_<Channel>("Channel",
         "        try:\n\n"
         "            pv = pvq.get()\n\n"
         "            print(pv)\n\n"
-        "        except InvalidRequest as ex:\n\n"
+        "        except QueueEmpty as ex:\n\n"
         "            # queue is empty\n\n"
         "            pv = pvq.waitForPut(1)\n\n")
 

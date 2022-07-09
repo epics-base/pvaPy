@@ -10,6 +10,7 @@
 #include "ObjectAlreadyExists.h"
 #include "ObjectNotFound.h"
 #include "InvalidRequest.h"
+#include "QueueEmpty.h"
 #include "PvaServer.h"
 #include "PyGilManager.h"
 
@@ -323,7 +324,7 @@ void PvaServer::callbackThread(PvaServer* server)
         catch (ObjectNotFound& ex) {
             // Record has been deleted before we could get to update
         }
-        catch (InvalidRequest& ex) {
+        catch (QueueEmpty& ex) {
             // Queue empty, no PV updates received.
         }
         catch (const std::exception& ex) {

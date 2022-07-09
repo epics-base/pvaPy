@@ -12,7 +12,7 @@
 #include "pv/logger.h"
 #include "pv/convert.h"
 #include "ChannelTimeout.h"
-#include "InvalidRequest.h"
+#include "QueueEmpty.h"
 #include "InvalidArgument.h"
 #include "ObjectNotFound.h"
 #include "ObjectAlreadyExists.h"
@@ -1186,7 +1186,7 @@ void Channel::processingThread(Channel* channel)
             }
             channel->callSubscribers(pvObject);
         }
-        catch (InvalidRequest& ex) {
+        catch (QueueEmpty& ex) {
             // Queue empty, no PV changes received.
         }
         catch (const std::exception& ex) {
@@ -1439,7 +1439,7 @@ void Channel::asyncGetThread(Channel* channel)
                 }
             }
         }
-        catch (InvalidRequest& ex) {
+        catch (QueueEmpty& ex) {
             // Queue empty.
             if (remainingRuntime <= 0) {
                 // Do not wait any longer for new requests.
@@ -1537,7 +1537,7 @@ void Channel::asyncPutThread(Channel* channel)
                 }
             }
         }
-        catch (InvalidRequest& ex) {
+        catch (QueueEmpty& ex) {
             // Queue empty.
             if (remainingRuntime <= 0) {
                 // Do not wait any longer for new requests.

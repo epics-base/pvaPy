@@ -5,7 +5,8 @@
 #include "PvObjectQueue.h"
 #include "PyGilManager.h"
 #include "PyUtility.h"
-#include "InvalidRequest.h"
+#include "QueueEmpty.h"
+#include "QueueFull.h"
 
 namespace bp = boost::python;
 
@@ -39,7 +40,7 @@ PvObject PvObjectQueue::get(double timeout)
         PyEval_RestoreThread(state);
         return pvObject;
     }
-    catch (const InvalidRequest& ex) {
+    catch (const QueueEmpty& ex) {
         PyEval_RestoreThread(state);
         throw;
     }
@@ -63,7 +64,7 @@ void PvObjectQueue::put(const PvObject& pvObject, double timeout)
         PyEval_RestoreThread(state);
         return;
     }
-    catch (const InvalidRequest& ex) {
+    catch (const QueueFull& ex) {
         PyEval_RestoreThread(state);
         throw;
     }

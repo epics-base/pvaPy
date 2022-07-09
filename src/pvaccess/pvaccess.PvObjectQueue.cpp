@@ -38,7 +38,7 @@ class_<PvObjectQueue>("PvObjectQueue",
         static_cast<PvObject(PvObjectQueue::*)()>(&PvObjectQueue::get),
         "Retrieves PvObject from the queue.\n\n"
         ":Returns: PvObject from the queue\n\n"
-        ":Raises: *InvalidRequest* - when the queue is empty\n\n"
+        ":Raises: *QueueEmpty* - when the queue is empty\n\n"
         "::\n\n"
         "    pv = pvq.get()\n\n")
 
@@ -47,7 +47,7 @@ class_<PvObjectQueue>("PvObjectQueue",
         "Retrieves PvObject from the queue with wait if the queue is empty.\n\n"
         ":Parameter: *timeout* (float) - amount of time to wait for a new PvObject if queue is empty\n\n"
         ":Returns: PvObject from the queue\n\n"
-        ":Raises: *InvalidRequest* - when the queue is empty after the specified timeout\n\n"
+        ":Raises: *QueueEmpty* - when the queue is empty after the specified timeout\n\n"
         "::\n\n"
         "    pv = pvq.get(10)\n\n")
 
@@ -56,7 +56,7 @@ class_<PvObjectQueue>("PvObjectQueue",
         args("pvObject"),
         "Puts PvObject into the queue.\n\n"
         ":Parameter: *pvObject* (PvObject) - PV object that will be pushed into the queue\n\n"
-        ":Raises: *InvalidRequest* - when the queue is full\n\n"
+        ":Raises: *QueueFull* - when the queue is full\n\n"
         "::\n\n"
         "    pvq.put(PvInt(1))\n\n")
 
@@ -66,7 +66,7 @@ class_<PvObjectQueue>("PvObjectQueue",
         "Puts PvObject into the queue with wait if the queue is full.\n\n"
         ":Parameter: *pvObject* (PvObject) - PV object that will be pushed into the queue\n\n"
         ":Parameter: *timeout* (float) - amount of time to wait if the queue is full\n\n"
-        ":Raises: *InvalidRequest* - when the queue is full after the specified timeout\n\n"
+        ":Raises: *QueueFull* - when the queue is full after the specified timeout\n\n"
         "::\n\n"
         "    pvq.put(PvInt(1), 10)\n\n")
 

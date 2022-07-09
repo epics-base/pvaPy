@@ -3,6 +3,7 @@
 
 #include "boost/python.hpp"
 #include "ChannelMonitorRequesterImpl.h"
+#include "QueueEmpty.h"
 
 PvaPyLogger ChannelMonitorRequesterImpl::logger("ChannelMonitorRequesterImpl");
 const double ChannelMonitorRequesterImpl::DefaultTimeout(3.0);
@@ -82,7 +83,7 @@ PvObject ChannelMonitorRequesterImpl::getQueuedPvObject(double timeout) throw(Ch
     try {
         return pvObjectQueue.frontAndPop(timeout);
     }
-    catch (InvalidRequest& ex) {
+    catch (QueueEmpty& ex) {
         throw ChannelTimeout("No PV changes for channel %s received.", channelName.c_str());
     }
 }
@@ -100,7 +101,7 @@ void ChannelMonitorRequesterImpl::clearPvObjectQueue()
             pvObjectQueue.frontAndPop();
         }
     }
-    catch (InvalidRequest& ex) {
+    catch (QueueEmpty& ex) {
         // OK, we are done.
     }
 }

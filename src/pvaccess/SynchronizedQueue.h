@@ -9,7 +9,8 @@
 #include <map>
 #include <epicsEvent.h>
 #include <pv/pvData.h>
-#include "InvalidRequest.h"
+#include "QueueEmpty.h"
+#include "QueueFull.h"
 
 template <class T>
 class SynchronizedQueue : public std::queue<T>
@@ -57,7 +58,7 @@ public:
     void addToCounter(const std::string& key, unsigned int value);
 
 private:
-    void throwInvalidRequestIfEmpty() ;
+    void throwQueueEmptyIfEmpty() ;
     T frontAndPopUnsynchronized();
     void pushUnsynchronized(const T& t);
 
@@ -147,10 +148,10 @@ bool SynchronizedQueue<T>::isEmpty()
 }
 
 template <class T>
-void SynchronizedQueue<T>::throwInvalidRequestIfEmpty() 
+void SynchronizedQueue<T>::throwQueueEmptyIfEmpty() 
 {
     if (std::queue<T>::empty()) {
-        throw InvalidRequest("Queue is empty.");
+        throw QueueEmpty("Queue is empty.");
     }
 }
 
@@ -165,7 +166,7 @@ template <class T>
 T SynchronizedQueue<T>::back() 
 {
     epics::pvData::Lock lock(mutex);
-    throwInvalidRequestIfEmpty();
+    throwQueueEmptyIfEmpty();
     return std::queue<T>::back();
 }
 
@@ -173,7 +174,7 @@ template <class T>
 T SynchronizedQueue<T>::front() 
 {
     epics::pvData::Lock lock(mutex);
-    throwInvalidRequestIfEmpty();
+    throwQueueEmptyIfEmpty();
     return std::queue<T>::front();
 }
 
@@ -199,7 +200,7 @@ template <class T>
 T SynchronizedQueue<T>::frontAndPop() 
 {
     epics::pvData::Lock lock(mutex);
-    throwInvalidRequestIfEmpty();
+    throwQueueEmptyIfEmpty();
     return frontAndPopUnsynchronized();
 }
 
@@ -226,7 +227,7 @@ void SynchronizedQueue<T>::pop()
         itemPoppedEvent.signal();
     }
     else {
-        throw InvalidRequest("Queue is empty.");
+        throw QueueEmpty("Queue is empty.");
     }
 }
 
@@ -251,7 +252,7 @@ void SynchronizedQueue<T>::push(const T& t)
     if (maxLength > 0 && size >= maxLength) {
         // We are full, throw exception
         nRejected++;
-        throw InvalidRequest("Queue is full.");
+        throw QueueFull("Queue is full.");
     }
     pushUnsynchronized(t);
 }

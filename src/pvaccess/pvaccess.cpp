@@ -16,6 +16,8 @@
 #include "InvalidState.h"
 #include "InvalidRequest.h"
 #include "ChannelTimeout.h"
+#include "QueueEmpty.h"
+#include "QueueFull.h"
 
 #include "PvaExceptionTranslator.h"
 
@@ -87,6 +89,8 @@ PyObject* invalidDataTypeException = NULL;
 PyObject* invalidRequestException = NULL;
 PyObject* invalidStateException = NULL;
 PyObject* channelTimeoutException = NULL;
+PyObject* queueEmptyException = NULL;
+PyObject* queueFullException = NULL;
 
 BOOST_PYTHON_MODULE(pvaccess)
 {
@@ -109,6 +113,8 @@ BOOST_PYTHON_MODULE(pvaccess)
     invalidRequestException = PvaExceptionTranslator::createExceptionClass(InvalidRequest::PyExceptionClassName, pvaException);
     invalidStateException = PvaExceptionTranslator::createExceptionClass(InvalidState::PyExceptionClassName, pvaException);
     channelTimeoutException = PvaExceptionTranslator::createExceptionClass(ChannelTimeout::PyExceptionClassName, pvaException);
+    queueEmptyException = PvaExceptionTranslator::createExceptionClass(QueueEmpty::PyExceptionClassName, pvaException);
+    queueFullException = PvaExceptionTranslator::createExceptionClass(QueueFull::PyExceptionClassName, pvaException);
 
     // Constants
     wrapConstants();

@@ -16,6 +16,7 @@
 #include "PvaPyLogger.h"
 #include "PyPvDataUtility.h"
 #include "PvaConstants.h"
+#include "InvalidRequest.h"
 
 namespace PvaClientUtility
 {

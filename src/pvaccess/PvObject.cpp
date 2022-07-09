@@ -20,7 +20,6 @@
 #include "PyPvDataUtility.h"
 #include "StringUtility.h"
 #include "InvalidArgument.h"
-#include "InvalidRequest.h"
 #include "FieldNotFound.h"
 
 namespace pvd = epics::pvData;

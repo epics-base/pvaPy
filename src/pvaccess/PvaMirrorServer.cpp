@@ -7,7 +7,6 @@
 #include "PvaException.h"
 #include "ObjectAlreadyExists.h"
 #include "ObjectNotFound.h"
-#include "InvalidRequest.h"
 #include "PvaMirrorServer.h"
 #include "PvaConstants.h"
 #include "PvaPyConstants.h"
