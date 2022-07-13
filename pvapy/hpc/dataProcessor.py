@@ -41,6 +41,9 @@ class DataProcessor:
     def getStats(self):
         if self.statsNeedsUpdate:
             self.processorStats = self.updateStats()
+        else:
+            runtime = time.time()-self.startTime
+            self.processorStats['runtime'] = runtime
         return self.processorStats
 
     def updateStats(self, t=0):
