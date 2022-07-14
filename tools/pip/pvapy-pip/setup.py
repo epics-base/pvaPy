@@ -76,8 +76,9 @@ setup(
     ],
     entry_points = {
         'console_scripts': [
+            'pvapy-ad-sim-server=pvapy.cli.adSimServer:main',
             'pvapy-mirror-server=pvapy.cli.mirrorServer:main',
-            'pvapy-ad-sim-server=pvapy.cli.adSimServer:main'
+            'pvapy-hpc-consumer=pvapy.cli.hpcConsumer:main'
         ],
     },
     ext_modules=[PVACCESS_MODULE],
