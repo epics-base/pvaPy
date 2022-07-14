@@ -1,13 +1,23 @@
-## Release 4.3.0 (2022/MM/DD)
+## Release 5.0.0 (2022/MM/DD)
 
-- added Channel monitoring methods that push PV updates into the
-  PvObject queue and allow python processing to be done elsewhere
+- mirror server enhancements:
+  - optimized structure copy on processing
+  - added ability to specify source server queue size
+  - added ability to retrieve mirror record statistics
+- channel enhancements:
+  - added monitoring methods that push PV updates into the
+    PvObject queue and allow python processing to be done elsewhere
+  - added ability to retrieve channel monitor statistics
 - updated structure IDs for NtTable and NtAttribute fields
-- added new area detector simulator features:
+- new area detector simulator features:
   - option to generate frames with different data types and in the specified 
     ranges
-  - option to use numpy memory map for oading input files
-  - option to notify channel access PV when server start
+  - option to use numpy memory map for loading input files
+  - option to notify channel access PV when server starts
+- added python HPC framework for monitoring and processing data produced at
+  high rates using one or more consumers
+- added command line utilitiy:
+  - pvapy-hpc-consumer
 - conda/pip package dependencies: 
   - EPICS BASE = 7.0.6.1
   - BOOST      = 1.78.0
