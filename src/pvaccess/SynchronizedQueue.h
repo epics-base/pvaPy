@@ -181,19 +181,27 @@ T SynchronizedQueue<T>::front()
 template <class T>
 T SynchronizedQueue<T>::frontAndPopUnsynchronized() 
 {
+    bool isFull = (maxLength > 0 && std::queue<T>::size() >= maxLength);
     T t = std::queue<T>::front();
     std::queue<T>::pop();
     nDelivered++;
-    itemPoppedEvent.signal();
+    if (isFull) {
+        // Signal pop when queue was full
+        itemPoppedEvent.signal();
+    }
     return t;
 }
 
 template <class T>
 void SynchronizedQueue<T>::pushUnsynchronized(const T& t) 
 {
+    bool isEmpty = std::queue<T>::empty();
     std::queue<T>::push(t);
     nReceived++;
-    itemPushedEvent.signal();
+    if (isEmpty) {
+        // Signal push when queue was empty
+        itemPushedEvent.signal();
+    }
 }
 
 template <class T>
@@ -212,6 +220,8 @@ T SynchronizedQueue<T>::frontAndPop(double timeout)
         if (!std::queue<T>::empty()) {
             return frontAndPopUnsynchronized();
         }
+        // Clear push event.
+        itemPushedEvent.tryWait();
     }
     waitForItemPushed(timeout);
     return frontAndPop();
@@ -221,10 +231,15 @@ template <class T>
 void SynchronizedQueue<T>::pop()
 {
     epics::pvData::Lock lock(mutex);
-    if (!std::queue<T>::empty()) {
+    int size = std::queue<T>::size();
+    if (size > 0) {
+        bool isFull = (maxLength > 0 && size >= maxLength); 
         std::queue<T>::pop();
         nDelivered++;
-        itemPoppedEvent.signal();
+        if (isFull) {
+            // Signal pop when queue was full
+            itemPoppedEvent.signal();
+        }
     }
     else {
         throw QueueEmpty("Queue is empty.");
@@ -235,10 +250,15 @@ template <class T>
 bool SynchronizedQueue<T>::popIfNotEmpty()
 {
     epics::pvData::Lock lock(mutex);
-    if (!std::queue<T>::empty()) {
+    int size = std::queue<T>::size();
+    if (size > 0) {
+        bool isFull = (maxLength > 0 && size >= maxLength); 
         std::queue<T>::pop();
         nDelivered++;
-        itemPoppedEvent.signal();
+        if (isFull) {
+            // Signal pop when queue was full
+            itemPoppedEvent.signal();
+        }
         return true;
     }
     return false;
@@ -266,6 +286,8 @@ void SynchronizedQueue<T>::push(const T& t, double timeout)
         if (maxLength <= 0 || size < maxLength) {
             pushUnsynchronized(t);
         }
+        // Clear pop event.
+        itemPoppedEvent.tryWait();
     }
     waitForItemPopped(timeout);
     push(t);
@@ -283,7 +305,10 @@ bool SynchronizedQueue<T>::pushIfNotFull(const T& t)
     }
     std::queue<T>::push(t);
     nReceived++;
-    itemPushedEvent.signal();
+    if (size == 0) {
+        // Signal push when queue was empty
+        itemPushedEvent.signal();
+    }
     return true;
 }
 
@@ -302,6 +327,8 @@ void SynchronizedQueue<T>::waitForItemPushedIfEmpty(double timeout)
         if (size > 0) {
             return;
         }
+        // Clear push event.
+        itemPushedEvent.tryWait();
     }
     // Queue is empty, wait for push 
     itemPushedEvent.wait(timeout);
@@ -322,6 +349,8 @@ void SynchronizedQueue<T>::waitForItemPoppedIfFull(double timeout)
         if (maxLength <= 0 || size < maxLength) {
             return;
         }
+        // Clear pop event.
+        itemPoppedEvent.tryWait();
     }
     // Queue is full, wait for pop
     itemPoppedEvent.wait(timeout);
@@ -345,8 +374,8 @@ void SynchronizedQueue<T>::clear()
     epics::pvData::Lock lock(mutex);
     while (!std::queue<T>::empty()) {
         std::queue<T>::pop();
-        itemPoppedEvent.signal();
     }
+    itemPoppedEvent.signal();
 }
 
 template <class T>
