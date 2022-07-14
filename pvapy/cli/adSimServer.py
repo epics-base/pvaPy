@@ -1,9 +1,14 @@
 #!/usr/bin/env python
 
-import time, threading, queue, argparse
+import curses
+import time
+import threading
+import queue
+import argparse
 import numpy as np
 import pvaccess as pva
-import os, os.path
+import os
+import os.path
 
 __version__ = pva.__version__
 
@@ -24,33 +29,32 @@ class AdSimServer:
         np.dtype('float64') : 'doubleValue'
     }
 
-    def __init__(self, input_directory, input_file, mmap_mode, frame_rate, nf, nx, ny, datatype, minimum, maximum, runtime, channel_name, notify_pv, notify_pv_value, start_delay, report_period):
-        self.arraySize = None
-        self.delta_t = 0
-        if frame_rate > 0:
-            self.delta_t = 1.0/frame_rate
+    def __init__(self, inputDirectory, inputFile, mmapMode, frameRate, nf, nx, ny, datatype, minimum, maximum, runtime, channelName, notifyPv, notifyPvValue, startDelay, reportPeriod):
+        self.deltaT = 0
+        if frameRate > 0:
+            self.deltaT = 1.0/frameRate
         self.runtime = runtime
-        self.report_period = report_period 
+        self.reportPeriod = reportPeriod 
 
-        input_files = []
-        if input_directory is not None:
-            input_files = [os.path.join(input_directory, f) for f in os.listdir(input_directory) if os.path.isfile(os.path.join(input_directory, f))]
-        if input_file is not None:
-            input_files.append(input_file)
+        inputFiles = []
+        if inputDirectory is not None:
+            inputFiles = [os.path.join(inputDirectory, f) for f in os.listdir(inputDirectory) if os.path.isfile(os.path.join(inputDirectory, f))]
+        if inputFile is not None:
+            inputFiles.append(inputFile)
         self.frames = None
-        for f in input_files:
+        for f in inputFiles:
             try:
-                if mmap_mode:
-                    new_frames = np.load(f, mmap_mode='r')
+                if mmapMode:
+                    newFrames = np.load(f, mmapMode='r')
                 else:
-                    new_frames = np.load(f)
+                    newFrames = np.load(f)
                 if self.frames is None:
-                    self.frames = new_frames
+                    self.frames = newFrames
                 else:
-                    self.frames = np.append(self.frames, new_frames, axis=0)
-                print('Loaded input file {}'.format(f))
+                    self.frames = np.append(self.frames, newFrames, axis=0)
+                print(f'Loaded input file {f}')
             except Exception as ex:
-                print('Cannot load input file {}, skipping it: {}'.format(f, str(ex)))
+                print(f'Cannot load input file {f}, skipping it: {ex}')
         if self.frames is None:
             print('Generating random frames')
             # Example frame:
@@ -83,42 +87,43 @@ class AdSimServer:
                 if datatype == 'float32':
                     self.frames = np.float32(self.frames)
 
-            print('Generated frame shape: {}'.format(self.frames[0].shape))
-            print('Range of generated values: [{},{}]'.format(mn,mx))
-        self.n_input_frames, self.rows, self.cols = self.frames.shape
-        self.pva_type_key = self.PVA_TYPE_KEY_MAP.get(self.frames.dtype)
-        print('Number of input frames: {} (size: {}x{}, type: {})'.format(self.n_input_frames, self.cols, self.rows, self.frames.dtype))
+            print(f'Generated frame shape: {self.frames[0].shape}')
+            print(f'Range of generated values: [{mn},{mx}]')
+        self.nInputFrames, self.rows, self.cols = self.frames.shape
+        self.pvaTypeKey = self.PVA_TYPE_KEY_MAP.get(self.frames.dtype)
+        print(f'Number of input frames: {self.nInputFrames} (size: {self.cols}x{self.rows}, type: {self.frames.dtype})')
 
-        self.channel_name = channel_name
-        self.frame_rate = frame_rate
+        self.channelName = channelName
+        self.frameRate = frameRate
         self.server = pva.PvaServer()
-        self.server.addRecord(self.channel_name, pva.NtNdArray())
-        if notify_pv and notify_pv_value:
+        self.server.addRecord(self.channelName, pva.NtNdArray())
+        if notifyPv and notifyPvValue:
             try:
                 time.sleep(self.NOTIFICATION_DELAY)
-                notifyChannel = pva.Channel(notify_pv, pva.CA)
-                notifyChannel.put(notify_pv_value)
-                print('Set notification PV {} to {}'.format(notify_pv, notify_pv_value))
+                notifyChannel = pva.Channel(notifyPv, pva.CA)
+                notifyChannel.put(notifyPvValue)
+                print(f'Set notification PV {notifyPv} to {notifyPvValue}')
             except Exception as ex:
-                print('Could not set notification PV {} to {}: {}'.format(notify_pv, notify_pv_value, ex))
+                print(f'Could not set notification PV {notifyPv} to {notifyPvValue}: {ex}')
 
-        self.frame_map = {}
-        self.current_frame_id = 0
-        self.n_published_frames = 0
-        self.start_time = 0
-        self.last_published_time = 0
-        self.start_delay = start_delay
-        self.is_done = False
+        self.frameMap = {}
+        self.currentFrameId = 0
+        self.nPublishedFrames = 0
+        self.startTime = 0
+        self.lastPublishedTime = 0
+        self.startDelay = startDelay
+        self.isDone = False
+        self.screen = None
 
-    def get_timestamp(self):
+    def getTimestamp(self):
         s = time.time()
         ns = int((s-int(s))*1000000000)
         s = int(s)
         return pva.PvTimeStamp(s,ns)
 
-    def frame_producer(self, extraFieldsPvObject=None):
-        for frame_id in range(0, self.n_input_frames):
-            if self.is_done:
+    def frameProducer(self, extraFieldsPvObject=None):
+        for frameId in range(0, self.nInputFrames):
+            if self.isDone:
                return
 
             if extraFieldsPvObject is None:
@@ -126,87 +131,94 @@ class AdSimServer:
             else:
                 nda = pva.NtNdArray(extraFieldsPvObject.getStructureDict())
 
-            data = self.frames[frame_id].flatten()
-            nda['uniqueId'] = frame_id
+            data = self.frames[frameId].flatten()
+            nda['uniqueId'] = frameId
             #nda['codec'] = pva.PvCodec('pvapyc', pva.PvInt(6))
             dims = [pva.PvDimension(self.cols, 0, self.cols, 1, False), \
                     pva.PvDimension(self.rows, 0, self.rows, 1, False)]
             nda['dimension'] = dims
             nda['compressedSize'] = self.rows*self.cols*data.itemsize
             nda['uncompressedSize'] = self.rows*self.cols*data.itemsize
-            ts = self.get_timestamp()
+            ts = self.getTimestamp()
             nda['timeStamp'] = ts
             nda['dataTimeStamp'] = ts
             nda['descriptor'] = 'PvaPy Simulated Image'
-            nda['value'] = {self.pva_type_key : data}
+            nda['value'] = {self.pvaTypeKey : data}
             attrs = [pva.NtAttribute('ColorMode', pva.PvInt(0))]
             nda['attribute'] = attrs
             if extraFieldsPvObject is not None:
                 nda.set(extraFieldsPvObject)
-            self.frame_map[frame_id] = nda
+            self.frameMap[frameId] = nda
 
-    def prepare_frame(self):
+    def prepareFrame(self):
         # Get cached frame
-        cached_frame_id = self.current_frame_id % self.n_input_frames
-        if cached_frame_id not in self.frame_map:
+        cachedFrameId = self.currentFrameId % self.nInputFrames
+        if cachedFrameId not in self.frameMap:
             # In case frames were not generated on time, use first frame
-            cached_frame_id = 0
-        frame = self.frame_map[cached_frame_id]
+            cachedFrameId = 0
+        frame = self.frameMap[cachedFrameId]
 
         # Correct image id and timeestamps
-        self.current_frame_id += 1
-        frame['uniqueId'] = self.current_frame_id
-        ts = self.get_timestamp()
+        self.currentFrameId += 1
+        frame['uniqueId'] = self.currentFrameId
+        ts = self.getTimestamp()
         frame['timeStamp'] = ts
         frame['dataTimeStamp'] = ts
         return frame
 
-    def frame_publisher(self):
+    def framePublisher(self):
         while True:
-            if self.is_done:
+            if self.isDone:
                 return
 
-            frame = self.prepare_frame()
-            self.server.update(self.channel_name, frame)
-            self.last_published_time = time.time()
-            self.n_published_frames += 1
+            frame = self.prepareFrame()
+            self.server.update(self.channelName, frame)
+            self.lastPublishedTime = time.time()
+            self.nPublishedFrames += 1
 
             runtime = 0
-            if self.n_published_frames > 1:
-                runtime = self.last_published_time - self.start_time
-                delta_t = runtime/(self.n_published_frames - 1)
-                frame_rate = 1.0/delta_t
-                if self.report_period > 0 and (self.n_published_frames % self.report_period) == 0:
-                    print("Published frame id %6d @ %.3f (frame rate: %.4f fps)" % (self.current_frame_id, self.last_published_time, frame_rate))
+            frameRate = 0
+            if self.nPublishedFrames > 1:
+                runtime = self.lastPublishedTime - self.startTime
+                deltaT = runtime/(self.nPublishedFrames - 1)
+                frameRate = 1.0/deltaT
             else:
-                self.start_time = self.last_published_time
-                if self.report_period > 0 and (self.n_published_frames % self.report_period) == 0:
-                    print("Published frame id %6d @ %.3f" % (self.current_frame_id, self.last_published_time))
+                self.startTime = self.lastPublishedTime
+            if self.reportPeriod > 0 and (self.nPublishedFrames % self.reportPeriod) == 0:
+                report = 'Published frame id {:6d} @ {:.3f}s (frame rate: {:.4f}fps; runtime: {:.3f}s)'.format(self.currentFrameId, self.lastPublishedTime, frameRate, runtime)
+                if not self.screen:
+                    self.screen = curses.initscr()
+                self.screen.erase()
+                self.screen.addstr(f'{report}\n')
+                self.screen.refresh()
 
             if runtime > self.runtime:
-                print("Server will exit after reaching runtime of {} seconds".format(self.runtime))
+                curses.endwin()
+                print('Server exiting after reaching runtime of {:.3f} seconds'.format(self.runtime))
                 return
 
-            if self.delta_t > 0:
-                next_publish_time = self.start_time + self.n_published_frames*self.delta_t
-                delay = next_publish_time - time.time() - self.DELAY_CORRECTION
+            if self.deltaT > 0:
+                nextPublishTime = self.startTime + self.nPublishedFrames*self.deltaT
+                delay = nextPublishTime - time.time() - self.DELAY_CORRECTION
                 if delay > 0:
-                    threading.Timer(delay, self.frame_publisher).start()
+                    threading.Timer(delay, self.framePublisher).start()
                     return
 
     def start(self):
-        threading.Thread(target=self.frame_producer, daemon=True).start()
+        threading.Thread(target=self.frameProducer, daemon=True).start()
         self.server.start()
-        threading.Timer(self.start_delay, self.frame_publisher).start()
+        threading.Timer(self.startDelay, self.framePublisher).start()
 
     def stop(self):
-        self.is_done = True
+        self.isDone = True
         self.server.stop()
-        runtime = self.last_published_time - self.start_time
-        delta_t = runtime/(self.n_published_frames - 1)
-        frame_rate = 1.0/delta_t
-        print('\nServer runtime: %.4f seconds' % (runtime))
-        print('Published frames: %6d @ %.4f fps' % (self.n_published_frames, frame_rate))
+        runtime = self.lastPublishedTime - self.startTime
+        deltaT = runtime/(self.nPublishedFrames - 1)
+        frameRate = 1.0/deltaT
+        if self.screen:
+            curses.endwin()
+        print('\nServer runtime: {:.4f} seconds'.format(runtime))
+        print('Published frames: {:6d} @ {:.4f} fps'.format(self.nPublishedFrames, frameRate))
 
 def main():
     parser = argparse.ArgumentParser(description='PvaPy Area Detector Simulator')
@@ -233,7 +245,7 @@ def main():
         print('Unrecognized argument(s): %s' % ' '.join(unparsed))
         exit(1)
 
-    server = AdSimServer(input_directory=args.input_directory, input_file=args.input_file, mmap_mode=args.mmap_mode, frame_rate=args.frame_rate, nf=args.n_frames, nx=args.n_x_pixels, ny=args.n_y_pixels, datatype=args.datatype, minimum=args.minimum, maximum=args.maximum, runtime=args.runtime, channel_name=args.channel_name, notify_pv=args.notify_pv, notify_pv_value=args.notify_pv_value, start_delay=args.start_delay, report_period=args.report_period)
+    server = AdSimServer(inputDirectory=args.input_directory, inputFile=args.input_file, mmapMode=args.mmap_mode, frameRate=args.frame_rate, nf=args.n_frames, nx=args.n_x_pixels, ny=args.n_y_pixels, datatype=args.datatype, minimum=args.minimum, maximum=args.maximum, runtime=args.runtime, channelName=args.channel_name, notifyPv=args.notify_pv, notifyPvValue=args.notify_pv_value, startDelay=args.start_delay, reportPeriod=args.report_period)
 
     server.start()
     try:

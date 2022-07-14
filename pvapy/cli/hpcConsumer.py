@@ -79,7 +79,7 @@ class ConsumerController:
         report = self.formatConsumerStats(consumerId, statsDict)
         if self.screen:
             self.screen.erase()
-            self.screen.addstr('{}\n'.format(report))
+            self.screen.addstr(f'{report}\n')
             self.screen.refresh()
         else:
             print(report)
