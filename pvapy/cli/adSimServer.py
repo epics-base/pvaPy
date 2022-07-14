@@ -148,6 +148,9 @@ class AdSimServer:
     def prepare_frame(self):
         # Get cached frame
         cached_frame_id = self.current_frame_id % self.n_input_frames
+        if cached_frame_id not in self.frame_map:
+            # In case frames were not generated on time, use first frame
+            cached_frame_id = 0
         frame = self.frame_map[cached_frame_id]
 
         # Correct image id and timeestamps
