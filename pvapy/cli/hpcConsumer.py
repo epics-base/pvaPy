@@ -238,7 +238,7 @@ def mpController(consumerId, processId, requestQueue, responseQueue, args):
     time.sleep(WAIT_TIME)
 
 def main():
-    parser = argparse.ArgumentParser(description='PvaPy HPC Consumer')
+    parser = argparse.ArgumentParser(description='PvaPy HPC Consumer utility. It can be used for receiving and processing data using specified implementation of the data processor interface.')
     parser.add_argument('-v', '--version', action='version', version='%(prog)s {version}'.format(version=__version__))
     parser.add_argument('-cn', '--channel-name', dest='channel_name', required=True, help='PV channel name.')
     parser.add_argument('-cpt', '--channel-provider-type', dest='channel_provider_type', default='pva', help='PV channel provider type, it must be either "pva" or "ca" (default: pva).')
