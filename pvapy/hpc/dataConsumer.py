@@ -23,8 +23,7 @@ class DataConsumer:
         self.distributorUpdateMode = distributorUpdateMode
         self.pvObjectQueue = pvObjectQueue
         if pvObjectQueue is not None:
-            maxLength = pvObjectQueue.maxLength
-            self.logger.debug(f'Using PvObjectQueue of size: {maxLength}')
+            self.logger.debug(f'Using PvObjectQueue of size: {pvObjectQueue.maxLength}')
         self.dataProcessor = dataProcessor
         self.startTime = None
         self.endTime = None
