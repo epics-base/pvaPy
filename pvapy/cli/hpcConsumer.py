@@ -47,7 +47,17 @@ class ConsumerController:
                 self.logger.debug('Using processor oid offset appropriate for a single distributor client set')
                 processorOidOffset = (args.n_processors-1)*int(args.distributor_updates)+1
             self.logger.debug(f'Determined processor oid offset: {processorOidOffset}')
-        
+       
+        outputChannel =  args.processor_output_channel
+        if outputChannel == '_':
+            outputChannel = f'{args.channel_name}:processor'
+            if args.distributor_group:
+                outputChannel += f':{args.distributor_group}'
+            if args.distributor_set:
+                outputChannel += f':{args.distributor_set}'
+            outputChannel += f':{processorId}'
+            self.logger.debug(f'Determined processor output channel name: {outputChannel}')
+
         if args.processor_file and args.processor_class:
             # Create config dict
             processorConfig = {}
@@ -63,7 +73,7 @@ class ConsumerController:
             if not 'objectIdOffset' in processorConfig:
                 processorConfig['objectIdOffset'] = processorOidOffset
             if not 'outputChannel' in processorConfig:
-                processorConfig['outputChannel'] = args.processor_output_channel
+                processorConfig['outputChannel'] = outputChannel
 
             self.logger.debug(f'Using processor configuration: {processorConfig}')
             dataProcessor = ObjectUtility.createObjectInstanceFromFile(args.processor_file, 'dataProcessor', args.processor_class, processorConfig)
