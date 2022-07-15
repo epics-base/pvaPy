@@ -36,6 +36,18 @@ class ConsumerController:
 
     def createProcessor(self, processorId, args):
         dataProcessor = None
+        processorOidOffset = 1
+        if args.processor_oid_offset <= 0 and args.distributor_updates is not None:
+            if args.n_distributor_sets > 1:
+                self.logger.debug(f'Using processor oid offset appropriate for {args.n_distributor_sets} distributor client sets')
+                if args.distributor_set is None:
+                    raise pva.InvalidArgument(f'Specified number of distributor sets {args.n_distributor_sets} is greater than 1, but the actual distributor set name has not been set.')
+                processorOidOffset = (args.n_distributor_sets-1)*int(args.distributor_updates)+1
+            else:
+                self.logger.debug('Using processor oid offset appropriate for a single distributor client set')
+                processorOidOffset = (args.n_processors-1)*int(args.distributor_updates)+1
+            self.logger.debug(f'Determined processor oid offset: {processorOidOffset}')
+        
         if args.processor_file and args.processor_class:
             # Create config dict
             processorConfig = {}
@@ -49,7 +61,7 @@ class ConsumerController:
             if not 'objectIdField' in processorConfig:
                 processorConfig['objectIdField'] = args.processor_oid_field
             if not 'objectIdOffset' in processorConfig:
-                processorConfig['objectIdOffset'] = args.processor_oid_offset
+                processorConfig['objectIdOffset'] = processorOidOffset
             if not 'outputChannel' in processorConfig:
                 processorConfig['outputChannel'] = args.processor_output_channel
 
@@ -70,7 +82,7 @@ class ConsumerController:
             pvObjectQueue = pva.PvObjectQueue(args.consumer_queue_size)
             self.usingPvObjectQueue = True
 
-        self.dataConsumer = DataConsumer(consumerId, args.channel_name, providerType=args.channel_provider_type, serverQueueSize=args.server_queue_size, distributorPluginName=args.distributor_plugin_name, distributorGroupId=args.distributor_group, distributorSetId=args.distributor_set, distributorTriggerFieldName=args.distributor_trigger, distributorNumUpdates=args.distributor_n_updates, distributorUpdateMode=None, pvObjectQueue=pvObjectQueue, dataProcessor=dataProcessor)
+        self.dataConsumer = DataConsumer(consumerId, args.channel_name, providerType=args.channel_provider_type, serverQueueSize=args.server_queue_size, distributorPluginName=args.distributor_plugin_name, distributorGroupId=args.distributor_group, distributorSetId=args.distributor_set, distributorTriggerFieldName=args.distributor_trigger, distributorUpdates=args.distributor_updates, distributorUpdateMode=None, pvObjectQueue=pvObjectQueue, dataProcessor=dataProcessor)
         return self.dataConsumer
 
     def startConsumers(self):
@@ -261,7 +273,7 @@ def main():
     parser.add_argument('-pf', '--processor-file', dest='processor_file', default=None, help='Full path to the python file containing processor class.')
     parser.add_argument('-pc', '--processor-class', dest='processor_class', default=None, help='Name of the class located in the processor file that will be processing PV updates; it should be initialized with a dictionary and must implement the "process(self, pv)" method.')
     parser.add_argument('-pa', '--processor-args', dest='processor_args', default=None, help='JSON-formatted string that can be converted into dictionary and used for initializing processor object.')
-    parser.add_argument('-poo', '--processor-oid-offset', type=int, dest='processor_oid_offset', default=1, help='This parameter determines by how much object id should change between the two PV updates, and is used for determining the number of missed PV updates (default: 1). This parameter is ignored if processor args dictionary contains "objectIdOffset" key, and should be modified only if data distributor plugin will be distributing data between multiple clients, and should be set to "(<nConsumers>-1)*<nUpdates>" for a single client set, or to "(<nSets>-1)*<nUpdates>" for multiple client sets.')
+    parser.add_argument('-poo', '--processor-oid-offset', type=int, dest='processor_oid_offset', default=0, help='This parameter determines by how much object id should change between the two PV updates, and is used for determining the number of missed PV updates (default: 0). This parameter is ignored if processor args dictionary contains "objectIdOffset" key, and should be modified only if data distributor plugin will be distributing data between multiple clients, in which case it should be set to "(<nProcessors>-1)*<nUpdates>+1" for a single client set, or to "(<nSets>-1)*<nUpdates>+1" for multiple client sets. Values <= 0 will be replaced with the appropriate value depending on the number of client sets specified. Note that this relies on using the same value for the --n-distributor-sets when multiple instances of this command are running separately.')
     parser.add_argument('-pof', '--processor-oid-field', dest='processor_oid_field', default='uniqueId', help='PV update id field used for calculating data processor statistics (default: uniqueId). This parameter is ignored if processor args dictionary contains "objectIdField" key.')
     parser.add_argument('-pfu', '--process-first-update', dest='process_first_update', default=False, action='store_true', help='Process first PV update (default: False). This parameter is ignored if processor args dictionary contains "processFirstUpdate" key.')
     parser.add_argument('-poc', '--processor-output-channel', dest='processor_output_channel', default='', help='PVA channel that will be created for publishing processing results (default: ""). This parameter is ignored if processor args dictionary contains "outputChannel" key. If left empty, output channel will not be created. The value of "_" indicates that output channel name will be set to "<input channel>:processor:<processor id>".')
@@ -270,7 +282,8 @@ def main():
     parser.add_argument('-dg', '--distributor-group', dest='distributor_group', default=None, help='Distributor client group that application belongs to (default: None). This parameter should be used only if data distributor plugin will be distributing data between multiple clients. Note that different distributor groups are completely independent of each other.')
     parser.add_argument('-ds', '--distributor-set', dest='distributor_set', default=None, help='Distributor client set that application belongs to within its group (default: None). This parameter should be used only if data distributor plugin will be distributing data between multiple clients. Note that all clients belonging to the same set receive the same PV updates. If set id is not specified (i.e., if a group does not have multiple sets of clients), a PV update will be distributed to only one client.')
     parser.add_argument('-dt', '--distributor-trigger', dest='distributor_trigger', default=None, help='PV structure field that data distributor uses to distinguish different channel updates (default: None). This parameter should be used only if data distributor plugin will be distributing data between multiple clients. In case of, for example, area detector applications, the "uniqueId" field would be a good choice for distinguishing between the different frames.')
-    parser.add_argument('-dnu', '--distributor-n-updates', dest='distributor_n_updates', default=None, help='Number of sequential PV channel updates that a client (or a set of clients) will receive (default: None). This parameter should be used only if data distributor plugin will be distributing data between multiple clients.')
+    parser.add_argument('-du', '--distributor-updates', dest='distributor_updates', default=None, help='Number of sequential PV channel updates that a client (or a set of clients) will receive (default: None). This parameter should be used only if data distributor plugin will be distributing data between multiple clients.')
+    parser.add_argument('-nds', '--n-distributor-sets', type=int, dest='n_distributor_sets', default=1, help='Number of distributor client sets (default: 1). This setting is used to determine appropriate value for the processor object id offset in case where multiple instances of this command are running separately for different client sets. If distributor client set is not specified, this setting is ignored.')
     parser.add_argument('-rt', '--runtime', type=float, dest='runtime', default=0, help='Server runtime in seconds; values <=0 indicate infinite runtime (default: infinite).')
     parser.add_argument('-rp', '--report-period', type=float, dest='report_period', default=0, help='Statistics report period for all consumers in seconds; values <=0 indicate no reporting (default: 0).')
     parser.add_argument('-ll', '--log-level', dest='log_level', help='Log level; possible values: DEBUG, INFO, WARN, ERROR, CRITICAL. If not provided, there will be no log output.')

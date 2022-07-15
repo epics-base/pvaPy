@@ -8,7 +8,7 @@ class DataConsumer:
 
     PROVIDER_TYPE_MAP = { 'pva' : pva.PVA, 'ca' : pva.CA }
 
-    def __init__(self, consumerId, channelName, providerType=pva.PVA, serverQueueSize=0, distributorPluginName='pydistributor', distributorGroupId=None, distributorSetId=None, distributorTriggerFieldName=None, distributorNumUpdates=None, distributorUpdateMode=None, pvObjectQueue=None, dataProcessor=None):
+    def __init__(self, consumerId, channelName, providerType=pva.PVA, serverQueueSize=0, distributorPluginName='pydistributor', distributorGroupId=None, distributorSetId=None, distributorTriggerFieldName=None, distributorUpdates=None, distributorUpdateMode=None, pvObjectQueue=None, dataProcessor=None):
         self.logger = LoggingManager.getLogger('consumer-{}'.format(consumerId))
         self.consumerId = consumerId
         providerType = self.PROVIDER_TYPE_MAP.get(providerType.lower(), pva.PVA)
@@ -20,7 +20,7 @@ class DataConsumer:
         self.distributorGroupId = distributorGroupId 
         self.distributorSetId = distributorSetId 
         self.distributorTriggerFieldName = distributorTriggerFieldName
-        self.distributorNumUpdates = distributorNumUpdates 
+        self.distributorUpdates = distributorUpdates 
         self.distributorUpdateMode = distributorUpdateMode
         self.pvObjectQueue = pvObjectQueue
         if pvObjectQueue is not None:
@@ -44,7 +44,7 @@ class DataConsumer:
         if self.distributorGroupId \
                 or self.distributorSetId \
                 or self.distributorTriggerFieldName \
-                or self.distributorNumUpdates \
+                or self.distributorUpdates \
                 or self.distributorUpdateMode:
             distributorStr = f'_[{self.distributorPluginName}='
         if self.distributorGroupId:
@@ -53,8 +53,8 @@ class DataConsumer:
             distributorStr += f'set:{self.distributorSetId};'
         if self.distributorTriggerFieldName:
             distributorStr += f'trigger:{self.distributorTriggerFieldName};'
-        if self.distributorNumUpdates:
-            distributorStr += f'updates:{self.distributorNumUpdates};'
+        if self.distributorUpdates:
+            distributorStr += f'updates:{self.distributorUpdates};'
         if self.distributorUpdateMode:
             distributorStr += f'mode:{self.distributorUpdateMode};'
 
