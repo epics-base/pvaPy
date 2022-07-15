@@ -70,7 +70,7 @@ class ConsumerController:
             pvObjectQueue = pva.PvObjectQueue(args.consumer_queue_size)
             self.usingPvObjectQueue = True
 
-        self.dataConsumer = DataConsumer(consumerId, args.channel_name, providerType=args.channel_provider_type, serverQueueSize=args.server_queue_size, distributorGroupId=args.distributor_group, distributorSetId=args.distributor_set, distributorTriggerFieldName=args.distributor_trigger, distributorNumUpdates=args.distributor_n_updates, distributorUpdateMode=None, pvObjectQueue=pvObjectQueue, dataProcessor=dataProcessor)
+        self.dataConsumer = DataConsumer(consumerId, args.channel_name, providerType=args.channel_provider_type, serverQueueSize=args.server_queue_size, distributorPluginName=args.distributor_plugin_name, distributorGroupId=args.distributor_group, distributorSetId=args.distributor_set, distributorTriggerFieldName=args.distributor_trigger, distributorNumUpdates=args.distributor_n_updates, distributorUpdateMode=None, pvObjectQueue=pvObjectQueue, dataProcessor=dataProcessor)
         return self.dataConsumer
 
     def startConsumers(self):
@@ -163,12 +163,14 @@ class MultiprocessConsumerController(ConsumerController):
         report = ''
         for consumerId,statsDict in combinedStatsDict.items():
             report += self.formatConsumerStats(consumerId, statsDict)
+            report += '\n'
         if self.screen:
             self.screen.erase()
             self.screen.addstr(report)
             self.screen.refresh()
         else:
-            print(report)
+            # Remove extra newline character
+            print(report[0:-1])
 
     def getConsumerStats(self):
         for i in range(1, self.args.n_processors+1):
@@ -259,6 +261,7 @@ def main():
     parser.add_argument('-pfu', '--process-first-update', dest='process_first_update', default=False, action='store_true', help='Process first PV update (default: False). This parameter is ignored if processor args dictionary contains "processFirstUpdate" key.')
     parser.add_argument('-poc', '--processor-output-channel', dest='processor_output_channel', default='', help='PVA channel that will be created for publishing processing results (default: ""). This parameter is ignored if processor args dictionary contains "outputChannel" key. If left empty, output channel will not be created. The value of "_" indicates that output channel name will be set to "<input channel>:processor:<processor id>".')
     parser.add_argument('-np', '--n-processors', type=int, dest='n_processors', default=1, help='Number of data processors to instantiate (default: 1). If > 1, multiprocessing module will be used for receiving and processing data in separate processes.')
+    parser.add_argument('-dpn', '--distributor-plugin-name', dest='distributor_plugin_name', default='pydistributor', help='Distributor plugin name (default: pydistributor).')
     parser.add_argument('-dg', '--distributor-group', dest='distributor_group', default=None, help='Distributor client group that application belongs to (default: None). This parameter should be used only if data distributor plugin will be distributing data between multiple clients. Note that different distributor groups are completely independent of each other.')
     parser.add_argument('-ds', '--distributor-set', dest='distributor_set', default=None, help='Distributor client set that application belongs to within its group (default: None). This parameter should be used only if data distributor plugin will be distributing data between multiple clients. Note that all clients belonging to the same set receive the same PV updates. If set id is not specified (i.e., if a group does not have multiple sets of clients), a PV update will be distributed to only one client.')
     parser.add_argument('-dt', '--distributor-trigger', dest='distributor_trigger', default=None, help='PV structure field that data distributor uses to distinguish different channel updates (default: None). This parameter should be used only if data distributor plugin will be distributing data between multiple clients. In case of, for example, area detector applications, the "uniqueId" field would be a good choice for distinguishing between the different frames.')

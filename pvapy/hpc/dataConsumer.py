@@ -8,7 +8,7 @@ class DataConsumer:
 
     PROVIDER_TYPE_MAP = { 'pva' : pva.PVA, 'ca' : pva.CA }
 
-    def __init__(self, consumerId, channelName, providerType=pva.PVA, serverQueueSize=0, distributorGroupId=None, distributorSetId=None, distributorTriggerFieldName=None, distributorNumUpdates=None, distributorUpdateMode=None, pvObjectQueue=None, dataProcessor=None):
+    def __init__(self, consumerId, channelName, providerType=pva.PVA, serverQueueSize=0, distributorPluginName='pydistributor', distributorGroupId=None, distributorSetId=None, distributorTriggerFieldName=None, distributorNumUpdates=None, distributorUpdateMode=None, pvObjectQueue=None, dataProcessor=None):
         self.logger = LoggingManager.getLogger('consumer-{}'.format(consumerId))
         self.consumerId = consumerId
         providerType = self.PROVIDER_TYPE_MAP.get(providerType.lower(), pva.PVA)
@@ -16,6 +16,7 @@ class DataConsumer:
         self.channel = pva.Channel(channelName, providerType)
         self.serverQueueSize = serverQueueSize
         self.logger.debug(f'Server queue size: {serverQueueSize}')
+        self.distributorPluginName = distributorPluginName
         self.distributorGroupId = distributorGroupId 
         self.distributorSetId = distributorSetId 
         self.distributorTriggerFieldName = distributorTriggerFieldName
@@ -38,30 +39,30 @@ class DataConsumer:
     def getPvMonitorRequest(self):
         recordStr = ''
         if self.serverQueueSize > 0:
-            recordStr = 'record[queueSize={}]'.format(self.serverQueueSize)
+            recordStr = f'record[queueSize={self.serverQueueSize}]'
         distributorStr = ''
         if self.distributorGroupId \
                 or self.distributorSetId \
                 or self.distributorTriggerFieldName \
                 or self.distributorNumUpdates \
                 or self.distributorUpdateMode:
-            distributorStr = '_[pydistributor='
+            distributorStr = f'_[{self.distributorPluginName}='
         if self.distributorGroupId:
-            distributorStr += 'group:{};'.format(self.distributorGroupId)
+            distributorStr += f'group:{self.distributorGroupId};'
         if self.distributorSetId:
-            distributorStr += 'set:{};'.format(self.distributorSetId)
+            distributorStr += f'set:{self.distributorSetId};'
         if self.distributorTriggerFieldName:
-            distributorStr += 'trigger:{};'.format(self.distributorTriggerFieldName)
+            distributorStr += f'trigger:{self.distributorTriggerFieldName};'
         if self.distributorNumUpdates:
-            distributorStr += 'updates:{};'.format(self.distributorNumUpdates)
+            distributorStr += f'updates:{self.distributorNumUpdates};'
         if self.distributorUpdateMode:
-            distributorStr += 'mode:{};'.format(self.distributorUpdateMode)
+            distributorStr += f'mode:{self.distributorUpdateMode};'
 
-        request = '{}field()'.format(recordStr)
+        request = f'{recordStr}field()'
         if distributorStr:
             # Strip last ';' character
-            distributorStr = '{}]'.format(distributorStr[0:-1])
-            request = '{}field({})'.format(recordStr,distributorStr)
+            distributorStr = distributorStr[0:-1] + ']'
+            request = f'{recordStr}field({distributorStr})'
         return request
 
     def process(self, pv):
