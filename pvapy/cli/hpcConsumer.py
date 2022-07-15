@@ -145,6 +145,10 @@ class MultiprocessConsumerController(ConsumerController):
         self.responseQueueMap = {}
 
     def startConsumers(self):
+        # Replace interrupt handler for worker processes
+        # so we can exit cleanly
+        import signal
+        originalSigintHandler = signal.signal(signal.SIGINT, signal.SIG_IGN)
         for i in range(1, self.args.n_processors+1):
             consumerId = i
             processorId = i
@@ -156,6 +160,7 @@ class MultiprocessConsumerController(ConsumerController):
             self.mpProcessMap[i] = mpProcess
             self.logger.debug(f'Starting consumer process {i}')
             mpProcess.start()
+        signal.signal(signal.SIGINT, originalSigintHandler)
 
     def reportConsumerStats(self, combinedStatsDict=None):
         if not combinedStatsDict:
