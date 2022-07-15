@@ -193,7 +193,8 @@ class AdSimServer:
                 self.screen.refresh()
 
             if runtime > self.runtime:
-                curses.endwin()
+                if self.screen:
+                    curses.endwin()
                 print('Server exiting after reaching runtime of {:.3f} seconds'.format(self.runtime))
                 return
 
