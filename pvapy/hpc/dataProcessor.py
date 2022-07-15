@@ -1,15 +1,16 @@
 #!/usr/bin/env python
 
 import time
+import pvaccess as pva
 from ..utility.loggingManager import LoggingManager
 
-# Example for a data processor
+# Base data processor class
 class DataProcessor:
 
     def __init__(self, configDict={}):
         self.configDict = configDict
         # Use data processor id for logging
-        self.processorId = configDict.get('processorId', self.__class__.__name__)
+        self.processorId = configDict.get('processorId', 0)
         self.logger = LoggingManager.getLogger(f'processor-{self.processorId}')
         self.logger.debug(f'Config dict: {configDict}')
 
@@ -18,7 +19,12 @@ class DataProcessor:
         # Do not process first object by default
         self.processFirstUpdate = configDict.get('processFirstUpdate', False)
         # Object id processing offset used for statistics calculation
-        self.objectIdOffset =int(configDict.get('objectIdOffset', 1))
+        self.objectIdOffset = int(configDict.get('objectIdOffset', 1))
+        # Output channel is used for publishing processed objects
+        self.inputChannel = configDict.get('inputChannel', '')
+        self.outputChannel = configDict.get('outputChannel', '')
+        if self.outputChannel == '_':
+            self.outputChannel = f'{self.inputChannel}:processor-{self.processorId}'
         self.nProcessed = 0
         self.nMissed = 0
         self.firstObjectId = None
@@ -29,14 +35,20 @@ class DataProcessor:
         self.endTime = 0
         self.processorStats = {}
         self.statsNeedsUpdate = True
+        self.pvaServer = None
 
     def start(self):
+        if self.outputChannel:
+            self.pvaServer = pva.PvaServer()
+            self.pvaServer.start()
         self.startTime = time.time()
 
     def stop(self):
         now = time.time()
         self.endTime = now
         self.processorStats = self.updateStats(now)
+        if self.outputChannel:
+            self.pvaServer.stop()
 
     def getStats(self):
         if self.statsNeedsUpdate:
@@ -73,11 +85,19 @@ class DataProcessor:
         }
         return processorStats
 
+    def updateOutputChannel(self, pvObject):
+        if not self.pvaServer:
+            return 
+        self.pvaServer.update(pvObject)
+
     def process(self, pvObject):
         now = time.time()
         objectId = pvObject[self.objectIdField]
         if self.lastObjectId is None: 
             self.lastObjectId = objectId
+            if self.outputChannel:
+                self.pvaServer.addRecord(self.outputChannel, pvObject.copy())
+                self.logger.debug(f'Added output channel {self.outputChannel}')
             if not self.processFirstUpdate:
                 return None
         if self.firstObjectId is None:

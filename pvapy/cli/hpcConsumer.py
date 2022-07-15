@@ -39,6 +39,7 @@ class ConsumerController:
         if args.processor_file and args.processor_class:
             # Create config dict
             processorConfig = {}
+            processorConfig['inputChannel'] = args.channel_name
             if args.processor_args:
                 processorConfig = json.loads(args.processor_args)
             if not 'processorId' in processorConfig:
@@ -49,10 +50,15 @@ class ConsumerController:
                 processorConfig['objectIdField'] = args.processor_oid_field
             if not 'objectIdOffset' in processorConfig:
                 processorConfig['objectIdOffset'] = args.processor_oid_offset
+            if not 'outputChannel' in processorConfig:
+                processorConfig['outputChannel'] = args.processor_output_channel
 
             self.logger.debug(f'Using processor configuration: {processorConfig}')
             dataProcessor = ObjectUtility.createObjectInstanceFromFile(args.processor_file, 'dataProcessor', args.processor_class, processorConfig)
-            self.logger.debug(f'Created data processor {processorId}')
+            if dataProcessor is not None:
+                self.logger.debug(f'Created data processor {processorId}: {dataProcessor}')
+            else: 
+                raise pva.InvalidArgument(f'Could not create data processor instance of class {args.processor_class} from file {args.processor_file}')
         return dataProcessor
             
     def createConsumer(self, consumerId, processorId, args):
@@ -79,7 +85,7 @@ class ConsumerController:
         report = self.formatConsumerStats(consumerId, statsDict)
         if self.screen:
             self.screen.erase()
-            self.screen.addstr(f'{report}\n')
+            self.screen.addstr(report)
             self.screen.refresh()
         else:
             print(report)
@@ -97,7 +103,8 @@ class ConsumerController:
             else:
                 report += '  {}'.format(self._formatDictEntry(k,v))
             report += '\n'
-        return report
+        # Remove last new line
+        return report[0:-1] 
 
     def _formatDictEntry(self, k, v):
         if k.endswith('ime'):
@@ -158,7 +165,7 @@ class MultiprocessConsumerController(ConsumerController):
             report += self.formatConsumerStats(consumerId, statsDict)
         if self.screen:
             self.screen.erase()
-            self.screen.addstr('{}\n'.format(report))
+            self.screen.addstr(report)
             self.screen.refresh()
         else:
             print(report)
@@ -240,7 +247,7 @@ def mpController(consumerId, processId, requestQueue, responseQueue, args):
 def main():
     parser = argparse.ArgumentParser(description='PvaPy HPC Consumer utility. It can be used for receiving and processing data using specified implementation of the data processor interface.')
     parser.add_argument('-v', '--version', action='version', version='%(prog)s {version}'.format(version=__version__))
-    parser.add_argument('-cn', '--channel-name', dest='channel_name', required=True, help='PV channel name.')
+    parser.add_argument('-cn', '--channel-name', dest='channel_name', required=True, help='Input PV channel name.')
     parser.add_argument('-cpt', '--channel-provider-type', dest='channel_provider_type', default='pva', help='PV channel provider type, it must be either "pva" or "ca" (default: pva).')
     parser.add_argument('-sqs', '--server-queue-size', type=int, dest='server_queue_size', default=0, help='Server queue size (default: 0); this setting will increase memory usage on the server side, but may help prevent missed PV updates.')
     parser.add_argument('-cqs', '--consumer-queue-size', type=int, dest='consumer_queue_size', default=-1, help='Consumer queue size (default: -1); if >= 0, PvObjectQueue will be used for receving PV updates (value of zero indicates infinite queue size).')
@@ -250,6 +257,7 @@ def main():
     parser.add_argument('-poo', '--processor-oid-offset', type=int, dest='processor_oid_offset', default=1, help='This parameter determines by how much object id should change between the two PV updates, and is used for determining the number of missed PV updates (default: 1). This parameter is ignored if processor args dictionary contains "objectIdOffset" key, and should be modified only if data distributor plugin will be distributing data between multiple clients, and should be set to "(<nConsumers>-1)*<nUpdates>" for a single client set, or to "(<nSets>-1)*<nUpdates>" for multiple client sets.')
     parser.add_argument('-pof', '--processor-oid-field', dest='processor_oid_field', default='uniqueId', help='PV update id field used for calculating data processor statistics (default: uniqueId). This parameter is ignored if processor args dictionary contains "objectIdField" key.')
     parser.add_argument('-pfu', '--process-first-update', dest='process_first_update', default=False, action='store_true', help='Process first PV update (default: False). This parameter is ignored if processor args dictionary contains "processFirstUpdate" key.')
+    parser.add_argument('-poc', '--processor-output-channel', dest='processor_output_channel', default='', help='PVA channel that will be created for publishing processing results (default: ""). This parameter is ignored if processor args dictionary contains "outputChannel" key. If left empty, output channel will not be created. The value of "_" indicates that output channel name will be set to "<input channel>:processor:<processor id>".')
     parser.add_argument('-np', '--n-processors', type=int, dest='n_processors', default=1, help='Number of data processors to instantiate (default: 1). If > 1, multiprocessing module will be used for receiving and processing data in separate processes.')
     parser.add_argument('-dg', '--distributor-group', dest='distributor_group', default=None, help='Distributor client group that application belongs to (default: None). This parameter should be used only if data distributor plugin will be distributing data between multiple clients. Note that different distributor groups are completely independent of each other.')
     parser.add_argument('-ds', '--distributor-set', dest='distributor_set', default=None, help='Distributor client set that application belongs to within its group (default: None). This parameter should be used only if data distributor plugin will be distributing data between multiple clients. Note that all clients belonging to the same set receive the same PV updates. If set id is not specified (i.e., if a group does not have multiple sets of clients), a PV update will be distributed to only one client.')
