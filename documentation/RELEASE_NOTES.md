@@ -1,13 +1,16 @@
 ## Release 5.0.0 (2022/MM/DD)
 
-- mirror server enhancements:
+- PvaMirrorServer enhancements:
   - optimized structure copy on processing
   - added ability to specify source server queue size
   - added ability to retrieve mirror record statistics
-- channel enhancements:
+- Channel enhancements:
   - added monitoring methods that push PV updates into the
     PvObject queue and allow python processing to be done elsewhere
   - added ability to retrieve channel monitor statistics
+- PvTimeStamp enhancements:
+  - added constructor from and conversion to float
+  - added python properties for all fields
 - updated structure IDs for NtTable and NtAttribute fields
 - new area detector simulator features:
   - option to generate frames with different data types and in the specified 

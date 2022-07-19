@@ -17,20 +17,28 @@ class_<PvTimeStamp, bases<PvObject> >("PvTimeStamp",
     "**PvTimeStamp()**\n\n"
     "\t::\n\n"
     "\t\ttimestamp1 = PvTimeStamp()\n\n"
+    "**PvTimeStamp(time)**\n\n"
+    "\t:Parameter: *time* (float) - time represented as float, including seconds and fractional seconds\n\n"
+    "\t::\n\n"
+    "\t\ttimeStamp2 = PvTimeStamp(1234567890.00123)\n\n"
     "**PvTimeStamp(secondsPastEpoch, nanoseconds [, userTag=-1])**\n\n"
     "\t:Parameter: *secondsPastEpoch* (long) - seconds past epoch\n\n"
     "\t:Parameter: *nanoseconds* (int) - nanoseconds\n\n"
     "\t:Parameter: *userTag* (int) - user tag\n\n"
     "\t::\n\n"
-    "\t\ttimeStamp2 = PvTimeStamp(1234567890, 10000)\n\n"
-    "\t\ttimeStamp3 = PvTimeStamp(1234567890, 10000, 1)\n\n", 
+    "\t\ttimeStamp3 = PvTimeStamp(1234567890, 10000)\n\n"
+    "\t\ttimeStamp4 = PvTimeStamp(1234567890, 10000, 1)\n\n", 
     init<>())
+
+    .def(init<double>())
 
     .def(init<long long, int>())
 
     .def(init<long long, int, int>())
 
     .def(init<const PvObject&>())
+
+    .def("__float__", &PvTimeStamp::operator double)
 
     .def("getSecondsPastEpoch", 
         &PvTimeStamp::getSecondsPastEpoch, 
@@ -47,6 +55,8 @@ class_<PvTimeStamp, bases<PvObject> >("PvTimeStamp",
         "::\n\n"
         "    timeStamp.setSecondsPastEpoch(1234567890)\n\n")
 
+    .add_property("secondsPastEpoch", &PvTimeStamp::getSecondsPastEpoch, &PvTimeStamp::setSecondsPastEpoch)
+
     .def("getNanoseconds", 
         &PvTimeStamp::getNanoseconds, 
         "Retrieves time stamp value for nanoseconds.\n\n"
@@ -62,6 +72,8 @@ class_<PvTimeStamp, bases<PvObject> >("PvTimeStamp",
         "::\n\n"
         "    timeStamp.setNanoseconds(10000)\n\n")
 
+    .add_property("nanoseconds", &PvTimeStamp::getNanoseconds, &PvTimeStamp::setNanoseconds)
+
     .def("getUserTag", 
         &PvTimeStamp::getUserTag, 
         "Retrieves user tag.\n\n"
@@ -76,6 +88,8 @@ class_<PvTimeStamp, bases<PvObject> >("PvTimeStamp",
         ":Parameter: *userTag* (int) - user tag\n\n"
         "::\n\n"
         "    timeStamp.setUserTag(1)\n\n")
+
+    .add_property("userTag", &PvTimeStamp::getUserTag, &PvTimeStamp::setUserTag)
 ;
 
 } // wrapPvTimeStamp()

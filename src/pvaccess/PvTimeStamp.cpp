@@ -4,6 +4,7 @@
 #include "PvTimeStamp.h"
 #include "PvType.h"
 
+const double PvTimeStamp::NanosecondsInSecond(1000000000.0);
 const char* PvTimeStamp::StructureId("time_t");
 
 const char* PvTimeStamp::SecondsPastEpochFieldKey("secondsPastEpoch");
@@ -27,6 +28,16 @@ PvTimeStamp::PvTimeStamp()
 {
     setSecondsPastEpoch(0);
     setNanoseconds(0);
+    setUserTag(UnknownUserTag);
+}
+
+PvTimeStamp::PvTimeStamp(double time)
+    : PvObject(createStructureDict(), StructureId)
+{
+    long long secondsPastEpoch(time);
+    int nanoseconds((time-secondsPastEpoch)*NanosecondsInSecond);
+    setSecondsPastEpoch(secondsPastEpoch);
+    setNanoseconds(nanoseconds);
     setUserTag(UnknownUserTag);
 }
 
@@ -63,6 +74,13 @@ PvTimeStamp::PvTimeStamp(const epics::pvData::PVStructurePtr& pvStructurePtr)
 
 PvTimeStamp::~PvTimeStamp()
 {
+}
+
+PvTimeStamp::operator double() const 
+{
+    long long s = pvStructurePtr->getSubField<epics::pvData::PVLong>(SecondsPastEpochFieldKey)->get();
+    int ns = pvStructurePtr->getSubField<epics::pvData::PVInt>(NanosecondsFieldKey)->get();
+    return (s+ns/NanosecondsInSecond);
 }
 
 void PvTimeStamp::setSecondsPastEpoch(long long secondsPastEpoch)
