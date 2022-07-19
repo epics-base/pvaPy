@@ -19,6 +19,40 @@ STOP_COMMAND = 'stop'
 
 class ConsumerController:
 
+    CONSUMER_STATUS_TYPE_DICT = {
+        'consumerId' : pva.UINT,
+        'objectTime' : pva.DOUBLE,
+        'objectTimestamp' : pva.PvTimeStamp(),
+        'monitorStats' : {
+            'nReceived' : pva.UINT,
+            'receivedRate' : pva.DOUBLE,
+            'nOverruns' : pva.UINT, 
+            'overrunRate' : pva.DOUBLE
+        },
+        'queueStats' : {
+            'nReceived' : pva.UINT,
+            'nRejected' : pva.UINT,
+            'nDelivered' : pva.UINT,
+            'nQueued' : pva.UINT
+        },
+        'processorStats' : {
+            'runtime' : pva.DOUBLE,
+            'startTime' : pva.DOUBLE,
+            'endTime' : pva.DOUBLE,
+            'receivingTime' : pva.DOUBLE,
+            'firstObjectTime' : pva.DOUBLE, 
+            'lastObjectTime' : pva.DOUBLE,
+            'firstObjectId' : pva.UINT,
+            'lastObjectId' : pva.UINT,
+            'nProcessed' : pva.UINT,
+            'processedRate' : pva.DOUBLE,
+            'nErrors' : pva.UINT,
+            'errorRate' : pva.DOUBLE,
+            'nMissed' : pva.UINT, 
+            'missedRate' : pva.DOUBLE
+        }
+    }
+
     def __init__(self, args):
         self.screen = None
         if args.log_level:
@@ -50,7 +84,7 @@ class ConsumerController:
        
         outputChannel =  args.processor_output_channel
         if outputChannel == '_':
-            outputChannel = f'{args.channel_name}:processor'
+            outputChannel = f'{args.input_channel}:processor'
             if args.distributor_group:
                 outputChannel += f':{args.distributor_group}'
             if args.distributor_set:
@@ -61,7 +95,7 @@ class ConsumerController:
         if args.processor_file and args.processor_class:
             # Create config dict
             processorConfig = {}
-            processorConfig['inputChannel'] = args.channel_name
+            processorConfig['inputChannel'] = args.input_channel
             if args.processor_args:
                 processorConfig = json.loads(args.processor_args)
             if not 'processorId' in processorConfig:
@@ -92,7 +126,7 @@ class ConsumerController:
             pvObjectQueue = pva.PvObjectQueue(args.consumer_queue_size)
             self.usingPvObjectQueue = True
 
-        self.dataConsumer = DataConsumer(consumerId, args.channel_name, providerType=args.channel_provider_type, serverQueueSize=args.server_queue_size, distributorPluginName=args.distributor_plugin_name, distributorGroupId=args.distributor_group, distributorSetId=args.distributor_set, distributorTriggerFieldName=args.distributor_trigger, distributorUpdates=args.distributor_updates, distributorUpdateMode=None, pvObjectQueue=pvObjectQueue, dataProcessor=dataProcessor)
+        self.dataConsumer = DataConsumer(consumerId, args.input_channel, providerType=args.input_provider_type, serverQueueSize=args.server_queue_size, distributorPluginName=args.distributor_plugin_name, distributorGroupId=args.distributor_group, distributorSetId=args.distributor_set, distributorTriggerFieldName=args.distributor_trigger, distributorUpdates=args.distributor_updates, distributorUpdateMode=None, pvObjectQueue=pvObjectQueue, dataProcessor=dataProcessor)
         return self.dataConsumer
 
     def startConsumers(self):
@@ -202,15 +236,18 @@ class MultiprocessConsumerController(ConsumerController):
     def getConsumerStats(self):
         for i in range(1, self.args.n_processors+1):
             requestQueue = self.requestQueueMap[i]
-            requestQueue.put(GET_STATS_COMMAND)
+            try:
+                requestQueue.put(GET_STATS_COMMAND, block=True, timeout=WAIT_TIME)
+            except Exception as ex:
+                self.logger.error(f'Cannot request stats from consumer process {i}: {ex}')
         statsDict = {}
         for i in range(1, self.args.n_processors+1):
             statsDict[i] = {}
             try:
                 responseQueue = self.responseQueueMap[i]
-                statsDict[i] = responseQueue.get(WAIT_TIME)
+                statsDict[i] = responseQueue.get(block=True, timeout=WAIT_TIME)
             except queue.Empty:
-                self.logger.warn(f'No stats received from consumer process {i}')
+                self.logger.error(f'No stats received from consumer process {i}')
         return statsDict
 
     def processPvUpdate(self, updateWaitTime):
@@ -219,15 +256,18 @@ class MultiprocessConsumerController(ConsumerController):
     def stopConsumers(self):
         for i in range(1, self.args.n_processors+1):
             requestQueue = self.requestQueueMap[i]
-            requestQueue.put(STOP_COMMAND)
+            try:
+                requestQueue.put(STOP_COMMAND, block=True, timeout=WAIT_TIME)
+            except Exception as ex:
+                self.logger.error(f'Cannot stop consumer process {i}: {ex}')
         statsDict = {}
         for i in range(1, self.args.n_processors+1):
             statsDict[i] = {}
             try:
                 responseQueue = self.responseQueueMap[i]
-                statsDict[i] = responseQueue.get(WAIT_TIME)
+                statsDict[i] = responseQueue.get(block=True, timeout=WAIT_TIME)
             except queue.Empty:
-                self.logger.warn(f'No stats received from consumer process {i}')
+                self.logger.error(f'No stats received from consumer process {i}')
         for i in range(1, self.args.n_processors+1):
             mpProcess = self.mpProcessMap[i]
             mpProcess.join()
@@ -249,13 +289,17 @@ def mpController(consumerId, processId, requestQueue, responseQueue, args):
             now = time.time()
             wakeTime = now+waitTime
             try:
-                request = requestQueue.get()
+                request = requestQueue.get(block=False)
                 logger.debug(f'Received request: {request}')
                 if request == STOP_COMMAND:
                     break
                 elif request == GET_STATS_COMMAND:
                     statsDict = controller.getConsumerStats()
                     responseQueue.put(statsDict)
+                    try:
+                        responseQueue.put(statsDict, block=False)
+                    except Exception as ex:
+                        logger.error(f'Consumer {consumerId} cannot report stats: {ex}')
             except queue.Empty:
                 pass
 
@@ -266,18 +310,24 @@ def mpController(consumerId, processId, requestQueue, responseQueue, args):
                 if delay > 0:
                     time.sleep(delay)
         except Exception as ex:
+            logger.error(f'Processing error: {ex}')
             break
 
     dataConsumer.stop()
     statsDict = controller.getConsumerStats()
-    responseQueue.put(statsDict)
+    try:
+        responseQueue.put(statsDict, block=True, timeout=WAIT_TIME)
+    except Exception as ex:
+        logger.error(f'Consumer {consumerId} cannot report stats on exit: {ex}')
     time.sleep(WAIT_TIME)
 
 def main():
     parser = argparse.ArgumentParser(description='PvaPy HPC Consumer utility. It can be used for receiving and processing data using specified implementation of the data processor interface.')
     parser.add_argument('-v', '--version', action='version', version='%(prog)s {version}'.format(version=__version__))
-    parser.add_argument('-cn', '--channel-name', dest='channel_name', required=True, help='Input PV channel name.')
-    parser.add_argument('-cpt', '--channel-provider-type', dest='channel_provider_type', default='pva', help='PV channel provider type, it must be either "pva" or "ca" (default: pva).')
+    parser.add_argument('-ic', '--input-channel', dest='input_channel', required=True, help='Input PV channel name.')
+    parser.add_argument('-ipt', '--input-provider-type', dest='input_provider_type', default='pva', help='Input PV channel provider type, it must be either "pva" or "ca" (default: pva).')
+    parser.add_argument('-sc', '--status-channel', dest='status_channel', default=None, help='Status channel name (default: None). If specified, this channel will provide consumer status.')
+    parser.add_argument('-cc', '--control-channel', dest='control_channel', default=None, help='Control channel name (default: None). If specified, this channel can be used to control consumer configuration and processing.')
     parser.add_argument('-sqs', '--server-queue-size', type=int, dest='server_queue_size', default=0, help='Server queue size (default: 0); this setting will increase memory usage on the server side, but may help prevent missed PV updates.')
     parser.add_argument('-cqs', '--consumer-queue-size', type=int, dest='consumer_queue_size', default=-1, help='Consumer queue size (default: -1); if >= 0, PvObjectQueue will be used for receving PV updates (value of zero indicates infinite queue size).')
     parser.add_argument('-pf', '--processor-file', dest='processor_file', default=None, help='Full path to the python file containing processor class.')
