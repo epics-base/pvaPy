@@ -8,12 +8,12 @@ class DataConsumer:
 
     PROVIDER_TYPE_MAP = { 'pva' : pva.PVA, 'ca' : pva.CA }
 
-    def __init__(self, consumerId, channelName, providerType=pva.PVA, serverQueueSize=0, distributorPluginName='pydistributor', distributorGroupId=None, distributorSetId=None, distributorTriggerFieldName=None, distributorUpdates=None, distributorUpdateMode=None, pvObjectQueue=None, dataProcessor=None):
+    def __init__(self, consumerId, inputChannel, providerType=pva.PVA, serverQueueSize=0, distributorPluginName='pydistributor', distributorGroupId=None, distributorSetId=None, distributorTriggerFieldName=None, distributorUpdates=None, distributorUpdateMode=None, pvObjectQueue=None, dataProcessor=None):
         self.logger = LoggingManager.getLogger('consumer-{}'.format(consumerId))
         self.consumerId = consumerId
         providerType = self.PROVIDER_TYPE_MAP.get(providerType.lower(), pva.PVA)
-        self.logger.debug(f'Channel {channelName} provider type: {providerType}')
-        self.channel = pva.Channel(channelName, providerType)
+        self.logger.debug(f'Channel {inputChannel} provider type: {providerType}')
+        self.channel = pva.Channel(inputChannel, providerType)
         self.serverQueueSize = serverQueueSize
         self.logger.debug(f'Server queue size: {serverQueueSize}')
         self.distributorPluginName = distributorPluginName
@@ -68,7 +68,10 @@ class DataConsumer:
     def process(self, pv):
         try:
             if self.dataProcessor:
-                self.dataProcessor.process(pv)
+                # Data processor will call process() method
+                # of the derived class. In this way we can
+                # track processing errors.
+                self.dataProcessor.processPvObject(pv)
         except Exception as ex:
             self.logger.error(f'Processing error: {ex}')
 
@@ -100,13 +103,17 @@ class DataConsumer:
     def getStats(self):
         monitorStats = self.getMonitorStats()
         queueStats = self.getQueueStats()
+        nOverruns = monitorStats.get('nOverruns', 0)
         processorStats = self.getProcessorStats()
         receivedRate = 0
+        overrunRate = 0
         receivingTime = processorStats.get('receivingTime', 0)
         nReceived = monitorStats.get('nReceived', 0)-self.nReceivedOffset
         if receivingTime > 0 and nReceived >= 0:
             receivedRate = nReceived/receivingTime
+            overrunRate = nOverruns/receivingTime
         monitorStats['receivedRate'] = receivedRate
+        monitorStats['overrunRate'] = overrunRate
         return {'monitorStats' : monitorStats, 'queueStats' : queueStats, 'processorStats' : processorStats}
 
     def getConsumerId(self):
