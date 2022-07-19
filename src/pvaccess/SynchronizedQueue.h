@@ -11,6 +11,7 @@
 #include <pv/pvData.h>
 #include "QueueEmpty.h"
 #include "QueueFull.h"
+#include "PvaPyConstants.h"
 
 template <class T>
 class SynchronizedQueue : public std::queue<T>
@@ -19,9 +20,6 @@ public:
     POINTER_DEFINITIONS(SynchronizedQueue<T>);
 
     static const int Unlimited = -1;
-    static const char* NumReceivedCounterKey;
-    static const char* NumRejectedCounterKey;
-    static const char* NumDeliveredCounterKey;
 
     SynchronizedQueue(int maxLength=Unlimited);
     SynchronizedQueue(const SynchronizedQueue& q);
@@ -73,13 +71,6 @@ private:
     unsigned int nRejected;
     unsigned int nDelivered;
 };
-
-template <class T>
-const char* SynchronizedQueue<T>::NumReceivedCounterKey("nReceived");
-template <class T>
-const char* SynchronizedQueue<T>::NumRejectedCounterKey("nRejected");
-template <class T>
-const char* SynchronizedQueue<T>::NumDeliveredCounterKey("nDelivered");
 
 template <class T>
 SynchronizedQueue<T>::SynchronizedQueue(int maxLength_) 
@@ -395,9 +386,10 @@ template <class T>
 const std::map<std::string,unsigned int>& SynchronizedQueue<T>::getCounterMap()
 {
     epics::pvData::Lock lock(mutex);
-    counterMap[NumReceivedCounterKey] = nReceived;
-    counterMap[NumRejectedCounterKey] = nRejected;
-    counterMap[NumDeliveredCounterKey] = nDelivered;
+    counterMap[PvaPyConstants::NumReceivedCounterKey] = nReceived;
+    counterMap[PvaPyConstants::NumRejectedCounterKey] = nRejected;
+    counterMap[PvaPyConstants::NumDeliveredCounterKey] = nDelivered;
+    counterMap[PvaPyConstants::NumQueuedCounterKey] = std::queue<T>::size();
     return counterMap;
 }
 

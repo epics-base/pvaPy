@@ -6,4 +6,5 @@
 const char* PvaPyConstants::NumReceivedCounterKey("nReceived");
 const char* PvaPyConstants::NumRejectedCounterKey("nRejected");
 const char* PvaPyConstants::NumDeliveredCounterKey("nDelivered");
+const char* PvaPyConstants::NumQueuedCounterKey("nQueued");
 const char* PvaPyConstants::NumOverrunsCounterKey("nOverruns");

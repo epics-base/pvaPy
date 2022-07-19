@@ -12,6 +12,7 @@ public:
     static const char* NumReceivedCounterKey;
     static const char* NumRejectedCounterKey;
     static const char* NumDeliveredCounterKey;
+    static const char* NumQueuedCounterKey;
     static const char* NumOverrunsCounterKey;
 }; 
 
