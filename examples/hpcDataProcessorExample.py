@@ -20,6 +20,9 @@ class HpcDataProcessor(DataProcessor):
     def updateStats(self, t=0):
         return DataProcessor.updateStats(self, t)
 
+    def updateOutputChannel(self, pvObject):
+        DataProcessor.updateOutputChannel(self, pvObject)
+
     def process(self, pvObject):
         return DataProcessor.process(self, pvObject)
 

@@ -27,6 +27,7 @@ class DataProcessor:
             self.outputChannel = f'{self.inputChannel}:processor-{self.processorId}'
         self.nProcessed = 0
         self.nMissed = 0
+        self.nErrors = 0
         self.firstObjectId = None
         self.lastObjectId = None
         self.startTime = time.time()
@@ -66,9 +67,11 @@ class DataProcessor:
         receivingTime = self.lastObjectTime-self.firstObjectTime
         processedRate = 0
         missedRate = 0
+        errorRate = 0
         if receivingTime > 0:
             processedRate = self.nProcessed/receivingTime
             missedRate = self.nMissed/receivingTime
+            errorRate = self.nErrors/receivingTime
         processorStats = {
             'runtime' : runtime, 
             'startTime' : self.startTime, 
@@ -82,6 +85,8 @@ class DataProcessor:
             'processedRate' : processedRate,
             'nMissed' : self.nMissed, 
             'missedRate' : missedRate,
+            'nErrors' : self.nErrors, 
+            'errorRate' : errorRate,
         }
         return processorStats
 
@@ -91,6 +96,9 @@ class DataProcessor:
         self.pvaServer.update(pvObject)
 
     def process(self, pvObject):
+        return pvObject
+
+    def processPvObject(self, pvObject):
         now = time.time()
         objectId = pvObject[self.objectIdField]
         if self.lastObjectId is None: 
@@ -104,11 +112,16 @@ class DataProcessor:
             self.firstObjectId = objectId
             self.firstObjectTime = now
             self.lastObjectId = objectId
-        self.nProcessed += 1
         nMissed = objectId-self.lastObjectId-self.objectIdOffset
         if nMissed > 0:
             self.nMissed += nMissed
         self.lastObjectId = objectId
         self.lastObjectTime = now
         self.statsNeedsUpdate = True
-        return pvObject
+        try:
+            pvObject2 = self.process(pvObject)
+            self.nProcessed += 1
+            return pvObject2
+        except Exception as ex:
+            self.nErrors += 1
+            raise

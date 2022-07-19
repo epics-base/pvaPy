@@ -11,10 +11,6 @@ class HpcAdImageProcessor(AdImageProcessor):
         self.logger.debug('Created HpcAdImageProcessor')
 
     def process(self, pvObject):
-        pvObject2 = AdImageProcessor.process(self, pvObject)
-        if not pvObject2:
-            # Update was rejected by the base class
-            return None
         frameId = pvObject['uniqueId']
         (image,nx,ny,nz,colorMode,fieldKey) = self.reshapeFrame(pvObject)
         self.logger.debug(f'Data sum: {image.sum()} (frame id: {frameId})')
@@ -24,4 +20,6 @@ class HpcAdImageProcessor(AdImageProcessor):
         u2 = pva.PvObject({fieldKey : fieldDataType}, {fieldKey : image2})
         outputFrame.setUnion(u2)
         self.updateOutputChannel(outputFrame)
+        if frameId/2 == int(frameId/2):
+            raise Exception('Jebbbb...')
         return outputFrame
