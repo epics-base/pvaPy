@@ -23,6 +23,4 @@ class HpcAdImageProcessor(AdImageProcessor):
         u2 = pva.PvObject({fieldKey : fieldDataType}, {fieldKey : image2})
         outputFrame.setUnion(u2)
         self.updateOutputChannel(outputFrame)
-        if frameId/2 == int(frameId/2):
-            raise Exception('Jebbbb...')
         return outputFrame
