@@ -25,6 +25,83 @@ class DataProcessor:
         self.outputChannel = configDict.get('outputChannel', '')
         if self.outputChannel == '_':
             self.outputChannel = f'{self.inputChannel}:processor-{self.processorId}'
+        self.outputRecordAdded = False
+        self.pvaServer = None
+
+        # Defines all counters and sets them to zero
+        self.resetStats()
+
+    # Interface method called at startup
+    def start(self):
+        pass
+
+    def _start(self):
+        if self.outputChannel:
+            self.pvaServer = pva.PvaServer()
+            self.pvaServer.start()
+        self.startTime = time.time()
+        self.start()
+
+    # Interface method called at shutdown
+    def stop(self):
+        pass
+
+    def _stop(self):
+        now = time.time()
+        self.endTime = now
+        self.processorStats = self.updateStats(now)
+        if self.outputChannel:
+            self.pvaServer.stop()
+        self.stop()
+
+    # Interface method called at configuration
+    def configure(self, kwargs):
+        pass
+
+    def _configure(self, kwargs):
+        if type(kwargs) == dict:
+            if 'processFirstUpdate' in kwargs: 
+                self.processFirstUpdate = kwargs.get('processFirstUpdate')
+                self.logger.debug(f'Resetting processing of first update to {self.processFirstUpdate}')
+            if 'objectIdOffset' in kwargs: 
+                self.objectIdOffset = int(configDict.get('objectIdOffset', 1))
+                self.logger.debug(f'Resetting object id offset to {self.objectIdOffset}')
+        self.configure(kwargs)
+
+    # Interface method called at processing channel updates
+    def process(self, pvObject):
+        return pvObject
+
+    def _process(self, pvObject):
+        now = time.time()
+        objectId = pvObject[self.objectIdField]
+        if self.lastObjectId is None: 
+            self.lastObjectId = objectId
+            if self.outputChannel and not self.outputRecordAdded:
+                self.outputRecordAdded = True
+                self.pvaServer.addRecord(self.outputChannel, pvObject.copy())
+                self.logger.debug(f'Added output channel {self.outputChannel}')
+            if not self.processFirstUpdate:
+                return None
+        if self.firstObjectId is None:
+            self.firstObjectId = objectId
+            self.firstObjectTime = now
+            self.lastObjectId = objectId
+        nMissed = objectId-self.lastObjectId-self.objectIdOffset
+        if nMissed > 0:
+            self.nMissed += nMissed
+        self.lastObjectId = objectId
+        self.lastObjectTime = now
+        self.statsNeedsUpdate = True
+        try:
+            pvObject2 = self.process(pvObject)
+            self.nProcessed += 1
+            return pvObject2
+        except Exception as ex:
+            self.nErrors += 1
+            raise
+
+    def resetStats(self):
         self.nProcessed = 0
         self.nMissed = 0
         self.nErrors = 0
@@ -36,20 +113,6 @@ class DataProcessor:
         self.endTime = 0
         self.processorStats = {}
         self.statsNeedsUpdate = True
-        self.pvaServer = None
-
-    def start(self):
-        if self.outputChannel:
-            self.pvaServer = pva.PvaServer()
-            self.pvaServer.start()
-        self.startTime = time.time()
-
-    def stop(self):
-        now = time.time()
-        self.endTime = now
-        self.processorStats = self.updateStats(now)
-        if self.outputChannel:
-            self.pvaServer.stop()
 
     def getStats(self):
         if self.statsNeedsUpdate:
@@ -95,33 +158,3 @@ class DataProcessor:
             return 
         self.pvaServer.update(pvObject)
 
-    def process(self, pvObject):
-        return pvObject
-
-    def processPvObject(self, pvObject):
-        now = time.time()
-        objectId = pvObject[self.objectIdField]
-        if self.lastObjectId is None: 
-            self.lastObjectId = objectId
-            if self.outputChannel:
-                self.pvaServer.addRecord(self.outputChannel, pvObject.copy())
-                self.logger.debug(f'Added output channel {self.outputChannel}')
-            if not self.processFirstUpdate:
-                return None
-        if self.firstObjectId is None:
-            self.firstObjectId = objectId
-            self.firstObjectTime = now
-            self.lastObjectId = objectId
-        nMissed = objectId-self.lastObjectId-self.objectIdOffset
-        if nMissed > 0:
-            self.nMissed += nMissed
-        self.lastObjectId = objectId
-        self.lastObjectTime = now
-        self.statsNeedsUpdate = True
-        try:
-            pvObject2 = self.process(pvObject)
-            self.nProcessed += 1
-            return pvObject2
-        except Exception as ex:
-            self.nErrors += 1
-            raise

@@ -2,6 +2,7 @@
 
 import curses
 import argparse
+import threading
 import time
 import json
 import queue
@@ -15,11 +16,23 @@ __version__ = pva.__version__
 
 WAIT_TIME = 1.0
 MIN_STATUS_UPDATE_PERIOD = 10.0
+COMMAND_EXEC_DELAY = 0.1
 
 GET_STATS_COMMAND = 'get_stats'
+RESET_STATS_COMMAND = 'reset_stats'
+CONFIGURE_COMMAND = 'configure'
 STOP_COMMAND = 'stop'
 
 class ConsumerController:
+
+    CONSUMER_CONTROL_TYPE_DICT = {
+        'consumerId' : pva.UINT,
+        'objectTime' : pva.DOUBLE,
+        'objectTimestamp' : pva.PvTimeStamp(),
+        'command' : pva.STRING,
+        'kwargs' : pva.STRING,
+        'statusMessage' : pva.STRING
+    }
 
     CONSUMER_STATUS_TYPE_DICT = {
         'consumerId' : pva.UINT,
@@ -69,6 +82,76 @@ class ConsumerController:
 
         self.logger = LoggingManager.getLogger(self.__class__.__name__)
         self.args = args
+        self.isDone = False
+
+    def controlCallback(self, pv):
+        t = time.time()
+        if 'command' not in pv:
+            statusMessage = f'Ignoring invalid request (no command specified): {pv}'
+            self.logger.warning(statusMessage)
+            self.controlPvObject.set({'statusMessage' : statusMessage, 'objectTime' : t, 'objectTimestamp' : pva.PvTimeStamp(t)})
+            return
+        command = pv['command']
+        self.logger.debug(f'Got command: {command}')
+        if command == RESET_STATS_COMMAND:
+            self.logger.info('Control channel: resetting consumer statistics')
+            cTimer = threading.Timer(COMMAND_EXEC_DELAY, self.controlResetStats)
+        elif command == GET_STATS_COMMAND:
+            self.logger.info('Control channel: getting consumer statistics')
+            cTimer = threading.Timer(COMMAND_EXEC_DELAY, self.controlGetStats)
+        elif command == CONFIGURE_COMMAND:
+            kwargs = ''
+            if 'kwargs' not in pv:
+                self.logger.debug('Empty keyword arguments string for the configure request')
+            else:
+                kwargs = pv['kwargs']
+            self.logger.info(f'Control channel: configuring consumer with kwargs: {kwargs}')
+            cTimer = threading.Timer(COMMAND_EXEC_DELAY, self.controlConfigure, args=[kwargs])
+        elif command == STOP_COMMAND:
+            self.logger.info(f'Control channel: stopping consumer')
+            cTimer = threading.Timer(COMMAND_EXEC_DELAY, self.controlStop)
+        else: 
+            statusMessage = f'Ignoring invalid request (unrecognized command specified): {pv}'
+            self.logger.warning(statusMessage)
+            self.controlPvObject.set({'statusMessage' : statusMessage, 'objectTime' : t, 'objectTimestamp' : pva.PvTimeStamp(t)})
+            return
+        statusMessage = 'Command successful'
+        self.controlPvObject.set({'statusMessage' : statusMessage, 'objectTime' : t, 'objectTimestamp' : pva.PvTimeStamp(t)})
+        cTimer.start()
+
+    def controlConfigure(self, kwargs):
+        self.logger.debug(f'Configuring consumer {self.dataConsumer.getConsumerId()} with kwargs: {kwargs}')
+        try:
+            kwargs = json.loads(kwargs)
+            self.logger.debug(f'Converted configuration kwargs string to JSON: {kwargs}')
+        except Exception as ex:
+            self.logger.debug(f'Cannot convert string {kwargs} from JSON: {ex}')
+        try:
+            self.dataConsumer.configure(kwargs)
+            statusMessage = 'Configuration successful'
+            self.logger.debug(statusMessage)
+        except Exception as ex:
+            statusMessage = f'Configuration failed: {ex}'
+            self.logger.warning(statusMessage)
+        self.controlPvObject['statusMessage'] = statusMessage
+
+    def controlResetStats(self):
+        self.logger.debug(f'Resetting stats for consumer {self.dataConsumer.getConsumerId()}')
+        self.dataConsumer.resetStats()
+        statusMessage = 'Stats reset successful'
+        self.controlPvObject['statusMessage'] = statusMessage
+
+    def controlGetStats(self):
+        self.logger.debug(f'Getting stats for consumer {self.dataConsumer.getConsumerId()}')
+        self.reportConsumerStats()
+        statusMessage = 'Stats update successful'
+        self.controlPvObject['statusMessage'] = statusMessage
+
+    def controlStop(self):
+        self.logger.debug(f'Stopping consumer {self.dataConsumer.getConsumerId()}')
+        self.isDone = True
+        statusMessage = 'Stop flag set'
+        self.controlPvObject['statusMessage'] = statusMessage
 
     def createProcessor(self, consumerId, args):
         dataProcessor = None
@@ -130,8 +213,22 @@ class ConsumerController:
             self.logger.debug(f'Determined consumer status channel name: {self.statusChannel}')
         if self.statusChannel:
             self.pvaServer = pva.PvaServer()
-            statusObject = pva.PvObject(self.CONSUMER_STATUS_TYPE_DICT, {'consumerId' : consumerId})
-            self.pvaServer.addRecord(self.statusChannel, statusObject)
+            statusPvObject = pva.PvObject(self.CONSUMER_STATUS_TYPE_DICT, {'consumerId' : consumerId})
+            self.pvaServer.addRecord(self.statusChannel, statusPvObject)
+            self.logger.debug(f'Created consumer status channel: {self.statusChannel}')
+
+        self.controlChannel = args.control_channel
+        if self.controlChannel == '_':
+            self.controlChannel = f'{args.input_channel}:consumer:{consumerId}:control'
+            self.logger.debug(f'Determined consumer control channel name: {self.controlChannel}')
+        if self.controlChannel:
+            if not self.pvaServer:
+                self.pvaServer = pva.PvaServer()
+            # Keep reference to the control object so we can
+            # update it
+            self.controlPvObject = pva.PvObject(self.CONSUMER_CONTROL_TYPE_DICT, {'consumerId' : consumerId})
+            self.pvaServer.addRecord(self.controlChannel, self.controlPvObject, self.controlCallback)
+            self.logger.debug(f'Created consumer control channel: {self.controlChannel}')
 
         self.dataConsumer = DataConsumer(consumerId, args.input_channel, providerType=args.input_provider_type, serverQueueSize=args.server_queue_size, distributorPluginName=args.distributor_plugin_name, distributorGroupId=args.distributor_group, distributorSetId=args.distributor_set, distributorTriggerFieldName=args.distributor_trigger, distributorUpdates=args.distributor_updates, distributorUpdateMode=None, pvObjectQueue=pvObjectQueue, dataProcessor=dataProcessor)
         return self.dataConsumer
@@ -352,7 +449,7 @@ def main():
     parser.add_argument('-ipt', '--input-provider-type', dest='input_provider_type', default='pva', help='Input PV channel provider type, it must be either "pva" or "ca" (default: pva).')
     parser.add_argument('-oc', '--output-channel', dest='output_channel', default=None, help='Output PVA channel name (default: None). If specified, this channel can be used for publishing processing results. The value of "_" indicates that the output channel name will be set to "<input channel>:consumer:<consumer id>:output". Note that this parameter is ignored if processor args dictionary contains "outputChannel" key.')
     parser.add_argument('-sc', '--status-channel', dest='status_channel', default=None, help='Status PVA channel name (default: None). If specified, this channel will provide consumer status. The value of "_" indicates that the status channel name will be set to "<input channel>:consumer:<consumer id>:status".')
-    parser.add_argument('-cc', '--control-channel', dest='control_channel', default=None, help='Control channel name (default: None). If specified, this channel can be used to control consumer configuration and processing. The value of "_" indicates that the control channel name will be set to "<input channel>:consumer:<consumer id>:control".')
+    parser.add_argument('-cc', '--control-channel', dest='control_channel', default=None, help='Control channel name (default: None). If specified, this channel can be used to control consumer configuration and processing. The value of "_" indicates that the control channel name will be set to "<input channel>:consumer:<consumer id>:control". The control channel object has two strings: command and kwargs. The only allowed values for the command string are: "configure", "reset_stats", "get_stats" and "stop". The configure command is used to allow for runtime configuration changes; in this case the keyword arguments string should be in json format to allow data consumer to convert it into python dictionary that contains new configuration. For example, sending configuration dictionary via pvput command might look like this: pvput input_channel:consumer:2:control \'{"command" : "configure", "kwargs" : "{\\"x\\":100}"}\'. Note that system parameters that can be modified at runtime are the following: "consumerQueueSize" (only if consumer queue has been configured at the start), "processFirstUpdate" (affects consumer behavior after resetting stats), and "objectIdOffset" (may be used to adjust offset if consumers have been added or removed from processing). The reset_stats command will cause consumer to reset it statistics data, the get_stats will force statistics data update, and the stop command will result in consumer process exiting; for all these commands kwargs string is not needed.')
     parser.add_argument('-sqs', '--server-queue-size', type=int, dest='server_queue_size', default=0, help='Server queue size (default: 0); this setting will increase memory usage on the server side, but may help prevent missed PV updates.')
     parser.add_argument('-cqs', '--consumer-queue-size', type=int, dest='consumer_queue_size', default=-1, help='Consumer queue size (default: -1); if >= 0, PvObjectQueue will be used for receving PV updates (value of zero indicates infinite queue size).')
     parser.add_argument('-pf', '--processor-file', dest='processor_file', default=None, help='Full path to the python file containing processor class.')
@@ -369,7 +466,7 @@ def main():
     parser.add_argument('-nds', '--n-distributor-sets', type=int, dest='n_distributor_sets', default=1, help='Number of distributor client sets (default: 1). This setting is used to determine appropriate value for the processor object id offset in case where multiple instances of this command are running separately for different client sets. If distributor client set is not specified, this setting is ignored.')
     parser.add_argument('-rt', '--runtime', type=float, dest='runtime', default=0, help='Server runtime in seconds; values <=0 indicate infinite runtime (default: infinite).')
     parser.add_argument('-rp', '--report-period', type=float, dest='report_period', default=0, help='Statistics report period for all consumers in seconds; values <=0 indicate no reporting (default: 0).')
-    parser.add_argument('-ll', '--log-level', dest='log_level', help='Log level; possible values: DEBUG, INFO, WARN, ERROR, CRITICAL. If not provided, there will be no log output.')
+    parser.add_argument('-ll', '--log-level', dest='log_level', help='Log level; possible values: DEBUG, INFO, WARNING, ERROR, CRITICAL. If not provided, there will be no log output.')
     parser.add_argument('-lf', '--log-file', dest='log_file', help='Log file.')
 
     args, unparsed = parser.parse_known_args()
@@ -390,6 +487,8 @@ def main():
         try:
             now = time.time()
             wakeTime = now+waitTime
+            if controller.isDone:
+                break
             if args.runtime > 0:
                 runtime = now - startTime
                 if runtime > args.runtime:
@@ -414,6 +513,8 @@ def main():
 
     statsDict = controller.stopConsumers()
     controller.reportConsumerStats(statsDict)
+    # Allow clients monitoring various channels to get last update
+    time.sleep(WAIT_TIME)
 
 if __name__ == '__main__':
     main()

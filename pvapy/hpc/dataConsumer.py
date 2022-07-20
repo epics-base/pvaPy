@@ -65,13 +65,26 @@ class DataConsumer:
             request = f'{recordStr}field({distributorStr})'
         return request
 
+    def configure(self, kwargs):
+        try:
+            if type(kwargs) == dict:
+                if 'consumerQueueSize' in kwargs:
+                    consumerQueueSize = int(kwargs.get('consumerQueueSize', 0))
+                    if self.pvObjectQueue is not None:
+                        self.logger.debug(f'Resetting PvObjectQueue size from {self.pvObjectQueue.maxLength} to {consumerQueueSize}')
+                    self.pvObjectQueue.maxLength = consumerQueueSize
+            if self.dataProcessor:
+                self.dataProcessor._configure(kwargs)
+        except Exception as ex:
+            self.logger.error(f'Configuration error: {ex}')
+
     def process(self, pv):
         try:
             if self.dataProcessor:
                 # Data processor will call process() method
                 # of the derived class. In this way we can
                 # track processing errors.
-                self.dataProcessor.processPvObject(pv)
+                self.dataProcessor._process(pv)
         except Exception as ex:
             self.logger.error(f'Processing error: {ex}')
 
@@ -86,6 +99,13 @@ class DataConsumer:
                 # Ignore empty queue
                 pass
         return False
+
+    def resetStats(self):
+        self.channel.resetMonitorCounters()
+        if self.pvObjectQueue is not None:
+            self.pvObjectQueue.resetCounters()
+        if self.dataProcessor:
+            self.dataProcessor.resetStats()
 
     def getMonitorStats(self):
         return self.channel.getMonitorCounters()
@@ -128,13 +148,19 @@ class DataConsumer:
         else:
             self.logger.debug('Starting process monitor')
             self.channel.monitor(self.process, request)
-        if self.dataProcessor:
-            self.dataProcessor.start()
+        try:
+            if self.dataProcessor:
+                self.dataProcessor._start()
+        except Exception as ex:
+            self.logger.error(f'Cannot start data processor: {ex}')
         self.startTime = time.time()
 
     def stop(self):
         self.channel.stopMonitor()
-        if self.dataProcessor:
-            self.dataProcessor.stop()
+        try:
+            if self.dataProcessor:
+                self.dataProcessor._stop()
+        except Exception as ex:
+            self.logger.error(f'Cannot stop data processor: {ex}')
         self.endTime = time.time()
 
