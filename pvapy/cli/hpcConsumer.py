@@ -14,6 +14,8 @@ from ..hpc.dataConsumer import DataConsumer
 __version__ = pva.__version__
 
 WAIT_TIME = 1.0
+MIN_STATUS_UPDATE_PERIOD = 10.0
+
 GET_STATS_COMMAND = 'get_stats'
 STOP_COMMAND = 'stop'
 
@@ -68,28 +70,23 @@ class ConsumerController:
         self.logger = LoggingManager.getLogger(self.__class__.__name__)
         self.args = args
 
-    def createProcessor(self, processorId, args):
+    def createProcessor(self, consumerId, args):
         dataProcessor = None
-        processorOidOffset = 1
-        if args.processor_oid_offset <= 0 and args.distributor_updates is not None:
+        oidOffset = 1
+        if args.oid_offset <= 0 and args.distributor_updates is not None:
             if args.n_distributor_sets > 1:
-                self.logger.debug(f'Using processor oid offset appropriate for {args.n_distributor_sets} distributor client sets')
+                self.logger.debug(f'Using oid offset appropriate for {args.n_distributor_sets} distributor client sets')
                 if args.distributor_set is None:
                     raise pva.InvalidArgument(f'Specified number of distributor sets {args.n_distributor_sets} is greater than 1, but the actual distributor set name has not been set.')
-                processorOidOffset = (args.n_distributor_sets-1)*int(args.distributor_updates)+1
+                oidOffset = (args.n_distributor_sets-1)*int(args.distributor_updates)+1
             else:
-                self.logger.debug('Using processor oid offset appropriate for a single distributor client set')
-                processorOidOffset = (args.n_processors-1)*int(args.distributor_updates)+1
-            self.logger.debug(f'Determined processor oid offset: {processorOidOffset}')
+                self.logger.debug('Using oid offset appropriate for a single distributor client set')
+                oidOffset = (args.n_consumers-1)*int(args.distributor_updates)+1
+            self.logger.debug(f'Determined oid offset: {oidOffset}')
        
-        outputChannel =  args.processor_output_channel
+        outputChannel =  args.output_channel
         if outputChannel == '_':
-            outputChannel = f'{args.input_channel}:processor'
-            if args.distributor_group:
-                outputChannel += f':{args.distributor_group}'
-            if args.distributor_set:
-                outputChannel += f':{args.distributor_set}'
-            outputChannel += f':{processorId}'
+            outputChannel = f'{args.input_channel}:consumer:{consumerId}:output'
             self.logger.debug(f'Determined processor output channel name: {outputChannel}')
 
         if args.processor_file and args.processor_class:
@@ -99,26 +96,26 @@ class ConsumerController:
             if args.processor_args:
                 processorConfig = json.loads(args.processor_args)
             if not 'processorId' in processorConfig:
-                processorConfig['processorId'] = processorId
+                processorConfig['processorId'] = consumerId
             if not 'processFirstUpdate' in processorConfig:
                 processorConfig['processFirstUpdate'] = args.process_first_update
             if not 'objectIdField' in processorConfig:
-                processorConfig['objectIdField'] = args.processor_oid_field
+                processorConfig['objectIdField'] = args.oid_field
             if not 'objectIdOffset' in processorConfig:
-                processorConfig['objectIdOffset'] = processorOidOffset
+                processorConfig['objectIdOffset'] = oidOffset
             if not 'outputChannel' in processorConfig:
                 processorConfig['outputChannel'] = outputChannel
 
             self.logger.debug(f'Using processor configuration: {processorConfig}')
             dataProcessor = ObjectUtility.createObjectInstanceFromFile(args.processor_file, 'dataProcessor', args.processor_class, processorConfig)
             if dataProcessor is not None:
-                self.logger.debug(f'Created data processor {processorId}: {dataProcessor}')
+                self.logger.debug(f'Created data processor {consumerId}: {dataProcessor}')
             else: 
                 raise pva.InvalidArgument(f'Could not create data processor instance of class {args.processor_class} from file {args.processor_file}')
         return dataProcessor
             
-    def createConsumer(self, consumerId, processorId, args):
-        dataProcessor = self.createProcessor(processorId, args)
+    def createConsumer(self, consumerId, args):
+        dataProcessor = self.createProcessor(consumerId, args)
             
         pvObjectQueue = None
         self.usingPvObjectQueue = False
@@ -126,12 +123,24 @@ class ConsumerController:
             pvObjectQueue = pva.PvObjectQueue(args.consumer_queue_size)
             self.usingPvObjectQueue = True
 
+        self.pvaServer = None
+        self.statusChannel = args.status_channel
+        if self.statusChannel == '_':
+            self.statusChannel = f'{args.input_channel}:consumer:{consumerId}:status'
+            self.logger.debug(f'Determined consumer status channel name: {self.statusChannel}')
+        if self.statusChannel:
+            self.pvaServer = pva.PvaServer()
+            statusObject = pva.PvObject(self.CONSUMER_STATUS_TYPE_DICT, {'consumerId' : consumerId})
+            self.pvaServer.addRecord(self.statusChannel, statusObject)
+
         self.dataConsumer = DataConsumer(consumerId, args.input_channel, providerType=args.input_provider_type, serverQueueSize=args.server_queue_size, distributorPluginName=args.distributor_plugin_name, distributorGroupId=args.distributor_group, distributorSetId=args.distributor_set, distributorTriggerFieldName=args.distributor_trigger, distributorUpdates=args.distributor_updates, distributorUpdateMode=None, pvObjectQueue=pvObjectQueue, dataProcessor=dataProcessor)
         return self.dataConsumer
 
     def startConsumers(self):
-        self.createConsumer(consumerId=1, processorId=1, args=self.args)
+        self.createConsumer(self.args.consumer_id, args=self.args)
         self.dataConsumer.start()
+        if self.pvaServer:
+            self.pvaServer.start()
         self.logger.info(f'Started consumer {self.dataConsumer.getConsumerId()}')
 
     def reportConsumerStats(self, statsDict=None):
@@ -174,7 +183,16 @@ class ConsumerController:
 
 
     def getConsumerStats(self):
-        return self.dataConsumer.getStats()
+        statsDict = self.dataConsumer.getStats()
+        t = time.time()
+        if self.pvaServer:
+            consumerId = self.dataConsumer.getConsumerId()
+            statusObject = pva.PvObject(self.CONSUMER_STATUS_TYPE_DICT, {'consumerId' : consumerId, 'objectTime' : t, 'objectTimestamp' : pva.PvTimeStamp(t)})
+            statusObject['monitorStats'] = statsDict.get('monitorStats', {})
+            statusObject['queueStats'] = statsDict.get('queueStats', {})
+            statusObject['processorStats'] = statsDict.get('processorStats', {})
+            self.pvaServer.update(self.statusChannel, statusObject)
+        return statsDict 
 
     def processPvUpdate(self, updateWaitTime):
         if self.usingPvObjectQueue:
@@ -205,16 +223,15 @@ class MultiprocessConsumerController(ConsumerController):
         # so we can exit cleanly
         import signal
         originalSigintHandler = signal.signal(signal.SIGINT, signal.SIG_IGN)
-        for i in range(1, self.args.n_processors+1):
-            consumerId = i
-            processorId = i
+        for i in range(0, self.args.n_consumers):
+            consumerId = self.args.consumer_id + i
             requestQueue = mp.Queue()
             self.requestQueueMap[i] = requestQueue
             responseQueue = mp.Queue()
             self.responseQueueMap[i] = responseQueue
-            mpProcess = mp.Process(target=mpController, args=(consumerId, processorId, requestQueue, responseQueue, self.args,))
+            mpProcess = mp.Process(target=mpController, args=(consumerId, requestQueue, responseQueue, self.args,))
             self.mpProcessMap[i] = mpProcess
-            self.logger.debug(f'Starting consumer process {i}')
+            self.logger.debug(f'Starting consumer {consumerId}')
             mpProcess.start()
         signal.signal(signal.SIGINT, originalSigintHandler)
 
@@ -234,54 +251,59 @@ class MultiprocessConsumerController(ConsumerController):
             print(report[0:-1])
 
     def getConsumerStats(self):
-        for i in range(1, self.args.n_processors+1):
+        for i in range(0, self.args.n_consumers):
+            consumerId = self.args.consumer_id + i
             requestQueue = self.requestQueueMap[i]
             try:
                 requestQueue.put(GET_STATS_COMMAND, block=True, timeout=WAIT_TIME)
             except Exception as ex:
-                self.logger.error(f'Cannot request stats from consumer process {i}: {ex}')
+                self.logger.error(f'Cannot request stats from consumer {consumerId}: {ex}')
         statsDict = {}
-        for i in range(1, self.args.n_processors+1):
+        for i in range(0, self.args.n_consumers):
+            consumerId = self.args.consumer_id + i
             statsDict[i] = {}
             try:
                 responseQueue = self.responseQueueMap[i]
                 statsDict[i] = responseQueue.get(block=True, timeout=WAIT_TIME)
             except queue.Empty:
-                self.logger.error(f'No stats received from consumer process {i}')
+                self.logger.error(f'No stats received from consumer {consumerId}')
         return statsDict
 
     def processPvUpdate(self, updateWaitTime):
         return False
 
     def stopConsumers(self):
-        for i in range(1, self.args.n_processors+1):
+        for i in range(0, self.args.n_consumers):
+            consumerId = self.args.consumer_id + i
             requestQueue = self.requestQueueMap[i]
             try:
                 requestQueue.put(STOP_COMMAND, block=True, timeout=WAIT_TIME)
             except Exception as ex:
-                self.logger.error(f'Cannot stop consumer process {i}: {ex}')
+                self.logger.error(f'Cannot stop consumer {consumerId}: {ex}')
         statsDict = {}
-        for i in range(1, self.args.n_processors+1):
+        for i in range(0, self.args.n_consumers):
+            consumerId = self.args.consumer_id + i
             statsDict[i] = {}
             try:
                 responseQueue = self.responseQueueMap[i]
                 statsDict[i] = responseQueue.get(block=True, timeout=WAIT_TIME)
             except queue.Empty:
-                self.logger.error(f'No stats received from consumer process {i}')
-        for i in range(1, self.args.n_processors+1):
+                self.logger.error(f'No stats received from consumer {consumerId}')
+        for i in range(0, self.args.n_consumers):
+            consumerId = self.args.consumer_id + i
             mpProcess = self.mpProcessMap[i]
-            mpProcess.join()
-            self.logger.info(f'Stopped consumer process {i}')
+            mpProcess.join(WAIT_TIME)
+            self.logger.info(f'Stopped consumer {consumerId}')
         if self.screen:
             curses.endwin()
             self.screen = None
         self.logger.debug('Controller exiting')
         return statsDict
 
-def mpController(consumerId, processId, requestQueue, responseQueue, args):
+def mpController(consumerId, requestQueue, responseQueue, args):
     controller = ConsumerController(args)
     logger = LoggingManager.getLogger(f'mpController-{consumerId}')
-    dataConsumer = controller.createConsumer(consumerId, processId, args)
+    dataConsumer = controller.createConsumer(consumerId, args)
     dataConsumer.start()
     waitTime = WAIT_TIME
     while True:
@@ -324,20 +346,21 @@ def mpController(consumerId, processId, requestQueue, responseQueue, args):
 def main():
     parser = argparse.ArgumentParser(description='PvaPy HPC Consumer utility. It can be used for receiving and processing data using specified implementation of the data processor interface.')
     parser.add_argument('-v', '--version', action='version', version='%(prog)s {version}'.format(version=__version__))
+    parser.add_argument('-id', '--consumer-id', dest='consumer_id', type=int, default=1, help='Consumer id (default: 1). If spawning multiple consumers, this option will be interpreted as the first consumer id; for each subsequent consumer id will be increased by 1. Note that consumer id is used for naming various PVA channels, so care must be taken when multiple consumer processes are running independently of each other.')
+    parser.add_argument('-nc', '--n-consumers', type=int, dest='n_consumers', default=1, help='Number of consumers to instantiate (default: 1). If > 1, multiprocessing module will be used for receiving and processing data in separate processes.')
     parser.add_argument('-ic', '--input-channel', dest='input_channel', required=True, help='Input PV channel name.')
     parser.add_argument('-ipt', '--input-provider-type', dest='input_provider_type', default='pva', help='Input PV channel provider type, it must be either "pva" or "ca" (default: pva).')
-    parser.add_argument('-sc', '--status-channel', dest='status_channel', default=None, help='Status channel name (default: None). If specified, this channel will provide consumer status.')
-    parser.add_argument('-cc', '--control-channel', dest='control_channel', default=None, help='Control channel name (default: None). If specified, this channel can be used to control consumer configuration and processing.')
+    parser.add_argument('-oc', '--output-channel', dest='output_channel', default=None, help='Output PVA channel name (default: None). If specified, this channel can be used for publishing processing results. The value of "_" indicates that the output channel name will be set to "<input channel>:consumer:<consumer id>:output". Note that this parameter is ignored if processor args dictionary contains "outputChannel" key.')
+    parser.add_argument('-sc', '--status-channel', dest='status_channel', default=None, help='Status PVA channel name (default: None). If specified, this channel will provide consumer status. The value of "_" indicates that the status channel name will be set to "<input channel>:consumer:<consumer id>:status".')
+    parser.add_argument('-cc', '--control-channel', dest='control_channel', default=None, help='Control channel name (default: None). If specified, this channel can be used to control consumer configuration and processing. The value of "_" indicates that the control channel name will be set to "<input channel>:consumer:<consumer id>:control".')
     parser.add_argument('-sqs', '--server-queue-size', type=int, dest='server_queue_size', default=0, help='Server queue size (default: 0); this setting will increase memory usage on the server side, but may help prevent missed PV updates.')
     parser.add_argument('-cqs', '--consumer-queue-size', type=int, dest='consumer_queue_size', default=-1, help='Consumer queue size (default: -1); if >= 0, PvObjectQueue will be used for receving PV updates (value of zero indicates infinite queue size).')
     parser.add_argument('-pf', '--processor-file', dest='processor_file', default=None, help='Full path to the python file containing processor class.')
     parser.add_argument('-pc', '--processor-class', dest='processor_class', default=None, help='Name of the class located in the processor file that will be processing PV updates; it should be initialized with a dictionary and must implement the "process(self, pv)" method.')
     parser.add_argument('-pa', '--processor-args', dest='processor_args', default=None, help='JSON-formatted string that can be converted into dictionary and used for initializing processor object.')
-    parser.add_argument('-poo', '--processor-oid-offset', type=int, dest='processor_oid_offset', default=0, help='This parameter determines by how much object id should change between the two PV updates, and is used for determining the number of missed PV updates (default: 0). This parameter is ignored if processor args dictionary contains "objectIdOffset" key, and should be modified only if data distributor plugin will be distributing data between multiple clients, in which case it should be set to "(<nProcessors>-1)*<nUpdates>+1" for a single client set, or to "(<nSets>-1)*<nUpdates>+1" for multiple client sets. Values <= 0 will be replaced with the appropriate value depending on the number of client sets specified. Note that this relies on using the same value for the --n-distributor-sets when multiple instances of this command are running separately.')
-    parser.add_argument('-pof', '--processor-oid-field', dest='processor_oid_field', default='uniqueId', help='PV update id field used for calculating data processor statistics (default: uniqueId). This parameter is ignored if processor args dictionary contains "objectIdField" key.')
+    parser.add_argument('-oo', '--oid-offset', type=int, dest='oid_offset', default=0, help='This parameter determines by how much object id should change between the two PV updates, and is used for determining the number of missed PV updates (default: 0). This parameter is ignored if processor args dictionary contains "objectIdOffset" key, and should be modified only if data distributor plugin will be distributing data between multiple clients, in which case it should be set to "(<nConsumers>-1)*<nUpdates>+1" for a single client set, or to "(<nSets>-1)*<nUpdates>+1" for multiple client sets. Values <= 0 will be replaced with the appropriate value depending on the number of client sets specified. Note that this relies on using the same value for the --n-distributor-sets when multiple instances of this command are running separately.')
+    parser.add_argument('-of', '--oid-field', dest='oid_field', default='uniqueId', help='PV update id field used for calculating data processor statistics (default: uniqueId). This parameter is ignored if processor args dictionary contains "objectIdField" key.')
     parser.add_argument('-pfu', '--process-first-update', dest='process_first_update', default=False, action='store_true', help='Process first PV update (default: False). This parameter is ignored if processor args dictionary contains "processFirstUpdate" key.')
-    parser.add_argument('-poc', '--processor-output-channel', dest='processor_output_channel', default='', help='PVA channel that will be created for publishing processing results (default: ""). This parameter is ignored if processor args dictionary contains "outputChannel" key. If left empty, output channel will not be created. The value of "_" indicates that the output channel name will be set to "<input channel>:processor[:<distributor group>][:<distributor set>]:<processor id>".')
-    parser.add_argument('-np', '--n-processors', type=int, dest='n_processors', default=1, help='Number of data processors to instantiate (default: 1). If > 1, multiprocessing module will be used for receiving and processing data in separate processes.')
     parser.add_argument('-dpn', '--distributor-plugin-name', dest='distributor_plugin_name', default='pydistributor', help='Distributor plugin name (default: pydistributor).')
     parser.add_argument('-dg', '--distributor-group', dest='distributor_group', default=None, help='Distributor client group that application belongs to (default: None). This parameter should be used only if data distributor plugin will be distributing data between multiple clients. Note that different distributor groups are completely independent of each other.')
     parser.add_argument('-ds', '--distributor-set', dest='distributor_set', default=None, help='Distributor client set that application belongs to within its group (default: None). This parameter should be used only if data distributor plugin will be distributing data between multiple clients. Note that all clients belonging to the same set receive the same PV updates. If set id is not specified (i.e., if a group does not have multiple sets of clients), a PV update will be distributed to only one client.')
@@ -354,13 +377,14 @@ def main():
         print('Unrecognized argument(s): {}'.format(' '.join(unparsed)))
         exit(1)
 
-    if args.n_processors == 1:
+    if args.n_consumers == 1:
         controller = ConsumerController(args)
     else:
         controller = MultiprocessConsumerController(args)
     controller.startConsumers()
     startTime = time.time()
     lastReportTime = startTime
+    lastStatusUpdateTime = startTime
     waitTime = WAIT_TIME
     while True:
         try:
@@ -372,7 +396,12 @@ def main():
                     break
             if args.report_period > 0 and now-lastReportTime > args.report_period:
                 lastReportTime = now
+                lastStatusUpdateTime = now
                 controller.reportConsumerStats()
+
+            if args.status_channel and now-lastStatusUpdateTime > MIN_STATUS_UPDATE_PERIOD:
+                lastStatusUpdateTime = now
+                controller.getConsumerStats()
 
             hasProcessedObject = controller.processPvUpdate(waitTime)
             if not hasProcessedObject:
