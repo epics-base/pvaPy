@@ -9,20 +9,13 @@ class HpcDataProcessor(DataProcessor):
         DataProcessor.__init__(self, configDict)
 
     def start(self):
-        DataProcessor.start(self)
+        pass
 
-    def stop(self):
-        DataProcessor.stop(self)
-
-    def getStats(self):
-        return DataProcessor.getStats(self)
-
-    def updateStats(self, t=0):
-        return DataProcessor.updateStats(self, t)
-
-    def updateOutputChannel(self, pvObject):
-        DataProcessor.updateOutputChannel(self, pvObject)
+    def configure(self, kwargs):
+        pass
 
     def process(self, pvObject):
-        return DataProcessor.process(self, pvObject)
+        pass
 
+    def stop(self):
+        pass

@@ -10,6 +10,9 @@ class HpcAdImageProcessor(AdImageProcessor):
         AdImageProcessor.__init__(self, configDict)
         self.logger.debug('Created HpcAdImageProcessor')
 
+    def configure(self, kwargs):
+        self.logger.debug(f'Configuration update: {kwargs}')
+
     def process(self, pvObject):
         frameId = pvObject['uniqueId']
         (image,nx,ny,nz,colorMode,fieldKey) = self.reshapeFrame(pvObject)
