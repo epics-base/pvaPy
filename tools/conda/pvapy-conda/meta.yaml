@@ -1,14 +1,20 @@
 package:
   name: pvapy
-  version: 4.1.0
+  version: {{ environ.get('PVAPY_VERSION', '0.0') }}
 
 source:
+  #git_rev: {{ environ.get('PVAPY_VERSION', '0.0') }}
+  #git_url: https://github.com/epics-base/pvaPy
   path: ../../..
 
 build:
-  number: 1
+  number: {{ environ.get('BUILD_NUMBER', '1') }}
   script_env:
     - BUILD_FLAGS
+  entry_points:
+    - pvapy-ad-sim-server=pvapy.cli.adSimServer:main
+    - pvapy-mirror-server=pvapy.cli.mirrorServer:main
+    - pvapy-hpc-consumer=pvapy.cli.hpcConsumer:main
 
 test:
   requires:
@@ -22,15 +28,17 @@ requirements:
     - python
     - sphinx
     - sphinx_rtd_theme
-    - numpy>=1.22
-    - epics-base=7.0.6.1
-    - pvapy-boost=1.78.0
+    #- numpy>=1.22
+    - numpy>=1.20,<1.21
+    - epics-base={{ environ.get('EPICS_BASE_VERSION', '0.0') }}
+    - pvapy-boost={{ environ.get('BOOST_VERSION', '0.0') }}
 
   run:
     - python
-    - numpy>=1.22
-    - epics-base=7.0.6.1
-    - pvapy-boost=1.78.0
+    #- numpy>=1.22
+    - numpy>=1.20,<1.21
+    - epics-base={{ environ.get('EPICS_BASE_VERSION', '0.0') }}
+    - pvapy-boost={{ environ.get('BOOST_VERSION', '0.0') }}
 
 about:
   home: https://github.com/epics-base/pvaPy
