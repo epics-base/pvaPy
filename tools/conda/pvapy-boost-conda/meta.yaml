@@ -1,21 +1,21 @@
 package:
   name: pvapy-boost
-  version: 1.78.0
+  version: {{ environ.get('BOOST_VERSION', '0.0') }}
 
 source:
-  url: https://sourceforge.net/projects/boost/files/boost/1.78.0/boost_1_78_0.tar.gz
+  url: https://sourceforge.net/projects/boost/files/boost/{{ environ.get('BOOST_VERSION', '0.0') }}/boost_{{ environ.get('BOOST_DOWNLOAD_VERSION', '0.0') }}.tar.gz
 
 build:
-  number: 1
+  number: {{ environ.get('BUILD_NUMBER', '1') }}
 
 requirements:
   build:
     - python
-    - numpy>=1.22
+    - numpy>=1.20,<1.21
 
   run:
     - python
-    - numpy>=1.22
+    - numpy>=1.20,<1.21
 
 about:
   home: http://www.boost.org
