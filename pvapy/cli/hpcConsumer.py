@@ -253,11 +253,15 @@ class ConsumerController:
         consumerId = self.dataConsumer.getConsumerId()
         report = self.formatConsumerStats(consumerId, statsDict)
         if self.screen:
-            self.screen.erase()
-            self.screen.addstr(report)
-            self.screen.refresh()
-        else:
-            print(report)
+            try:
+                self.screen.erase()
+                self.screen.addstr(report)
+                self.screen.refresh()
+                return
+            except Exception as ex:
+                # Turn screen off on errors
+                self.stopScreen()
+        print(report)
 
     def formatConsumerStats(self, consumerId, statsDict):
         now = time.time()
@@ -355,12 +359,16 @@ class MultiprocessConsumerController(ConsumerController):
             report += self.formatConsumerStats(consumerId, statsDict)
             report += '\n'
         if self.screen:
-            self.screen.erase()
-            self.screen.addstr(report)
-            self.screen.refresh()
-        else:
-            # Remove extra newline character
-            print(report[0:-1])
+            try:
+                self.screen.erase()
+                self.screen.addstr(report)
+                self.screen.refresh()
+                return
+            except Exception as ex:
+                # Turn screen off on errors
+                self.stopScreen()
+        # Remove extra newline character
+        print(report[0:-1])
 
     def getConsumerStats(self):
         for consumerId in range(self.args.consumer_id, self.args.consumer_id+self.args.n_consumers):
