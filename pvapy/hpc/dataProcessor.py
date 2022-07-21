@@ -26,6 +26,7 @@ class DataProcessor:
         if self.outputChannel == '_':
             self.outputChannel = f'{self.inputChannel}:processor-{self.processorId}'
         self.outputRecordAdded = False
+        self.pvaServerStarted = False
         self.pvaServer = None
 
         # Defines all counters and sets them to zero
@@ -36,7 +37,8 @@ class DataProcessor:
         pass
 
     def _start(self):
-        if self.outputChannel:
+        if self.outputChannel and not self.pvaServer:
+            self.pvaServerStarted = True
             self.pvaServer = pva.PvaServer()
             self.pvaServer.start()
         self.startTime = time.time()
@@ -50,7 +52,7 @@ class DataProcessor:
         now = time.time()
         self.endTime = now
         self.processorStats = self.updateStats(now)
-        if self.outputChannel:
+        if self.pvaServerStarted:
             self.pvaServer.stop()
         self.stop()
 
@@ -154,7 +156,7 @@ class DataProcessor:
         return processorStats
 
     def updateOutputChannel(self, pvObject):
-        if not self.pvaServer:
+        if not self.outputChannel:
             return 
-        self.pvaServer.update(pvObject)
+        self.pvaServer.update(self.outputChannel, pvObject)
 

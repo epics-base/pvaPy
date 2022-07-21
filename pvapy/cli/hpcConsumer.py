@@ -230,6 +230,10 @@ class ConsumerController:
             self.pvaServer.addRecord(self.controlChannel, self.controlPvObject, self.controlCallback)
             self.logger.debug(f'Created consumer control channel: {self.controlChannel}')
 
+        # Share PVA server if we have one
+        if dataProcessor and self.pvaServer:
+            dataProcessor.pvaServer = self.pvaServer
+
         self.dataConsumer = DataConsumer(consumerId, args.input_channel, providerType=args.input_provider_type, serverQueueSize=args.server_queue_size, distributorPluginName=args.distributor_plugin_name, distributorGroupId=args.distributor_group, distributorSetId=args.distributor_set, distributorTriggerFieldName=args.distributor_trigger, distributorUpdates=args.distributor_updates, distributorUpdateMode=None, pvObjectQueue=pvObjectQueue, dataProcessor=dataProcessor)
         return self.dataConsumer
 
