@@ -5,7 +5,10 @@
 OPT_EPICS_DIR=opt/epics
 CONDA_EPICS_DIR=$PREFIX/$OPT_EPICS_DIR
 EPICS_HOST_ARCH=`./startup/EpicsHostArch`
-EPICS_EXECUTABLES="caget cainfo camonitor caput caRepeater makeBaseApp.pl p2p pvcall pvget pvinfo pvlist pvmonitor pvput softIoc softIocPVA"
+EPICS_EXECUTABLES="caget cainfo camonitor capr.pl caput caRepeater makeBaseApp.pl p2p pvcall pvget pvinfo pvlist pvmonitor pvput softIoc softIocPVA"
+
+echo "Fixing Conda's Perl installation"
+perl $RECIPE_DIR/fix-perl.pl
 
 echo "Building epics"
 #eval "cat configure/CONFIG_SITE | sed 's?#INSTALL_LOCATION=.*?INSTALL_LOCATION=$CONDA_EPICS_DIR?' > configure/CONFIG_SITE.2 && mv configure/CONFIG_SITE.2 configure/CONFIG_SITE" 
@@ -17,8 +20,8 @@ eval "cat $CONFIG_FILE | grep -v GNU_DIR | sed 's?COMMANDLINE_LIBRARY.*?COMMANDL
 CONFIG_FILE=configure/os/CONFIG_SITE.Common.linux-x86
 eval "cat $CONFIG_FILE | grep -v GNU_DIR | sed 's?COMMANDLINE_LIBRARY.*?COMMANDLINE_LIBRARY=EPICS?' > $CONFIG_FILE.2 && mv $CONFIG_FILE.2 $CONFIG_FILE"
 
-MAKEFILE=modules/ca/src/perl/Makefile
-cat $MAKEFILE | sed "s/ccflags/ccflags \| sed 's?--sysroot=*.*sysroot??'/" > $MAKEFILE.2 && mv $MAKEFILE.2 $MAKEFILE
+#MAKEFILE=modules/ca/src/perl/Makefile
+#cat $MAKEFILE | sed "s/ccflags/ccflags \| sed 's?--sysroot=*.*sysroot??'/" > $MAKEFILE.2 && mv $MAKEFILE.2 $MAKEFILE
 
 echo "Using BUILD_FLAGS: $BUILD_FLAGS"
 make $BUILD_FLAGS

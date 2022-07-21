@@ -1,12 +1,12 @@
 package:
   name: epics-base
-  version: 7.0.6.1
+  version: {{ environ.get('EPICS_BASE_VERSION', '0.0') }}
 
 source:
-  url: https://epics.anl.gov/download/base/base-7.0.6.1.tar.gz
+  url: https://epics.anl.gov/download/base/base-{{ environ.get('EPICS_BASE_VERSION', '0.0') }}.tar.gz
 
 build:
-  number: 1
+  number: {{ environ.get('BUILD_NUMBER', '1') }}
   script_env:
     - BUILD_FLAGS
 

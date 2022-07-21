@@ -5,15 +5,17 @@ include $(BUILD_CONF)
 
 PACKAGE = epics-base
 CONDA_LIST_FLAGS := $(CONDA_ENV_FLAGS)
+CONDA_BUILD_FLAGS += BUILD_NUMBER=${BUILD_NUMBER}
+CONDA_BUILD_FLAGS += EPICS_BASE_VERSION=${EPICS_BASE_VERSION}
 CONDA_ENV_FLAGS += -y
 
 default: package
 
 configure:
-	eval "cat meta.yaml.template | sed 's?BUILD_NUMBER?${BUILD_NUMBER}?g' | sed 's?EPICS_BASE_VERSION?${EPICS_BASE_VERSION}?g' > meta.yaml"
+	#eval "cat meta.yaml.template | sed 's?BUILD_NUMBER?${BUILD_NUMBER}?g' | sed 's?EPICS_BASE_VERSION?${EPICS_BASE_VERSION}?g' > meta.yaml"
 
 build: configure
-	conda build .
+	$(CONDA_BUILD_FLAGS) conda build .
 
 package: build
 
