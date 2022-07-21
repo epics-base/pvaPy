@@ -36,6 +36,7 @@ class ConsumerController:
 
     CONSUMER_STATUS_TYPE_DICT = {
         'consumerId' : pva.UINT,
+        'objectId' : pva.UINT,
         'objectTime' : pva.DOUBLE,
         'objectTimestamp' : pva.PvTimeStamp(),
         'monitorStats' : {
@@ -83,6 +84,7 @@ class ConsumerController:
         self.logger = LoggingManager.getLogger(self.__class__.__name__)
         self.args = args
         self.isDone = False
+        self.statsObjectId = 0
 
     def controlCallback(self, pv):
         t = time.time()
@@ -260,10 +262,13 @@ class ConsumerController:
         now = time.time()
         report = 'consumer-{} @ {:.3f}s :\n'.format(consumerId, now)
         for k,v in statsDict.items():
+            # Skip some keys and empty entries
             if not v:
                 continue
-            report += '  {:15s}:'.format(k)
+            if k in ['objectId']:
+                continue
             if type(v) == dict:
+                report += '  {:15s}:'.format(k)
                 for (k2,v2) in v.items():
                     report += ' {}'.format(self._formatDictEntry(k2,v2))
             else:
@@ -285,10 +290,12 @@ class ConsumerController:
 
     def getConsumerStats(self):
         statsDict = self.dataConsumer.getStats()
+        self.statsObjectId += 1
+        statsDict['objectId'] = self.statsObjectId
         t = time.time()
         if self.pvaServer:
             consumerId = self.dataConsumer.getConsumerId()
-            statusObject = pva.PvObject(self.CONSUMER_STATUS_TYPE_DICT, {'consumerId' : consumerId, 'objectTime' : t, 'objectTimestamp' : pva.PvTimeStamp(t)})
+            statusObject = pva.PvObject(self.CONSUMER_STATUS_TYPE_DICT, {'consumerId' : consumerId, 'objectId' : self.statsObjectId, 'objectTime' : t, 'objectTimestamp' : pva.PvTimeStamp(t)})
             statusObject['monitorStats'] = statsDict.get('monitorStats', {})
             statusObject['queueStats'] = statsDict.get('queueStats', {})
             statusObject['processorStats'] = statsDict.get('processorStats', {})
@@ -318,20 +325,20 @@ class MultiprocessConsumerController(ConsumerController):
         self.mpProcessMap = {}
         self.requestQueueMap = {}
         self.responseQueueMap = {}
+        self.lastStatsObjectIdMap = {}
 
     def startConsumers(self):
         # Replace interrupt handler for worker processes
         # so we can exit cleanly
         import signal
         originalSigintHandler = signal.signal(signal.SIGINT, signal.SIG_IGN)
-        for i in range(0, self.args.n_consumers):
-            consumerId = self.args.consumer_id + i
+        for consumerId in range(self.args.consumer_id, self.args.consumer_id+self.args.n_consumers):
             requestQueue = mp.Queue()
-            self.requestQueueMap[i] = requestQueue
+            self.requestQueueMap[consumerId] = requestQueue
             responseQueue = mp.Queue()
-            self.responseQueueMap[i] = responseQueue
+            self.responseQueueMap[consumerId] = responseQueue
             mpProcess = mp.Process(target=mpController, args=(consumerId, requestQueue, responseQueue, self.args,))
-            self.mpProcessMap[i] = mpProcess
+            self.mpProcessMap[consumerId] = mpProcess
             self.logger.debug(f'Starting consumer {consumerId}')
             mpProcess.start()
         signal.signal(signal.SIGINT, originalSigintHandler)
@@ -352,20 +359,26 @@ class MultiprocessConsumerController(ConsumerController):
             print(report[0:-1])
 
     def getConsumerStats(self):
-        for i in range(0, self.args.n_consumers):
-            consumerId = self.args.consumer_id + i
-            requestQueue = self.requestQueueMap[i]
+        for consumerId in range(self.args.consumer_id, self.args.consumer_id+self.args.n_consumers):
+            requestQueue = self.requestQueueMap[consumerId]
             try:
                 requestQueue.put(GET_STATS_COMMAND, block=True, timeout=WAIT_TIME)
             except Exception as ex:
                 self.logger.error(f'Cannot request stats from consumer {consumerId}: {ex}')
         statsDict = {}
-        for i in range(0, self.args.n_consumers):
-            consumerId = self.args.consumer_id + i
-            statsDict[i] = {}
+        for consumerId in range(self.args.consumer_id, self.args.consumer_id+self.args.n_consumers):
+            statsDict[consumerId] = {}
+            lastStatsObjectId = self.lastStatsObjectIdMap.get(consumerId, 0)
             try:
-                responseQueue = self.responseQueueMap[i]
-                statsDict[i] = responseQueue.get(block=True, timeout=WAIT_TIME)
+                while True:
+                    responseQueue = self.responseQueueMap[consumerId]
+                    statsDict[consumerId] = responseQueue.get(block=True, timeout=WAIT_TIME)
+                    statsObjectId = statsDict[consumerId].get('objectId', 0)
+                    if statsObjectId != lastStatsObjectId:
+                        self.lastStatsObjectIdMap[consumerId] = statsObjectId 
+                        break
+                    else:
+                        self.logger.warning(f'Discarding stale stats received from consumer {consumerId}')
             except queue.Empty:
                 self.logger.error(f'No stats received from consumer {consumerId}')
         return statsDict
@@ -374,25 +387,22 @@ class MultiprocessConsumerController(ConsumerController):
         return False
 
     def stopConsumers(self):
-        for i in range(0, self.args.n_consumers):
-            consumerId = self.args.consumer_id + i
-            requestQueue = self.requestQueueMap[i]
+        for consumerId in range(self.args.consumer_id, self.args.consumer_id+self.args.n_consumers):
+            requestQueue = self.requestQueueMap[consumerId]
             try:
                 requestQueue.put(STOP_COMMAND, block=True, timeout=WAIT_TIME)
             except Exception as ex:
                 self.logger.error(f'Cannot stop consumer {consumerId}: {ex}')
         statsDict = {}
-        for i in range(0, self.args.n_consumers):
-            consumerId = self.args.consumer_id + i
-            statsDict[i] = {}
+        for consumerId in range(self.args.consumer_id, self.args.consumer_id+self.args.n_consumers):
+            statsDict[consumerId] = {}
             try:
-                responseQueue = self.responseQueueMap[i]
-                statsDict[i] = responseQueue.get(block=True, timeout=WAIT_TIME)
+                responseQueue = self.responseQueueMap[consumerId]
+                statsDict[consumerId] = responseQueue.get(block=True, timeout=WAIT_TIME)
             except queue.Empty:
                 self.logger.error(f'No stats received from consumer {consumerId}')
-        for i in range(0, self.args.n_consumers):
-            consumerId = self.args.consumer_id + i
-            mpProcess = self.mpProcessMap[i]
+        for consumerId in range(self.args.consumer_id, self.args.consumer_id+self.args.n_consumers):
+            mpProcess = self.mpProcessMap[consumerId]
             mpProcess.join(WAIT_TIME)
             self.logger.info(f'Stopped consumer {consumerId}')
         if self.screen:
@@ -401,40 +411,77 @@ class MultiprocessConsumerController(ConsumerController):
         self.logger.debug('Controller exiting')
         return statsDict
 
+class MpControllerRequestProcessingThread(threading.Thread):
+
+    def __init__(self, controller, consumerId, requestQueue, responseQueue):
+        threading.Thread.__init__(self)
+        self.controller = controller
+        self.consumerId = consumerId
+        self.requestQueue = requestQueue
+        self.responseQueue = responseQueue
+        self.logger = LoggingManager.getLogger(f'rpThread-{self.consumerId}')
+
+    def run(self):
+        self.logger.debug(f'Request processing thread for consumer {self.consumerId} starting')
+        while True:
+            try:
+                if self.controller.isDone:
+                    self.logger.debug(f'Consumer {self.consumerId} is done, request processing thread is exiting')
+                    break
+
+                # Check for new request
+                try:
+                    request = self.requestQueue.get(block=True, timeout=WAIT_TIME)
+                    self.logger.debug(f'Received request: {request}')
+                    if request == STOP_COMMAND:
+                        self.controller.isDone = True
+                        self.logger.debug(f'Consumer {self.consumerId} received stop command, request processing thread is exiting')
+                        break
+                    elif request == GET_STATS_COMMAND:
+                        statsDict = self.controller.getConsumerStats()
+                        try:
+                            self.responseQueue.put(statsDict, block=False)
+                        except Exception as ex:
+                            self.logger.error(f'Consumer {consumerId} cannot report stats: {ex}')
+                except queue.Empty:
+                    pass
+
+            except Exception as ex:
+                self.logger.error(f'Request processing error: {ex}')
+
+        self.logger.debug(f'Request processing thread for consumer {self.consumerId} exited')
+   
 def mpController(consumerId, requestQueue, responseQueue, args):
     controller = ConsumerController(args)
     logger = LoggingManager.getLogger(f'mpController-{consumerId}')
     dataConsumer = controller.createConsumer(consumerId, args)
     dataConsumer.start()
+
+    # Process controller requests in a separate thread
+    rpThread = MpControllerRequestProcessingThread(controller, consumerId, requestQueue, responseQueue)
+    rpThread.start()
+
     waitTime = WAIT_TIME
     while True:
         try:
+            if controller.isDone:
+                logger.debug(f'Consumer {consumerId} is done')
+                break
+
             now = time.time()
             wakeTime = now+waitTime
-            try:
-                request = requestQueue.get(block=False)
-                logger.debug(f'Received request: {request}')
-                if request == STOP_COMMAND:
-                    break
-                elif request == GET_STATS_COMMAND:
-                    statsDict = controller.getConsumerStats()
-                    responseQueue.put(statsDict)
-                    try:
-                        responseQueue.put(statsDict, block=False)
-                    except Exception as ex:
-                        logger.error(f'Consumer {consumerId} cannot report stats: {ex}')
-            except queue.Empty:
-                pass
 
+            # Try to process object
+            delay = 0
             hasProcessedObject = controller.processPvUpdate(waitTime)
             if not hasProcessedObject:
-                # Check if we need to sleep
+                # Determine if we can wait
                 delay = wakeTime-time.time()
                 if delay > 0:
                     time.sleep(delay)
+
         except Exception as ex:
             logger.error(f'Processing error: {ex}')
-            break
 
     dataConsumer.stop()
     statsDict = controller.getConsumerStats()
