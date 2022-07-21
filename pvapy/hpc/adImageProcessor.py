@@ -33,12 +33,15 @@ class AdImageProcessor(DataProcessor):
             if attribute['name'] == 'ColorMode':
                 colorMode = attribute['value'][0]['value']
                 break
-        if colorMode is None:
-            raise pva.InvalidArgument('NTNDArray does not contain ColorMode attribute.')
 
         # Get dimensions
         dims = frame['dimension']
         nDims = len(dims)
+
+        if colorMode is None and nDims > 2:
+            raise pva.InvalidArgument('NTNDArray does not contain ColorMode attribute.')
+        else:
+            colorMode = cls.COLOR_MODE_MONO
 
         if nDims == 2 and colorMode == cls.COLOR_MODE_MONO:
             nx = dims[0]['size']

@@ -133,6 +133,7 @@ class ConsumerController:
             statusMessage = 'Configuration successful'
             self.logger.debug(statusMessage)
         except Exception as ex:
+            self.stopScreen()
             statusMessage = f'Configuration failed: {ex}'
             self.logger.warning(statusMessage)
         self.controlPvObject['statusMessage'] = statusMessage
@@ -308,14 +309,17 @@ class ConsumerController:
             return self.dataConsumer.processFromQueue(updateWaitTime)
         return False
 
+    def stopScreen(self):
+        if self.screen:
+            curses.endwin()
+        self.screen = None
+
     def stopConsumers(self):
         self.logger.debug('Controller exiting')
         self.dataConsumer.stop()
         statsDict = self.dataConsumer.getStats()
         self.logger.info(f'Stopped consumer {self.dataConsumer.getConsumerId()}')
-        if self.screen:
-            curses.endwin()
-        self.screen = None
+        self.stopScreen()
         return statsDict
 
 class MultiprocessConsumerController(ConsumerController):
@@ -364,6 +368,7 @@ class MultiprocessConsumerController(ConsumerController):
             try:
                 requestQueue.put(GET_STATS_COMMAND, block=True, timeout=WAIT_TIME)
             except Exception as ex:
+                self.stopScreen()
                 self.logger.error(f'Cannot request stats from consumer {consumerId}: {ex}')
         statsDict = {}
         for consumerId in range(self.args.consumer_id, self.args.consumer_id+self.args.n_consumers):
@@ -380,6 +385,7 @@ class MultiprocessConsumerController(ConsumerController):
                     else:
                         self.logger.warning(f'Discarding stale stats received from consumer {consumerId}')
             except queue.Empty:
+                self.stopScreen()
                 self.logger.error(f'No stats received from consumer {consumerId}')
         return statsDict
 
@@ -392,6 +398,7 @@ class MultiprocessConsumerController(ConsumerController):
             try:
                 requestQueue.put(STOP_COMMAND, block=True, timeout=WAIT_TIME)
             except Exception as ex:
+                self.stopScreen()
                 self.logger.error(f'Cannot stop consumer {consumerId}: {ex}')
         statsDict = {}
         for consumerId in range(self.args.consumer_id, self.args.consumer_id+self.args.n_consumers):
@@ -400,6 +407,7 @@ class MultiprocessConsumerController(ConsumerController):
                 responseQueue = self.responseQueueMap[consumerId]
                 statsDict[consumerId] = responseQueue.get(block=True, timeout=WAIT_TIME)
             except queue.Empty:
+                self.stopScreen()
                 self.logger.error(f'No stats received from consumer {consumerId}')
         for consumerId in range(self.args.consumer_id, self.args.consumer_id+self.args.n_consumers):
             mpProcess = self.mpProcessMap[consumerId]
@@ -481,6 +489,7 @@ def mpController(consumerId, requestQueue, responseQueue, args):
                     time.sleep(delay)
 
         except Exception as ex:
+            controller.stopScreen()
             logger.error(f'Processing error: {ex}')
 
     dataConsumer.stop()
@@ -525,6 +534,7 @@ def main():
         print('Unrecognized argument(s): {}'.format(' '.join(unparsed)))
         exit(1)
 
+    logger = LoggingManager.getLogger('main')
     if args.n_consumers == 1:
         controller = ConsumerController(args)
     else:
@@ -553,12 +563,17 @@ def main():
                 lastStatusUpdateTime = now
                 controller.getConsumerStats()
 
-            hasProcessedObject = controller.processPvUpdate(waitTime)
-            if not hasProcessedObject:
-                # Check if we need to sleep
-                delay = wakeTime-time.time()
-                if delay > 0:
-                    time.sleep(delay)
+            try:
+                hasProcessedObject = controller.processPvUpdate(waitTime)
+                if not hasProcessedObject:
+                    # Check if we need to sleep
+                    delay = wakeTime-time.time()
+                    if delay > 0:
+                        time.sleep(delay)
+            except Exception as ex:
+                controller.stopScreen()
+                logger.error(f'Processing error: {ex}')
+
         except KeyboardInterrupt as ex:
             break
 

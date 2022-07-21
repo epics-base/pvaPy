@@ -77,6 +77,7 @@ class DataConsumer:
                 self.dataProcessor._configure(kwargs)
         except Exception as ex:
             self.logger.error(f'Configuration error: {ex}')
+            raise
 
     def process(self, pv):
         try:
@@ -87,6 +88,7 @@ class DataConsumer:
                 self.dataProcessor._process(pv)
         except Exception as ex:
             self.logger.error(f'Processing error: {ex}')
+            raise
 
     # Return true if object was processed, False otherwise
     def processFromQueue(self, waitTime):
@@ -153,6 +155,7 @@ class DataConsumer:
                 self.dataProcessor._start()
         except Exception as ex:
             self.logger.error(f'Cannot start data processor: {ex}')
+            raise
         self.startTime = time.time()
 
     def stop(self):
@@ -162,5 +165,6 @@ class DataConsumer:
                 self.dataProcessor._stop()
         except Exception as ex:
             self.logger.error(f'Cannot stop data processor: {ex}')
+            raise
         self.endTime = time.time()
 
