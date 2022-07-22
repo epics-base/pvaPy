@@ -75,16 +75,21 @@ class ConsumerController:
             LoggingManager.setLogLevel(args.log_level)
             if args.log_file:
                 LoggingManager.addFileHandler(args.log_file)
-                self.screen = curses.initscr()
+                if not args.disable_curses:
+                    self.screen = curses.initscr()
             else:
                 LoggingManager.addStreamHandler()
         else:
-            self.screen = curses.initscr()
+            if not args.disable_curses:
+                self.screen = curses.initscr()
 
         self.logger = LoggingManager.getLogger(self.__class__.__name__)
         self.args = args
         self.isDone = False
         self.statsObjectId = 0
+        self.statsEnabled = {}
+        for statsType in ['monitor','queue','processor']:
+            self.statsEnabled[f'{statsType}Stats'] = 'all' in args.report_stats or statsType in args.report_stats
 
     def controlCallback(self, pv):
         t = time.time()
@@ -271,6 +276,8 @@ class ConsumerController:
             if not v:
                 continue
             if k in ['objectId']:
+                continue
+            if not self.statsEnabled.get(k, True):
                 continue
             if type(v) == dict:
                 report += '  {:15s}:'.format(k)
@@ -534,8 +541,10 @@ def main():
     parser.add_argument('-nds', '--n-distributor-sets', type=int, dest='n_distributor_sets', default=1, help='Number of distributor client sets (default: 1). This setting is used to determine appropriate value for the processor object id offset in case where multiple instances of this command are running separately for different client sets. If distributor client set is not specified, this setting is ignored.')
     parser.add_argument('-rt', '--runtime', type=float, dest='runtime', default=0, help='Server runtime in seconds; values <=0 indicate infinite runtime (default: infinite).')
     parser.add_argument('-rp', '--report-period', type=float, dest='report_period', default=0, help='Statistics report period for all consumers in seconds; values <=0 indicate no reporting (default: 0).')
-    parser.add_argument('-ll', '--log-level', dest='log_level', help='Log level; possible values: DEBUG, INFO, WARNING, ERROR, CRITICAL. If not provided, there will be no log output.')
+    parser.add_argument('-rs', '--report-stats', dest='report_stats', default='all', help='Comma-separated list of statistics subsets that should be reported (default: all); possible values: monitor, queue, processor, all.')
+    parser.add_argument('-ll', '--log-level', dest='log_level', help='Log level; possible values: debug, info, warning, error, critical. If not provided, there will be no log output.')
     parser.add_argument('-lf', '--log-file', dest='log_file', help='Log file.')
+    parser.add_argument('-dc', '--disable-curses', dest='disable_curses', default=False, action='store_true', help='Disable curses library screen handling. This is enabled by default, except when logging into standard output is turned on.')
 
     args, unparsed = parser.parse_known_args()
     if len(unparsed) > 0:
