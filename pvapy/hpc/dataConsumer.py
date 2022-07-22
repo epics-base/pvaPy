@@ -66,29 +66,21 @@ class DataConsumer:
         return request
 
     def configure(self, kwargs):
-        try:
-            if type(kwargs) == dict:
-                if 'consumerQueueSize' in kwargs:
-                    consumerQueueSize = int(kwargs.get('consumerQueueSize', 0))
-                    if self.pvObjectQueue is not None:
-                        self.logger.debug(f'Resetting PvObjectQueue size from {self.pvObjectQueue.maxLength} to {consumerQueueSize}')
-                    self.pvObjectQueue.maxLength = consumerQueueSize
-            if self.dataProcessor:
-                self.dataProcessor._configure(kwargs)
-        except Exception as ex:
-            self.logger.error(f'Configuration error: {ex}')
-            raise
+        if type(kwargs) == dict:
+            if 'consumerQueueSize' in kwargs:
+                consumerQueueSize = int(kwargs.get('consumerQueueSize', 0))
+                if self.pvObjectQueue is not None:
+                    self.logger.debug(f'Resetting PvObjectQueue size from {self.pvObjectQueue.maxLength} to {consumerQueueSize}')
+                self.pvObjectQueue.maxLength = consumerQueueSize
+        if self.dataProcessor:
+            self.dataProcessor._configure(kwargs)
 
     def process(self, pv):
-        try:
-            if self.dataProcessor:
-                # Data processor will call process() method
-                # of the derived class. In this way we can
-                # track processing errors.
-                self.dataProcessor._process(pv)
-        except Exception as ex:
-            self.logger.error(f'Processing error: {ex}')
-            raise
+        if self.dataProcessor:
+            # Data processor will call process() method
+            # of the derived class. In this way we can
+            # track processing errors.
+            self.dataProcessor._process(pv)
 
     # Return true if object was processed, False otherwise
     def processFromQueue(self, waitTime):
@@ -142,6 +134,7 @@ class DataConsumer:
         return self.consumerId
  
     def start(self):
+        self.startTime = time.time()
         request = self.getPvMonitorRequest()
         self.logger.debug(f'Using request string {request}')
         if self.pvObjectQueue is not None and isinstance(self.pvObjectQueue, pva.PvObjectQueue):
@@ -150,21 +143,13 @@ class DataConsumer:
         else:
             self.logger.debug('Starting process monitor')
             self.channel.monitor(self.process, request)
-        try:
-            if self.dataProcessor:
-                self.dataProcessor._start()
-        except Exception as ex:
-            self.logger.error(f'Cannot start data processor: {ex}')
-            raise
-        self.startTime = time.time()
+
+        if self.dataProcessor:
+            self.dataProcessor._start()
 
     def stop(self):
-        self.channel.stopMonitor()
-        try:
-            if self.dataProcessor:
-                self.dataProcessor._stop()
-        except Exception as ex:
-            self.logger.error(f'Cannot stop data processor: {ex}')
-            raise
         self.endTime = time.time()
+        self.channel.stopMonitor()
+        if self.dataProcessor:
+            self.dataProcessor._stop()
 

@@ -60,7 +60,7 @@ class AdImageProcessor(DataProcessor):
             ny = dims[1]['size']
             nz = dims[2]['size']
         else:
-            raise pva.InvalidArgument('Invalid dimensions/color mode.')
+            raise pva.InvalidArgument(f'Invalid dimensions {dims} and color mode {colorMode} combination.')
 
         # Alternative ways of getting the image array and type
         fieldKey = frame.getSelectedUnionFieldName()

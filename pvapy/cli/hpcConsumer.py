@@ -327,9 +327,13 @@ class ConsumerController:
 
     def stopConsumers(self):
         self.logger.debug('Controller exiting')
-        self.dataConsumer.stop()
+        try: 
+            self.dataConsumer.stop()
+            self.logger.info(f'Stopped consumer {self.dataConsumer.getConsumerId()}')
+        except Exception as ex:
+            self.logger.warn(f'Could not stop consumer {self.dataConsumer.getConsumerId()}')
+
         statsDict = self.dataConsumer.getStats()
-        self.logger.info(f'Stopped consumer {self.dataConsumer.getConsumerId()}')
         self.stopScreen()
         return statsDict
 
@@ -507,7 +511,10 @@ def mpController(consumerId, requestQueue, responseQueue, args):
             controller.stopScreen()
             logger.error(f'Processing error: {ex}')
 
-    dataConsumer.stop()
+    try: 
+        dataConsumer.stop()
+    except Exception as ex:
+        self.logger.warn(f'Could not stop consumer {dataConsumer.getConsumerId()}')
     statsDict = controller.getConsumerStats()
     try:
         responseQueue.put(statsDict, block=True, timeout=WAIT_TIME)
@@ -594,6 +601,7 @@ def main():
         except KeyboardInterrupt as ex:
             break
 
+    print()
     statsDict = controller.stopConsumers()
     controller.reportConsumerStats(statsDict)
     # Allow clients monitoring various channels to get last update
