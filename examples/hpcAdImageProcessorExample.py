@@ -14,8 +14,10 @@ class HpcAdImageProcessor(AdImageProcessor):
         self.logger.debug(f'Configuration update: {kwargs}')
 
     def process(self, pvObject):
-        frameId = pvObject['uniqueId']
-        (image,nx,ny,nz,colorMode,fieldKey) = self.reshapeFrame(pvObject)
+        (frameId,image,nx,ny,nz,colorMode,fieldKey) = self.reshapeNtNdArray(pvObject)
+        if nx is None:
+            self.logger.debug(f'Frame id {frameId} contains an empty image.')
+            return pvObject
         self.logger.debug(f'Data sum: {image.sum()} (frame id: {frameId})')
         outputFrame = pvObject
         fieldDataType = outputFrame.getStructureDict()['value'][0][fieldKey]
