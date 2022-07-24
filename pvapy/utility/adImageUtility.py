@@ -54,7 +54,15 @@ class AdImageUtility:
         else:
             colorMode = cls.COLOR_MODE_MONO
 
-        if nDims == 2 and colorMode == cls.COLOR_MODE_MONO:
+        if nDims == 0:
+            nx = None
+            ny = None
+            nz = None
+            image = None
+            colorMode = None
+            fieldKey = None
+            return (imageId,image,nx,ny,nz,colorMode,fieldKey)
+        elif nDims == 2 and colorMode == cls.COLOR_MODE_MONO:
             nx = dims[0]['size']
             ny = dims[1]['size']
             nz = None
@@ -102,6 +110,10 @@ class AdImageUtility:
             raise pva.InvalidArgument('Unsupported color mode: {colorMode}')
 
         return (imageId,image,nx,ny,nz,colorMode,fieldKey)
+
+    @classmethod
+    def getNtNdArrayDataTypeKey(cls, image):
+        return cls.PVA_TYPE_KEY_MAP.get(image.dtype)
 
     @classmethod
     def generateNtNdArray2D(cls, imageId, image, extraFieldsPvObject=None):
