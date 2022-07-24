@@ -9,6 +9,7 @@ import numpy as np
 import pvaccess as pva
 import os
 import os.path
+from ..utility.adImageUtility import AdImageUtility
 
 __version__ = pva.__version__
 
@@ -16,18 +17,6 @@ class AdSimServer:
 
     DELAY_CORRECTION = 0.0001
     NOTIFICATION_DELAY = 0.1
-    PVA_TYPE_KEY_MAP = {
-        np.dtype('uint8')   : 'ubyteValue',
-        np.dtype('int8')    : 'byteValue',
-        np.dtype('uint16')  : 'ushortValue',
-        np.dtype('int16')   : 'shortValue',
-        np.dtype('uint32')  : 'uintValue',
-        np.dtype('int32')   : 'intValue',
-        np.dtype('uint64')  : 'ulongValue',
-        np.dtype('int64')   : 'longValue',
-        np.dtype('float32') : 'floatValue',
-        np.dtype('float64') : 'doubleValue'
-    }
 
     def __init__(self, inputDirectory, inputFile, mmapMode, frameRate, nf, nx, ny, datatype, minimum, maximum, runtime, channelName, notifyPv, notifyPvValue, startDelay, reportPeriod):
         self.deltaT = 0
@@ -90,7 +79,6 @@ class AdSimServer:
             print(f'Generated frame shape: {self.frames[0].shape}')
             print(f'Range of generated values: [{mn},{mx}]')
         self.nInputFrames, self.rows, self.cols = self.frames.shape
-        self.pvaTypeKey = self.PVA_TYPE_KEY_MAP.get(self.frames.dtype)
         print(f'Number of input frames: {self.nInputFrames} (size: {self.cols}x{self.rows}, type: {self.frames.dtype})')
 
         self.channelName = channelName
@@ -115,40 +103,13 @@ class AdSimServer:
         self.isDone = False
         self.screen = None
 
-    def getTimestamp(self):
-        s = time.time()
-        ns = int((s-int(s))*1000000000)
-        s = int(s)
-        return pva.PvTimeStamp(s,ns)
-
     def frameProducer(self, extraFieldsPvObject=None):
         for frameId in range(0, self.nInputFrames):
             if self.isDone:
                return
 
-            if extraFieldsPvObject is None:
-                nda = pva.NtNdArray()
-            else:
-                nda = pva.NtNdArray(extraFieldsPvObject.getStructureDict())
-
-            data = self.frames[frameId].flatten()
-            nda['uniqueId'] = frameId
-            #nda['codec'] = pva.PvCodec('pvapyc', pva.PvInt(6))
-            dims = [pva.PvDimension(self.cols, 0, self.cols, 1, False), \
-                    pva.PvDimension(self.rows, 0, self.rows, 1, False)]
-            nda['dimension'] = dims
-            nda['compressedSize'] = self.rows*self.cols*data.itemsize
-            nda['uncompressedSize'] = self.rows*self.cols*data.itemsize
-            ts = self.getTimestamp()
-            nda['timeStamp'] = ts
-            nda['dataTimeStamp'] = ts
-            nda['descriptor'] = 'PvaPy Simulated Image'
-            nda['value'] = {self.pvaTypeKey : data}
-            attrs = [pva.NtAttribute('ColorMode', pva.PvInt(0))]
-            nda['attribute'] = attrs
-            if extraFieldsPvObject is not None:
-                nda.set(extraFieldsPvObject)
-            self.frameMap[frameId] = nda
+            frame = self.frames[frameId]
+            self.frameMap[frameId] = AdImageUtility.generateNtNdArray2D(frameId, frame, extraFieldsPvObject)
 
     def prepareFrame(self):
         # Get cached frame
@@ -158,10 +119,10 @@ class AdSimServer:
             cachedFrameId = 0
         frame = self.frameMap[cachedFrameId]
 
-        # Correct image id and timeestamps
+        # Correct image id and timestamps
         self.currentFrameId += 1
         frame['uniqueId'] = self.currentFrameId
-        ts = self.getTimestamp()
+        ts = pva.PvTimeStamp(time.time())
         frame['timeStamp'] = ts
         frame['dataTimeStamp'] = ts
         return frame
