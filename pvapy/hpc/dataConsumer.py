@@ -8,7 +8,7 @@ class DataConsumer:
 
     PROVIDER_TYPE_MAP = { 'pva' : pva.PVA, 'ca' : pva.CA }
 
-    def __init__(self, consumerId, inputChannel, providerType=pva.PVA, serverQueueSize=0, distributorPluginName='pydistributor', distributorGroupId=None, distributorSetId=None, distributorTriggerFieldName=None, distributorUpdates=None, distributorUpdateMode=None, pvObjectQueue=None, dataProcessor=None):
+    def __init__(self, consumerId, inputChannel, providerType=pva.PVA, serverQueueSize=0, distributorPluginName='pydistributor', distributorGroupId=None, distributorSetId=None, distributorTriggerFieldName=None, distributorUpdates=None, distributorUpdateMode=None, pvObjectQueue=None, processingController=None):
         self.logger = LoggingManager.getLogger('consumer-{}'.format(consumerId))
         self.consumerId = consumerId
         providerType = self.PROVIDER_TYPE_MAP.get(providerType.lower(), pva.PVA)
@@ -25,13 +25,13 @@ class DataConsumer:
         self.pvObjectQueue = pvObjectQueue
         if pvObjectQueue is not None:
             self.logger.debug(f'Using PvObjectQueue of size: {pvObjectQueue.maxLength}')
-        self.dataProcessor = dataProcessor
+        self.processingController = processingController
         self.startTime = None
         self.endTime = None
 
         # If first object is ignored, stats will be adjusted
         self.nReceivedOffset = 0
-        if self.dataProcessor and hasattr(self.dataProcessor, 'ignoreFirstObject') and self.dataProcessor.ignoreFirstObject:
+        if self.processingController and hasattr(self.processingController, 'ignoreFirstObject') and self.processingController.ignoreFirstObject:
             self.nReceivedOffset = 1
 
         self.logger.debug(f'Created data consumer {consumerId}')
@@ -72,15 +72,15 @@ class DataConsumer:
                 if self.pvObjectQueue is not None:
                     self.logger.debug(f'Resetting PvObjectQueue size from {self.pvObjectQueue.maxLength} to {consumerQueueSize}')
                 self.pvObjectQueue.maxLength = consumerQueueSize
-        if self.dataProcessor:
-            self.dataProcessor._configure(kwargs)
+        if self.processingController:
+            self.processingController.configure(kwargs)
 
     def process(self, pv):
-        if self.dataProcessor:
+        if self.processingController:
             # Data processor will call process() method
             # of the derived class. In this way we can
             # track processing errors.
-            self.dataProcessor._process(pv)
+            self.processingController.process(pv)
 
     # Return true if object was processed, False otherwise
     def processFromQueue(self, waitTime):
@@ -98,8 +98,8 @@ class DataConsumer:
         self.channel.resetMonitorCounters()
         if self.pvObjectQueue is not None:
             self.pvObjectQueue.resetCounters()
-        if self.dataProcessor:
-            self.dataProcessor.resetStats()
+        if self.processingController:
+            self.processingController.resetStats()
 
     def getMonitorStats(self):
         return self.channel.getMonitorCounters()
@@ -110,8 +110,13 @@ class DataConsumer:
         return {}
         
     def getProcessorStats(self):
-        if self.dataProcessor:
-            return self.dataProcessor.getStats()
+        if self.processingController:
+            return self.processingController.getProcessorStats()
+        return {}
+
+    def getUserStats(self):
+        if self.processingController:
+            return self.processingController.getUserStats()
         return {}
 
     def getStats(self):
@@ -119,6 +124,7 @@ class DataConsumer:
         queueStats = self.getQueueStats()
         nOverruns = monitorStats.get('nOverruns', 0)
         processorStats = self.getProcessorStats()
+        userStats = self.getUserStats()
         receivedRate = 0
         overrunRate = 0
         receivingTime = processorStats.get('receivingTime', 0)
@@ -128,7 +134,7 @@ class DataConsumer:
             overrunRate = nOverruns/receivingTime
         monitorStats['receivedRate'] = receivedRate
         monitorStats['overrunRate'] = overrunRate
-        return {'monitorStats' : monitorStats, 'queueStats' : queueStats, 'processorStats' : processorStats}
+        return {'monitorStats' : monitorStats, 'queueStats' : queueStats, 'processorStats' : processorStats, 'userStats' : userStats}
 
     def getConsumerId(self):
         return self.consumerId
@@ -144,12 +150,12 @@ class DataConsumer:
             self.logger.debug('Starting process monitor')
             self.channel.monitor(self.process, request)
 
-        if self.dataProcessor:
-            self.dataProcessor._start()
+        if self.processingController:
+            self.processingController.start()
 
     def stop(self):
         self.endTime = time.time()
         self.channel.stopMonitor()
-        if self.dataProcessor:
-            self.dataProcessor._stop()
+        if self.processingController:
+            self.processingController.stop()
 

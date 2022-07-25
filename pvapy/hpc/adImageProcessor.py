@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 
-from .dataProcessor import DataProcessor
+from .userDataProcessor import UserDataProcessor
 from ..utility.adImageUtility import AdImageUtility
 
-# AD Image Processor class
-class AdImageProcessor(DataProcessor):
+# Class that should be used as base for all AD image processing
+class AdImageProcessor(UserDataProcessor):
 
     def __init__(self, configDict={}):
-        DataProcessor.__init__(self, configDict)
+        UserDataProcessor.__init__(self, configDict)
 
     @classmethod
     def reshapeNtNdArray(cls, ntnda):

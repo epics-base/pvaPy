@@ -11,6 +11,7 @@ import multiprocessing as mp
 from ..utility.loggingManager import LoggingManager
 from ..utility.objectUtility import ObjectUtility
 from ..hpc.dataConsumer import DataConsumer
+from ..hpc.dataProcessingController import DataProcessingController
 
 __version__ = pva.__version__
 
@@ -162,7 +163,7 @@ class ConsumerController:
         self.controlPvObject['statusMessage'] = statusMessage
 
     def createProcessor(self, consumerId, args):
-        dataProcessor = None
+        userDataProcessor = None
         oidOffset = 1
         if args.oid_offset <= 0 and args.distributor_updates is not None:
             if args.n_distributor_sets > 1:
@@ -180,33 +181,43 @@ class ConsumerController:
             outputChannel = f'{args.input_channel}:consumer:{consumerId}:output'
             self.logger.debug(f'Determined processor output channel name: {outputChannel}')
 
-        if args.processor_file and args.processor_class:
-            # Create config dict
-            processorConfig = {}
-            processorConfig['inputChannel'] = args.input_channel
-            if args.processor_kwargs:
-                processorConfig = json.loads(args.processor_kwargs)
-            if not 'processorId' in processorConfig:
-                processorConfig['processorId'] = consumerId
-            if not 'processFirstUpdate' in processorConfig:
-                processorConfig['processFirstUpdate'] = args.process_first_update
-            if not 'objectIdField' in processorConfig:
-                processorConfig['objectIdField'] = args.oid_field
-            if not 'objectIdOffset' in processorConfig:
-                processorConfig['objectIdOffset'] = oidOffset
-            if not 'outputChannel' in processorConfig:
-                processorConfig['outputChannel'] = outputChannel
+        # Create config dict
+        processorConfig = {}
+        if args.processor_kwargs:
+            processorConfig = json.loads(args.processor_kwargs)
+        processorConfig['inputChannel'] = args.input_channel
+        if not 'processorId' in processorConfig:
+            processorConfig['processorId'] = consumerId
+        if not 'processFirstUpdate' in processorConfig:
+            processorConfig['processFirstUpdate'] = args.process_first_update
+        if not 'objectIdField' in processorConfig:
+            processorConfig['objectIdField'] = args.oid_field
+        if not 'objectIdOffset' in processorConfig:
+            processorConfig['objectIdOffset'] = oidOffset
+        if not 'outputChannel' in processorConfig:
+            processorConfig['outputChannel'] = outputChannel
 
-            self.logger.debug(f'Using processor configuration: {processorConfig}')
-            dataProcessor = ObjectUtility.createObjectInstanceFromFile(args.processor_file, 'dataProcessor', args.processor_class, processorConfig)
-            if dataProcessor is not None:
-                self.logger.debug(f'Created data processor {consumerId}: {dataProcessor}')
+        self.logger.debug(f'Using processor configuration: {processorConfig}')
+        if args.processor_file and args.processor_class:
+            userDataProcessor = ObjectUtility.createObjectInstanceFromFile(args.processor_file, 'userDataProcessorModule', args.processor_class, processorConfig)
+            if userDataProcessor is not None:
+                self.logger.debug(f'Created data processor {consumerId}: {userDataProcessor}')
+                userDataProcessor.consumerId = consumerId
             else: 
                 raise pva.InvalidArgument(f'Could not create data processor instance of class {args.processor_class} from file {args.processor_file}')
-        return dataProcessor
+        processingController = DataProcessingController(processorConfig, userDataProcessor)
+        return processingController
             
+    def getConsumerStatusTypeDict(self, processingController):
+        statusTypeDict = self.CONSUMER_STATUS_TYPE_DICT
+        if processingController:
+            userStatsTypeDict = processingController.getUserStatsPvaTypes()
+            if userStatsTypeDict:
+                statusTypeDict['userStats'] = processingController.getUserStatsPvaTypes()
+        return statusTypeDict
+
     def createConsumer(self, consumerId, args):
-        dataProcessor = self.createProcessor(consumerId, args)
+        processingController = self.createProcessor(consumerId, args)
             
         pvObjectQueue = None
         self.usingPvObjectQueue = False
@@ -221,7 +232,8 @@ class ConsumerController:
             self.logger.debug(f'Determined consumer status channel name: {self.statusChannel}')
         if self.statusChannel:
             self.pvaServer = pva.PvaServer()
-            statusPvObject = pva.PvObject(self.CONSUMER_STATUS_TYPE_DICT, {'consumerId' : consumerId})
+            self.statusTypeDict = self.getConsumerStatusTypeDict(processingController)
+            statusPvObject = pva.PvObject(self.statusTypeDict, {'consumerId' : consumerId})
             self.pvaServer.addRecord(self.statusChannel, statusPvObject)
             self.logger.debug(f'Created consumer status channel: {self.statusChannel}')
 
@@ -239,10 +251,10 @@ class ConsumerController:
             self.logger.debug(f'Created consumer control channel: {self.controlChannel}')
 
         # Share PVA server if we have one
-        if dataProcessor and self.pvaServer:
-            dataProcessor.pvaServer = self.pvaServer
+        if processingController and self.pvaServer:
+            processingController.pvaServer = self.pvaServer
 
-        self.dataConsumer = DataConsumer(consumerId, args.input_channel, providerType=args.input_provider_type, serverQueueSize=args.server_queue_size, distributorPluginName=args.distributor_plugin_name, distributorGroupId=args.distributor_group, distributorSetId=args.distributor_set, distributorTriggerFieldName=args.distributor_trigger, distributorUpdates=args.distributor_updates, distributorUpdateMode=None, pvObjectQueue=pvObjectQueue, dataProcessor=dataProcessor)
+        self.dataConsumer = DataConsumer(consumerId, args.input_channel, providerType=args.input_provider_type, serverQueueSize=args.server_queue_size, distributorPluginName=args.distributor_plugin_name, distributorGroupId=args.distributor_group, distributorSetId=args.distributor_set, distributorTriggerFieldName=args.distributor_trigger, distributorUpdates=args.distributor_updates, distributorUpdateMode=None, pvObjectQueue=pvObjectQueue, processingController=processingController)
         return self.dataConsumer
 
     def startConsumers(self):
@@ -307,10 +319,18 @@ class ConsumerController:
         t = time.time()
         if self.pvaServer:
             consumerId = self.dataConsumer.getConsumerId()
-            statusObject = pva.PvObject(self.CONSUMER_STATUS_TYPE_DICT, {'consumerId' : consumerId, 'objectId' : self.statsObjectId, 'objectTime' : t, 'objectTimestamp' : pva.PvTimeStamp(t)})
+            statusObject = pva.PvObject(self.statusTypeDict, {'consumerId' : consumerId, 'objectId' : self.statsObjectId, 'objectTime' : t, 'objectTimestamp' : pva.PvTimeStamp(t)})
             statusObject['monitorStats'] = statsDict.get('monitorStats', {})
             statusObject['queueStats'] = statsDict.get('queueStats', {})
             statusObject['processorStats'] = statsDict.get('processorStats', {})
+            userStatsPvaTypes = self.statusTypeDict.get('userStats', {})
+            if userStatsPvaTypes: 
+                userStats = statsDict.get('userStats', {})
+                filteredUserStats = {}
+                for k,v in userStats.items():
+                    if k in userStatsPvaTypes:
+                        filteredUserStats[k] = v
+                statusObject['userStats'] = filteredUserStats
             self.pvaServer.update(self.statusChannel, statusObject)
         return statsDict 
 
@@ -534,9 +554,9 @@ def main():
     parser.add_argument('-cc', '--control-channel', dest='control_channel', default=None, help='Control channel name (default: None). If specified, this channel can be used to control consumer configuration and processing. The value of "_" indicates that the control channel name will be set to "<input channel>:consumer:<consumer id>:control". The control channel object has two strings: command and kwargs. The only allowed values for the command string are: "configure", "reset_stats", "get_stats" and "stop". The configure command is used to allow for runtime configuration changes; in this case the keyword arguments string should be in json format to allow data consumer to convert it into python dictionary that contains new configuration. For example, sending configuration dictionary via pvput command might look like this: pvput input_channel:consumer:2:control \'{"command" : "configure", "kwargs" : "{\\"x\\":100}"}\'. Note that system parameters that can be modified at runtime are the following: "consumerQueueSize" (only if consumer queue has been configured at the start), "processFirstUpdate" (affects consumer behavior after resetting stats), and "objectIdOffset" (may be used to adjust offset if consumers have been added or removed from processing). The reset_stats command will cause consumer to reset it statistics data, the get_stats will force statistics data update, and the stop command will result in consumer process exiting; for all these commands kwargs string is not needed.')
     parser.add_argument('-sqs', '--server-queue-size', type=int, dest='server_queue_size', default=0, help='Server queue size (default: 0); this setting will increase memory usage on the server side, but may help prevent missed PV updates.')
     parser.add_argument('-cqs', '--consumer-queue-size', type=int, dest='consumer_queue_size', default=-1, help='Consumer queue size (default: -1); if >= 0, PvObjectQueue will be used for receving PV updates (value of zero indicates infinite queue size).')
-    parser.add_argument('-pf', '--processor-file', dest='processor_file', default=None, help='Full path to the python file containing processor class.')
-    parser.add_argument('-pc', '--processor-class', dest='processor_class', default=None, help='Name of the class located in the processor file that will be processing PV updates; it should be initialized with a dictionary and must implement the "process(self, pv)" method.')
-    parser.add_argument('-pk', '--processor-kwargs', dest='processor_kwargs', default=None, help='JSON-formatted string that can be converted into dictionary and used for initializing processor object.')
+    parser.add_argument('-pf', '--processor-file', dest='processor_file', default=None, help='Full path to the python file containing user processor class.')
+    parser.add_argument('-pc', '--processor-class', dest='processor_class', default=None, help='Name of the class located in the user processor file that will be processing PV updates; it should be initialized with a dictionary and must implement the "process(self, pv)" method.')
+    parser.add_argument('-pk', '--processor-kwargs', dest='processor_kwargs', default=None, help='JSON-formatted string that can be converted into dictionary and used for initializing user processor object.')
     parser.add_argument('-oo', '--oid-offset', type=int, dest='oid_offset', default=0, help='This parameter determines by how much object id should change between the two PV updates, and is used for determining the number of missed PV updates (default: 0). This parameter is ignored if processor kwargs dictionary contains "objectIdOffset" key, and should be modified only if data distributor plugin will be distributing data between multiple clients, in which case it should be set to "(<nConsumers>-1)*<nUpdates>+1" for a single client set, or to "(<nSets>-1)*<nUpdates>+1" for multiple client sets. Values <= 0 will be replaced with the appropriate value depending on the number of client sets specified. Note that this relies on using the same value for the --n-distributor-sets when multiple instances of this command are running separately.')
     parser.add_argument('-of', '--oid-field', dest='oid_field', default='uniqueId', help='PV update id field used for calculating data processor statistics (default: uniqueId). This parameter is ignored if processor kwargs dictionary contains "objectIdField" key.')
     parser.add_argument('-pfu', '--process-first-update', dest='process_first_update', default=False, action='store_true', help='Process first PV update (default: False). This parameter is ignored if processor kwargs dictionary contains "processFirstUpdate" key.')
@@ -548,7 +568,7 @@ def main():
     parser.add_argument('-nds', '--n-distributor-sets', type=int, dest='n_distributor_sets', default=1, help='Number of distributor client sets (default: 1). This setting is used to determine appropriate value for the processor object id offset in case where multiple instances of this command are running separately for different client sets. If distributor client set is not specified, this setting is ignored.')
     parser.add_argument('-rt', '--runtime', type=float, dest='runtime', default=0, help='Server runtime in seconds; values <=0 indicate infinite runtime (default: infinite).')
     parser.add_argument('-rp', '--report-period', type=float, dest='report_period', default=0, help='Statistics report period for all consumers in seconds; values <=0 indicate no reporting (default: 0).')
-    parser.add_argument('-rs', '--report-stats', dest='report_stats', default='all', help='Comma-separated list of statistics subsets that should be reported (default: all); possible values: monitor, queue, processor, all.')
+    parser.add_argument('-rs', '--report-stats', dest='report_stats', default='all', help='Comma-separated list of statistics subsets that should be reported (default: all); possible values: monitor, queue, processor, user, all.')
     parser.add_argument('-ll', '--log-level', dest='log_level', help='Log level; possible values: debug, info, warning, error, critical. If not provided, there will be no log output.')
     parser.add_argument('-lf', '--log-file', dest='log_file', help='Log file.')
     parser.add_argument('-dc', '--disable-curses', dest='disable_curses', default=False, action='store_true', help='Disable curses library screen handling. This is enabled by default, except when logging into standard output is turned on.')

@@ -4,15 +4,19 @@ import time
 import pvaccess as pva
 from ..utility.loggingManager import LoggingManager
 
-# Base data processor class
-class DataProcessor:
+# Data processor contrller class
+class DataProcessingController:
 
-    def __init__(self, configDict={}):
+    def __init__(self, configDict={}, userDataProcessor=None):
         self.configDict = configDict
+
         # Use data processor id for logging
         self.processorId = configDict.get('processorId', 0)
         self.logger = LoggingManager.getLogger(f'processor-{self.processorId}')
         self.logger.debug(f'Config dict: {configDict}')
+
+        self.userDataProcessor = userDataProcessor
+        self.logger.debug(f'User data processor: {userDataProcessor}')
 
         # Assume NTND Arrays if object id field is not passed in
         self.objectIdField = configDict.get('objectIdField', 'uniqueId')
@@ -32,35 +36,29 @@ class DataProcessor:
         # Defines all counters and sets them to zero
         self.resetStats()
 
-    # Interface method called at startup
     def start(self):
-        pass
-
-    def _start(self):
         if self.outputChannel and not self.pvaServer:
             self.pvaServerStarted = True
             self.pvaServer = pva.PvaServer()
             self.pvaServer.start()
         self.startTime = time.time()
-        self.start()
+        # Call user interface method for startup
+        if self.userDataProcessor:
+            self.userDataProcessor.pvaServer = self.pvaServer
+            self.userDataProcessor.outputChannel = self.outputChannel
+            self.userDataProcessor.start()
 
-    # Interface method called at shutdown
     def stop(self):
-        pass
-
-    def _stop(self):
         now = time.time()
         self.endTime = now
         self.processorStats = self.updateStats(now)
         if self.pvaServerStarted:
             self.pvaServer.stop()
-        self.stop()
+        # Call user interface method for shutdown
+        if self.userDataProcessor:
+            self.userDataProcessor.stop()
 
-    # Interface method called at configuration
     def configure(self, kwargs):
-        pass
-
-    def _configure(self, kwargs):
         if type(kwargs) == dict:
             if 'processFirstUpdate' in kwargs: 
                 self.processFirstUpdate = kwargs.get('processFirstUpdate')
@@ -68,13 +66,11 @@ class DataProcessor:
             if 'objectIdOffset' in kwargs: 
                 self.objectIdOffset = int(configDict.get('objectIdOffset', 1))
                 self.logger.debug(f'Resetting object id offset to {self.objectIdOffset}')
-        self.configure(kwargs)
+        # Call user interface method for configuration
+        if self.userDataProcessor:
+            self.userDataProcessor.configure(kwargs)
 
-    # Interface method called at processing channel updates
     def process(self, pvObject):
-        return pvObject
-
-    def _process(self, pvObject):
         now = time.time()
         objectId = pvObject[self.objectIdField]
         if self.lastObjectId is None: 
@@ -96,7 +92,11 @@ class DataProcessor:
         self.lastObjectTime = now
         self.statsNeedsUpdate = True
         try:
-            pvObject2 = self.process(pvObject)
+            # Call user interface method for processing
+            if self.userDataProcessor:
+                pvObject2 = self.userDataProcessor.process(pvObject)
+            else:
+                pvObject2 = pvObject
             self.nProcessed += 1
             return pvObject2
         except Exception as ex:
@@ -115,8 +115,23 @@ class DataProcessor:
         self.endTime = 0
         self.processorStats = {}
         self.statsNeedsUpdate = True
+        # Call user interface method for resetting stats
+        if self.userDataProcessor:
+            self.userDataProcessor.resetStats()
 
-    def getStats(self):
+    def getUserStats(self):
+        # Call user interface for retrieving stats
+        if self.userDataProcessor:
+            return self.userDataProcessor.getStats()
+        return {}
+
+    def getUserStatsPvaTypes(self):
+        # Call user interface for retrieving stats PVA types
+        if self.userDataProcessor:
+            return self.userDataProcessor.getStatsPvaTypes()
+        return {}
+
+    def getProcessorStats(self):
         if self.statsNeedsUpdate:
             self.processorStats = self.updateStats()
         else:

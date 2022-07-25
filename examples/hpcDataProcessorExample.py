@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 
-from pvapy.hpc.dataProcessor import DataProcessor
+from pvapy.hpc.userDataProcessor import UserDataProcessor
 
-# Example for a data processor implementation
-class HpcDataProcessor(DataProcessor):
+# Example for a trivial data processor implementation
+class HpcDataProcessor(UserDataProcessor):
 
     def __init__(self, configDict={}):
-        DataProcessor.__init__(self, configDict)
+        UserDataProcessor.__init__(self, configDict)
 
     def start(self):
         pass
@@ -15,7 +15,17 @@ class HpcDataProcessor(DataProcessor):
         pass
 
     def process(self, pvObject):
-        pass
+        return pvObject
 
     def stop(self):
         pass
+
+    def resetStats(self):
+        pass
+
+    def getStats(self):
+        return {}
+
+    def getStatsPvaTypes(self):
+        return {}
+
