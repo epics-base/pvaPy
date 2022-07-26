@@ -25,7 +25,7 @@ class UserDataProcessor:
 
     # Process monitor update
     def process(self, pvObject):
-        raise pva.PvaException('The process() method must be implemented.')
+        return pvObject
 
     # Method called at shutdown
     def stop(self):
