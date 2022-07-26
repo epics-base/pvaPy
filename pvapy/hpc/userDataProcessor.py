@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+
+import pvaccess as pva
 from ..utility.loggingManager import LoggingManager
 
 # Base user data processor class.
@@ -22,7 +25,7 @@ class UserDataProcessor:
 
     # Process monitor update
     def process(self, pvObject):
-        return pvObject
+        raise pva.PvaException('The process() method must be implemented.')
 
     # Method called at shutdown
     def stop(self):
