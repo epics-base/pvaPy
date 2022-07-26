@@ -176,16 +176,21 @@ class ConsumerController:
                 oidOffset = (args.n_consumers-1)*int(args.distributor_updates)+1
             self.logger.debug(f'Determined oid offset: {oidOffset}')
        
-        outputChannel =  args.output_channel
+        inputChannel = args.input_channel.replace('*', f'{consumerId}')
+        self.logger.debug(f'Processor input channel name: {inputChannel}')
+
+        outputChannel = args.output_channel
         if outputChannel == '_':
             outputChannel = f'{args.input_channel}:consumer:{consumerId}:output'
-            self.logger.debug(f'Determined processor output channel name: {outputChannel}')
+        if outputChannel:
+            outputChannel = outputChannel.replace('*', f'{consumerId}')
+            self.logger.debug(f'Processor output channel name: {outputChannel}')
 
         # Create config dict
         processorConfig = {}
         if args.processor_kwargs:
             processorConfig = json.loads(args.processor_kwargs)
-        processorConfig['inputChannel'] = args.input_channel
+        processorConfig['inputChannel'] = inputChannel
         if not 'processorId' in processorConfig:
             processorConfig['processorId'] = consumerId
         if not 'processFirstUpdate' in processorConfig:
@@ -200,11 +205,12 @@ class ConsumerController:
         self.logger.debug(f'Using processor configuration: {processorConfig}')
         if args.processor_file and args.processor_class:
             userDataProcessor = ObjectUtility.createObjectInstanceFromFile(args.processor_file, 'userDataProcessorModule', args.processor_class, processorConfig)
-            if userDataProcessor is not None:
-                self.logger.debug(f'Created data processor {consumerId}: {userDataProcessor}')
-                userDataProcessor.consumerId = consumerId
-            else: 
-                raise pva.InvalidArgument(f'Could not create data processor instance of class {args.processor_class} from file {args.processor_file}')
+        elif args.processor_class:
+            userDataProcessor = ObjectUtility.createObjectInstanceFromClassPath(args.processor_class, processorConfig)
+
+        if userDataProcessor is not None:
+            self.logger.debug(f'Created data processor {consumerId}: {userDataProcessor}')
+            userDataProcessor.consumerId = consumerId
         processingController = DataProcessingController(processorConfig, userDataProcessor)
         return processingController
             
@@ -226,10 +232,16 @@ class ConsumerController:
             self.usingPvObjectQueue = True
 
         self.pvaServer = None
+
+        inputChannel = args.input_channel.replace('*', f'{consumerId}')
+        self.logger.debug(f'Input channel name: {inputChannel}')
+
         self.statusChannel = args.status_channel
         if self.statusChannel == '_':
             self.statusChannel = f'{args.input_channel}:consumer:{consumerId}:status'
-            self.logger.debug(f'Determined consumer status channel name: {self.statusChannel}')
+        if self.statusChannel:
+            self.statusChannel = self.statusChannel.replace('*', f'{consumerId}')
+            self.logger.debug(f'Consumer status channel name: {self.statusChannel}')
         if self.statusChannel:
             self.pvaServer = pva.PvaServer()
             self.statusTypeDict = self.getConsumerStatusTypeDict(processingController)
@@ -240,7 +252,9 @@ class ConsumerController:
         self.controlChannel = args.control_channel
         if self.controlChannel == '_':
             self.controlChannel = f'{args.input_channel}:consumer:{consumerId}:control'
-            self.logger.debug(f'Determined consumer control channel name: {self.controlChannel}')
+        if self.controlChannel:
+            self.controlChannel = self.controlChannel.replace('*', f'{consumerId}')
+            self.logger.debug(f'Consumer control channel name: {self.controlChannel}')
         if self.controlChannel:
             if not self.pvaServer:
                 self.pvaServer = pva.PvaServer()
@@ -254,7 +268,7 @@ class ConsumerController:
         if processingController and self.pvaServer:
             processingController.pvaServer = self.pvaServer
 
-        self.dataConsumer = DataConsumer(consumerId, args.input_channel, providerType=args.input_provider_type, serverQueueSize=args.server_queue_size, distributorPluginName=args.distributor_plugin_name, distributorGroupId=args.distributor_group, distributorSetId=args.distributor_set, distributorTriggerFieldName=args.distributor_trigger, distributorUpdates=args.distributor_updates, distributorUpdateMode=None, pvObjectQueue=pvObjectQueue, processingController=processingController)
+        self.dataConsumer = DataConsumer(consumerId, inputChannel, providerType=args.input_provider_type, serverQueueSize=args.server_queue_size, distributorPluginName=args.distributor_plugin_name, distributorGroupId=args.distributor_group, distributorSetId=args.distributor_set, distributorTriggerFieldName=args.distributor_trigger, distributorUpdates=args.distributor_updates, distributorUpdateMode=None, pvObjectQueue=pvObjectQueue, processingController=processingController)
         return self.dataConsumer
 
     def startConsumers(self):
@@ -547,15 +561,15 @@ def main():
     parser.add_argument('-v', '--version', action='version', version='%(prog)s {version}'.format(version=__version__))
     parser.add_argument('-id', '--consumer-id', dest='consumer_id', type=int, default=1, help='Consumer id (default: 1). If spawning multiple consumers, this option will be interpreted as the first consumer id; for each subsequent consumer id will be increased by 1. Note that consumer id is used for naming various PVA channels, so care must be taken when multiple consumer processes are running independently of each other.')
     parser.add_argument('-nc', '--n-consumers', type=int, dest='n_consumers', default=1, help='Number of consumers to instantiate (default: 1). If > 1, multiprocessing module will be used for receiving and processing data in separate processes.')
-    parser.add_argument('-ic', '--input-channel', dest='input_channel', required=True, help='Input PV channel name.')
+    parser.add_argument('-ic', '--input-channel', dest='input_channel', required=True, help='Input PV channel name. The "*" character will be replaced with <consumer id>.')
     parser.add_argument('-ipt', '--input-provider-type', dest='input_provider_type', default='pva', help='Input PV channel provider type, it must be either "pva" or "ca" (default: pva).')
-    parser.add_argument('-oc', '--output-channel', dest='output_channel', default=None, help='Output PVA channel name (default: None). If specified, this channel can be used for publishing processing results. The value of "_" indicates that the output channel name will be set to "<input channel>:consumer:<consumer id>:output". Note that this parameter is ignored if processor kwargs dictionary contains "outputChannel" key.')
-    parser.add_argument('-sc', '--status-channel', dest='status_channel', default=None, help='Status PVA channel name (default: None). If specified, this channel will provide consumer status. The value of "_" indicates that the status channel name will be set to "<input channel>:consumer:<consumer id>:status".')
-    parser.add_argument('-cc', '--control-channel', dest='control_channel', default=None, help='Control channel name (default: None). If specified, this channel can be used to control consumer configuration and processing. The value of "_" indicates that the control channel name will be set to "<input channel>:consumer:<consumer id>:control". The control channel object has two strings: command and kwargs. The only allowed values for the command string are: "configure", "reset_stats", "get_stats" and "stop". The configure command is used to allow for runtime configuration changes; in this case the keyword arguments string should be in json format to allow data consumer to convert it into python dictionary that contains new configuration. For example, sending configuration dictionary via pvput command might look like this: pvput input_channel:consumer:2:control \'{"command" : "configure", "kwargs" : "{\\"x\\":100}"}\'. Note that system parameters that can be modified at runtime are the following: "consumerQueueSize" (only if consumer queue has been configured at the start), "processFirstUpdate" (affects consumer behavior after resetting stats), and "objectIdOffset" (may be used to adjust offset if consumers have been added or removed from processing). The reset_stats command will cause consumer to reset it statistics data, the get_stats will force statistics data update, and the stop command will result in consumer process exiting; for all these commands kwargs string is not needed.')
+    parser.add_argument('-oc', '--output-channel', dest='output_channel', default=None, help='Output PVA channel name (default: None). If specified, this channel can be used for publishing processing results. The value of "_" indicates that the output channel name will be set to "<input channel>:consumer:<consumer id>:output", while the "*" character will be replaced with <consumer id>. Note that this parameter is ignored if processor kwargs dictionary contains "outputChannel" key.')
+    parser.add_argument('-sc', '--status-channel', dest='status_channel', default=None, help='Status PVA channel name (default: None). If specified, this channel will provide consumer status. The value of "_" indicates that the status channel name will be set to "<input channel>:consumer:<consumer id>:status", while the "*" character will be replaced with <consumer id>.')
+    parser.add_argument('-cc', '--control-channel', dest='control_channel', default=None, help='Control channel name (default: None). If specified, this channel can be used to control consumer configuration and processing. The value of "_" indicates that the control channel name will be set to "<input channel>:consumer:<consumer id>:control", while the "*" character will be replaced with <consumer id>. The control channel object has two strings: command and kwargs. The only allowed values for the command string are: "configure", "reset_stats", "get_stats" and "stop". The configure command is used to allow for runtime configuration changes; in this case the keyword arguments string should be in json format to allow data consumer to convert it into python dictionary that contains new configuration. For example, sending configuration dictionary via pvput command might look like this: pvput input_channel:consumer:2:control \'{"command" : "configure", "kwargs" : "{\\"x\\":100}"}\'. Note that system parameters that can be modified at runtime are the following: "consumerQueueSize" (only if consumer queue has been configured at the start), "processFirstUpdate" (affects consumer behavior after resetting stats), and "objectIdOffset" (may be used to adjust offset if consumers have been added or removed from processing). The reset_stats command will cause consumer to reset it statistics data, the get_stats will force statistics data update, and the stop command will result in consumer process exiting; for all these commands kwargs string is not needed.')
     parser.add_argument('-sqs', '--server-queue-size', type=int, dest='server_queue_size', default=0, help='Server queue size (default: 0); this setting will increase memory usage on the server side, but may help prevent missed PV updates.')
     parser.add_argument('-cqs', '--consumer-queue-size', type=int, dest='consumer_queue_size', default=-1, help='Consumer queue size (default: -1); if >= 0, PvObjectQueue will be used for receving PV updates (value of zero indicates infinite queue size).')
-    parser.add_argument('-pf', '--processor-file', dest='processor_file', default=None, help='Full path to the python file containing user processor class.')
-    parser.add_argument('-pc', '--processor-class', dest='processor_class', default=None, help='Name of the class located in the user processor file that will be processing PV updates; it should be initialized with a dictionary and must implement the "process(self, pv)" method.')
+    parser.add_argument('-pf', '--processor-file', dest='processor_file', default=None, help='Full path to the python file containing user processor class. If this option is not used, the processor class should be specified using "<modulePath>.<className>" notation.')
+    parser.add_argument('-pc', '--processor-class', dest='processor_class', default=None, help='Name of the class located in the user processor file that will be processing PV updates. Alternatively, if processor file is not given, the processor class should be specified using the "<modulePath>.<className>" notation. The class should be initialized with a dictionary and must implement the "process(self, pv)" method.')
     parser.add_argument('-pk', '--processor-kwargs', dest='processor_kwargs', default=None, help='JSON-formatted string that can be converted into dictionary and used for initializing user processor object.')
     parser.add_argument('-oo', '--oid-offset', type=int, dest='oid_offset', default=0, help='This parameter determines by how much object id should change between the two PV updates, and is used for determining the number of missed PV updates (default: 0). This parameter is ignored if processor kwargs dictionary contains "objectIdOffset" key, and should be modified only if data distributor plugin will be distributing data between multiple clients, in which case it should be set to "(<nConsumers>-1)*<nUpdates>+1" for a single client set, or to "(<nSets>-1)*<nUpdates>+1" for multiple client sets. Values <= 0 will be replaced with the appropriate value depending on the number of client sets specified. Note that this relies on using the same value for the --n-distributor-sets when multiple instances of this command are running separately.')
     parser.add_argument('-of', '--oid-field', dest='oid_field', default='uniqueId', help='PV update id field used for calculating data processor statistics (default: uniqueId). This parameter is ignored if processor kwargs dictionary contains "objectIdField" key.')
