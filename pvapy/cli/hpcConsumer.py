@@ -318,7 +318,7 @@ class ConsumerController:
     def _formatDictEntry(self, k, v):
         if k.endswith('ime'):
             # anything ending with time or Time
-            return '{}={:.3f}s'.format(k,v)
+            return '{}={:.4f}s'.format(k,v)
         elif k.endswith('ate'):
             # anything ending with rate or Rate
             return '{}={:.4f}Hz'.format(k,v)
