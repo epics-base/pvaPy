@@ -89,7 +89,7 @@ class ConsumerController:
         self.isDone = False
         self.statsObjectId = 0
         self.statsEnabled = {}
-        for statsType in ['monitor','queue','processor']:
+        for statsType in ['monitor','queue','processor','user']:
             self.statsEnabled[f'{statsType}Stats'] = 'all' in args.report_stats or statsType in args.report_stats
 
     def controlCallback(self, pv):
