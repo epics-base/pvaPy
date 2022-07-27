@@ -94,7 +94,7 @@ class AdOutputFileProcessor(AdImageProcessor):
     def getStatsPvaTypes(self):
         return {
             'nFilesSaved' : pva.UINT,
-            'nBytesSaved' : pva.UINT,
+            'nBytesSaved' : pva.ULONG,
             'fileProcessingTime' : pva.DOUBLE,
             'fileProcessingRate' : pva.DOUBLE,
             'dataStorageRate' : pva.DOUBLE
