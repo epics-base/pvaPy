@@ -322,6 +322,8 @@ class ConsumerController:
         elif k.endswith('ate'):
             # anything ending with rate or Rate
             return '{}={:.4f}Hz'.format(k,v)
+        elif type(v) == float:
+            return '{}={:.4f}'.format(k,v)
         else:
             return '{}={}'.format(k,v)
 
