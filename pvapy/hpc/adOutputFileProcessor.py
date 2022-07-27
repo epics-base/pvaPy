@@ -55,6 +55,7 @@ class AdOutputFileProcessor(AdImageProcessor):
         self.logger.debug(f'Saving frame {frameId} to file {filePath}')
         im = Image.fromarray(imageData)
         im.save(filePath)
+        self.updateOutputChannel(pvObject)
         t1 = time.time()
         dt = t1-t0
         nBytesSaved = os.stat(filePath)[stat.ST_SIZE]
