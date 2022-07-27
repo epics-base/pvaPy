@@ -10,6 +10,8 @@ from .adImageProcessor import AdImageProcessor
 # Processor that saves output files
 class AdOutputFileProcessor(AdImageProcessor):
 
+    BYTES_IN_MEGABYTE = 1000000
+
     def __init__(self, configDict={}):
         AdImageProcessor.__init__(self,configDict)
         self.outputDirectory = configDict.get('outputDirectory', '.')
@@ -78,16 +80,16 @@ class AdOutputFileProcessor(AdImageProcessor):
     # Retrieve statistics for user processor
     def getStats(self):
         fileProcessingRate = 0
-        dataStorageRate = 0
+        dataStorageRateMBps = 0
         if self.fileProcessingTime > 0:
             fileProcessingRate = self.nFilesSaved/self.fileProcessingTime
-            dataStorageRate = self.nBytesSaved/self.fileProcessingTime
+            dataStorageRateMBps = self.nBytesSaved/self.fileProcessingTime/self.BYTES_IN_MEGABYTE
         return {
             'nFilesSaved' : self.nFilesSaved,
             'nBytesSaved' : self.nBytesSaved,
             'fileProcessingTime' : self.fileProcessingTime,
             'fileProcessingRate' : fileProcessingRate,
-            'dataStorageRate' : dataStorageRate
+            'dataStorageRateMBps' : dataStorageRateMBps
         }
 
     # Define PVA types for different stats variables
@@ -97,6 +99,6 @@ class AdOutputFileProcessor(AdImageProcessor):
             'nBytesSaved' : pva.ULONG,
             'fileProcessingTime' : pva.DOUBLE,
             'fileProcessingRate' : pva.DOUBLE,
-            'dataStorageRate' : pva.DOUBLE
+            'dataStorageRateMBps' : pva.DOUBLE
         }
 
