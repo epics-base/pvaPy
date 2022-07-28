@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+import pvaccess as pva
+
 class ObjectUtility:
 
     @classmethod
