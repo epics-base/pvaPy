@@ -146,7 +146,7 @@ class DataConsumer:
         self.startTime = time.time()
         request = self.getPvMonitorRequest()
         self.logger.debug(f'Using request string {request}')
-        if self.pvObjectQueue is not None and isinstance(self.pvObjectQueue, pva.PvObjectQueue):
+        if self.pvObjectQueue is not None:
             self.logger.debug('Starting queue monitor')
             self.channel.qMonitor(self.pvObjectQueue, request)
         else:
