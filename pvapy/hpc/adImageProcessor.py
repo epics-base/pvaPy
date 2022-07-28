@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import pvaccess as pva
 from .userDataProcessor import UserDataProcessor
 from ..utility.adImageUtility import AdImageUtility
 
@@ -20,3 +21,9 @@ class AdImageProcessor(UserDataProcessor):
     @classmethod
     def generateNtNdArray2D(cls, imageId, image, extraFieldsPvObject=None):
         return AdImageUtility.generateNtNdArray2D(imageId, image, extraFieldsPvObject)
+
+    # Process monitor update
+    def process(self, pvObject):
+        self.logger.debug(f'Consumer {self.consumerId} processing frame {pvObject["uniqueId"]}')
+        return pvObject
+
