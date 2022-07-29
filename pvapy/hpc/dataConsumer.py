@@ -80,9 +80,6 @@ class DataConsumer:
 
     def process(self, pv):
         if self.processingController:
-            # Data processor will call process() method
-            # of the derived class. In this way we can
-            # track processing errors.
             self.processingController.process(pv)
 
     # Return true if object was processed, False otherwise

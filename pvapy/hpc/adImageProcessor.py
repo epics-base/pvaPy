@@ -25,5 +25,6 @@ class AdImageProcessor(UserDataProcessor):
     # Process monitor update
     def process(self, pvObject):
         self.logger.debug(f'Consumer {self.consumerId} processing frame {pvObject["uniqueId"]}')
+        self.updateOutputChannel(pvObject)
         return pvObject
 
