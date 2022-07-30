@@ -8,7 +8,7 @@ class DataConsumer:
 
     PROVIDER_TYPE_MAP = { 'pva' : pva.PVA, 'ca' : pva.CA }
 
-    def __init__(self, consumerId, inputChannel, providerType=pva.PVA, serverQueueSize=-1, consumerQueueSize=-1, distributorPluginName='pydistributor', distributorGroupId=None, distributorSetId=None, distributorTriggerFieldName=None, distributorUpdates=None, distributorUpdateMode=None, processingController=None):
+    def __init__(self, consumerId, inputChannel, providerType=pva.PVA, serverQueueSize=-1, monitorQueueSize=-1, distributorPluginName='pydistributor', distributorGroupId=None, distributorSetId=None, distributorTriggerFieldName=None, distributorUpdates=None, distributorUpdateMode=None, processingController=None):
         self.logger = LoggingManager.getLogger(f'consumer-{consumerId}')
         self.consumerId = consumerId
         providerType = self.PROVIDER_TYPE_MAP.get(providerType.lower(), pva.PVA)
@@ -23,10 +23,10 @@ class DataConsumer:
         self.distributorUpdates = distributorUpdates 
         self.distributorUpdateMode = distributorUpdateMode
         self.pvObjectQueue = None
-        self.consumerQueueSize = consumerQueueSize
-        if consumerQueueSize >= 0:
-            self.pvObjectQueue = pva.PvObjectQueue(consumerQueueSize)
-            self.logger.debug(f'Using PvObjectQueue of size: {consumerQueueSize}')
+        self.monitorQueueSize = monitorQueueSize
+        if monitorQueueSize >= 0:
+            self.pvObjectQueue = pva.PvObjectQueue(monitorQueueSize)
+            self.logger.debug(f'Using PvObjectQueue of size: {monitorQueueSize}')
         self.processingController = processingController
         self.startTime = None
         self.endTime = None
@@ -69,12 +69,12 @@ class DataConsumer:
 
     def configure(self, kwargs):
         if type(kwargs) == dict:
-            if 'consumerQueueSize' in kwargs:
-                consumerQueueSize = int(kwargs.get('consumerQueueSize'))
+            if 'monitorQueueSize' in kwargs:
+                monitorQueueSize = int(kwargs.get('monitorQueueSize'))
                 if self.pvObjectQueue is not None:
-                    self.logger.debug(f'Resetting PvObjectQueue size from {self.pvObjectQueue.maxLength} to {consumerQueueSize}')
-                    self.pvObjectQueue.maxLength = consumerQueueSize
-                    self.consumerQueueSize = consumerQueueSize
+                    self.logger.debug(f'Resetting PvObjectQueue size from {self.pvObjectQueue.maxLength} to {monitorQueueSize}')
+                    self.pvObjectQueue.maxLength = monitorQueueSize
+                    self.monitorQueueSize = monitorQueueSize
         if self.processingController:
             self.processingController.configure(kwargs)
 
