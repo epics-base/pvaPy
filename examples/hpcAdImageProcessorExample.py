@@ -28,7 +28,7 @@ class HpcAdImageProcessor(AdImageProcessor):
         if nx is None:
             self.logger.debug(f'Frame id {frameId} contains an empty image.')
             return pvObject
-        self.logger.debug(f'Consumer {self.consumerId} data sum: {image.sum()} (frame id: {frameId})')
+        self.logger.debug(f'Consumer {self.processorId} data sum: {image.sum()} (frame id: {frameId})')
         outputFrame = pvObject
         fieldDataType = outputFrame.getStructureDict()['value'][0][fieldKey]
         image2 = np.swapaxes(image, 0, 1).flatten()
