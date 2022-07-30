@@ -162,8 +162,7 @@ class ConsumerController:
         statusMessage = 'Stop flag set'
         self.controlPvObject['statusMessage'] = statusMessage
 
-    def createProcessor(self, consumerId, args):
-        userDataProcessor = None
+    def createProcessorConfig(self, consumerId, args):
         oidOffset = 1
         if args.oid_offset > 0:
             oidOffset = args.oid_offset
@@ -203,8 +202,13 @@ class ConsumerController:
             processorConfig['objectIdOffset'] = oidOffset
         if not 'outputChannel' in processorConfig:
             processorConfig['outputChannel'] = outputChannel
+        return processorConfig
 
+    def createProcessor(self, consumerId, args):
+        processorConfig = self.createProcessorConfig(consumerId, args)
         self.logger.debug(f'Using processor configuration: {processorConfig}')
+
+        userDataProcessor = None
         if args.processor_file and args.processor_class:
             userDataProcessor = ObjectUtility.createObjectInstanceFromFile(args.processor_file, 'userDataProcessorModule', args.processor_class, processorConfig)
         elif args.processor_class:
