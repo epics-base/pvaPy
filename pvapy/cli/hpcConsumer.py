@@ -10,6 +10,7 @@ import pvaccess as pva
 import multiprocessing as mp
 from ..utility.loggingManager import LoggingManager
 from ..utility.objectUtility import ObjectUtility
+from ..utility.pvapyPrettyPrinter import PvaPyPrettyPrinter
 from ..hpc.dataConsumer import DataConsumer
 from ..hpc.dataProcessingController import DataProcessingController
 
@@ -91,6 +92,7 @@ class ConsumerController:
         self.statsEnabled = {}
         for statsType in ['monitor','queue','processor','user']:
             self.statsEnabled[f'{statsType}Stats'] = 'all' in args.report_stats or statsType in args.report_stats
+        self.prettyPrinter = PvaPyPrettyPrinter()
 
     def controlCallback(self, pv):
         t = time.time()
@@ -283,8 +285,9 @@ class ConsumerController:
     def reportConsumerStats(self, statsDict=None):
         if not statsDict:
             statsDict = self.getConsumerStats()
-        consumerId = self.dataConsumer.getConsumerId()
-        report = self.formatConsumerStats(consumerId, statsDict)
+        consumerId = self.dataConsumer.consumerId
+        statsDict['consumerId'] = consumerId
+        report = self.prettyPrinter.pformat(statsDict)
         if self.screen:
             try:
                 self.screen.erase()
@@ -295,40 +298,6 @@ class ConsumerController:
                 # Turn screen off on errors
                 self.stopScreen()
         print(report)
-
-    def formatConsumerStats(self, consumerId, statsDict):
-        now = time.time()
-        report = 'consumer-{} @ {:.3f}s :\n'.format(consumerId, now)
-        for k,v in statsDict.items():
-            # Skip some keys and empty entries
-            if not v:
-                continue
-            if k in ['objectId']:
-                continue
-            if not self.statsEnabled.get(k, True):
-                continue
-            if type(v) == dict:
-                report += '  {:15s}:'.format(k)
-                for (k2,v2) in v.items():
-                    report += ' {}'.format(self._formatDictEntry(k2,v2))
-            else:
-                report += '  {}'.format(self._formatDictEntry(k,v))
-            report += '\n'
-        # Remove last new line
-        return report[0:-1] 
-
-    def _formatDictEntry(self, k, v):
-        if k.endswith('ime'):
-            # anything ending with time or Time
-            return '{}={:.4f}s'.format(k,v)
-        elif k.endswith('ate'):
-            # anything ending with rate or Rate
-            return '{}={:.4f}Hz'.format(k,v)
-        elif type(v) == float:
-            return '{}={:.4f}'.format(k,v)
-        else:
-            return '{}={}'.format(k,v)
-
 
     def getConsumerStats(self):
         statsDict = self.dataConsumer.getStats()
@@ -405,7 +374,8 @@ class MultiprocessConsumerController(ConsumerController):
             combinedStatsDict = self.getConsumerStats()
         report = ''
         for consumerId,statsDict in combinedStatsDict.items():
-            report += self.formatConsumerStats(consumerId, statsDict)
+            statsDict['consumerId'] = consumerId
+            report += self.prettyPrinter.pformat(statsDict)
             report += '\n'
         if self.screen:
             try:

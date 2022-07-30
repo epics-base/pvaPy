@@ -4,6 +4,7 @@ import time
 import threading
 import pvaccess as pva
 from ..utility.loggingManager import LoggingManager
+from ..utility.floatWithUnits import FloatWithUnits
 
 class ProducerChannel(pva.Channel):
     def __init__(self, producerId, channelName, serverQueueSize, monitorQueueSize, objectIdField, dataCollector):
@@ -324,8 +325,8 @@ class DataCollector:
         if receivingTime > 0 and nReceived >= 0:
             receivedRate = nReceived/receivingTime
             overrunRate = nOverruns/receivingTime
-        monitorStats['receivedRate'] = receivedRate
-        monitorStats['overrunRate'] = overrunRate
+        monitorStats['receivedRate'] = FloatWithUnits(receivedRate, 'Hz')
+        monitorStats['overrunRate'] = FloatWithUnits(overrunRate, 'Hz')
         return {'monitorStats' : monitorStats, 'queueStats' : queueStats}
         
     def getProcessorStats(self):

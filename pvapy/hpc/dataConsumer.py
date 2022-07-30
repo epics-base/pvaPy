@@ -3,6 +3,7 @@
 import time
 import pvaccess as pva
 from ..utility.loggingManager import LoggingManager
+from ..utility.floatWithUnits import FloatWithUnits
 
 class DataConsumer:
 
@@ -132,8 +133,8 @@ class DataConsumer:
         if receivingTime > 0 and nReceived >= 0:
             receivedRate = nReceived/receivingTime
             overrunRate = nOverruns/receivingTime
-        monitorStats['receivedRate'] = receivedRate
-        monitorStats['overrunRate'] = overrunRate
+        monitorStats['receivedRate'] = FloatWithUnits(receivedRate, 'Hz')
+        monitorStats['overrunRate'] = FloatWithUnits(overrunRate, 'Hz')
         return {'monitorStats' : monitorStats, 'queueStats' : queueStats, 'processorStats' : processorStats, 'userStats' : userStats}
 
     def getConsumerId(self):

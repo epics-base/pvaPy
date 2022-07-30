@@ -12,6 +12,7 @@ import pvaccess as pva
 import multiprocessing as mp
 from ..utility.loggingManager import LoggingManager
 from ..utility.objectUtility import ObjectUtility
+from ..utility.pvapyPrettyPrinter import PvaPyPrettyPrinter
 from ..hpc.dataCollector import DataCollector
 from ..hpc.dataProcessingController import DataProcessingController
 
@@ -25,20 +26,6 @@ GET_STATS_COMMAND = 'get_stats'
 RESET_STATS_COMMAND = 'reset_stats'
 CONFIGURE_COMMAND = 'configure'
 STOP_COMMAND = 'stop'
-
-    
-class PrettyFloat(float):
-    def __repr__(self):
-        return '%.15g' % self
-    
-def pretty_floats(obj):
-    if isinstance(obj, float):
-        return PrettyFloat(obj)
-    elif isinstance(obj, dict):
-        return dict((k, pretty_floats(v)) for k, v in obj.items())
-    elif isinstance(obj, (list, tuple)):
-        return list(map(pretty_floats, obj))
-    return obj
 
 class CollectorController:
 
@@ -218,7 +205,7 @@ class CollectorController:
 
         if userDataProcessor is not None:
             self.logger.debug(f'Created data processor {collectorId}: {userDataProcessor}')
-            userDataProcessor.processorId = processorId
+            userDataProcessor.processorId = collectorId
             userDataProcessor.collectorId = collectorId
             userDataProcessor.objectIdField = processorConfig['objectIdField']
         processingController = DataProcessingController(processorConfig, userDataProcessor)
@@ -294,13 +281,9 @@ class CollectorController:
         if not statsDict:
             statsDict = self.getCollectorStats()
         collectorId = self.dataCollector.collectorId
-        #report = self.formatCollectorStats(collectorId, statsDict)
-        PPRINT_INDENT = 2
-        PPRINT_DEPTH = 4
-        PPRINT_WIDTH = 256
-        #report = pprint.pformat(json.dumps(statsDict))
-        pp = pprint.PrettyPrinter(indent=PPRINT_INDENT, depth=PPRINT_DEPTH, width=PPRINT_WIDTH)
-        report = pp.pformat(pretty_floats(statsDict))
+        statsDict['collectorId'] = collectorId
+        pp = PvaPyPrettyPrinter()
+        report = pp.pformat(statsDict)
 
         if self.screen:
             try:
@@ -312,40 +295,6 @@ class CollectorController:
                 # Turn screen off on errors
                 self.stopScreen()
         print(report)
-
-    def formatCollectorStats(self, collectorId, statsDict):
-        now = time.time()
-        report = 'collector-{} @ {:.3f}s :\n'.format(collectorId, now)
-        for k,v in statsDict.items():
-            # Skip some keys and empty entries
-            if not v:
-                continue
-            if k in ['objectId']:
-                continue
-            if not self.statsEnabled.get(k, True):
-                continue
-            if type(v) == dict:
-                report += '  {:15s}:'.format(k)
-                for (k2,v2) in v.items():
-                    report += ' {}'.format(self._formatDictEntry(k2,v2))
-            else:
-                report += '  {}'.format(self._formatDictEntry(k,v))
-            report += '\n'
-        # Remove last new line
-        return report[0:-1] 
-
-    def _formatDictEntry(self, k, v):
-        if k.endswith('ime'):
-            # anything ending with time or Time
-            return '{}={:.4f}s'.format(k,v)
-        elif k.endswith('ate'):
-            # anything ending with rate or Rate
-            return '{}={:.4f}Hz'.format(k,v)
-        elif type(v) == float:
-            return '{}={:.4f}'.format(k,v)
-        else:
-            return '{}={}'.format(k,v)
-
 
     def getCollectorStats(self):
         statsDict = self.dataCollector.getStats()

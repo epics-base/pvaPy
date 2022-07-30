@@ -3,6 +3,7 @@
 import time
 import pvaccess as pva
 from ..utility.loggingManager import LoggingManager
+from ..utility.floatWithUnits import FloatWithUnits
 
 # Data processor contrller class
 class DataProcessingController:
@@ -136,7 +137,7 @@ class DataProcessingController:
             self.processorStats = self.updateStats()
         else:
             runtime = time.time()-self.startTime
-            self.processorStats['runtime'] = runtime
+            self.processorStats['runtime'] = FloatWithUnits(runtime, 's')
         return self.processorStats
 
     def updateStats(self, t=0):
@@ -153,20 +154,20 @@ class DataProcessingController:
             missedRate = self.nMissed/receivingTime
             errorRate = self.nErrors/receivingTime
         processorStats = {
-            'runtime' : runtime, 
-            'startTime' : self.startTime, 
-            'endTime' : self.endTime, 
-            'receivingTime' : receivingTime,
-            'firstObjectTime' : self.firstObjectTime, 
-            'lastObjectTime' : self.lastObjectTime, 
+            'runtime' : FloatWithUnits(runtime, 's'), 
+            'startTime' : FloatWithUnits(self.startTime, 's'), 
+            'endTime' : FloatWithUnits(self.endTime, 's'),
+            'receivingTime' : FloatWithUnits(receivingTime, 's'),
+            'firstObjectTime' : FloatWithUnits(self.firstObjectTime, 's'),
+            'lastObjectTime' : FloatWithUnits(self.lastObjectTime, 's'),
             'firstObjectId' : self.firstObjectId or 0, 
             'lastObjectId' : self.lastObjectId or 0, 
             'nProcessed' : self.nProcessed, 
-            'processedRate' : processedRate,
+            'processedRate' : FloatWithUnits(processedRate, 'Hz'),
             'nMissed' : self.nMissed, 
-            'missedRate' : missedRate,
+            'missedRate' : FloatWithUnits(missedRate, 'Hz'),
             'nErrors' : self.nErrors, 
-            'errorRate' : errorRate,
+            'errorRate' : FloatWithUnits(errorRate, 'Hz'),
         }
         return processorStats
 
