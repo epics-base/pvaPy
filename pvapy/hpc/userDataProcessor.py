@@ -14,6 +14,7 @@ class UserDataProcessor:
         self.processorId = None
         self.pvaServer = None
         self.outputChannel = None
+        self.objectIdField = None
 
     # Method called at start
     def start(self):
@@ -25,6 +26,8 @@ class UserDataProcessor:
 
     # Process monitor update
     def process(self, pvObject):
+        self.logger.debug(f'Processor {self.processorId} processing object {pvObject[self.objectIdField]}')
+        self.updateOutputChannel(pvObject)
         return pvObject
 
     # Method called at shutdown

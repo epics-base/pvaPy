@@ -218,6 +218,7 @@ class ConsumerController:
             self.logger.debug(f'Created data processor {consumerId}: {userDataProcessor}')
             userDataProcessor.processorId = consumerId
             userDataProcessor.consumerId = consumerId
+            userDataProcessor.objectIdField = processorConfig['objectIdField']
         processingController = DataProcessingController(processorConfig, userDataProcessor)
         return processingController
             
