@@ -11,7 +11,7 @@ class UserDataProcessor:
         self.logger = LoggingManager.getLogger(self.__class__.__name__)
 
         # The following will be set after object gets created.
-        self.consumerId = None
+        self.processorId = None
         self.pvaServer = None
         self.outputChannel = None
 

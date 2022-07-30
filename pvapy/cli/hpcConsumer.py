@@ -212,6 +212,7 @@ class ConsumerController:
 
         if userDataProcessor is not None:
             self.logger.debug(f'Created data processor {consumerId}: {userDataProcessor}')
+            userDataProcessor.processorId = consumerId
             userDataProcessor.consumerId = consumerId
         processingController = DataProcessingController(processorConfig, userDataProcessor)
         return processingController

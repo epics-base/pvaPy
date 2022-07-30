@@ -19,7 +19,7 @@ class AdOutputFileProcessor(AdImageProcessor):
         if not os.path.exists(self.outputDirectory): 
             self.logger.debug(f'Creating output directory: {self.outputDirectory}')
             os.makedirs(self.outputDirectory)
-        self.outputFileNameFormat = configDict.get('outputFileNameFormat', '{uniqueId:06}.{consumerId}.tiff')
+        self.outputFileNameFormat = configDict.get('outputFileNameFormat', '{uniqueId:06}.{processorId}.tiff')
         self.logger.debug(f'Using output file name format: {self.outputFileNameFormat}')
         self.nFilesSaved = 0
         self.nBytesSaved = 0
@@ -51,9 +51,9 @@ class AdOutputFileProcessor(AdImageProcessor):
             return 
         uniqueId = frameId
         objectId = frameId
-        consumerId = self.consumerId
+        processorId = self.processorId
         filePath = os.path.join(self.outputDirectory, self.outputFileNameFormat)
-        filePath = filePath.format(frameId=frameId,uniqueId=uniqueId,objectId=frameId,consumerId=self.consumerId)
+        filePath = filePath.format(frameId=frameId,uniqueId=uniqueId,objectId=frameId,processorId=self.processorId)
         self.logger.debug(f'Saving frame {frameId} to file {filePath}')
         im = Image.fromarray(imageData)
         im.save(filePath)
