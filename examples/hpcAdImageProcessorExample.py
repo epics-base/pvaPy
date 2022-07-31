@@ -3,6 +3,7 @@ import time
 import numpy as np
 import pvaccess as pva
 from pvapy.hpc.adImageProcessor import AdImageProcessor
+from ..utility.floatWithUnits import FloatWithUnits
 
 # Example for HPC AD Image Processor
 class HpcAdImageProcessor(AdImageProcessor):
@@ -56,8 +57,8 @@ class HpcAdImageProcessor(AdImageProcessor):
             processingRate = self.nProcessed/self.processingTime
         return { 
             'nProcessed' : self.nProcessed,
-            'processingTime' : self.processingTime,
-            'processingRate' : processingRate
+            'processingTime' : FloatWithUnits(self.processingTime, 's'),
+            'processingRate' : FloatWithUnits(processingRate, 'fps')
         }
 
     # Define PVA types for different stats variables

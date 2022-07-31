@@ -6,6 +6,8 @@ import time
 import pvaccess as pva
 from PIL import Image
 from .adImageProcessor import AdImageProcessor
+from ..utility.floatWithUnits import FloatWithUnits
+from ..utility.intWithUnits import IntWithUnits
 
 # Processor that saves output files
 class AdOutputFileProcessor(AdImageProcessor):
@@ -86,10 +88,10 @@ class AdOutputFileProcessor(AdImageProcessor):
             dataStorageRateMBps = self.nBytesSaved/self.fileProcessingTime/self.BYTES_IN_MEGABYTE
         return {
             'nFilesSaved' : self.nFilesSaved,
-            'nBytesSaved' : self.nBytesSaved,
-            'fileProcessingTime' : self.fileProcessingTime,
-            'fileProcessingRate' : fileProcessingRate,
-            'dataStorageRateMBps' : dataStorageRateMBps
+            'nBytesSaved' : IntWithUnits(self.nBytesSaved, 'B'),
+            'fileProcessingTime' : FloatWithUnits(self.fileProcessingTime, 's'),
+            'fileProcessingRate' : FloatWithUnits(fileProcessingRate, 'fps'),
+            'dataStorageRateMBps' : FloatWithUnits(dataStorageRateMBps, 'MBps')
         }
 
     # Define PVA types for different stats variables
