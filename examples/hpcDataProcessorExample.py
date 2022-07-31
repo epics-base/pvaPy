@@ -19,6 +19,7 @@ class HpcDataProcessor(UserDataProcessor):
 
     # Process monitor update
     def process(self, pvObject):
+        self.updateOutputChannel(pvObject)
         return pvObject
 
     # Method called at shutdown

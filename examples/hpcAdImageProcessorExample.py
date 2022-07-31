@@ -3,7 +3,7 @@ import time
 import numpy as np
 import pvaccess as pva
 from pvapy.hpc.adImageProcessor import AdImageProcessor
-from ..utility.floatWithUnits import FloatWithUnits
+from pvapy.utility.floatWithUnits import FloatWithUnits
 
 # Example for HPC AD Image Processor
 class HpcAdImageProcessor(AdImageProcessor):
@@ -30,16 +30,13 @@ class HpcAdImageProcessor(AdImageProcessor):
             self.logger.debug(f'Frame id {frameId} contains an empty image.')
             return pvObject
         self.logger.debug(f'Consumer {self.processorId} data sum: {image.sum()} (frame id: {frameId})')
-        outputFrame = pvObject
-        fieldDataType = outputFrame.getStructureDict()['value'][0][fieldKey]
-        image2 = np.swapaxes(image, 0, 1).flatten()
-        u2 = pva.PvObject({fieldKey : fieldDataType}, {fieldKey : image2})
-        outputFrame.setUnion(u2)
-        self.updateOutputChannel(outputFrame)
+        image2 = np.swapaxes(image, 0, 1)
+        pvObject2 = self.generateNtNdArray2D(frameId, image2)
+        self.updateOutputChannel(pvObject2)
         t1 = time.time()
         self.nProcessed += 1
         self.processingTime += (t1-t0)
-        return outputFrame
+        return pvObject2
 
     # Method called at shutdown
     def stop(self):
