@@ -29,7 +29,7 @@ STOP_COMMAND = 'stop'
 
 class CollectorController:
 
-    CONSUMER_CONTROL_TYPE_DICT = {
+    COLLECTOR_CONTROL_TYPE_DICT = {
         'collectorId' : pva.UINT,
         'objectTime' : pva.DOUBLE,
         'objectTimestamp' : pva.PvTimeStamp(),
@@ -38,11 +38,8 @@ class CollectorController:
         'statusMessage' : pva.STRING
     }
 
-    CONSUMER_STATUS_TYPE_DICT = {
-        'collectorId' : pva.UINT,
-        'objectId' : pva.UINT,
-        'objectTime' : pva.DOUBLE,
-        'objectTimestamp' : pva.PvTimeStamp(),
+    PRODUCER_STATUS_TYPE_DICT = {
+        'producerId' : pva.UINT,
         'monitorStats' : {
             'nReceived' : pva.UINT,
             'receivedRate' : pva.DOUBLE,
@@ -54,6 +51,21 @@ class CollectorController:
             'nRejected' : pva.UINT,
             'nDelivered' : pva.UINT,
             'nQueued' : pva.UINT
+        },
+    }
+
+    COLLECTOR_STATUS_TYPE_DICT = {
+        'collectorId' : pva.UINT,
+        'objectId' : pva.UINT,
+        'objectTime' : pva.DOUBLE,
+        'objectTimestamp' : pva.PvTimeStamp(),
+        'collectorStats' : {
+            'nCollected' : pva.UINT, 
+            'collectedRate' : pva.DOUBLE,
+            'nRejected' : pva.UINT, 
+            'rejectedRate' : pva.DOUBLE,
+            'nMissed' : pva.UINT, 
+            'missedRate' : pva.DOUBLE
         },
         'processorStats' : {
             'runtime' : pva.DOUBLE,
@@ -212,12 +224,23 @@ class CollectorController:
         return processingController
             
     def getCollectorStatusTypeDict(self, processingController):
-        statusTypeDict = self.CONSUMER_STATUS_TYPE_DICT
+        statusTypeDict = self.COLLECTOR_STATUS_TYPE_DICT
         if processingController:
             userStatsTypeDict = processingController.getUserStatsPvaTypes()
             if userStatsTypeDict:
                 statusTypeDict['userStats'] = processingController.getUserStatsPvaTypes()
+        for producerId in self.producerIdList:
+            statusTypeDict[f'producerStats_{producerId}'] = self.PRODUCER_STATUS_TYPE_DICT
         return statusTypeDict
+
+    def getProducerIdList(self, args):
+        # Evaluate producer id list; it should be given either as range() spec
+        # or as comma-separated list.
+        producerIdList = args.producer_id_list
+        if not producerIdList.startswith('range') and not producerIdList.startswith('['):
+            producerIdList = f'[{producerIdList}]'
+        producerIdList = list(eval(producerIdList))
+        return producerIdList
 
     def createCollector(self, collectorId, args):
         processorConfig = self.createProcessorConfig(collectorId, args)
@@ -225,6 +248,9 @@ class CollectorController:
         self.pvaServer = None
         inputChannel = args.input_channel
         self.logger.debug(f'Input channel name: {inputChannel}')
+
+        self.producerIdList = self.getProducerIdList(args)
+        self.logger.debug(f'Producer id list: {self.producerIdList}')
 
         self.statusChannel = args.status_channel
         if self.statusChannel == '_':
@@ -250,7 +276,7 @@ class CollectorController:
                 self.pvaServer = pva.PvaServer()
             # Keep reference to the control object so we can
             # update it
-            self.controlPvObject = pva.PvObject(self.CONSUMER_CONTROL_TYPE_DICT, {'collectorId' : collectorId})
+            self.controlPvObject = pva.PvObject(self.COLLECTOR_CONTROL_TYPE_DICT, {'collectorId' : collectorId})
             self.pvaServer.addRecord(self.controlChannel, self.controlPvObject, self.controlCallback)
             self.logger.debug(f'Created collector control channel: {self.controlChannel}')
 
@@ -258,16 +284,9 @@ class CollectorController:
         if processingController and self.pvaServer:
             processingController.pvaServer = self.pvaServer
 
-        # Evaluate producer id list; it should be given either as range() spec
-        # or as comma-separated list.
-        producerIdList = args.producer_id_list
-        if not producerIdList.startswith('range') and not producerIdList.startswith('['):
-            producerIdList = f'[{producerIdList}]'
-        inputChannel = args.input_channel
-        producerIdList = list(eval(producerIdList))
         objectIdField = processorConfig['objectIdField']
         objectIdOffset = processorConfig['objectIdOffset']
-        self.dataCollector = DataCollector(collectorId, inputChannel, producerIdList=producerIdList, objectIdField=objectIdField, objectIdOffset=objectIdOffset, serverQueueSize=args.server_queue_size, monitorQueueSize=args.monitor_queue_size, collectorCacheSize=args.collector_cache_size, processingController=processingController)
+        self.dataCollector = DataCollector(collectorId, inputChannel, producerIdList=self.producerIdList, objectIdField=objectIdField, objectIdOffset=objectIdOffset, serverQueueSize=args.server_queue_size, monitorQueueSize=args.monitor_queue_size, collectorCacheSize=args.collector_cache_size, processingController=processingController)
         return self.dataCollector
 
     def startCollectors(self):
@@ -304,8 +323,6 @@ class CollectorController:
         if self.pvaServer:
             collectorId = self.dataCollector.collectorId
             statusObject = pva.PvObject(self.statusTypeDict, {'collectorId' : collectorId, 'objectId' : self.statsObjectId, 'objectTime' : t, 'objectTimestamp' : pva.PvTimeStamp(t)})
-            statusObject['monitorStats'] = statsDict.get('monitorStats', {})
-            statusObject['queueStats'] = statsDict.get('queueStats', {})
             statusObject['processorStats'] = statsDict.get('processorStats', {})
             userStatsPvaTypes = self.statusTypeDict.get('userStats', {})
             if userStatsPvaTypes: 
@@ -315,6 +332,14 @@ class CollectorController:
                     if k in userStatsPvaTypes:
                         filteredUserStats[k] = v
                 statusObject['userStats'] = filteredUserStats
+            statusObject['collectorStats'] = statsDict.get('collectorStats', {})
+            for producerId in self.producerIdList:
+                producerStatsDict = statsDict.get(f'producerStats', {})
+                producerStatsDict = producerStatsDict.get(f'producer-{producerId}', {})
+                producerStatusObject = {'producerId' : producerId}
+                producerStatusObject['monitorStats'] = producerStatsDict.get('monitorStats', {})
+                producerStatusObject['queueStats'] = producerStatsDict.get('queueStats', {})
+                statusObject[f'producerStats_{producerId}'] = producerStatusObject
             self.pvaServer.update(self.statusChannel, statusObject)
         return statsDict 
 

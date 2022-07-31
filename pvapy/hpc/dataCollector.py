@@ -211,7 +211,6 @@ class DataCollector:
         self.nCollected = 0
         self.nProcessed = 0
         self.nMissed = 0
-        self.nErrors = 0
 
         # If first object is ignored, stats will be adjusted
         self.nReceivedOffset = 0
@@ -329,6 +328,24 @@ class DataCollector:
         monitorStats['overrunRate'] = FloatWithUnits(overrunRate, 'Hz')
         return {'monitorStats' : monitorStats, 'queueStats' : queueStats}
         
+    def getCollectorStats(self, receivingTime):
+        collectorStats = {
+            'nCollected' : self.nCollected, 
+            'nRejected' : self.nRejected,
+            'nMissed' : self.nMissed
+        }
+        collectedRate = 0
+        rejectedRate = 0
+        missedRate = 0
+        if receivingTime > 0:
+            collectedRate = self.nCollected/receivingTime
+            rejectedRate = self.nRejected/receivingTime
+            missedRate = self.nMissed/receivingTime
+        collectorStats['collectedRate'] = FloatWithUnits(collectedRate, 'Hz')
+        collectorStats['rejectedRate'] = FloatWithUnits(rejectedRate, 'Hz')
+        collectorStats['missedRate'] = FloatWithUnits(missedRate, 'Hz')
+        return collectorStats
+
     def getProcessorStats(self):
         if self.processingController:
             return self.processingController.getProcessorStats()
@@ -343,10 +360,11 @@ class DataCollector:
         processorStats = self.getProcessorStats()
         userStats = self.getUserStats()
         receivingTime = processorStats.get('receivingTime', 0)
+        collectorStats = self.getCollectorStats(receivingTime)
         producerStats = {}
         for producerId,producerChannel in self.producerChannelMap.items():
             producerStats[f'producer-{producerId}'] = self.getProducerStats(producerChannel, receivingTime)
-        return {'producerStats' : producerStats, 'processorStats' : processorStats, 'userStats' : userStats}
+        return {'producerStats' : producerStats, 'processorStats' : processorStats, 'userStats' : userStats, 'collectorStats' : collectorStats}
 
     def start(self):
         self.startTime = time.time()
@@ -364,7 +382,7 @@ class DataCollector:
         self.processingThread.join(ProcessingThread.THREAD_EVENT_TIMEOUT_IN_SECONDS)
         if self.processingController:
             self.processingController.stop()
-        self.logger.debug(f'Collected objects {self.nCollected}; missed objects: {self.nMissed}; processing errors: {self.nErrors}; rejected objects: {self.nRejected}')
+        self.logger.debug(f'Collected objects {self.nCollected}; missed objects: {self.nMissed}; rejected objects: {self.nRejected}')
 
     def setEvent(self):
         self.eventLock.acquire()
