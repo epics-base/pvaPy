@@ -78,7 +78,8 @@ setup(
         'console_scripts': [
             'pvapy-ad-sim-server=pvapy.cli.adSimServer:main',
             'pvapy-mirror-server=pvapy.cli.mirrorServer:main',
-            'pvapy-hpc-consumer=pvapy.cli.hpcConsumer:main'
+            'pvapy-hpc-consumer=pvapy.cli.hpcConsumer:main',
+            'pvapy-hpc-collector=pvapy.cli.hpcCollector:main'
         ],
     },
     ext_modules=[PVACCESS_MODULE],

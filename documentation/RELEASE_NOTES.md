@@ -17,10 +17,11 @@
     ranges
   - option to use numpy memory map for loading input files
   - option to notify channel access PV when server starts
-- added python HPC framework for monitoring and processing data produced at
-  high rates using one or more consumers
-- added command line utilitiy:
+- added python HPC framework for processing data produced at
+  high rates using stream consumers and stream collectors
+- added command line utilities:
   - pvapy-hpc-consumer
+  - pvapy-hpc-collector
 - conda/pip package dependencies: 
   - EPICS BASE = 7.0.6.1
   - BOOST      = 1.78.0
