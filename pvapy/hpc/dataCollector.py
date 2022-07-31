@@ -209,7 +209,6 @@ class DataCollector:
 
         self.nRejected = 0
         self.nCollected = 0
-        self.nProcessed = 0
         self.nMissed = 0
 
         # If first object is ignored, stats will be adjusted
@@ -312,7 +311,11 @@ class DataCollector:
             self.cacheLock.release()
 
     def resetStats(self):
-        pass
+        for producerId,producerChannel in self.producerChannelMap.items():
+            producerChannel.resetStats()
+        self.nRejected = 0
+        self.nCollected = 0
+        self.nMissed = 0
        
     def getProducerStats(self, producerChannel, receivingTime):
         monitorStats = producerChannel.getMonitorStats()
