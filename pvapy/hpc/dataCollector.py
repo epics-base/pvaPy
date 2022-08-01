@@ -289,7 +289,7 @@ class DataCollector:
                 nMissed = self.minCachedObjectId-self.lastObjectId-self.objectIdOffset
                 if nMissed > 0:
                     self.logger.debug(f'Missed {nMissed} objects since last retrieval from cache; total number of missed objects: {self.nMissed}')
-                self.nMissed += nMissed
+                    self.nMissed += nMissed
             objectId = self.minCachedObjectId
             objectTuples = []
             while True:
