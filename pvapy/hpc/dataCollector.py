@@ -140,13 +140,14 @@ class ProcessingThread(threading.Thread):
                 # We are using client queues, need to push data into the cache
                 nNewObjects = 0
                 while True:
-                    nNewObjects += self.dataCollector.pushObjectsToCacheFromProducerQueues()
+                    nNewObjects2 = self.dataCollector.pushObjectsToCacheFromProducerQueues()
+                    nNewObjects += nNewObjects2
                     cacheSize = len(self.dataCollector.collectorCacheMap)
                     if cacheSize >= self.dataCollector.collectorCacheSize or self.isDone:
                         self.logger.debug(f'{nNewObjects} new objects cached, cache size: {cacheSize}')
                         break
                     # If we did not get any new objects, wait on event
-                    if not nNewObjects:
+                    if not nNewObjects2:
                         self.dataCollector.waitOnFirstProducerQueue(self.THREAD_EVENT_TIMEOUT_IN_SECONDS)
                         break
             else: 
