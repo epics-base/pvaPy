@@ -10,6 +10,7 @@ import pvaccess as pva
 import os
 import os.path
 from ..utility.adImageUtility import AdImageUtility
+from ..utility.floatWithUnits import FloatWithUnits
 
 __version__ = pva.__version__
 
@@ -17,6 +18,7 @@ class AdSimServer:
 
     DELAY_CORRECTION = 0.0001
     NOTIFICATION_DELAY = 0.1
+    BYTES_IN_MEGABYTE = 1000000
 
     def __init__(self, inputDirectory, inputFile, mmapMode, frameRate, nf, nx, ny, datatype, minimum, maximum, runtime, channelName, notifyPv, notifyPvValue, startDelay, reportPeriod):
         self.deltaT = 0
@@ -78,11 +80,14 @@ class AdSimServer:
 
             print(f'Generated frame shape: {self.frames[0].shape}')
             print(f'Range of generated values: [{mn},{mx}]')
+        self.frameRate = frameRate
         self.nInputFrames, self.rows, self.cols = self.frames.shape
-        print(f'Number of input frames: {self.nInputFrames} (size: {self.cols}x{self.rows}, type: {self.frames.dtype})')
+        self.imageSize = FloatWithUnits(self.rows*self.cols*self.frames[0].itemsize, 'B')
+        self.expectedDataRate = FloatWithUnits(self.imageSize*self.frameRate/self.BYTES_IN_MEGABYTE, 'MBps')
+        print(f'Number of input frames: {self.nInputFrames} (size: {self.cols}x{self.rows}, {self.imageSize}, type: {self.frames.dtype})')
+        print(f'Expected data rate: {self.expectedDataRate}')
 
         self.channelName = channelName
-        self.frameRate = frameRate
         self.server = pva.PvaServer()
         self.server.addRecord(self.channelName, pva.NtNdArray())
         if notifyPv and notifyPvValue:
@@ -177,10 +182,12 @@ class AdSimServer:
         runtime = self.lastPublishedTime - self.startTime
         deltaT = runtime/(self.nPublishedFrames - 1)
         frameRate = 1.0/deltaT
+        dataRate = FloatWithUnits(self.imageSize*frameRate/self.BYTES_IN_MEGABYTE, 'MBps')
         if self.screen:
             curses.endwin()
         print('\nServer runtime: {:.4f} seconds'.format(runtime))
         print('Published frames: {:6d} @ {:.4f} fps'.format(self.nPublishedFrames, frameRate))
+        print(f'Data rate: {dataRate}')
 
 def main():
     parser = argparse.ArgumentParser(description='PvaPy Area Detector Simulator')
