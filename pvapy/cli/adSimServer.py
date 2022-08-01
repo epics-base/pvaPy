@@ -11,6 +11,7 @@ import os
 import os.path
 from ..utility.adImageUtility import AdImageUtility
 from ..utility.floatWithUnits import FloatWithUnits
+from ..utility.intWithUnits import IntWithUnits
 
 __version__ = pva.__version__
 
@@ -82,7 +83,7 @@ class AdSimServer:
             print(f'Range of generated values: [{mn},{mx}]')
         self.frameRate = frameRate
         self.nInputFrames, self.rows, self.cols = self.frames.shape
-        self.imageSize = FloatWithUnits(self.rows*self.cols*self.frames[0].itemsize, 'B')
+        self.imageSize = IntWithUnits(self.rows*self.cols*self.frames[0].itemsize, 'B')
         self.expectedDataRate = FloatWithUnits(self.imageSize*self.frameRate/self.BYTES_IN_MEGABYTE, 'MBps')
         print(f'Number of input frames: {self.nInputFrames} (size: {self.cols}x{self.rows}, {self.imageSize}, type: {self.frames.dtype})')
         print(f'Expected data rate: {self.expectedDataRate}')
