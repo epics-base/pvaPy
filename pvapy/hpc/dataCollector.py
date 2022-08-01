@@ -267,7 +267,7 @@ class DataCollector:
                 self.minCachedObjectId = objectId
             if self.lastObjectId is not None and objectId <= self.lastObjectId:
                 self.nRejected += 1
-                self.logger.warning(f'Rejecting object id {objectId} from producer {producerId} (last processed object id: {self.lastObjectId}; total number of rejected objects: {self.nRejected}')
+                self.logger.debug(f'Rejecting object id {objectId} from producer {producerId} (last processed object id: {self.lastObjectId}; total number of rejected objects: {self.nRejected}')
                 return 
 
             self.collectorCacheMap[objectId] = pvObject
