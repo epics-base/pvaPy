@@ -31,7 +31,10 @@ class HpcAdImageProcessor(AdImageProcessor):
             return pvObject
         self.logger.debug(f'Consumer {self.processorId} data sum: {image.sum()} (frame id: {frameId})')
         image2 = np.swapaxes(image, 0, 1)
-        pvObject2 = self.generateNtNdArray2D(frameId, image2)
+        # Simply replacing image data is slightly faster than 
+        # generating a new one
+        #pvObject2 = self.generateNtNdArray2D(frameId, image2)
+        pvObject2 = self.replaceNtNdArrayImage2D(pvObject, frameId, image2)
         self.updateOutputChannel(pvObject2)
         t1 = time.time()
         self.nProcessed += 1
