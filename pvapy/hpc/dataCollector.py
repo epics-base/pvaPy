@@ -122,8 +122,12 @@ class ProcessingThread(threading.Thread):
             while True:
                 try:
                     cacheSize = len(self.dataCollector.collectorCacheMap)
-                    # Wait until cache fills so we can process stuff
-                    if cacheSize < self.dataCollector.collectorCacheSize or self.isDone:
+                    timeSinceCacheUpdate = time.time()-self.dataCollector.cacheUpdateTime 
+                    if not cacheSize or self.isDone:
+                        # Cache empty or we are done
+                        break
+                    elif cacheSize < self.dataCollector.collectorCacheSize and timeSinceCacheUpdate < self.THREAD_EVENT_TIMEOUT_IN_SECONDS:
+                        # Cache is being filled 
                         break
                     nObjects = self.processObjects()
                 except Exception as ex:
@@ -144,6 +148,7 @@ class ProcessingThread(threading.Thread):
                     # If we did not get any new objects, wait on event
                     if not nNewObjects:
                         self.dataCollector.waitOnFirstProducerQueue(self.THREAD_EVENT_TIMEOUT_IN_SECONDS)
+                        break
             else: 
                 self.dataCollector.waitOnEvent(self.THREAD_EVENT_TIMEOUT_IN_SECONDS)
         # Finish up
@@ -161,6 +166,9 @@ class ProcessingThread(threading.Thread):
             nObjects = self.processObjects()
             if not nObjects:
                 break
+        # Wait after processing so that any clients can pick up
+        # last set of updates
+        self.dataCollector.waitOnEvent(self.THREAD_EVENT_TIMEOUT_IN_SECONDS)
         self.isRunning = False
         self.logger.debug(f'{self.name} is done')
 
@@ -205,6 +213,7 @@ class DataCollector:
         self.startTime = None
         self.endTime = None
         self.minCachedObjectId = None
+        self.cacheUpdateTime = time.time()
         self.lastObjectId = None
 
         self.nRejected = 0
@@ -273,6 +282,7 @@ class DataCollector:
             self.collectorCacheMap[objectId] = pvObject
             if objectId < self.minCachedObjectId:
                 self.minCachedObjectId = objectId
+            self.cacheUpdateTime = time.time()
             self.setEvent()
         finally:
             self.cacheLock.release()
@@ -306,6 +316,7 @@ class DataCollector:
                 self.minCachedObjectId = min(self.collectorCacheMap)
             self.nCollected += nCollected
             self.logger.debug(f'Found {nCollected} objects ready for processing, remaining cache size is {len(self.collectorCacheMap)}')
+            self.cacheUpdateTime = time.time()
             return objectTuples 
         finally:
             self.cacheLock.release()
