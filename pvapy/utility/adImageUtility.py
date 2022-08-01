@@ -174,8 +174,9 @@ class AdImageUtility:
         ny, nx = image.shape
         dims = ntnda['dimension']
         if dims[0]['size'] != nx or dims[1]['size'] != ny:
-            dims[0]['size'] = nx
-            dims[1]['size'] = ny
+            dims = [pva.PvDimension(nx, 0, nx, 1, False), \
+                    pva.PvDimension(ny, 0, ny, 1, False)]
+            ntnda['dimension'] = dims
             size = nx*ny*data.itemsize
             ntnda['compressedSize'] = size
             ntnda['uncompressedSize'] = size
