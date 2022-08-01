@@ -2,10 +2,10 @@
 
 class IntWithUnits(int):
 
-    def __new__(self, value, units='')
+    def __new__(self, value, units=''):
         return int.__new__(self, value)
 
-    def __init__(self, value, units='', precision=4):
+    def __init__(self, value, units=''):
         int.__init__(value)
         self.units = units
 
