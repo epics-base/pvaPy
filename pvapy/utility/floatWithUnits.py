@@ -13,7 +13,7 @@ class FloatWithUnits(float):
         self.units = units
         self.precision = precision
 
-    def __repr__(self):
+    def __str__(self):
         if self == 0:
             return f'0.0{self.units}'
         return f'{self:.{self.precision}f}{self.units}'

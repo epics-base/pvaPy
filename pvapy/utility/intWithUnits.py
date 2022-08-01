@@ -9,6 +9,6 @@ class IntWithUnits(int):
         int.__init__(value)
         self.units = units
 
-    def __repr__(self):
+    def __str__(self):
         return f'{self}{self.units}'
 
