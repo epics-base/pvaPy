@@ -9,7 +9,7 @@ class DataConsumer:
 
     PROVIDER_TYPE_MAP = { 'pva' : pva.PVA, 'ca' : pva.CA }
 
-    def __init__(self, consumerId, inputChannel, providerType=pva.PVA, serverQueueSize=-1, monitorQueueSize=-1, distributorPluginName='pydistributor', distributorGroupId=None, distributorSetId=None, distributorTriggerFieldName=None, distributorUpdates=None, distributorUpdateMode=None, processingController=None):
+    def __init__(self, consumerId, inputChannel, providerType=pva.PVA, objectIdField='uniqueId', fieldRequest='', serverQueueSize=-1, monitorQueueSize=-1, distributorPluginName='pydistributor', distributorGroupId=None, distributorSetId=None, distributorTriggerFieldName=None, distributorUpdates=None, distributorUpdateMode=None, processingController=None):
         self.logger = LoggingManager.getLogger(f'consumer-{consumerId}')
         self.consumerId = consumerId
         providerType = self.PROVIDER_TYPE_MAP.get(providerType.lower(), pva.PVA)
@@ -23,6 +23,8 @@ class DataConsumer:
         self.distributorTriggerFieldName = distributorTriggerFieldName
         self.distributorUpdates = distributorUpdates 
         self.distributorUpdateMode = distributorUpdateMode
+        self.objectIdField = objectIdField
+        self.fieldRequest = fieldRequest
         self.pvObjectQueue = None
         self.monitorQueueSize = monitorQueueSize
         if monitorQueueSize >= 0:
@@ -61,7 +63,14 @@ class DataConsumer:
         if self.distributorUpdateMode:
             distributorStr += f'mode:{self.distributorUpdateMode};'
 
-        request = f'{recordStr}field()'
+        fieldRequest = ''
+        if self.fieldRequest:
+            # Strip field() if present
+            fieldRequest = self.fieldRequest.replace('field(', '').replace(')', '')
+            if self.objectIdField and self.objectIdField not in fieldRequest:
+                fieldRequest = f'{self.objectIdField},{fieldRequest}'
+        
+        request = f'{recordStr}field({fieldRequest})'
         if distributorStr:
             # Strip last ';' character
             distributorStr = distributorStr[0:-1] + ']'

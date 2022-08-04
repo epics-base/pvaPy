@@ -202,8 +202,11 @@ class ConsumerController:
             processorConfig['objectIdField'] = args.oid_field
         if not 'objectIdOffset' in processorConfig:
             processorConfig['objectIdOffset'] = oidOffset
+        if not 'fieldRequest' in processorConfig:
+            processorConfig['fieldRequest'] = args.field_request
         if not 'outputChannel' in processorConfig:
             processorConfig['outputChannel'] = outputChannel
+        self.processorConfig = processorConfig
         return processorConfig
 
     def createProcessor(self, consumerId, args):
@@ -222,6 +225,7 @@ class ConsumerController:
             userDataProcessor.consumerId = consumerId
             userDataProcessor.objectIdField = processorConfig['objectIdField']
         processingController = DataProcessingController(processorConfig, userDataProcessor)
+        self.processorConfig = processorConfig
         return processingController
             
     def getConsumerStatusTypeDict(self, processingController):
@@ -235,11 +239,11 @@ class ConsumerController:
     def createConsumer(self, consumerId, args):
         processingController = self.createProcessor(consumerId, args)
         self.usingPvObjectQueue = (args.monitor_queue_size >= 0)
-        self.pvaServer = None
 
         inputChannel = args.input_channel.replace('*', f'{consumerId}')
         self.logger.debug(f'Input channel name: {inputChannel}')
 
+        self.pvaServer = pva.PvaServer()
         self.statusChannel = args.status_channel
         if self.statusChannel == '_':
             self.statusChannel = f'pvapy:consumer:{consumerId}:status'
@@ -247,7 +251,6 @@ class ConsumerController:
             self.statusChannel = self.statusChannel.replace('*', f'{consumerId}')
             self.logger.debug(f'Consumer status channel name: {self.statusChannel}')
         if self.statusChannel:
-            self.pvaServer = pva.PvaServer()
             self.statusTypeDict = self.getConsumerStatusTypeDict(processingController)
             statusPvObject = pva.PvObject(self.statusTypeDict, {'consumerId' : consumerId})
             self.pvaServer.addRecord(self.statusChannel, statusPvObject)
@@ -260,19 +263,20 @@ class ConsumerController:
             self.controlChannel = self.controlChannel.replace('*', f'{consumerId}')
             self.logger.debug(f'Consumer control channel name: {self.controlChannel}')
         if self.controlChannel:
-            if not self.pvaServer:
-                self.pvaServer = pva.PvaServer()
             # Keep reference to the control object so we can
             # update it
             self.controlPvObject = pva.PvObject(self.CONSUMER_CONTROL_TYPE_DICT, {'consumerId' : consumerId})
             self.pvaServer.addRecord(self.controlChannel, self.controlPvObject, self.controlCallback)
             self.logger.debug(f'Created consumer control channel: {self.controlChannel}')
 
-        # Share PVA server if we have one
+        # Share PVA server
         if processingController and self.pvaServer:
             processingController.pvaServer = self.pvaServer
+            processingController.createUserDefinedOutputChannel()
 
-        self.dataConsumer = DataConsumer(consumerId, inputChannel, providerType=args.input_provider_type, serverQueueSize=args.server_queue_size, monitorQueueSize=args.monitor_queue_size, distributorPluginName=args.distributor_plugin_name, distributorGroupId=args.distributor_group, distributorSetId=args.distributor_set, distributorTriggerFieldName=args.distributor_trigger, distributorUpdates=args.distributor_updates, distributorUpdateMode=None, processingController=processingController)
+        objectIdField = self.processorConfig['objectIdField']
+        fieldRequest = self.processorConfig['fieldRequest']
+        self.dataConsumer = DataConsumer(consumerId, inputChannel, providerType=args.input_provider_type, objectIdField=objectIdField, fieldRequest=fieldRequest, serverQueueSize=args.server_queue_size, monitorQueueSize=args.monitor_queue_size, distributorPluginName=args.distributor_plugin_name, distributorGroupId=args.distributor_group, distributorSetId=args.distributor_set, distributorTriggerFieldName=args.distributor_trigger, distributorUpdates=args.distributor_updates, distributorUpdateMode=None, processingController=processingController)
         return self.dataConsumer
 
     def startConsumers(self):
@@ -547,6 +551,7 @@ def main():
     parser.add_argument('-pk', '--processor-kwargs', dest='processor_kwargs', default=None, help='JSON-formatted string that can be converted into dictionary and used for initializing user processor object.')
     parser.add_argument('-of', '--oid-field', dest='oid_field', default='uniqueId', help='PV update id field used for calculating data processor statistics (default: uniqueId). This parameter is ignored if processor kwargs dictionary contains "objectIdField" key.')
     parser.add_argument('-oo', '--oid-offset', type=int, dest='oid_offset', default=0, help='This parameter determines by how much object id should change between the two PV updates, and is used for determining the number of missed PV updates (default: 0). This parameter is ignored if processor kwargs dictionary contains "objectIdOffset" key, and should be modified only if data distributor plugin will be distributing data between multiple clients, in which case it should be set to "(<nConsumers>-1)*<nUpdates>+1" for a single client set, or to "(<nSets>-1)*<nUpdates>+1" for multiple client sets. Values <= 0 will be replaced with the appropriate value depending on the number of client sets specified. Note that this relies on using the same value for the --n-distributor-sets when multiple instances of this command are running separately.')
+    parser.add_argument('-fr', '--field-request', dest='field_request', default='', help='PV field request string (default: None). This parameter can be used to request only a subset of the data available in the input channel. The system will automatically append object id field to the specified request string. Note that this parameter is ignored when data distributor is used.')
     parser.add_argument('-pfu', '--process-first-update', dest='process_first_update', default=False, action='store_true', help='Process first PV update (default: False). This parameter is ignored if processor kwargs dictionary contains "processFirstUpdate" key.')
     parser.add_argument('-dpn', '--distributor-plugin-name', dest='distributor_plugin_name', default='pydistributor', help='Distributor plugin name (default: pydistributor).')
     parser.add_argument('-dg', '--distributor-group', dest='distributor_group', default=None, help='Distributor client group that application belongs to (default: None). This parameter should be used only if data distributor plugin will be distributing data between multiple clients. Note that different distributor groups are completely independent of each other.')

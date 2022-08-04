@@ -200,8 +200,11 @@ class CollectorController:
             processorConfig['objectIdField'] = args.oid_field
         if not 'objectIdOffset' in processorConfig:
             processorConfig['objectIdOffset'] = args.oid_offset
+        if not 'fieldRequest' in processorConfig:
+            processorConfig['fieldRequest'] = args.field_request
         if not 'outputChannel' in processorConfig:
             processorConfig['outputChannel'] = outputChannel
+        self.processorConfig = processorConfig
         return processorConfig
 
     def createProcessor(self, collectorId, args):
@@ -243,23 +246,21 @@ class CollectorController:
         return producerIdList
 
     def createCollector(self, collectorId, args):
-        processorConfig = self.createProcessorConfig(collectorId, args)
         processingController = self.createProcessor(collectorId, args)
-        self.pvaServer = None
         inputChannel = args.input_channel
         self.logger.debug(f'Input channel name: {inputChannel}')
 
         self.producerIdList = self.getProducerIdList(args)
         self.logger.debug(f'Producer id list: {self.producerIdList}')
 
+        self.pvaServer = pva.PvaServer()
         self.statusChannel = args.status_channel
         if self.statusChannel == '_':
-            self.statusChannel = f'{args.input_channel}:collector:{collectorId}:status'
+            self.statusChannel = f'pvapy:collector:{collectorId}:status'
         if self.statusChannel:
             self.statusChannel = self.statusChannel.replace('*', f'{collectorId}')
             self.logger.debug(f'Collector status channel name: {self.statusChannel}')
         if self.statusChannel:
-            self.pvaServer = pva.PvaServer()
             self.statusTypeDict = self.getCollectorStatusTypeDict(processingController)
             statusPvObject = pva.PvObject(self.statusTypeDict, {'collectorId' : collectorId})
             self.pvaServer.addRecord(self.statusChannel, statusPvObject)
@@ -267,26 +268,26 @@ class CollectorController:
 
         self.controlChannel = args.control_channel
         if self.controlChannel == '_':
-            self.controlChannel = f'{args.input_channel}:collector:{collectorId}:control'
+            self.controlChannel = f'pvapy:collector:{collectorId}:control'
         if self.controlChannel:
             self.controlChannel = self.controlChannel.replace('*', f'{collectorId}')
             self.logger.debug(f'Collector control channel name: {self.controlChannel}')
         if self.controlChannel:
-            if not self.pvaServer:
-                self.pvaServer = pva.PvaServer()
             # Keep reference to the control object so we can
             # update it
             self.controlPvObject = pva.PvObject(self.COLLECTOR_CONTROL_TYPE_DICT, {'collectorId' : collectorId})
             self.pvaServer.addRecord(self.controlChannel, self.controlPvObject, self.controlCallback)
             self.logger.debug(f'Created collector control channel: {self.controlChannel}')
 
-        # Share PVA server if we have one
-        if processingController and self.pvaServer:
+        # Share PVA server
+        if processingController:
             processingController.pvaServer = self.pvaServer
+            processingController.createUserDefinedOutputChannel()
 
-        objectIdField = processorConfig['objectIdField']
-        objectIdOffset = processorConfig['objectIdOffset']
-        self.dataCollector = DataCollector(collectorId, inputChannel, producerIdList=self.producerIdList, objectIdField=objectIdField, objectIdOffset=objectIdOffset, serverQueueSize=args.server_queue_size, monitorQueueSize=args.monitor_queue_size, collectorCacheSize=args.collector_cache_size, processingController=processingController)
+        objectIdField = self.processorConfig['objectIdField']
+        objectIdOffset = self.processorConfig['objectIdOffset']
+        fieldRequest = self.processorConfig['fieldRequest']
+        self.dataCollector = DataCollector(collectorId, inputChannel, producerIdList=self.producerIdList, objectIdField=objectIdField, objectIdOffset=objectIdOffset, fieldRequest=fieldRequest, serverQueueSize=args.server_queue_size, monitorQueueSize=args.monitor_queue_size, collectorCacheSize=args.collector_cache_size, processingController=processingController)
         return self.dataCollector
 
     def startCollectors(self):
@@ -377,6 +378,7 @@ def main():
     parser.add_argument('-pk', '--processor-kwargs', dest='processor_kwargs', default=None, help='JSON-formatted string that can be converted into dictionary and used for initializing user processor object.')
     parser.add_argument('-of', '--oid-field', dest='oid_field', default='uniqueId', help='PV update id field used for calculating data processor statistics (default: uniqueId). This parameter is ignored if processor kwargs dictionary contains "objectIdField" key.')
     parser.add_argument('-oo', '--oid-offset', type=int, dest='oid_offset', default=1, help='This parameter determines by how much object id should change between the two PV updates, and is used for determining the number of missed PV updates (default: 1). This parameter is ignored if processor kwargs dictionary contains "objectIdOffset" key.')
+    parser.add_argument('-fr', '--field-request', dest='field_request', default='', help='PV field request string (default: None). This parameter can be used to request only a subset of the data available in the input channel. The system will automatically append object id field to the specified request string. Note that this parameter is ignored when data distributor is used.')
     parser.add_argument('-pfu', '--process-first-update', dest='process_first_update', default=False, action='store_true', help='Process first PV update (default: False). This parameter is ignored if processor kwargs dictionary contains "processFirstUpdate" key.')
     parser.add_argument('-rt', '--runtime', type=float, dest='runtime', default=0, help='Server runtime in seconds; values <=0 indicate infinite runtime (default: infinite).')
     parser.add_argument('-rp', '--report-period', type=float, dest='report_period', default=0, help='Statistics report period for the collector in seconds; values <=0 indicate no reporting (default: 0).')

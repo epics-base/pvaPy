@@ -7,7 +7,7 @@ from ..utility.loggingManager import LoggingManager
 from ..utility.floatWithUnits import FloatWithUnits
 
 class ProducerChannel(pva.Channel):
-    def __init__(self, producerId, channelName, serverQueueSize, monitorQueueSize, objectIdField, dataCollector):
+    def __init__(self, producerId, channelName, serverQueueSize, monitorQueueSize, objectIdField, fieldRequest, dataCollector):
         self.logger = LoggingManager.getLogger(f'producer-{producerId}')
         self.channelName = channelName
         self.dataCollector = dataCollector
@@ -15,6 +15,7 @@ class ProducerChannel(pva.Channel):
         self.serverQueueSize = serverQueueSize
         self.monitorQueueSize = monitorQueueSize
         self.objectIdField = objectIdField
+        self.fieldRequest = fieldRequest
         self.pvObjectQueue = None
         if monitorQueueSize >= 0:
             self.logger.debug(f'Channel {self.channelName} using monitor queue size {monitorQueueSize}')
@@ -31,10 +32,17 @@ class ProducerChannel(pva.Channel):
                     self.logger.debug(f'Producer channel client queue size is set to {monitorQueueSize}')
 
     def getPvMonitorRequest(self):
+        fieldRequest = ''
+        if self.fieldRequest:
+            # Strip field() if present
+            fieldRequest = self.fieldRequest.replace('field(', '').replace(')', '')
+            if self.objectIdField and self.objectIdField not in fieldRequest:
+                fieldRequest = f'{self.objectIdField},{fieldRequest}'
+
         recordStr = ''
         if self.serverQueueSize > 0:
             recordStr = f'record[queueSize={self.serverQueueSize}]'
-        request = f'{recordStr}field()'
+        request = f'{recordStr}field({fieldRequest})'
         return request
 
     def resetStats(self):
@@ -181,7 +189,7 @@ class DataCollector:
     # Default queue sizing factor
     CACHE_SIZE_SCALING_FACTOR = 10
 
-    def __init__(self, collectorId, inputChannel, producerIdList=[1], objectIdField='uniqueId', objectIdOffset=1, serverQueueSize=0, monitorQueueSize=-1, collectorCacheSize=-1, processingController=None):
+    def __init__(self, collectorId, inputChannel, producerIdList=[1], objectIdField='uniqueId', objectIdOffset=1, fieldRequest='', serverQueueSize=0, monitorQueueSize=-1, collectorCacheSize=-1, processingController=None):
         self.logger = LoggingManager.getLogger(f'collector-{collectorId}')
         self.eventLock = threading.Lock()
         self.event = threading.Event()
@@ -192,6 +200,8 @@ class DataCollector:
         self.logger.debug(f'Object id field: {objectIdField}')
         self.objectIdOffset = objectIdOffset
         self.logger.debug(f'Object id offset: {objectIdOffset}')
+        self.fieldRequest = fieldRequest
+        self.logger.debug(f'Field request: {fieldRequest}')
         self.serverQueueSize = serverQueueSize
         self.logger.debug(f'Server queue size: {serverQueueSize}')
         self.nProducers = len(producerIdList)
@@ -208,7 +218,7 @@ class DataCollector:
         for producerId in producerIdList:
             cName = f'{inputChannel}'.replace('*', str(producerId))
             self.logger.debug(f'Creating channel {cName} for producer {producerId}')
-            self.producerChannelMap[producerId] = ProducerChannel(producerId, cName, serverQueueSize, self.monitorQueueSize, objectIdField, self)
+            self.producerChannelMap[producerId] = ProducerChannel(producerId, cName, serverQueueSize, self.monitorQueueSize, objectIdField, fieldRequest, self)
         self.processingController = processingController
         self.processingThread = ProcessingThread(f'ProcessingThread-{self.collectorId}', self)
         self.startTime = None
@@ -328,6 +338,7 @@ class DataCollector:
         self.nRejected = 0
         self.nCollected = 0
         self.nMissed = 0
+        self.lastObjectId = None
        
     def getProducerStats(self, producerChannel, receivingTime):
         monitorStats = producerChannel.getMonitorStats()
