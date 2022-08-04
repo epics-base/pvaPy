@@ -4,7 +4,6 @@ import pvaccess as pva
 from ..utility.loggingManager import LoggingManager
 
 # Base user data processor class.
-# The only method that derived class really needs to implement is process()
 class UserDataProcessor:
 
     def __init__(self, configDict={}):
@@ -46,7 +45,14 @@ class UserDataProcessor:
     def getStatsPvaTypes(self):
         return {}
 
+    # Define PVA types for output object
+    # This method does not need to be implemented if output
+    # object has the same structure as the input object
+    def getOutputPvaTypes(self):
+        return {}
+
     # Update output channel
+    # No need to override this method
     def updateOutputChannel(self, pvObject):
         if not self.outputChannel or not self.pvaServer:
             return
