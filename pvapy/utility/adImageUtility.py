@@ -51,8 +51,10 @@ class AdImageUtility:
         """ Reshape area detector numpy array. """
         # Get color mode
         imageId = ntnda['uniqueId']
-        attributes = ntnda['attribute']
         colorMode = None
+        attributes = []
+        if 'attribute' in ntnda:
+            attributes = ntnda['attribute']
         for attribute in attributes:
             if attribute['name'] == 'ColorMode':
                 colorMode = attribute['value'][0]['value']
