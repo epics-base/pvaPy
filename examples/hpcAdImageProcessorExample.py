@@ -68,3 +68,10 @@ class HpcAdImageProcessor(AdImageProcessor):
             'processingTime' : pva.DOUBLE,
             'processingRate' : pva.DOUBLE
         }
+
+    # Define PVA types for output object
+    # This method does not need to be implemented if output
+    # object has the same structure as the input object
+    def getOutputPvaTypes(self):
+        return {}
+

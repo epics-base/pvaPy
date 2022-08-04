@@ -3,7 +3,6 @@
 from pvapy.hpc.userDataProcessor import UserDataProcessor
 
 # Trivial data processor implementation
-# All interface hooks are optional except for process()
 class HpcDataProcessor(UserDataProcessor):
 
     def __init__(self, configDict={}):
@@ -37,3 +36,10 @@ class HpcDataProcessor(UserDataProcessor):
     # Define PVA types for different stats variables
     def getStatsPvaTypes(self):
         return {}
+
+    # Define PVA types for output object
+    # This method does not need to be implemented if output
+    # object has the same structure as the input object
+    def getOutputPvaTypes(self):
+        return {}
+
