@@ -37,8 +37,28 @@ class DataProcessingController:
         # Defines all counters and sets them to zero
         self.resetStats()
 
+    def setPvaServer(self, pvaServer):
+        self.pvaServer = pvaServer
+
+    def createUserDefinedOutputChannel(self):
+        # Create output channel if user processing class defines it
+        if self.userDataProcessor:
+            typesDict = self.userDataProcessor.getOutputPvaTypes()
+            if typesDict:
+                self.logger.debug(f'User data processor defines output channel as: {typesDict}')
+                self.createOutputChannel(pva.PvObject(typesDict))
+            else:
+                self.logger.debug('User data processor does not define output channel')
+                
+    def createOutputChannel(self, pvObject):
+        if self.outputChannel and self.pvaServer and not self.outputRecordAdded:
+            self.outputRecordAdded = True
+            self.pvaServer.addRecord(self.outputChannel, pvObject.copy())
+            self.logger.debug(f'Added output channel {self.outputChannel}')
+
     def start(self):
         if self.outputChannel and not self.pvaServer:
+            self.logger.debug('Starting pva server')
             self.pvaServerStarted = True
             self.pvaServer = pva.PvaServer()
             self.pvaServer.start()
@@ -76,10 +96,7 @@ class DataProcessingController:
         objectId = pvObject[self.objectIdField]
         if self.lastObjectId is None: 
             self.lastObjectId = objectId
-            if self.outputChannel and not self.outputRecordAdded:
-                self.outputRecordAdded = True
-                self.pvaServer.addRecord(self.outputChannel, pvObject.copy())
-                self.logger.debug(f'Added output channel {self.outputChannel}')
+            self.createOutputChannel(pvObject)
             if not self.processFirstUpdate:
                 return None
         if self.firstObjectId is None:
