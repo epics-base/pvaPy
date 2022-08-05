@@ -31,6 +31,10 @@ class_<NtNdArray, bases<NtType> >("NtNdArray",
 
     .def(init<const PvObject&>())
 
+    .def(init<boost::python::dict,boost::python::dict,const std::string&,boost::python::dict>(args("structureDict","valueDict","typeId","fieldTypeIdDict")))
+
+    .def_pickle(NtNdArrayPickleSuite())
+
     .def("getValue", 
         &NtNdArray::getValue, 
         "Retrieves array value.\n\n"

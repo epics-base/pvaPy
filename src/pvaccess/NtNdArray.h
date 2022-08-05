@@ -52,6 +52,7 @@ public:
     NtNdArray();
     NtNdArray(const boost::python::dict& extraFieldsDict);
     NtNdArray(const PvObject& pvObject);
+    NtNdArray(const boost::python::dict& structureDict, const boost::python::dict& valueDict, const std::string& structureId, const boost::python::dict& structureFieldIdDict);
     NtNdArray(const NtNdArray& ntNdArray);
     virtual ~NtNdArray();
 
@@ -80,6 +81,18 @@ public:
     virtual PvTimeStamp getTimeStamp() const;
     virtual void setDisplay(const PvDisplay& pvDisplay);
     virtual PvDisplay getDisplay() const;
+};
+
+struct NtNdArrayPickleSuite : boost::python::pickle_suite
+{
+    static boost::python::tuple getinitargs(const NtNdArray& ntNdArray)
+    {
+        return boost::python::make_tuple(
+            ntNdArray.getStructureDict(),
+            ntNdArray.get(),
+            NtNdArray::StructureId,
+            NtNdArray::createStructureFieldIdDict());
+    }
 };
 
 #endif

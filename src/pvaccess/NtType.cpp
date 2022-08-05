@@ -15,6 +15,11 @@ NtType::NtType(const bp::dict& pyDict, const std::string& structureId, const bp:
 {
 }
 
+NtType::NtType(const bp::dict& structureDict, const bp::dict& valueDict, const std::string& structureId, const bp::dict& structureFieldIdDict)
+    : PvObject(structureDict, valueDict, structureId, structureFieldIdDict)
+{
+}
+
 NtType::NtType(const NtType& ntType)
     : PvObject(ntType.pvStructurePtr)
 {

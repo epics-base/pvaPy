@@ -110,6 +110,11 @@ NtNdArray::NtNdArray(const PvObject& pvObject)
 {
 }
 
+NtNdArray::NtNdArray(const bp::dict& structureDict, const bp::dict& valueDict, const std::string& structureId, const bp::dict& structureFieldIdDict)
+    : NtType(structureDict, valueDict, structureId, structureFieldIdDict)
+{
+}
+
 NtNdArray::NtNdArray(const NtNdArray& ntNdArray)
     : NtType(ntNdArray.pvStructurePtr)
 {

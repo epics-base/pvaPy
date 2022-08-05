@@ -749,7 +749,10 @@ void pyDictToUnion(const bp::dict& pyDict, pvd::PVUnionPtr& pvUnionPtr)
     pvd::PVFieldPtr pvField;
     std::string unionFieldName;
     int dictSize = bp::len(pyDict);
-    if (dictSize != 1) {
+    if (dictSize == 0) {
+        return;
+    }
+    else if (dictSize != 1) {
         throw InvalidArgument("Dictionary representing union value must have exactly one element.");
     }
     bp::list keys = pyDict.keys();
