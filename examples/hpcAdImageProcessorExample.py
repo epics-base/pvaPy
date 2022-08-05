@@ -5,7 +5,7 @@ import pvaccess as pva
 from pvapy.hpc.adImageProcessor import AdImageProcessor
 from pvapy.utility.floatWithUnits import FloatWithUnits
 
-# Example for HPC AD Image Processor
+# Example AD Image Processor for the streaming framework
 class HpcAdImageProcessor(AdImageProcessor):
 
     def __init__(self, configDict={}):

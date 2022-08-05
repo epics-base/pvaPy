@@ -1,4 +1,4 @@
-## Release 5.0.0 (2022/MM/DD)
+## Release 5.0.0 (2022/08/05)
 
 - PvaMirrorServer enhancements:
   - optimized structure copy on processing
@@ -17,15 +17,16 @@
     ranges
   - option to use numpy memory map for loading input files
   - option to notify channel access PV when server starts
-- added python HPC framework for processing data produced at
-  high rates using stream consumers and stream collectors
+- added python HPC streaming framework for processing data produced at
+  high rates using stream consumers and stream collectors (see the
+  [framework documentation](streamingFramework.md))
 - added command line utilities:
   - pvapy-hpc-consumer
   - pvapy-hpc-collector
 - conda/pip package dependencies: 
-  - EPICS BASE = 7.0.6.1
+  - EPICS BASE = 7.0.6.1.C2.3
   - BOOST      = 1.78.0
-  - NUMPY      >= 1.22
+  - NUMPY      >= 1.22 (for python >= 3.8); < 1.21 (for python < 3.8)
 
 ## Release 4.2.0 (2022/06/07)
 
