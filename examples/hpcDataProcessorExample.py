@@ -2,7 +2,7 @@
 
 from pvapy.hpc.userDataProcessor import UserDataProcessor
 
-# Trivial data processor implementation
+# Trivial data processor implementation for the streaming framework
 class HpcDataProcessor(UserDataProcessor):
 
     def __init__(self, configDict={}):
