@@ -79,17 +79,17 @@ class DataProcessingController:
         if self.userDataProcessor:
             self.userDataProcessor.stop()
 
-    def configure(self, kwargs):
-        if type(kwargs) == dict:
-            if 'processFirstUpdate' in kwargs: 
-                self.processFirstUpdate = kwargs.get('processFirstUpdate')
+    def configure(self, configDict):
+        if type(configDict) == dict:
+            if 'processFirstUpdate' in configDict: 
+                self.processFirstUpdate = configDict.get('processFirstUpdate')
                 self.logger.debug(f'Resetting processing of first update to {self.processFirstUpdate}')
-            if 'objectIdOffset' in kwargs: 
+            if 'objectIdOffset' in configDict: 
                 self.objectIdOffset = int(configDict.get('objectIdOffset', 1))
                 self.logger.debug(f'Resetting object id offset to {self.objectIdOffset}')
         # Call user interface method for configuration
         if self.userDataProcessor:
-            self.userDataProcessor.configure(kwargs)
+            self.userDataProcessor.configure(configDict)
 
     def process(self, pvObject):
         now = time.time()

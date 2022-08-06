@@ -22,10 +22,10 @@ class ProducerChannel(pva.Channel):
             self.pvObjectQueue = pva.PvObjectQueue(monitorQueueSize)
         pva.Channel.__init__(self, channelName)
 
-    def configure(self, kwargs):
-        if type(kwargs) == dict:
-            if 'monitorQueueSize' in kwargs and self.pvObjectQueue is not None:
-                monitorQueueSize = int(kwargs.get('monitorQueueSize'))
+    def configure(self, configDict):
+        if type(configDict) == dict:
+            if 'monitorQueueSize' in configDict and self.pvObjectQueue is not None:
+                monitorQueueSize = int(configDict.get('monitorQueueSize'))
                 if monitorQueueSize >= 0:
                     self.monitorQueueSize = monitorQueueSize
                     self.pvObjectQueue.maxLength = monitorQueueSize
@@ -253,16 +253,16 @@ class DataCollector:
             return monitorQueueSize
         return minClientQueueSize 
 
-    def configure(self, kwargs):
-        if type(kwargs) == dict:
-            if 'collectorCacheSize' in kwargs:
-                collectorCacheSize = int(kwargs.get('collectorCacheSize'))
+    def configure(self, configDict):
+        if type(configDict) == dict:
+            if 'collectorCacheSize' in configDict:
+                collectorCacheSize = int(configDict.get('collectorCacheSize'))
                 self.collectorCacheSize = self.getCollectorCacheSize(collectorCacheSize)
                 self.logger.debug(f'Collector cache size is set to {self.collectorCacheSize}')
             for producerId,producerChannel in self.producerChannelMap.items():
-                producerChannel.configure(kwargs)
+                producerChannel.configure(configDict)
         if self.processingController:
-            self.processingController.configure(kwargs)
+            self.processingController.configure(configDict)
 
     def process(self, pv):
         if self.processingController:

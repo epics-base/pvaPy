@@ -77,16 +77,16 @@ class DataConsumer:
             request = f'{recordStr}field({distributorStr})'
         return request
 
-    def configure(self, kwargs):
-        if type(kwargs) == dict:
-            if 'monitorQueueSize' in kwargs:
-                monitorQueueSize = int(kwargs.get('monitorQueueSize'))
+    def configure(self, configDict):
+        if type(configDict) == dict:
+            if 'monitorQueueSize' in configDict:
+                monitorQueueSize = int(configDict.get('monitorQueueSize'))
                 if self.pvObjectQueue is not None:
                     self.logger.debug(f'Resetting PvObjectQueue size from {self.pvObjectQueue.maxLength} to {monitorQueueSize}')
                     self.pvObjectQueue.maxLength = monitorQueueSize
                     self.monitorQueueSize = monitorQueueSize
         if self.processingController:
-            self.processingController.configure(kwargs)
+            self.processingController.configure(configDict)
 
     def process(self, pv):
         if self.processingController:
