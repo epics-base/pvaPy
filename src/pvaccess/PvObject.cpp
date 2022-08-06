@@ -774,14 +774,7 @@ void PvObject::setUnionArray(const bp::list& pyList)
 
 bp::list PvObject::getUnionArray(const std::string& key) const
 {
-    pvd::PVUnionArrayPtr pvUnionArrayPtr = PyPvDataUtility::getUnionArrayField(key, pvStructurePtr);
-    pvd::PVUnionArray::const_svector data = pvUnionArrayPtr->view();
-    bp::list pyList;
-    for(size_t i = 0; i < data.size(); ++i) {
-        std::string fieldName = data[i]->getSelectedFieldName();
-        pyList.append(PvObject(PyPvDataUtility::createUnionPvStructure(data[i], fieldName)));
-    }
-    return pyList;
+    return PyPvDataUtility::getUnionArrayFieldAsList(key, pvStructurePtr, useNumPyArrays);
 }
 
 bp::list PvObject::getUnionArray() const

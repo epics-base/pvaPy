@@ -1,4 +1,4 @@
-## Release 5.0.0 (2022/08/05)
+## Release 5.0.0 (2022/08/07)
 
 - PvaMirrorServer enhancements:
   - optimized structure copy on processing
@@ -11,8 +11,14 @@
 - PvTimeStamp enhancements:
   - added constructor from and conversion to float
   - added python properties for all fields
-- updated structure IDs for NtTable and NtAttribute fields
-- new area detector simulator features:
+- NtNdArray enhancements:
+  - updated structure IDs for NtAttribute 
+  - added support for pickling NtNdArray objects
+- NtTable enhancements:
+  - updated structure IDs 
+- PvObject enhancements:
+  - simplified handling of unions
+- new Area Detector Simulator features:
   - option to generate frames with different data types and in the specified 
     ranges
   - option to use numpy memory map for loading input files
@@ -20,7 +26,7 @@
 - added python HPC streaming framework for processing data produced at
   high rates using stream consumers and stream collectors (see the
   [framework documentation](streamingFramework.md))
-- added command line utilities:
+- added streaming framework command line utilities:
   - pvapy-hpc-consumer
   - pvapy-hpc-collector
 - conda/pip package dependencies: 

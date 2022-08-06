@@ -544,7 +544,38 @@ void pyObjectToUnionField(const bp::object& pyObject, const std::string& fieldNa
     bp::extract<bp::tuple> extractTuple(pyObject);
     if (extractTuple.check()) {
         bp::tuple pyTuple = extractTuple();
-        pyObject2 = pyTuple[0];
+        int tupleSize = bp::len(pyTuple);
+        switch (tupleSize) {
+            case (0): {
+                // empty tuple
+                pvd::PVUnionPtr pvUnionPtr = pvStructurePtr->getSubField<pvd::PVUnion>(fieldName);
+                pvUnionPtr->select(pvd::PVUnion::UNDEFINED_INDEX);
+                return;
+            }
+            case (1): {
+                // this could be value dict or PvObject
+                pyObject2 = pyTuple[0];
+                break;
+            }
+            case (2): {
+                // we should have dict and structure dict
+                bp::dict valueDict = PyUtility::extractValueFromPyObject<bp::dict>(pyTuple[0]);
+                bp::dict typeDict = PyUtility::extractValueFromPyObject<bp::dict>(pyTuple[1]);
+                if (!bp::len(typeDict) || !bp::len(valueDict)) {
+                    // empty dicts
+                    pvd::PVUnionPtr pvUnionPtr = pvStructurePtr->getSubField<pvd::PVUnion>(fieldName);
+                    pvUnionPtr->select(pvd::PVUnion::UNDEFINED_INDEX);
+                }
+                else {
+                    PvObject pvObject(typeDict, valueDict);
+                    pvObjectToUnionField(pvObject, fieldName, pvStructurePtr);
+                }
+                return;
+            }
+            default: {
+                throw InvalidArgument("Tuple provided for field name %s must have length <= 2.", fieldName.c_str());
+            }
+        }
     }    
     bp::extract<PvObject> extractPvObject(pyObject2);
     if (extractPvObject.check()) {
@@ -552,8 +583,15 @@ void pyObjectToUnionField(const bp::object& pyObject, const std::string& fieldNa
         pvObjectToUnionField(pvObject, fieldName, pvStructurePtr);
     }
     else {
-        bp::dict pyDict = PyUtility::extractValueFromPyObject<bp::dict>(pyObject2);
-        pyDictToUnionField(pyDict, fieldName, pvStructurePtr);
+        bp::dict valueDict = PyUtility::extractValueFromPyObject<bp::dict>(pyObject2);
+        // we should have value dict here
+        if (!bp::len(valueDict)) {
+            pvd::PVUnionPtr pvUnionPtr = pvStructurePtr->getSubField<pvd::PVUnion>(fieldName);
+            pvUnionPtr->select(pvd::PVUnion::UNDEFINED_INDEX);
+        }
+        else {
+            pyDictToUnionField(valueDict, fieldName, pvStructurePtr);
+        }
     }
 }
 
@@ -879,26 +917,58 @@ void pyListToUnionArrayField(const bp::list& pyList, const std::string& fieldNam
         pvd::PVUnionPtr pvUnionPtr = pvd::getPVDataCreate()->createPVUnion(unionPtr);
         bp::object pyObject = pyList[i];
 
+        bp::extract<bp::tuple> extractTuple(pyObject);
+        if (extractTuple.check()) {
+            bp::tuple pyTuple = extractTuple();
+            int tupleSize = bp::len(pyTuple);
+            switch (tupleSize) {
+                case (0): {
+                    // empty tuple
+                    pvUnionPtr->select(pvd::PVUnion::UNDEFINED_INDEX);
+                    break;
+                }
+                case (1): {
+                    // we should have value dict 
+                    bp::dict valueDict = PyUtility::extractValueFromPyObject<bp::dict>(pyTuple[0]);
+                    if (!bp::len(valueDict)) {
+                        // empty dict
+                        pvUnionPtr->select(pvd::PVUnion::UNDEFINED_INDEX);
+                    }
+                    else {
+                        pyDictToUnion(valueDict, pvUnionPtr);
+                    }
+                    break;
+                }
+                case (2): { 
+                    // we should have value dict and structure dict
+                    bp::dict valueDict = PyUtility::extractValueFromPyObject<bp::dict>(pyTuple[0]);
+                    bp::dict typeDict = PyUtility::extractValueFromPyObject<bp::dict>(pyTuple[1]);
+                    if (!bp::len(typeDict) || !bp::len(valueDict)) {
+                        // empty dicts
+                        pvUnionPtr->select(pvd::PVUnion::UNDEFINED_INDEX);
+                    }
+                    else {
+                        PvObject pvObject(typeDict, valueDict);
+                        std::string keyFrom = getValueOrSingleFieldName(pvObject.getPvStructurePtr());
+                        pvd::PVFieldPtr pvFrom = PyPvDataUtility::getSubField(keyFrom, pvObject.getPvStructurePtr());
+                        PyPvDataUtility::setUnionField(pvFrom, pvUnionPtr);
+                    }
+                    break;
+                }
+                default: {
+                    throw InvalidArgument("Tuple provided for field name %s (position: %d) must have length <= 2.", fieldName.c_str(), i);
+                }
+            }
+            data[i] = pvUnionPtr;
+            continue;
+        }
+
         bp::extract<PvObject> extractPvObject(pyObject);
         if (extractPvObject.check()) {
             PvObject pvObject = extractPvObject();
             std::string keyFrom = getValueOrSingleFieldName(pvObject.getPvStructurePtr());
             pvd::PVFieldPtr pvFrom = PyPvDataUtility::getSubField(keyFrom, pvObject.getPvStructurePtr());
             PyPvDataUtility::setUnionField(pvFrom, pvUnionPtr);
-            data[i] = pvUnionPtr;
-            continue;
-        }
-
-        bp::extract<bp::tuple> extractTuple(pyObject);
-        if (extractTuple.check()) {
-            bp::tuple pyTuple = extractTuple();
-            // Extract dictionary within tuple
-            if (bp::len(pyTuple) != 1) {
-                throw InvalidArgument("PV union tuple must have exactly one element.");
-            }
-            bp::object pyObject = pyTuple[0];
-            bp::dict pyDict = PyUtility::extractValueFromPyObject<bp::dict>(pyObject);
-            pyDictToUnion(pyDict, pvUnionPtr);
             data[i] = pvUnionPtr;
             continue;
         }
@@ -1190,7 +1260,11 @@ void addUnionFieldToDict(const std::string& fieldName, const pvd::PVStructurePtr
     pvd::PVStructurePtr unionPvStructurePtr = getUnionPvStructurePtr(fieldName, pvStructurePtr);
     bp::dict pyDict2;
     structureToPyDict(unionPvStructurePtr, pyDict2, useNumPyArrays);
-    bp::tuple pyTuple = bp::make_tuple(pyDict2);
+    // Need to add object structure information to tuple in order to be
+    // able to re-create variant unions
+    bp::dict pyDict3;
+    PyPvDataUtility::structureToPyDict(unionPvStructurePtr->getStructure(), pyDict3);
+    bp::tuple pyTuple = bp::make_tuple(pyDict2,pyDict3);
     pyDict[fieldName] = pyTuple;
 }
 
@@ -1202,39 +1276,54 @@ bp::object getUnionFieldAsPyObject(const std::string& fieldName, const pvd::PVSt
 }
 
 //
-// Add PV Union Array => PY {}
+// Get PV Union Array => PY []
 // 
-void addUnionArrayFieldToDict(const std::string& fieldName, const pvd::PVStructurePtr& pvStructurePtr, bp::dict& pyDict, bool useNumPyArrays)
+bp::list getUnionArrayFieldAsList(const std::string& fieldName, const pvd::PVStructurePtr& pvStructurePtr, bool useNumPyArrays)
 {
     pvd::PVUnionArrayPtr pvUnionArrayPtr = pvStructurePtr->getSubField<pvd::PVUnionArray>(fieldName);
     pvd::shared_vector<const pvd::PVUnionPtr> pvUnions = pvUnionArrayPtr->view();
     bp::list pyList;
     for(size_t i = 0 ; i < pvUnions.size(); ++i) {
         pvd::PVUnionPtr pvUnionPtr = pvUnions[i];
-        std::string fieldName = PvaConstants::ValueFieldKey;
+        std::string unionFieldName = PvaConstants::ValueFieldKey;
         pvd::PVFieldPtr pvField;
         if (!pvUnionPtr->getUnion()->isVariant()) {
-            fieldName = pvUnionPtr->getSelectedFieldName();
-            pvField = pvUnionPtr->select(fieldName);
+            unionFieldName = pvUnionPtr->getSelectedFieldName();
+            if (unionFieldName.size() > 0) {
+                pvField = pvUnionPtr->select(unionFieldName);
+            }
         }
         else {
             pvField = pvUnionPtr->get();
         }
 
-        pvd::PVStructurePtr unionPvStructurePtr;
-        pvd::StructureConstPtr unionStructurePtr = pvd::getFieldCreate()->createFieldBuilder()->add(fieldName, pvField->getField())->createStructure();
-        unionPvStructurePtr = pvd::getPVDataCreate()->createPVStructure(unionStructurePtr);
+        bp::dict valueDict;
+        bp::dict typeDict;
+        if(pvField) {
+            pvd::PVStructurePtr unionPvStructurePtr;
+            pvd::StructureConstPtr unionStructurePtr = pvd::getFieldCreate()->createFieldBuilder()->add(unionFieldName, pvField->getField())->createStructure();
+            unionPvStructurePtr = pvd::getPVDataCreate()->createPVStructure(unionStructurePtr);
 #if PVA_API_VERSION == 440
-        pvd::Convert::getConvert()->copy(pvField, unionPvStructurePtr->getSubField(fieldName));
+            pvd::Convert::getConvert()->copy(pvField, unionPvStructurePtr->getSubField(unionFieldName));
 #else
-        unionPvStructurePtr->getSubField(fieldName)->copy(*pvField);
+            unionPvStructurePtr->getSubField(unionFieldName)->copy(*pvField);
 #endif // if PVA_API_VERSION == 440
 
-        bp::dict pyDict2;
-        structureToPyDict(unionPvStructurePtr, pyDict2, useNumPyArrays);
-        bp::tuple pyTuple = bp::make_tuple(pyDict2);
+            structureToPyDict(unionPvStructurePtr, valueDict, useNumPyArrays);
+            PyPvDataUtility::structureToPyDict(unionPvStructurePtr->getStructure(), typeDict);
+        }
+        bp::tuple pyTuple = bp::make_tuple(valueDict,typeDict);
         pyList.append(pyTuple);
     }
+    return pyList;
+}
+
+//
+// Add PV Union Array => PY {}
+// 
+void addUnionArrayFieldToDict(const std::string& fieldName, const pvd::PVStructurePtr& pvStructurePtr, bp::dict& pyDict, bool useNumPyArrays)
+{
+    bp::list pyList = getUnionArrayFieldAsList(fieldName, pvStructurePtr, useNumPyArrays);
     pyDict[fieldName] = pyList;
 }
 
@@ -1734,20 +1823,24 @@ void updateFieldArrayFromDict(const bp::dict& pyDict, pvd::FieldConstPtrArray& f
     }
 }
 
-pvd::PVStructurePtr createUnionPvStructure(const pvd::PVUnionPtr& pvUnionPtr, const std::string& fieldName)
+pvd::PVStructurePtr createUnionPvStructure(const pvd::PVUnionPtr& pvUnionPtr)
 {
     pvd::PVFieldPtr pvField = pvUnionPtr->get();
     pvd::StringArray names(1);
     pvd::PVFieldPtrArray pvfields(1);
     names[0] = PvaConstants::ValueFieldKey;
-    if (!pvUnionPtr->getUnion()->isVariant()) {
-        std::string unionFieldName = pvUnionPtr->getSelectedFieldName();
-        if (unionFieldName != "") {
-            names[0] = unionFieldName;
-        }
+    std::string unionFieldName = pvUnionPtr->getSelectedFieldName();
+    if (unionFieldName.size() > 0) {
+        names[0] = unionFieldName;
     }
-    pvfields[0] = pvField;
-    pvd::PVStructurePtr pv = pvd::getPVDataCreate()->createPVStructure(names, pvfields);
+    pvd::PVStructurePtr pv;
+    if (pvField) {
+        pvfields[0] = pvField;
+        pv = pvd::getPVDataCreate()->createPVStructure(names, pvfields);
+    }
+    else {
+        pv = pvd::getPVDataCreate()->createPVStructure(pvd::getFieldCreate()->createStructure());
+    }
     return pv;
 }
 
