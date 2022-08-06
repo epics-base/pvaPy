@@ -4,33 +4,62 @@ import pvaccess as pva
 from .userDataProcessor import UserDataProcessor
 from ..utility.adImageUtility import AdImageUtility
 
-# Class that should be used as base for all AD image processing
 class AdImageProcessor(UserDataProcessor):
+    ''' 
+    Class that can be used as a base for user implementation of an
+    Area Detector image processor class suitable for usage with the streaming
+    framework.
+    
+    **AdImageProcessor(configDict={})**
 
+    :Parameter: *configDict* (dict) - dictionary containing configuration parameters
+    '''
     def __init__(self, configDict={}):
         UserDataProcessor.__init__(self, configDict)
 
     @classmethod
-    def reshapeNtNdArray(cls, ntnda):
-        return AdImageUtility.reshapeNtNdArray(ntnda)
+    def reshapeNtNdArray(cls, ntNdArray):
+        '''
+        Reshape NtNdArray object and return tuple with image id, NumPy image array,
+        image dimensions, color mode and NtNdArray value (union) field key.
+
+        :Parameter: ntNdArray (NtNdArray) - NtNdArray object
+        :Returns: Tuple (imageId,image,nx,ny,nz,colorMode,fieldKey). 
+        '''
+        return AdImageUtility.reshapeNtNdArray(ntNdArray)
 
     @classmethod
     def getNtNdArrayDataFieldKey(cls, image):
+        '''
+        Get NtNdArray value (union) field key suitable for the given NumPy array.
+        
+        :Parameter: image (numpy.array) - array containing image data
+        :Returns: NtNdArray union value field key. Possible return values are 'ubyteValue', 'byteValue', 'ushortValue', 'shortValue', 'uintValue', 'intValue', 'ulongValue', 'longValue', 'floatValue', or 'doubleValue'.
+        '''
         return AdImageUtility.getNtNdArrayDataFieldKey(image)
 
-    # Generates new NtNdArray object
     @classmethod
     def generateNtNdArray2D(cls, imageId, image, extraFieldsPvObject=None):
+        '''
+        Generate new NtNdArray object from NumPy array containing 2D image data.
+
+        :Parameter: imageId (int) - Value for the 'uniqueId' field
+        :Parameter: image (numpy.array) - Image data
+        :Parameter: extraFieldsPvbject (PvObject) - PvObject to be used for setting additional fields in the generated NtNdArray object
+        :Returns: NtNdArray object
+        '''
         return AdImageUtility.generateNtNdArray2D(imageId, image, extraFieldsPvObject)
 
-    # Replaces image data in the existing NtNdArray object
     @classmethod
-    def replaceNtNdArrayImage2D(cls, ntnda, imageId, image, extraFieldsPvObject=None):
-        return AdImageUtility.replaceNtNdArrayImage2D(ntnda, imageId, image, extraFieldsPvObject)
+    def replaceNtNdArrayImage2D(cls, ntNdArray, imageId, image, extraFieldsPvObject=None):
+        '''
+        Replace 2D image data in the existing NtNdArray object. This method is 
+        slightly faster than generateNtNdArray2D().
 
-    # Process monitor update
-    def process(self, pvObject):
-        self.logger.debug(f'Processor {self.processorId} processing frame {pvObject["uniqueId"]}')
-        self.updateOutputChannel(pvObject)
-        return pvObject
-
+        :Parameter: ntNdArray (NtNdArray) - target NtNdArray object
+        :Parameter: imageId (int) - Value for the 'uniqueId' field
+        :Parameter: image (numpy.array) - Image data
+        :Parameter: extraFieldsPvbject (PvObject) - PvObject to be used for setting additional fields in the generated NtNdArray object
+        :Returns: NtNdArray object
+        '''
+        return AdImageUtility.replaceNtNdArrayImage2D(ntNdArray, imageId, image, extraFieldsPvObject)

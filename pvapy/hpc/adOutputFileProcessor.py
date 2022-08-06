@@ -11,6 +11,17 @@ from ..utility.intWithUnits import IntWithUnits
 
 # Processor that saves output files
 class AdOutputFileProcessor(AdImageProcessor):
+    ''' 
+    Streaming framework processor class that can be used for saving Area 
+    Detector images into files. Configuration dictionary should provide
+    the following settings:\n
+    \t\- outputDirectory (str)      : defines full path to the output directory\n
+    \t\- outputFileNameFormat (str) : defines format to be used for naming output files, e.g. '{uniqueId:06}.{processorId}.tiff'\n
+  
+    **AdImageProcessor(configDict)**
+
+    :Parameter: *configDict* (dict) - dictionary containing configuration parameters
+    '''
 
     BYTES_IN_MEGABYTE = 1000000
 
@@ -27,25 +38,33 @@ class AdOutputFileProcessor(AdImageProcessor):
         self.nBytesSaved = 0
         self.fileProcessingTime = 0
 
-    # Method called at start
-    def start(self):
-        pass
+    def configure(self, configDict):
+        '''
+        Method invoked at user initiated runtime configuration changes. It
+        looks for 'outputDirectory' and 'outputFileNameFormat' in the configuration
+        dictionary and reconfigures processor behavior according to the specified
+        values.
 
-    # Configure user processor
-    def configure(self, kwargs):
-        if 'outputDirectory' in kwargs:
-            outputDirectory = kwargs.get('outputDirectory')
+        :Parameter: *configDict* (dict) - dictionary containing configuration parameters
+        '''
+        if 'outputDirectory' in configDict:
+            outputDirectory = configDict.get('outputDirectory')
             self.logger.debug(f'Reconfigured output directory: {outputDirectory}')
             if not os.path.exists(outputDirectory): 
                 self.logger.debug(f'Creating output directory: {self.outputDirectory}')
                 os.makedirs(outputDirectory)
             self.outputDirectory = outputDirectory
-        if 'outputFileNameFormat' in kwargs:
-            self.outputFileNameFormat = kwargs.get('outputFileNameFormat')
+        if 'outputFileNameFormat' in configDict:
+            self.outputFileNameFormat = configDict.get('outputFileNameFormat')
             self.logger.debug(f'Reconfigured output file name format: {self.outputFileNameFormat}')
 
-    # Process monitor update
     def process(self, pvObject):
+        ''' 
+        Method invoked every time input channel updates its PV record. It reshapes
+        input NtNdArray object and saves image data into output file.
+
+        :Parameter: *pvObject* (NtNdArray) - channel monitor update object
+        '''
         t0 = time.time()
         (frameId,imageData,nx,ny,nz,colorMode,fieldKey) = self.reshapeNtNdArray(pvObject)
         if not nx:
@@ -69,18 +88,23 @@ class AdOutputFileProcessor(AdImageProcessor):
         self.fileProcessingTime += dt
         return pvObject
 
-    # Method called at shutdown
-    def stop(self):
-        pass
-    
-    # Reset statistics for user processor
     def resetStats(self):
+        ''' 
+        Method invoked at user initiated application statistics reset. It resets
+        total processing time, as well as counters for the number of files and for 
+        the total number of bytes saved.
+        '''
         self.nFilesSaved = 0
         self.nBytesSaved = 0
         self.fileProcessingTime = 0
 
-    # Retrieve statistics for user processor
     def getStats(self):
+        '''
+        Method invoked periodically for generating processor statistics (number
+        of files and bytes saved and corresponding processing/storage rates).
+        
+        :Returns: Dictionary containing processor statistics parameters
+        '''
         fileProcessingRate = 0
         dataStorageRateMBps = 0
         if self.fileProcessingTime > 0:
@@ -94,8 +118,13 @@ class AdOutputFileProcessor(AdImageProcessor):
             'dataStorageRateMBps' : FloatWithUnits(dataStorageRateMBps, 'MBps')
         }
 
-    # Define PVA types for different stats variables
     def getStatsPvaTypes(self):
+        '''
+        Method invoked at processing startup. It defines processor part
+        of the status PvObject published on the status PVA channel.
+        
+        :Returns: Dictionary containing PVA types for the processor statistics parameters
+        '''
         return {
             'nFilesSaved' : pva.UINT,
             'nBytesSaved' : pva.ULONG,
