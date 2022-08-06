@@ -14,6 +14,7 @@ Contents:
    :maxdepth: 2
 
    pvaccess
+   pvapy
 
 Indices and tables
 ==================

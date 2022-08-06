@@ -72,7 +72,7 @@ else
 endif # Command-line goal
 
 doc:
-	$(MAKE) -C $(DOC_DIR)
+	PYTHONPATH=../.. $(MAKE) -C $(DOC_DIR)
 
 doc-clean:
 	$(MAKE) -C $(DOC_DIR) clean
