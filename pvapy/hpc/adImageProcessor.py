@@ -23,7 +23,7 @@ class AdImageProcessor(UserDataProcessor):
         Reshape NtNdArray object and return tuple with image id, NumPy image array,
         image dimensions, color mode and NtNdArray value (union) field key.
 
-        :Parameter: ntNdArray (NtNdArray) - NtNdArray object
+        :Parameter: *ntNdArray* (NtNdArray) - NtNdArray object
         :Returns: Tuple (imageId,image,nx,ny,nz,colorMode,fieldKey). 
         '''
         return AdImageUtility.reshapeNtNdArray(ntNdArray)
@@ -33,7 +33,7 @@ class AdImageProcessor(UserDataProcessor):
         '''
         Get NtNdArray value (union) field key suitable for the given NumPy array.
         
-        :Parameter: image (numpy.array) - array containing image data
+        :Parameter: *image* (numpy.array) - array containing image data
         :Returns: NtNdArray union value field key. Possible return values are 'ubyteValue', 'byteValue', 'ushortValue', 'shortValue', 'uintValue', 'intValue', 'ulongValue', 'longValue', 'floatValue', or 'doubleValue'.
         '''
         return AdImageUtility.getNtNdArrayDataFieldKey(image)
@@ -43,9 +43,9 @@ class AdImageProcessor(UserDataProcessor):
         '''
         Generate new NtNdArray object from NumPy array containing 2D image data.
 
-        :Parameter: imageId (int) - Value for the 'uniqueId' field
-        :Parameter: image (numpy.array) - Image data
-        :Parameter: extraFieldsPvbject (PvObject) - PvObject to be used for setting additional fields in the generated NtNdArray object
+        :Parameter: *imageId* (int) - Value for the 'uniqueId' field
+        :Parameter: *image* (numpy.array) - Image data
+        :Parameter: *extraFieldsPvbject* (PvObject) - optional PvObject to be used for setting additional fields in the generated NtNdArray object
         :Returns: NtNdArray object
         '''
         return AdImageUtility.generateNtNdArray2D(imageId, image, extraFieldsPvObject)
@@ -56,10 +56,10 @@ class AdImageProcessor(UserDataProcessor):
         Replace 2D image data in the existing NtNdArray object. This method is 
         slightly faster than generateNtNdArray2D().
 
-        :Parameter: ntNdArray (NtNdArray) - target NtNdArray object
-        :Parameter: imageId (int) - Value for the 'uniqueId' field
-        :Parameter: image (numpy.array) - Image data
-        :Parameter: extraFieldsPvbject (PvObject) - PvObject to be used for setting additional fields in the generated NtNdArray object
+        :Parameter: *ntNdArray* (NtNdArray) - target NtNdArray object
+        :Parameter: *imageId* (int) - Value for the 'uniqueId' field
+        :Parameter: *image* (numpy.array) - Image data
+        :Parameter: *extraFieldsPvbject* (PvObject) - optional PvObject to be used for setting additional fields in the generated NtNdArray object
         :Returns: NtNdArray object
         '''
         return AdImageUtility.replaceNtNdArrayImage2D(ntNdArray, imageId, image, extraFieldsPvObject)

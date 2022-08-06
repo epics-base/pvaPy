@@ -9,11 +9,11 @@ class UserDataProcessor:
     suitable for usage with the streaming framework. Interface methods
     will be called at different stages of the processing workflow.\n
     The following variables will be set after processor instance is created and before processing starts:\n
-    \t\- logger (logging.Logger) : logger object\n
-    \t\- processorId (int)       : processor id\n
-    \t\- outputChannel (str)     : output channel\n
-    \t\- objectIdField (str)     : name of the object id field\n
-    \t\- pvaServer (PvaServer)   : PVA Server instance for publishing output objects\n
+    \t\- *logger* (logging.Logger) : logger object\n
+    \t\- *processorId* (int)       : processor id\n
+    \t\- *outputChannel* (str)     : output channel\n
+    \t\- *objectIdField* (str)     : name of the object id field\n
+    \t\- *pvaServer* (PvaServer)   : PVA Server instance for publishing output objects\n
   
     **UserDataProcessor(configDict={})**
 
