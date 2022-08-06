@@ -269,6 +269,37 @@ class TestPvObject:
         u = pv['v'][0]
         TestUtility.assertFloatEquality(u['value'],value)
 
+        # Setting variant union using value/type dicts in a tuple
+        value = TestUtility.getRandomInt()
+        pv['v'] = ({'i' : value}, {'i' : INT})
+        u = pv['v'][0]
+        assert(u['value'] == value)
+
+        # Empty variant union
+        pv['v'] = ()
+        u = pv['v'][0]
+        assert(u == {})
+
+        value = TestUtility.getRandomInt()
+        pv['v'] = PvInt(value) 
+        u = pv['v'][0]
+        assert(u['value'] == value)
+
+        # Empty variant union using value dict
+        pv['v'] = ({})
+        u = pv['v'][0]
+        assert(u == {})
+
+        value = TestUtility.getRandomString()
+        pv['v'] = PvString(value) 
+        u = pv['v'][0]
+        assert(u['value'] == value)
+
+        # Empty variant union using value/type dicts
+        pv['v'] = ({},{})
+        u = pv['v'][0]
+        assert(u == {})
+
     #
     # Restricted Union
     #
@@ -276,36 +307,67 @@ class TestPvObject:
     def test_RestrictedUnion(self):
         value = TestUtility.getRandomInt()
         unionPv = PvObject({'i':INT},{'i':value})
-        pv = PvObject({'v' : ({'i':INT, 'f':FLOAT, 's':STRING},)}, {'v' : unionPv})
-        u = pv['v'][0]
+        pv = PvObject({'u' : ({'i':INT, 'f':FLOAT, 's':STRING},)}, {'u' : unionPv})
+        u = pv['u'][0]
         assert(u['i'] == value)
 
         value = TestUtility.getRandomString()
         unionPv = PvObject({'s':STRING},{'s':value})
-        pv['v'] = unionPv
-        u = pv['v'][0]
+        pv['u'] = unionPv
+        u = pv['u'][0]
         assert(u['s'] == value)
  
         value = TestUtility.getRandomFloat()
         unionPv = PvObject({'f':FLOAT},{'f':value})
         pv.setUnion(unionPv)
-        u = pv['v'][0]
+        u = pv['u'][0]
         TestUtility.assertFloatEquality(u['f'],value)
  
+        # Setting restricted union using value/type dicts in a tuple
+        value = TestUtility.getRandomInt()
+        pv['u'] = ({'i' : value}, {'i' : INT})
+        u = pv['u'][0]
+        assert(u['i'] == value)
+
+        # Empty restricted union
+        pv['u'] = ()
+        u = pv['u'][0]
+        assert(u == {})
+
+        value = TestUtility.getRandomFloat()
+        pv['u'] = ({'f' : value})
+        u = pv['u'][0]
+        TestUtility.assertFloatEquality(u['f'],value)
+
+        # Empty restricted union using value dict
+        pv['u'] = ({})
+        u = pv['u'][0]
+        assert(u == {})
+
+        value = TestUtility.getRandomString()
+        pv['u'] = ({'s' : value})
+        u = pv['u'][0]
+        assert(u['s'] == value)
+
+        # Empty restricted union using value/type dicts
+        pv['u'] = ({},{})
+        u = pv['u'][0]
+        assert(u == {})
+
     #
     # Variant Union Array
     #
 
     def test_VariantUnionArray(self):
         size = TestUtility.getRandomListSize()
-        pv = PvObject({'v' : [()]})
+        pv = PvObject({'ul' : [()]})
         unionList = []
         for i in range(0,size):
             value = TestUtility.getRandomInt()
             unionList.append(PvInt(value))
  
-        pv['v'] = unionList
-        ul = pv['v']
+        pv['ul'] = unionList
+        ul = pv['ul']
         for i in range(0,size):
             uli = ul[i][0]
             assert(uli['value'] == unionList[i]['value'])
@@ -315,7 +377,13 @@ class TestPvObject:
         ul = pv.getUnionArray()
         for i in range(0,size):
             uli = ul[i]
-            assert(uli['value'] == unionList[i]['value'])
+            assert(uli[0]['value'] == unionList[i]['value'])
+
+        # Reset all elements in the array
+        pv['ul'] = [()]*size
+        ul = pv['ul']
+        for i in range(0,size):
+            assert(ul[i][0] == {})
 
     #
     #
@@ -324,7 +392,7 @@ class TestPvObject:
 
     def test_RestrictedUnionArray(self):
         size = TestUtility.getRandomListSize()
-        pv = PvObject({'v' : [({'i':INT,'s':STRING,'d':DOUBLE},)]})
+        pv = PvObject({'ul' : [({'i':INT,'s':STRING,'d':DOUBLE},)]})
         unionList = []
         for i in range(0,size):
             if i%3 == 0:
@@ -337,8 +405,8 @@ class TestPvObject:
                 value = TestUtility.getRandomDouble()
                 unionList.append(PvObject({'d':DOUBLE},{'d':value}))
  
-        pv['v'] = unionList
-        ul = pv['v']
+        pv['ul'] = unionList
+        ul = pv['ul']
         for i in range(0,size):
             uli = ul[i][0]
             if 'i' in uli:
@@ -350,7 +418,7 @@ class TestPvObject:
 
         unionList.reverse()
         pv.setUnionArray(unionList)
-        ul = pv['v']
+        ul = pv['ul']
         for i in range(0,size):
             uli = ul[i][0]
             if 'i' in uli:
@@ -359,6 +427,12 @@ class TestPvObject:
                 assert(uli['s'] == unionList[i]['s'])
             else:
                 TestUtility.assertDoubleEquality(uli['d'],unionList[i]['d'])
+
+        # Reset all elements in the array
+        pv['ul'] = [()]*size
+        ul = pv['ul']
+        for i in range(0,size):
+            assert(ul[i][0] == {})
 
     #
     #

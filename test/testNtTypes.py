@@ -3,6 +3,7 @@
 import numpy as np
 import random
 import math
+import pickle
 from pvaccess import NtTable
 from pvaccess import NtNdArray
 from pvaccess import NtAttribute
@@ -72,6 +73,12 @@ class TestNtTypes:
         print('Comparing image arrays {} to {}'.format(value2, value))
         assert(np.array_equiv(value, value2))
 
+        s = pickle.dumps(nda)
+        nda2 = pickle.loads(s)
+        value2 = nda2['value'][0]['ubyteValue']
+        print('After pickling, comparing image arrays {} to {}'.format(value2, value))
+        assert(np.array_equiv(value, value2))
+
     #
     # NtScalar
     #
@@ -88,10 +95,10 @@ class TestNtTypes:
     #
     def test_NtEnum(self):
         print()
-        maxInt = random.randint(1,100)
+        maxInt = random.randint(2,100)
         indices = list(range(0,maxInt))
         choices = list(map(lambda i: 'Ch%d' % i, indices))
-        current = random.randint(0,maxInt)
+        current = random.randint(0,maxInt-1)
         e = NtEnum(choices, current) 
         current2 = e['value.index']
         print('Comparing enum choice {} to {}'.format(current2, current))
