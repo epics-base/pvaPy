@@ -14,10 +14,6 @@ class HpcAdImageProcessor(AdImageProcessor):
         self.processingTime = 0
         self.logger.debug('Created HpcAdImageProcessor')
 
-    # Method called at start
-    def start(self):
-        pass
-
     # Configure user processor
     def configure(self, kwargs):
         self.logger.debug(f'Configuration update: {kwargs}')
@@ -40,10 +36,6 @@ class HpcAdImageProcessor(AdImageProcessor):
         self.nProcessed += 1
         self.processingTime += (t1-t0)
         return pvObject2
-
-    # Method called at shutdown
-    def stop(self):
-        pass
 
     # Reset statistics for user processor
     def resetStats(self):
@@ -68,10 +60,3 @@ class HpcAdImageProcessor(AdImageProcessor):
             'processingTime' : pva.DOUBLE,
             'processingRate' : pva.DOUBLE
         }
-
-    # Define PVA types for output object
-    # This method does not need to be implemented if output
-    # object has the same structure as the input object
-    def getOutputPvaTypes(self):
-        return {}
-
