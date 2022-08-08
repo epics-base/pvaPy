@@ -13,7 +13,7 @@ framework components, user interfaces and available command line utilities.
 ## User Interfaces
 
 Users interact with the framework by implementing the data processor
-interface class located in the 'pvapy.hpc.userDataProcessor' module:
+interface class located in the [pvapy.hpc.userDataProcessor](../pvapy/hpc/userDataProcessor.py) module:
 
 ```python
 class UserDataProcessor:
@@ -58,9 +58,24 @@ class UserDataProcessor:
         return {}
 ```
 
-A working example of a simple processor that rotates area detector images
-can be found [here](../examples/hpcAdImageProcessorExample.py). A python class
+A working example of a simple processor that rotates Area Detector images
+can be found [here](../examples/hpcAdImageProcessorExample.py). In addition,
+
+
+A python class
 that derives from UserDataProcessor class and implements the above interface
 is passed into one of the two main command line utilities:
-- pvapy-hpc-consumer: 
-- pvapy-hpc-collector:
+- pvapy-hpc-consumer: used for splitting streams and processing stream objects
+- pvapy-hpc-collector: used for gathering streams, sorting and processing
+stream objects
+
+In addition to these two commands, the framework also relies on the following:
+- pvapy-mirror-server: can be used for data distribution in those cases
+when the original data source does not have distributor plugin, for stream 
+isolation and IOC protection from high client loads, as bridge between 
+network interfaces, etc.
+- pvapy-ad-sim-server: testing utility that can generate and serve 
+NtNdArray objects (Area Detector images) at frame rates exceeding 10k fps
+
+
+
