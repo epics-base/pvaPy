@@ -27,7 +27,7 @@ class AdImageDataDecryptor(DataDecryptor):
         '''
         return DataDecryptor.process(self, pva.NtNdArray(pvObject))
 
-    def getOutputPvObject(self):
+    def getOutputPvObjectType(self):
         '''
         Method invoked at processing startup. It defines PVA structure of
         the output (processed) PvObject. 

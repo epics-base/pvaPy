@@ -37,9 +37,9 @@ class HpcDataProcessor(UserDataProcessor):
     def getStatsPvaTypes(self):
         return {}
 
-    # Define PVA types for output object
+    # Define output PvObject
     # This method does not need to be implemented if output
     # object has the same structure as the input object
-    def getOutputPvaTypes(self):
-        return {}
+    def getOutputPvObjectType(self):
+        return None
 

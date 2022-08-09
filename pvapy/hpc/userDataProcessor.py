@@ -85,7 +85,7 @@ class UserDataProcessor:
         '''
         return {}
 
-    def getOutputPvObject(self):
+    def getOutputPvObjectType(self):
         '''
         Method invoked at processing startup. It defines PVA structure of
         the output (processed) PvObject. There is no need to override

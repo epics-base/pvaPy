@@ -109,7 +109,7 @@ class DataEncryptor(UserDataProcessor):
             'processingRate' : pva.DOUBLE
         }
 
-    def getOutputPvObject(self):
+    def getOutputPvObjectType(self):
         '''
         Method invoked at processing startup. It defines PVA structure of
         the output (processed) PvObject. 
