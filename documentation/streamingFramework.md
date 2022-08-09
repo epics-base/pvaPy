@@ -106,3 +106,34 @@ built into the framework.
   <img alt="Single Consumer" src="images/StreamingFramework_SingleConsumer.jpg">
 </p>
 
+On terminal 1, run the consumer command: 
+
+```sh
+$ pvapy-hpc-consumer --input-channel pvapy:image --control-channel consumer:*:control --status-channel consumer:*:status --output-channel consumer:*:output --processor-file /path/to/hpcAdImageProcessorExample.py --processor-class HpcAdImageProcessor --report-period 10 --log-level debug
+```
+
+The above command will establish monitor on the 'pvapy:image channel', and will create
+channels for output, application status and control using default consumer id '1' that
+replaces the '*' character. Application status will be generated every 10 seconds, and
+log level of 'debug' ensures that processing log will be displayed on the screen.
+
+On terminal 2, generate small (128x128, uint8) test images at 1Hz for 60 seconds:
+
+```sh
+$ pvapy-ad-sim-server -cn pvapy:image -nx 128 -ny 128 -dt uint8 -rt 60 -fps 1
+```
+
+After images start publishing, the consumer terminal should display processing output.
+On terminal 3, you can interact with application's output, status and control channels:
+
+```sh
+$ pvget -r uniqueId consumer:1:output # processed image
+$ pvget consumer:1:status # application status
+$ pvput consumer:1:control '{"command" : "configure", "kwargs" : "{\"x\":100}"}' # configure application
+$ pvget consumer:1:control # get last command status
+$ pvput consumer:1:control '{"command" : "stop"}' # shutdown consumer process
+
+```
+
+After the shutdown command, the consumer process should exit.
+
