@@ -102,6 +102,6 @@ processing data. Although this can be easily achived with basic
 EPICS APIs/CLIs, this demonstrates application monitoring and control features
 built into the framework.
 
-![Single Consumer](images/StreamingFramework_SingleConsumer.jpg)
+![Single Consumer](images/StreamingFramework_SingleConsumer.jpg#center)
 
 
