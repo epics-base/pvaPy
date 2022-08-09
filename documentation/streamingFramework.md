@@ -299,7 +299,7 @@ With data distributor plugin, each consumer gets its own server and/or
 client queue.
 
 <p align="center">
-  <img alt="Multiple Consumers with High Frame Rate and Data Distribution" src="images/StreamingFrameworkMultipleConsumersDataLossProtectionDataDistribution.jpg.jpg">
+  <img alt="Multiple Consumers with High Frame Rate and Data Distribution" src="images/StreamingFrameworkMultipleConsumersDataLossProtectionDataDistribution.jpg">
 </p>
 
 We first demonstrate what happens if we use application that cannot keep up
