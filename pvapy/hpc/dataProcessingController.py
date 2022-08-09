@@ -43,10 +43,10 @@ class DataProcessingController:
     def createUserDefinedOutputChannel(self):
         # Create output channel if user processing class defines it
         if self.userDataProcessor:
-            typesDict = self.userDataProcessor.getOutputPvaTypes()
-            if typesDict:
-                self.logger.debug(f'User data processor defines output channel as: {typesDict}')
-                self.createOutputChannel(pva.PvObject(typesDict))
+            pvObject = self.userDataProcessor.getOutputPvObject()
+            if pvObject:
+                self.logger.debug(f'User data processor defines output channel as: {pvObject.getStructureDict()}')
+                self.createOutputChannel(pvObject)
             else:
                 self.logger.debug('User data processor does not define output channel')
                 
