@@ -328,7 +328,7 @@ We can now distribute data between two consumers using the following command
 on terminal 1:
 
 ```sh
-pvapy-hpc-consumer --input-channel pvapy:image --control-channel consumer:*:control --status-channel consumer:*:status --output-channel consumer:*:output --processor-file /local/sveseli/BDP/DEMO/hpcAdImageProcessorExample.py --processor-class HpcAdImageProcessor --report-period 10 --server-queue-size 100 --monitor-queue-size 1000 --n-consumers 2 --distributor-updates 1
+pvapy-hpc-consumer --input-channel pvapy:image --control-channel consumer:*:control --status-channel consumer:*:status --output-channel consumer:*:output --processor-file /path/to/hpcAdImageProcessorExample.py --processor-class HpcAdImageProcessor --report-period 10 --server-queue-size 100 --monitor-queue-size 1000 --n-consumers 2 --distributor-updates 1
 ```
 
 On terminal 2 we run as before:
@@ -342,4 +342,19 @@ the client queue, no missed frames, and each consumer processing images
 at a rate that is about half of the server frame rate. This also
 demonstrates that data distribution can be easily combined with 
 server-side queues.
+
+We can also scale the previous use case easily by updating the '--n-consumers' 
+option. On terminal 1 we can run the following command:
+
+```sh
+pvapy-hpc-consumer --input-channel pvapy:image --control-channel consumer:*:control --status-channel consumer:*:status --output-channel consumer:*:output --processor-file /path/to/hpcAdImageProcessorExample.py --processor-class HpcAdImageProcessor --report-period 10 --server-queue-size 100 --monitor-queue-size 1000 --n-consumers 4 --distributor-updates 1
+```
+
+On terminal 2 we can now increase frame rate as well:
+
+```
+$ pvapy-ad-sim-server -cn pvapy:image -nx 128 -ny 128 -dt uint8 -rt 60 -fps 8000 -rp 8000
+```
+
+All consumers should keep up and none should be reporting frame loss.
 
