@@ -26,7 +26,7 @@ class UserDataProcessor:
         pass
 
     # Configure user processor
-    def configure(self, kwargs):
+    def configure(self, configDict):
         pass
 
     # Process monitor update
@@ -132,7 +132,7 @@ On terminal 3, you can interact with application's output, status and control ch
 ```sh
 $ pvget -r uniqueId consumer:1:output # processed image
 $ pvget consumer:1:status # application status
-$ pvput consumer:1:control '{"command" : "configure", "kwargs" : "{\"x\":100}"}' # configure application
+$ pvput consumer:1:control '{"command" : "configure", "args" : "{\"x\":100}"}' # configure application
 $ pvget consumer:1:control # get last command status
 $ pvput consumer:1:control '{"command" : "stop"}' # shutdown consumer process
 
@@ -237,7 +237,7 @@ and processing images (1,2,3,7,8,9,13,...), and both consumers in the second set
 will be receiving and processing images (4,5,6,10,11,12,16,...).
 
 
-### Protection Against Lost Frames
+### Protection Against Lost Data
 
 In those cases when data source streams objects at high rates and/or user application
 processing times are not predictable (e.g., when processing incoming objects in batches),

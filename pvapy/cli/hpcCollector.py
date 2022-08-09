@@ -34,7 +34,7 @@ class CollectorController:
         'objectTime' : pva.DOUBLE,
         'objectTimestamp' : pva.PvTimeStamp(),
         'command' : pva.STRING,
-        'kwargs' : pva.STRING,
+        'args' : pva.STRING,
         'statusMessage' : pva.STRING
     }
 
@@ -123,13 +123,13 @@ class CollectorController:
             self.logger.info('Control channel: getting collector statistics')
             cTimer = threading.Timer(COMMAND_EXEC_DELAY, self.controlGetStats)
         elif command == CONFIGURE_COMMAND:
-            kwargs = ''
-            if 'kwargs' not in pv:
+            args = ''
+            if 'args' not in pv:
                 self.logger.debug('Empty keyword arguments string for the configure request')
             else:
-                kwargs = pv['kwargs']
-            self.logger.info(f'Control channel: configuring collector with kwargs: {kwargs}')
-            cTimer = threading.Timer(COMMAND_EXEC_DELAY, self.controlConfigure, args=[kwargs])
+                args = pv['args']
+            self.logger.info(f'Control channel: configuring collector with args: {args}')
+            cTimer = threading.Timer(COMMAND_EXEC_DELAY, self.controlConfigure, args=[args])
         elif command == STOP_COMMAND:
             self.logger.info(f'Control channel: stopping collector')
             cTimer = threading.Timer(COMMAND_EXEC_DELAY, self.controlStop)
@@ -142,15 +142,15 @@ class CollectorController:
         self.controlPvObject.set({'statusMessage' : statusMessage, 'objectTime' : t, 'objectTimestamp' : pva.PvTimeStamp(t)})
         cTimer.start()
 
-    def controlConfigure(self, kwargs):
-        self.logger.debug(f'Configuring collector {self.dataCollector.collectorId} with kwargs: {kwargs}')
+    def controlConfigure(self, configDict):
+        self.logger.debug(f'Configuring collector {self.dataCollector.collectorId} with: {configDict}')
         try:
-            kwargs = json.loads(kwargs)
-            self.logger.debug(f'Converted configuration kwargs string to JSON: {kwargs}')
+            configDict = json.loads(configDict)
+            self.logger.debug(f'Converted configuration args string from JSON: {configDict}')
         except Exception as ex:
-            self.logger.debug(f'Cannot convert string {kwargs} from JSON: {ex}')
+            self.logger.debug(f'Cannot convert string {configDict} from JSON: {ex}')
         try:
-            self.dataCollector.configure(kwargs)
+            self.dataCollector.configure(configDict)
             statusMessage = 'Configuration successful'
             self.logger.debug(statusMessage)
         except Exception as ex:
@@ -189,8 +189,8 @@ class CollectorController:
             self.logger.debug(f'Processor output channel name: {outputChannel}')
 
         processorConfig = {}
-        if args.processor_kwargs:
-            processorConfig = json.loads(args.processor_kwargs)
+        if args.processor_args:
+            processorConfig = json.loads(args.processor_args)
         processorConfig['inputChannel'] = inputChannel
         if not 'processorId' in processorConfig:
             processorConfig['processorId'] = collectorId
@@ -367,19 +367,19 @@ def main():
     parser.add_argument('-id', '--collector-id', dest='collector_id', type=int, default=1, help='Collector id (default: 1). This may be used for naming various PVA channels, so care must be taken when multiple collector processes are running independently of each other.')
     parser.add_argument('-pir', '--producer-id-list', dest='producer_id_list', default='1,2', help='Comma-separated list of producer IDs (default: 1,2). This option can also be specified as "range(<firstId>,<lastId+1>[,<idStep>)."')
     parser.add_argument('-ic', '--input-channel', dest='input_channel', required=True, help='Input PV channel name. It shuld contain the "*" character which will be replaced with <producerId>.')
-    parser.add_argument('-oc', '--output-channel', dest='output_channel', default=None, help='Output PVA channel name (default: None). If specified, this channel can be used for publishing processing results. The value of "_" indicates that the output channel name will be set to "pvapy:collector:<collectorId>:output", while the "*" character will be replaced with <collectorId>. Note that this parameter is ignored if processor kwargs dictionary contains "outputChannel" key.')
+    parser.add_argument('-oc', '--output-channel', dest='output_channel', default=None, help='Output PVA channel name (default: None). If specified, this channel can be used for publishing processing results. The value of "_" indicates that the output channel name will be set to "pvapy:collector:<collectorId>:output", while the "*" character will be replaced with <collectorId>. Note that this parameter is ignored if processor arguments dictionary contains "outputChannel" key.')
     parser.add_argument('-sc', '--status-channel', dest='status_channel', default=None, help='Status PVA channel name (default: None). If specified, this channel will provide collector status. The value of "_" indicates that the status channel name will be set to "pvapy:collector:<collectorId>:status", while the "*" character will be replaced with <collectorId>.')
-    parser.add_argument('-cc', '--control-channel', dest='control_channel', default=None, help='Control channel name (default: None). If specified, this channel can be used to control collector configuration and processing. The value of "_" indicates that the control channel name will be set to "pvapy:collector:<collectorId>:control", while the "*" character will be replaced with <collectorId>. The control channel object has two strings: command and kwargs. The only allowed values for the command string are: "configure", "reset_stats", "get_stats" and "stop". The configure command is used to allow for runtime configuration changes; in this case the keyword arguments string should be in json format to allow data collector to convert it into python dictionary that contains new configuration. For example, sending configuration dictionary via pvput command might look like this: pvput pvapy:collector:1:control \'{"command" : "configure", "kwargs" : "{\\"x\\":100}"}\'. Note that system parameters that can be modified at runtime are the following: "collectorCacheSize", "monitorQueueSize" (only if client monitor queues have been configured at the start), "processFirstUpdate" (affects processing behavior after resetting stats), and "objectIdOffset". The reset_stats command will cause collector to reset its statistics data, the get_stats will force statistics data update, and the stop command will result in collector process exiting; for all of these commands kwargs string is not needed.')
+    parser.add_argument('-cc', '--control-channel', dest='control_channel', default=None, help='Control channel name (default: None). If specified, this channel can be used to control collector configuration and processing. The value of "_" indicates that the control channel name will be set to "pvapy:collector:<collectorId>:control", while the "*" character will be replaced with <collectorId>. The control channel object has two strings: command and args. The only allowed values for the command string are: "configure", "reset_stats", "get_stats" and "stop". The configure command is used to allow for runtime configuration changes; in this case the keyword arguments string should be in json format to allow data collector to convert it into python dictionary that contains new configuration. For example, sending configuration dictionary via pvput command might look like this: pvput pvapy:collector:1:control \'{"command" : "configure", "args" : "{\\"x\\":100}"}\'. Note that system parameters that can be modified at runtime are the following: "collectorCacheSize", "monitorQueueSize" (only if client monitor queues have been configured at the start), "processFirstUpdate" (affects processing behavior after resetting stats), and "objectIdOffset". The reset_stats command will cause collector to reset its statistics data, the get_stats will force statistics data update, and the stop command will result in collector process exiting; for all of these commands args string is not needed.')
     parser.add_argument('-sqs', '--server-queue-size', type=int, dest='server_queue_size', default=0, help='Server queue size (default: 0); this setting will increase memory usage on the server side, but may help prevent missed PV updates.')
     parser.add_argument('-mqs', '--monitor-queue-size', type=int, dest='monitor_queue_size', default=-1, help='PVA channel monitor (client) queue size (default: -1); if < 0, PV updates will be processed immediately without copying them into PvObjectQueue; if >= 0, PvObjectQueue will be used for receving PV updates (value of zero indicates infinite queue size).')
     parser.add_argument('-ccs', '--collector-cache-size', type=int, dest='collector_cache_size', default=-1, help='Collector cache size (default: -1). Collector puts all received PV updates into its cache; once the cache is full, PV updates are sorted by the objectIdField value, removed from the cache and further processed. If specified cache size is negative, or smaller than the minimum allowed value (nProducers*10), this option will be ignored.')
     parser.add_argument('-pf', '--processor-file', dest='processor_file', default=None, help='Full path to the python file containing user processor class. If this option is not used, the processor class should be specified using "<modulePath>.<className>" notation.')
     parser.add_argument('-pc', '--processor-class', dest='processor_class', default=None, help='Name of the class located in the user processor file that will be processing PV updates. Alternatively, if processor file is not given, the processor class should be specified using the "<modulePath>.<className>" notation. The class should be initialized with a dictionary and must implement the "process(self, pv)" method.')
-    parser.add_argument('-pk', '--processor-kwargs', dest='processor_kwargs', default=None, help='JSON-formatted string that can be converted into dictionary and used for initializing user processor object.')
-    parser.add_argument('-of', '--oid-field', dest='oid_field', default='uniqueId', help='PV update id field used for calculating data processor statistics (default: uniqueId). This parameter is ignored if processor kwargs dictionary contains "objectIdField" key.')
-    parser.add_argument('-oo', '--oid-offset', type=int, dest='oid_offset', default=1, help='This parameter determines by how much object id should change between the two PV updates, and is used for determining the number of missed PV updates (default: 1). This parameter is ignored if processor kwargs dictionary contains "objectIdOffset" key.')
+    parser.add_argument('-pa', '--processor-args', dest='processor_args', default=None, help='JSON-formatted string that can be converted into dictionary and used for initializing user processor object.')
+    parser.add_argument('-of', '--oid-field', dest='oid_field', default='uniqueId', help='PV update id field used for calculating data processor statistics (default: uniqueId). This parameter is ignored if processor arguments dictionary contains "objectIdField" key.')
+    parser.add_argument('-oo', '--oid-offset', type=int, dest='oid_offset', default=1, help='This parameter determines by how much object id should change between the two PV updates, and is used for determining the number of missed PV updates (default: 1). This parameter is ignored if processor arguments dictionary contains "objectIdOffset" key.')
     parser.add_argument('-fr', '--field-request', dest='field_request', default='', help='PV field request string (default: None). This parameter can be used to request only a subset of the data available in the input channel. The system will automatically append object id field to the specified request string. Note that this parameter is ignored when data distributor is used.')
-    parser.add_argument('-pfu', '--process-first-update', dest='process_first_update', default=False, action='store_true', help='Process first PV update (default: False). This parameter is ignored if processor kwargs dictionary contains "processFirstUpdate" key.')
+    parser.add_argument('-pfu', '--process-first-update', dest='process_first_update', default=False, action='store_true', help='Process first PV update (default: False). This parameter is ignored if processor arguments dictionary contains "processFirstUpdate" key.')
     parser.add_argument('-rt', '--runtime', type=float, dest='runtime', default=0, help='Server runtime in seconds; values <=0 indicate infinite runtime (default: infinite).')
     parser.add_argument('-rp', '--report-period', type=float, dest='report_period', default=0, help='Statistics report period for the collector in seconds; values <=0 indicate no reporting (default: 0).')
     parser.add_argument('-rs', '--report-stats', dest='report_stats', default='all', help='Comma-separated list of statistics subsets that should be reported (default: all); possible values: monitor, queue, processor, user, all.')
