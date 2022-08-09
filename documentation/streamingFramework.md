@@ -1,10 +1,3 @@
-<style type="text/css" rel="stylesheet">
-img[src*='#center'] { 
-    display: block;
-    margin: auto;
-}
-</style>
-
 # Streaming Framework
 
 Processing data generated at high rates in real time typically faces many
@@ -109,6 +102,8 @@ processing data. Although this can be easily achived with basic
 EPICS APIs/CLIs, this demonstrates application monitoring and control features
 built into the framework.
 
-![Single Consumer](images/StreamingFramework_SingleConsumer.jpg#center)
+<center>
+![Single Consumer](images/StreamingFramework_SingleConsumer.jpg)
+</center>
     
 
