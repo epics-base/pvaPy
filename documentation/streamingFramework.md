@@ -85,7 +85,9 @@ NtNdArray objects (Area Detector images) at frame rates exceeding 10k fps
 
 ## Examples
 
-All of the examples described below should work out of the box. However,
+All of the examples described below should work out of the box, assuming
+that the EPICS libraries have built in [distributor plugin](dataDistributorPlugin.md),
+which is the case for the recent PvaPy pip and conda packages. However,
 depending on the machine used for running them, some of the command
 line arguments (e.g., frame rates, server and client queue sizes, etc.)
 might have to be tweaked in order for examples to run without lost frames.
@@ -103,7 +105,7 @@ EPICS APIs/CLIs, this demonstrates application monitoring and control features
 built into the framework.
 
 <p align="center">
-  <img alt="Single Consumer" src="images/StreamingFramework_SingleConsumer.jpg">
+  <img alt="Single Consumer" src="images/StreamingFrameworkSingleConsumer.jpg">
 </p>
 
 On terminal 1, run the consumer command: 
@@ -144,7 +146,7 @@ This example illustrates how to spawn multiple consumers which all receive and
 process the same set of images. 
 
 <p align="center">
-  <img alt="Multiple Consumers" src="images/StreamingFramework_MultipleConsumers.jpg">
+  <img alt="Multiple Consumers" src="images/StreamingFrameworkMultipleConsumers.jpg">
 </p>
 
 On terminal 1, run the consumer command:
@@ -162,5 +164,35 @@ On terminal 2, generate images as before:
 $ pvapy-ad-sim-server -cn pvapy:image -nx 128 -ny 128 -dt uint8 -rt 60 -fps 1
 ```
 
-After server starts publishing images, the consumer terminal should display processing output, with both consumers receeiving and processing all images (1,2,3,4,...).
+After server starts publishing images, the consumer terminal should display processing output, with both consumers receiving and processing all images (1,2,3,4,...). Images
+processed by consumer 1 should be accessible on the 'consumer:1:output' channel, and
+images processed by consumer 2 should be accessible on the 'consumer:2:output' channel.
+
+### Multiple Consumers with Data Distribution
+
+This example illustrates how to spawn multiple consumers that receive images in
+alternate order.
+
+<p align="center">
+  <img alt="Multiple Consumers" src="images/StreamingFrameworkMultipleConsumers.jpg">
+</p>
+
+On terminal 1, run the consumer command:
+
+```sh
+$ pvapy-hpc-consumer --input-channel pvapy:image --control-channel consumer:*:control --status-channel consumer:*:status --output-channel consumer:*:output --processor-file /local/sveseli/BDP/DEMO/hpcAdImageProcessorExample.py --processor-class HpcAdImageProcessor --report-period 10 --log-level debug --n-consumers 2 --distributor-updates 1
+```
+
+This command will request distributor plugin to give one sequential update to each
+of its clients.
+
+On terminal 2, generate images:
+
+```sh
+$ pvapy-ad-sim-server -cn pvapy:image -nx 128 -ny 128 -dt uint8 -rt 60 -fps 1
+```
+
+After server starts publishing images, the consumer terminal should display processing
+output, with one consumers receiving images (1,3,5,...) and the other one receiving images
+(2,4,6,...).
 
