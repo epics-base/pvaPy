@@ -54,7 +54,7 @@ class UserDataProcessor:
     # Define output PvObject
     # This method does not need to be implemented if output
     # object has the same structure as the input object
-    def getOutputPvObject(self):
+    def getOutputPvObjectType(self):
         return None
 ```
 
@@ -83,5 +83,25 @@ network interfaces, etc.
 - pvapy-ad-sim-server: testing utility that can generate and serve 
 NtNdArray objects (Area Detector images) at frame rates exceeding 10k fps
 
+## Examples
+
+All of the examples described below should work out of the box. However,
+depending on the machine used for running them, some of the command
+line arguments (e.g., frame rates, server and client queue sizes, etc.)
+might have to be tweaked in order for examples to run without lost frames.
+A medium range workstation (e.g. dual Intel Xeon E5-2620 2.40GHz CPU, 24
+logical cores, 64GB RAM, local SSD drives) should be able to run all
+examples shown here without any issues. Note that some commands use
+[sample AD image processor](../examples/hpcAdImageProcessorExample.py) as
+external (user) code.
+
+### Single Consumer
+
+The first example illustrates a basic use case with a single data consumer 
+processing data. Although this can be easily achived with basic 
+EPICS APIs/CLIs, this demonstrates application monitoring and control features
+built into the framework.
+
+![Single Consumer](images/StreamingFramework_SingleConsumer.jpg)
 
 
