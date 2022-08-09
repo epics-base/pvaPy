@@ -152,7 +152,7 @@ process the same set of images.
 On terminal 1, run the consumer command:
 
 ```sh
-$ pvapy-hpc-consumer --input-channel pvapy:image --control-channel consumer:*:control --status-channel consumer:*:status --output-channel consumer:*:output --processor-file /local/sveseli/BDP/DEMO/hpcAdImageProcessorExample.py --processor-class HpcAdImageProcessor --report-period 10 --log-level debug --n-consumers 2
+$ pvapy-hpc-consumer --input-channel pvapy:image --control-channel consumer:*:control --status-channel consumer:*:status --output-channel consumer:*:output --processor-file /path/to/hpcAdImageProcessorExample.py --processor-class HpcAdImageProcessor --report-period 10 --log-level debug --n-consumers 2
 ```
 
 This command is the same as before, with additional option that requests 2 consumers
@@ -180,7 +180,7 @@ alternate order.
 On terminal 1, run the consumer command:
 
 ```sh
-$ pvapy-hpc-consumer --input-channel pvapy:image --control-channel consumer:*:control --status-channel consumer:*:status --output-channel consumer:*:output --processor-file /local/sveseli/BDP/DEMO/hpcAdImageProcessorExample.py --processor-class HpcAdImageProcessor --report-period 10 --log-level debug --n-consumers 2 --distributor-updates 1
+$ pvapy-hpc-consumer --input-channel pvapy:image --control-channel consumer:*:control --status-channel consumer:*:status --output-channel consumer:*:output --processor-file /path/to/hpcAdImageProcessorExample.py --processor-class HpcAdImageProcessor --report-period 10 --log-level debug --n-consumers 2 --distributor-updates 1
 ```
 
 This command will direct the distributor plugin to give one sequential update to each
@@ -211,7 +211,7 @@ sequential updates:
 
 
 ```sh
-$ pvapy-hpc-consumer --input-channel pvapy:image --control-channel consumer:*:control --status-channel consumer:*:status --output-channel consumer:*:output --processor-file /local/sveseli/BDP/DEMO/hpcAdImageProcessorExample.py --processor-class HpcAdImageProcessor --report-period 10 --log-level debug --n-consumers 2 --distributor-updates 3 --consumer-id 1 --n-distributor-sets 2 --distributor-set A
+$ pvapy-hpc-consumer --input-channel pvapy:image --control-channel consumer:*:control --status-channel consumer:*:status --output-channel consumer:*:output --processor-file /path/to/hpcAdImageProcessorExample.py --processor-class HpcAdImageProcessor --report-period 10 --log-level debug --n-consumers 2 --distributor-updates 3 --consumer-id 1 --n-distributor-sets 2 --distributor-set A
 ```
 
 The option '--n-distributor-sets 2' allows the framework to correctly calculate
@@ -223,7 +223,7 @@ set 'B', and directs distributor plugin to give every consumer in the set 3
 sequential updates:
 
 ```sh
-$ pvapy-hpc-consumer --input-channel pvapy:image --control-channel consumer:*:control --status-channel consumer:*:status --output-channel consumer:*:output --processor-file /local/sveseli/BDP/DEMO/hpcAdImageProcessorExample.py --processor-class HpcAdImageProcessor --report-period 10 --log-level debug --n-consumers 2 --distributor-updates 3 --consumer-id 3 --n-distributor-sets 2 --distributor-set B
+$ pvapy-hpc-consumer --input-channel pvapy:image --control-channel consumer:*:control --status-channel consumer:*:status --output-channel consumer:*:output --processor-file /path/to/hpcAdImageProcessorExample.py --processor-class HpcAdImageProcessor --report-period 10 --log-level debug --n-consumers 2 --distributor-updates 3 --consumer-id 3 --n-distributor-sets 2 --distributor-set B
 ```
 
 On terminal 3, generate images:
@@ -252,15 +252,18 @@ are configurable, and that they increase the server (IOC) memory footprint.
 provides protection against unpredictable processing times, but it will also increase 
 consumer process memory footprint. 
 
-The purpose of examples in this section is to illustrate the two options above.
-As noted before, the frame rates shown here might have to be adjusted depending on the
-machine used.
-
 <p align="center">
   <img alt="Single Consumer with High Frame Rate" src="images/StreamingFrameworkSingleConsumerDataLossProtection.jpg">
 </p>
 
-On terminal 1, start single consumer process without any protection against frame loss:
+The purpose of examples in this section is to illustrate the two options above.
+As noted before, the frame rates shown here might have to be adjusted depending on the
+machine used.
+
+#### Single Consumer
+
+On terminal 1, start single consumer process without any protection against frame loss, using basic (pass through) data processor.
+:
 
 ```sh
 $ pvapy-hpc-consumer --input-channel pvapy:image --control-channel consumer:*:control --status-channel consumer:*:status --output-channel consumer:*:output --processor-class pvapy.hpc.userDataProcessor.UserDataProcessor --report-period 10
@@ -273,6 +276,70 @@ On terminal 2 generate frames at high rate (10kHz) and adjust the reporting peri
 $ pvapy-ad-sim-server -cn pvapy:image -nx 128 -ny 128 -dt uint8 -rt 60 -fps 10000 -rp 10000
 ```
 
-After 60 seconds consumer application should report number of overruns and missed
-frames greater than zero.
+After 60 seconds consumer application should report number of overruns and
+missed frames greater than zero.
+
+We can now modify the consumer command to include server queue. In terminal 1, run the following command:
+
+```sh
+$ pvapy-hpc-consumer --input-channel pvapy:image --control-channel consumer:*:control --status-channel consumer:*:status --output-channel consumer:*:output --processor-class pvapy.hpc.userDataProcessor.UserDataProcessor --report-period 10 --server-queue-size 1000
+```
+
+On terminal 2 start generating frames at the same rate as before:
+
+```sh
+$ pvapy-ad-sim-server -cn pvapy:image -nx 128 -ny 128 -dt uint8 -rt 60 -fps 10000 -rp 10000
+```
+
+After 60 second server runtime, there should be no overruns and missed frames reported by the consumer process.
+
+#### Multiple Consumers with Data Distribution
+
+With data distributor plugin, each consumer gets its own server and/or
+client queue.
+
+<p align="center">
+  <img alt="Multiple Consumers with High Frame Rate and Data Distribution" src="images/StreamingFrameworkMultipleConsumersDataLossProtectionDataDistribution.jpg.jpg">
+</p>
+
+We first demonstrate what happens if we use application that cannot keep up
+with the data source. For this we agan use the sample AD image processor,
+and request both server and client (monitor) queues. On tereminal 1 run
+the following command:
+
+```sh
+pvapy-hpc-consumer --input-channel pvapy:image --control-channel consumer:*:control --status-channel consumer:*:status --output-channel consumer:*:output --processor-file /path/to/hpcAdImageProcessorExample.py --processor-class HpcAdImageProcessor --report-period 10 --server-queue-size 100 --monitor-queue-size 1000
+```
+
+On terminal 2, generate images at a frame rate sufficiently high to overwhelm
+a single consumer. For example, if the sample processor can handle frames at
+about 3kHz, 5kHz is a reasonable choice for the server:
+
+```sh
+$ pvapy-ad-sim-server -cn pvapy:image -nx 128 -ny 128 -dt uint8 -rt 60 -fps 5000 -rp 5000
+```
+
+Since our consumer application now maintains client queue of size 1000, it
+should start reporting rejected frames (i.e., those that were delivered
+to the client code, but were not queued for processing because client queue was
+full). The application should be also reporting no overrruns or missed frames.
+
+We can now distribute data between two consumers using the following command
+on terminal 1:
+
+```sh
+pvapy-hpc-consumer --input-channel pvapy:image --control-channel consumer:*:control --status-channel consumer:*:status --output-channel consumer:*:output --processor-file /local/sveseli/BDP/DEMO/hpcAdImageProcessorExample.py --processor-class HpcAdImageProcessor --report-period 10 --server-queue-size 100 --monitor-queue-size 1000 --n-consumers 2 --distributor-updates 1
+```
+
+On terminal 2 we run as before:
+
+```sh
+$ pvapy-ad-sim-server -cn pvapy:image -nx 128 -ny 128 -dt uint8 -rt 60 -fps 5000 -rp 5000
+```
+
+Once server starts updating images, we should observe no frames rejected by
+the client queue, no missed frames, and each consumer processing images
+at a rate that is about half of the server frame rate. This also
+demonstrates that data distribution can be easily combined with 
+server-side queues.
 
