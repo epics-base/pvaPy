@@ -174,7 +174,7 @@ This example illustrates how to spawn multiple consumers that receive images in
 alternate order.
 
 <p align="center">
-  <img alt="Multiple Consumers" src="images/StreamingFrameworkMultipleConsumers.jpg">
+  <img alt="Multiple Consumers with Data Distribution" src="images/StreamingFrameworkMultipleConsumersDataDistribution.jpg">
 </p>
 
 On terminal 1, run the consumer command:
@@ -183,7 +183,7 @@ On terminal 1, run the consumer command:
 $ pvapy-hpc-consumer --input-channel pvapy:image --control-channel consumer:*:control --status-channel consumer:*:status --output-channel consumer:*:output --processor-file /local/sveseli/BDP/DEMO/hpcAdImageProcessorExample.py --processor-class HpcAdImageProcessor --report-period 10 --log-level debug --n-consumers 2 --distributor-updates 1
 ```
 
-This command will request distributor plugin to give one sequential update to each
+This command will direct the distributor plugin to give one sequential update to each
 of its clients.
 
 On terminal 2, generate images:
@@ -195,4 +195,45 @@ $ pvapy-ad-sim-server -cn pvapy:image -nx 128 -ny 128 -dt uint8 -rt 60 -fps 1
 After server starts publishing images, the consumer terminal should display processing
 output, with one consumers receiving images (1,3,5,...) and the other one receiving images
 (2,4,6,...).
+
+### Multiple Consumer Sets with Data Distribution
+
+This example illustrates how to distribute the same set of images between 
+multiple sets of consumers.
+
+<p align="center">
+  <img alt="Multiple Consumer Sets with Data Distribution" src="images/StreamingFrameworkMultipleConsumerSetsDataDistribution.jpg">
+</p>
+
+On terminal 1, run the consumer command that starts 2 consumers with IDs 1 and 2 in the 
+set 'A', and directs distributor plugin to give every consumer in the set 3 
+sequential updates:
+
+
+```sh
+$ pvapy-hpc-consumer --input-channel pvapy:image --control-channel consumer:*:control --status-channel consumer:*:status --output-channel consumer:*:output --processor-file /local/sveseli/BDP/DEMO/hpcAdImageProcessorExample.py --processor-class HpcAdImageProcessor --report-period 10 --log-level debug --n-consumers 2 --distributor-updates 3 --consumer-id 1 --n-distributor-sets 2 --distributor-set A
+```
+
+The option '--n-distributor-sets 2' allows the framework to correctly calculate
+number of images that all consumers should receive so that application status
+can display accurate statistics with respect to number of missed frames.
+
+On terminal 2, run the consumer command that starts 2 consumers with IDs 3 and 4 in the
+set 'B', and directs distributor plugin to give every consumer in the set 3 
+sequential updates:
+
+```sh
+$ pvapy-hpc-consumer --input-channel pvapy:image --control-channel consumer:*:control --status-channel consumer:*:status --output-channel consumer:*:output --processor-file /local/sveseli/BDP/DEMO/hpcAdImageProcessorExample.py --processor-class HpcAdImageProcessor --report-period 10 --log-level debug --n-consumers 2 --distributor-updates 3 --consumer-id 3 --n-distributor-sets 2 --distributor-set B
+```
+
+On terminal 3, generate images:
+
+```sh
+$ pvapy-ad-sim-server -cn pvapy:image -nx 128 -ny 128 -dt uint8 -rt 60 -fps 1
+```
+
+After server starts publishing images, both consumers in th first set will be receiving
+and processing images (1,2,3,7,8,9,...), and both consumers in the second set
+will be receiving and processing images (4,5,6,10,11,12,...).
+
 
