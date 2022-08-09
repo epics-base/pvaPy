@@ -1,15 +1,14 @@
 import base64
 import hashlib
 from Crypto.Cipher import AES
-from Crypto import Random
-
+import os
 
 class AesCipher:
     ''' 
     Class that handles AES encryption. 
     '''
 
-    DEFAULT_MODE = AES.MODE_CBC
+    DEFAULT_MODE = AES.MODE_EAX
 
     @classmethod
     def encode(cls, s):
@@ -35,7 +34,7 @@ class AesCipher:
     def encrypt(cls, plainText, key, mode=DEFAULT_MODE):
         privateKey = hashlib.sha256(cls.encode(key)).digest()
         paddedText = cls.pad(plainText)
-        iv = Random.new().read(AES.block_size)
+        iv = os.urandom(AES.block_size)
         cipher = AES.new(privateKey, mode, iv)
         return base64.b64encode(iv + cipher.encrypt(paddedText))
 

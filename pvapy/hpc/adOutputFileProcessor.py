@@ -9,7 +9,6 @@ from .adImageProcessor import AdImageProcessor
 from ..utility.floatWithUnits import FloatWithUnits
 from ..utility.intWithUnits import IntWithUnits
 
-# Processor that saves output files
 class AdOutputFileProcessor(AdImageProcessor):
     ''' 
     Streaming framework processor class that can be used for saving Area 

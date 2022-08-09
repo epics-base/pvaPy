@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
-from pvaccess import PvObject
+import pvaccess as pva
 from .cipher import Cipher
 
-class EncryptedData(PvObject):
+class EncryptedData(pva.PvObject):
     '''
     This class can be used as a container of encrypted data.
     '''
@@ -16,8 +16,9 @@ class EncryptedData(PvObject):
         'objectId' : pva.ULONG, 
         'data' : pva.STRING, 
         'key' : pva.STRING,
+        'signature' : pva.STRING,
         'cipher' : Cipher.PVA_STRUCTURE_DICT
     }
 
     def __init__(self, valueDict={}):
-        PvObject.__init__(self.PVA_STRUCTURE_DICT, valueDict, self.PVA_TYPE_ID, self.PVA_FIELD_TYPE_ID_DICT)
+        pva.PvObject.__init__(self, self.PVA_STRUCTURE_DICT, valueDict, self.PVA_TYPE_ID, self.PVA_FIELD_TYPE_ID_DICT)
