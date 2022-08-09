@@ -51,25 +51,31 @@ class UserDataProcessor:
     def getStatsPvaTypes(self):
         return {}
 
-    # Define PVA types for output object
+    # Define output PvObject
     # This method does not need to be implemented if output
     # object has the same structure as the input object
-    def getOutputPvaTypes(self):
-        return {}
+    def getOutputPvObject(self):
+        return None
 ```
 
-A working example of a simple processor that rotates Area Detector images
-can be found [here](../examples/hpcAdImageProcessorExample.py). In addition,
-
-
-A python class
-that derives from UserDataProcessor class and implements the above interface
-is passed into one of the two main command line utilities:
+A python class that derives from UserDataProcessor class and implements 
+the above interface is passed into one of the two main command line utilities:
 - pvapy-hpc-consumer: used for splitting streams and processing stream objects
 - pvapy-hpc-collector: used for gathering streams, sorting and processing
 stream objects
 
-In addition to these two commands, the framework also relies on the following:
+A working example of a simple processor that rotates Area Detector images
+can be found [here](../examples/hpcAdImageProcessorExample.py). There are
+also several processor classes for Area Detector images that can be used 
+out of the box:
+- [AD Image Data Encryptor](../pvapy/hpc/adImageDataEncryptor.py): encrypts
+images
+- [AD Image Data Decryptor](../pvapy/hpc/adImageDataDecryptor.py): decrypts
+images
+- [AD Output File Processor](../pvapy/hpc/adOutputFileProcessor.py): saves output files
+
+In addition to the above consumer and collector commands, the streaming 
+framework also relies on the following:
 - pvapy-mirror-server: can be used for data distribution in those cases
 when the original data source does not have distributor plugin, for stream 
 isolation and IOC protection from high client loads, as bridge between 
