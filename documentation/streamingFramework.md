@@ -156,7 +156,7 @@ $ pvapy-hpc-consumer --input-channel pvapy:image --control-channel consumer:*:co
 ```
 
 This command is the same as before, with additional option that requests 2 consumers
-spawned, with IDs of 1 and 2.
+spawned, with IDs of 1 and 2. Each consumer will run as a separate process.
 
 On terminal 2, generate images as before:
 
@@ -233,7 +233,46 @@ $ pvapy-ad-sim-server -cn pvapy:image -nx 128 -ny 128 -dt uint8 -rt 60 -fps 1
 ```
 
 After server starts publishing images, both consumers in th first set will be receiving
-and processing images (1,2,3,7,8,9,...), and both consumers in the second set
-will be receiving and processing images (4,5,6,10,11,12,...).
+and processing images (1,2,3,7,8,9,13,...), and both consumers in the second set
+will be receiving and processing images (4,5,6,10,11,12,16,...).
 
+
+### Protection Against Lost Frames
+
+In those cases when data source streams objects at high rates and/or user application
+processing times are not predictable (e.g., when processing incoming objects in batches),
+there are two options that can be used for protecting application against lost frames:
+
+- Server queue: EPICS libraries allow each client to request its own queue, which
+provides protection against the "overrun" problem, where the server replaces channel
+reecord before the client has a chance to retrieve it. Note that server queue sizes
+are configurable, and that they increase the server (IOC) memory footprint.
+- Client (monitor) queue: PvaPy channel monitor can copy incoming objects into a
+'PvObjectQueue' rather than process them immediately on monitor updates. This
+provides protection against unpredictable processing times, but it will also increase 
+consumer process memory footprint. 
+
+The purpose of examples in this section is to illustrate the two options above.
+As noted before, the frame rates shown here might have to be adjusted depending on the
+machine used.
+
+<p align="center">
+  <img alt="Single Consumer with High Frame Rate" src="images/StreamingFrameworkSingleConsumerDataLossProtection.jpg">
+</p>
+
+On terminal 1, start single consumer process without any protection against frame loss:
+
+```sh
+$ pvapy-hpc-consumer --input-channel pvapy:image --control-channel consumer:*:control --status-channel consumer:*:status --output-channel consumer:*:output --processor-class pvapy.hpc.userDataProcessor.UserDataProcessor --report-period 10
+```
+
+On terminal 2 generate frames at high rate (10kHz) and adjust the reporting period
+('-rp' option, given in number of frames) accordingly:
+
+```sh
+$ pvapy-ad-sim-server -cn pvapy:image -nx 128 -ny 128 -dt uint8 -rt 60 -fps 10000 -rp 10000
+```
+
+After 60 seconds consumer application should report number of overruns and missed
+frames greater than zero.
 
