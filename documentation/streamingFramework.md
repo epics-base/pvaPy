@@ -112,7 +112,7 @@ On terminal 1, run the consumer command:
 $ pvapy-hpc-consumer --input-channel pvapy:image --control-channel consumer:*:control --status-channel consumer:*:status --output-channel consumer:*:output --processor-file /path/to/hpcAdImageProcessorExample.py --processor-class HpcAdImageProcessor --report-period 10 --log-level debug
 ```
 
-The above command will establish monitor on the 'pvapy:image channel', and will create
+The above command will establish monitor on the 'pvapy:image' channel, and will create
 channels for output, application status and control using default consumer id '1' that
 replaces the '*' character. Application status will be generated every 10 seconds, and
 log level of 'debug' ensures that processing log will be displayed on the screen.
@@ -123,7 +123,8 @@ On terminal 2, generate small (128x128, uint8) test images at 1Hz for 60 seconds
 $ pvapy-ad-sim-server -cn pvapy:image -nx 128 -ny 128 -dt uint8 -rt 60 -fps 1
 ```
 
-After images start publishing, the consumer terminal should display processing output.
+After server starts publishing images, the consumer terminal should display processing output.
+
 On terminal 3, you can interact with application's output, status and control channels:
 
 ```sh
@@ -136,4 +137,30 @@ $ pvput consumer:1:control '{"command" : "stop"}' # shutdown consumer process
 ```
 
 After the shutdown command, the consumer process should exit.
+
+### Multiple Consumers
+
+This example illustrates how to spawn multiple consumers which all receive and
+process the same set of images. 
+
+<p align="center">
+  <img alt="Multiple Consumers" src="images/StreamingFramework_MultipleConsumers.jpg">
+</p>
+
+On terminal 1, run the consumer command:
+
+```sh
+$ pvapy-hpc-consumer --input-channel pvapy:image --control-channel consumer:*:control --status-channel consumer:*:status --output-channel consumer:*:output --processor-file /local/sveseli/BDP/DEMO/hpcAdImageProcessorExample.py --processor-class HpcAdImageProcessor --report-period 10 --log-level debug --n-consumers 2
+```
+
+This command is the same as before, with additional option that requests 2 consumers
+spawned, with IDs of 1 and 2.
+
+On terminal 2, generate images as before:
+
+```sh
+$ pvapy-ad-sim-server -cn pvapy:image -nx 128 -ny 128 -dt uint8 -rt 60 -fps 1
+```
+
+After server starts publishing images, the consumer terminal should display processing output, with both consumers receeiving and processing all images (1,2,3,4,...).
 
