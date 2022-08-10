@@ -612,7 +612,7 @@ $ pvapy-hpc-consumer \
     --n-consumers 4 \
     --report-period 10 \
     --server-queue-size 1000 \
-    --monitor-queue-size 2000 \
+    --monitor-queue-size 10000 \
     --distributor-updates 1
 ```
 
