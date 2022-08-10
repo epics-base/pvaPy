@@ -73,6 +73,8 @@ images
 - [AD Image Data Decryptor](../pvapy/hpc/adImageDataDecryptor.py): decrypts
 images
 - [AD Output File Processor](../pvapy/hpc/adOutputFileProcessor.py): saves output files
+The encryptor and decryptor processors require python 'rsa' and 'pycryptodome'
+packages for encryption utilities.
 
 In addition to the above consumer and collector commands, the streaming 
 framework also relies on the following:
@@ -344,17 +346,73 @@ demonstrates that data distribution can be easily combined with
 server-side queues.
 
 We can also scale the previous use case easily by updating the '--n-consumers' 
-option. On terminal 1 we can run the following command:
+option. On terminal 1 run the following command:
 
 ```sh
 pvapy-hpc-consumer --input-channel pvapy:image --control-channel consumer:*:control --status-channel consumer:*:status --output-channel consumer:*:output --processor-file /path/to/hpcAdImageProcessorExample.py --processor-class HpcAdImageProcessor --report-period 10 --server-queue-size 100 --monitor-queue-size 1000 --n-consumers 4 --distributor-updates 1
 ```
 
-On terminal 2 we can now increase frame rate as well:
+On terminal 2 increase frame rate as well:
 
 ```
 $ pvapy-ad-sim-server -cn pvapy:image -nx 128 -ny 128 -dt uint8 -rt 60 -fps 8000 -rp 8000
 ```
 
 All consumers should keep up and none should be reporting frame loss.
+
+### Processing Chains
+
+This example demonstrates how stream processing can be done in multiple stages,
+with each stage running on a different machine or a set of machines.
+This is accomplished by using the output of the first set of consumers as input
+to the second set of consumers. The example also uses Mirror Server, which
+forwards streamed objects from the source to the first set of consumers.
+
+<p align="center">
+  <img alt="Processing Chains" src="images/StreamingFrameworkProcessingChains.jpg">
+</p>
+
+On terminal 1, start four consumers producing output on the 'processor:*:output'
+channels:
+
+```sh
+$ pvapy-hpc-consumer --input-channel pvapy:image --control-channel processor:*:control --status-channel processor:*:status --output-channel processor:*:output --processor-file /path/to/hpcAdImageProcessorExample.py --processor-class HpcAdImageProcessor --report-period 10 --server-queue-size 100 --monitor-queue-size 1000 --n-consumers 4 --distributor-updates 8
+```
+
+Each processing consumer will be getting 8 sequential updates, and will be using
+small server and client side queues. 
+
+On terminal 2, create output folder for saving images, and use the built-in
+processor for saving output files:
+
+```sh
+$ rm -rf /path/to/output/data &&  mkdir -p /path/to/output/data
+$ pvapy-hpc-consumer --input-channel processor:*:output --output-channel file:*:output --control-channel file:*:control --status-channel file:*:status --processor-class pvapy.hpc.adOutputFileProcessor.AdOutputFileProcessor --processor-args '{"outputDirectory" : "/path/to/output/data", "outputFileNameFormat" : "bdp_{uniqueId:06d}.{processorId}.tiff", "objectIdOffset" : "25"}' --n-consumers 4 --report-period 10 --server-queue-size 1000 --monitor-queue-size 10000
+```
+
+The input for this set of consumers is the output of the previous set. We 
+used slightly larger queues than for the processing stage, and passed
+processor arguments that configure output directory, file format, and object
+ID offset, which ensures that application statistics tracking correctly 
+accounts for any missing files.
+
+On terminal 3 run the mirror server, which will serve images from the
+'ad:image' channel on the 'pvapy:image' channel that is used
+as input to the first set of consumers. In this case, we also use small
+server-side queue to make sure mirror server does not lose any frames:
+
+```sh
+$ pvapy-mirror-server --channel-map "(pvapy:image,ad:image,pva,1000)"
+```
+
+On terminal 4 generate images on the 'ad:image' channel:
+
+```sh
+$ pvapy-ad-sim-server -cn ad:image -nx 128 -ny 128 -dt uint8 -fps 2000 -rt 60 -rp 2000
+```
+
+Once the data source starts publishing images, they will be streamed through
+the workflow and processed by each stage, resulting in files being saved
+in the designated output folder.
+
 

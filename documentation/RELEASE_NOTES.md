@@ -18,14 +18,15 @@
   - updated structure IDs 
 - PvObject enhancements:
   - simplified handling of unions
-- new Area Detector Simulator features:
+- Area Detector Simulator enhancements:
   - option to generate frames with different data types and in the specified 
     ranges
   - option to use numpy memory map for loading input files
   - option to notify channel access PV when server starts
-- added python HPC streaming framework for processing data produced at
+- added python HPC Streaming Framework for processing data produced at
   high rates using stream consumers and stream collectors (see the
-  [framework documentation](streamingFramework.md))
+  [framework documentation](streamingFramework.md)); the frameworks requires
+  python >= 3.7
 - added streaming framework command line utilities:
   - pvapy-hpc-consumer
   - pvapy-hpc-collector
