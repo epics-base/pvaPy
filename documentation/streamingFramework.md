@@ -608,7 +608,7 @@ $ pvapy-hpc-consumer \
     --control-channel file:*:control \
     --status-channel file:*:status \
     --processor-class pvapy.hpc.adOutputFileProcessor.AdOutputFileProcessor \
-    --processor-args '{"outputDirectory" : "/local/sveseli/BDP/DEMO/data", "outputFileNameFormat" : "bdp_{uniqueId:06d}.{processorId}.tiff"}' \
+    --processor-args '{"outputDirectory" : "/path/to/output/data", "outputFileNameFormat" : "bdp_{uniqueId:06d}.{processorId}.tiff"}' \
     --n-consumers 4 \
     --report-period 10 \
     --server-queue-size 1000 \
