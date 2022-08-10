@@ -73,6 +73,7 @@ images
 - [AD Image Data Decryptor](../pvapy/hpc/adImageDataDecryptor.py): decrypts
 images
 - [AD Output File Processor](../pvapy/hpc/adOutputFileProcessor.py): saves output files
+
 The encryptor and decryptor processors require python 'rsa' and 'pycryptodome'
 packages for encryption utilities.
 
@@ -369,7 +370,7 @@ to the second set of consumers. The example also uses Mirror Server, which
 forwards streamed objects from the source to the first set of consumers.
 
 <p align="center">
-  <img alt="Processing Chains" src="images/StreamingFrameworkProcessingChains.jpg">
+  <img alt="Processing Chains" src="images/StreamingFrameworkProcessingChain.jpg">
 </p>
 
 On terminal 1, start four consumers producing output on the 'processor:*:output'
