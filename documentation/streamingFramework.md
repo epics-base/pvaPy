@@ -114,7 +114,15 @@ built into the framework.
 On terminal 1, run the consumer command: 
 
 ```sh
-$ pvapy-hpc-consumer --input-channel pvapy:image --control-channel consumer:*:control --status-channel consumer:*:status --output-channel consumer:*:output --processor-file /path/to/hpcAdImageProcessorExample.py --processor-class HpcAdImageProcessor --report-period 10 --log-level debug
+$ pvapy-hpc-consumer \
+    --input-channel pvapy:image \
+    --control-channel consumer:*:control \
+    --status-channel consumer:*:status \
+    --output-channel consumer:*:output \
+    --processor-file /path/to/hpcAdImageProcessorExample.py \
+    --processor-class HpcAdImageProcessor \
+    --report-period 10 \
+    --log-level debug
 ```
 
 The above command will establish monitor on the 'pvapy:image' channel, and will create
@@ -416,4 +424,9 @@ Once the data source starts publishing images, they will be streamed through
 the workflow and processed by each stage, resulting in files being saved
 in the designated output folder.
 
+### Data Collector
+
+<p align="center">
+  <img alt="Processing Chains with Data Collector" src="images/StreamingFrameworkProcessingChainDataCollector.jpg">
+</p>
 
