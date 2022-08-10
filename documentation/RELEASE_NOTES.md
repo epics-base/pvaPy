@@ -1,4 +1,4 @@
-## Release 5.0.0 (2022/08/07)
+## Release 5.0.0 (2022/08/10)
 
 - PvaMirrorServer enhancements:
   - optimized structure copy on processing
@@ -26,8 +26,7 @@
 - added python HPC Streaming Framework for processing data produced at
   high rates using stream consumers and stream collectors (see the
   [framework documentation](streamingFramework.md)); the frameworks requires
-  python >= 3.7
-- added streaming framework command line utilities:
+  python >= 3.7; new command line utilities:
   - pvapy-hpc-consumer
   - pvapy-hpc-collector
 - conda/pip package dependencies: 
