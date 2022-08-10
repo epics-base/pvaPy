@@ -111,7 +111,8 @@ built into the framework.
   <img alt="Single Consumer" src="images/StreamingFrameworkSingleConsumer.jpg">
 </p>
 
-On terminal 1, run the consumer command: 
+On terminal 1, run the consumer command (make sure to correct the path to the
+downloaded image proceessor example): 
 
 ```sh
 $ pvapy-hpc-consumer \
@@ -163,7 +164,16 @@ process the same set of images.
 On terminal 1, run the consumer command:
 
 ```sh
-$ pvapy-hpc-consumer --input-channel pvapy:image --control-channel consumer:*:control --status-channel consumer:*:status --output-channel consumer:*:output --processor-file /path/to/hpcAdImageProcessorExample.py --processor-class HpcAdImageProcessor --report-period 10 --log-level debug --n-consumers 2
+$ pvapy-hpc-consumer \
+    --input-channel pvapy:image \
+    --control-channel consumer:*:control \
+    --status-channel consumer:*:status \
+    --output-channel consumer:*:output \
+    --processor-file /path/to/hpcAdImageProcessorExample.py \
+    --processor-class HpcAdImageProcessor \
+    --report-period 10 \
+    --log-level debug \
+    --n-consumers 2
 ```
 
 This command is the same as before, with additional option that requests 2 consumers
@@ -191,7 +201,17 @@ alternate order.
 On terminal 1, run the consumer command:
 
 ```sh
-$ pvapy-hpc-consumer --input-channel pvapy:image --control-channel consumer:*:control --status-channel consumer:*:status --output-channel consumer:*:output --processor-file /path/to/hpcAdImageProcessorExample.py --processor-class HpcAdImageProcessor --report-period 10 --log-level debug --n-consumers 2 --distributor-updates 1
+$ pvapy-hpc-consumer \
+    --input-channel pvapy:image \
+    --control-channel consumer:*:control \
+    --status-channel consumer:*:status \
+    --output-channel consumer:*:output \
+    --processor-file /path/to/hpcAdImageProcessorExample.py \
+    --processor-class HpcAdImageProcessor \
+    --report-period 10 \
+    --log-level debug \
+    --n-consumers 2 \
+    --distributor-updates 1
 ```
 
 This command will direct the distributor plugin to give one sequential update to each
@@ -216,13 +236,25 @@ multiple sets of consumers.
   <img alt="Multiple Consumer Sets with Data Distribution" src="images/StreamingFrameworkMultipleConsumerSetsDataDistribution.jpg">
 </p>
 
-On terminal 1, run the consumer command that starts 2 consumers with IDs 1 and 2 in the 
-set 'A', and directs distributor plugin to give every consumer in the set 3 
-sequential updates:
-
+On terminal 1, run the consumer command that starts 2 consumers 
+with IDs 1 and 2 in the set 'A', and directs distributor plugin to give
+every consumer in the set 3 sequential updates:
 
 ```sh
-$ pvapy-hpc-consumer --input-channel pvapy:image --control-channel consumer:*:control --status-channel consumer:*:status --output-channel consumer:*:output --processor-file /path/to/hpcAdImageProcessorExample.py --processor-class HpcAdImageProcessor --report-period 10 --log-level debug --n-consumers 2 --distributor-updates 3 --consumer-id 1 --n-distributor-sets 2 --distributor-set A
+$ pvapy-hpc-consumer \
+    --input-channel pvapy:image \
+    --control-channel consumer:*:control \
+    --status-channel consumer:*:status \
+    --output-channel consumer:*:output \
+    --processor-file /path/to/hpcAdImageProcessorExample.py \
+    --processor-class HpcAdImageProcessor \
+    --report-period 10 \
+    --log-level debug \
+    --n-consumers 2 \
+    --distributor-updates 3 \
+    --consumer-id 1 \
+    --n-distributor-sets 2 \
+    --distributor-set A
 ```
 
 The option '--n-distributor-sets 2' allows the framework to correctly calculate
@@ -234,7 +266,20 @@ set 'B', and directs distributor plugin to give every consumer in the set 3
 sequential updates:
 
 ```sh
-$ pvapy-hpc-consumer --input-channel pvapy:image --control-channel consumer:*:control --status-channel consumer:*:status --output-channel consumer:*:output --processor-file /path/to/hpcAdImageProcessorExample.py --processor-class HpcAdImageProcessor --report-period 10 --log-level debug --n-consumers 2 --distributor-updates 3 --consumer-id 3 --n-distributor-sets 2 --distributor-set B
+$ pvapy-hpc-consumer \
+    --input-channel pvapy:image \
+    --control-channel consumer:*:control \
+    --status-channel consumer:*:status \
+    --output-channel consumer:*:output \
+    --processor-file /path/to/hpcAdImageProcessorExample.py \
+    --processor-class HpcAdImageProcessor \
+    --report-period 10 \
+    --log-level debug \
+    --n-consumers 2 \
+    --distributor-updates 3 \
+    --consumer-id 3 \
+    --n-distributor-sets 2 \
+    --distributor-set B
 ```
 
 On terminal 3, generate images:
@@ -268,8 +313,8 @@ consumer process memory footprint.
 </p>
 
 The purpose of examples in this section is to illustrate the two options above.
-As noted before, the frame rates shown here might have to be adjusted depending on the
-machine used.
+As noted before, the frame rates shown here might have to be adjusted
+depending on the machine used.
 
 #### Single Consumer
 
@@ -277,7 +322,13 @@ On terminal 1, start single consumer process without any protection against fram
 :
 
 ```sh
-$ pvapy-hpc-consumer --input-channel pvapy:image --control-channel consumer:*:control --status-channel consumer:*:status --output-channel consumer:*:output --processor-class pvapy.hpc.userDataProcessor.UserDataProcessor --report-period 10
+$ pvapy-hpc-consumer \
+    --input-channel pvapy:image \
+    --control-channel consumer:*:control \
+    --status-channel consumer:*:status \
+    --output-channel consumer:*:output \
+    --processor-class pvapy.hpc.userDataProcessor.UserDataProcessor \
+    --report-period 10
 ```
 
 On terminal 2 generate frames at high rate (10kHz) and adjust the reporting period
@@ -293,7 +344,14 @@ missed frames greater than zero.
 We can now modify the consumer command to include server queue. In terminal 1, run the following command:
 
 ```sh
-$ pvapy-hpc-consumer --input-channel pvapy:image --control-channel consumer:*:control --status-channel consumer:*:status --output-channel consumer:*:output --processor-class pvapy.hpc.userDataProcessor.UserDataProcessor --report-period 10 --server-queue-size 1000
+$ pvapy-hpc-consumer \
+    --input-channel pvapy:image \
+    --control-channel consumer:*:control \
+    --status-channel consumer:*:status \
+    --output-channel consumer:*:output \
+    --processor-class pvapy.hpc.userDataProcessor.UserDataProcessor \
+    --report-period 10 \
+    --server-queue-size 1000
 ```
 
 On terminal 2 start generating frames at the same rate as before:
@@ -319,7 +377,16 @@ and request both server and client (monitor) queues. On tereminal 1 run
 the following command:
 
 ```sh
-pvapy-hpc-consumer --input-channel pvapy:image --control-channel consumer:*:control --status-channel consumer:*:status --output-channel consumer:*:output --processor-file /path/to/hpcAdImageProcessorExample.py --processor-class HpcAdImageProcessor --report-period 10 --server-queue-size 100 --monitor-queue-size 1000
+pvapy-hpc-consumer \
+    --input-channel pvapy:image \
+    --control-channel consumer:*:control \
+    --status-channel consumer:*:status \
+    --output-channel consumer:*:output \
+    --processor-file /path/to/hpcAdImageProcessorExample.py \
+    --processor-class HpcAdImageProcessor \
+    --report-period 10 \
+    --server-queue-size 100 \
+    --monitor-queue-size 1000
 ```
 
 On terminal 2, generate images at a frame rate sufficiently high to overwhelm
@@ -339,7 +406,18 @@ We can now distribute data between two consumers using the following command
 on terminal 1:
 
 ```sh
-pvapy-hpc-consumer --input-channel pvapy:image --control-channel consumer:*:control --status-channel consumer:*:status --output-channel consumer:*:output --processor-file /path/to/hpcAdImageProcessorExample.py --processor-class HpcAdImageProcessor --report-period 10 --server-queue-size 100 --monitor-queue-size 1000 --n-consumers 2 --distributor-updates 1
+pvapy-hpc-consumer \
+    --input-channel pvapy:image \
+    --control-channel consumer:*:control \
+    --status-channel consumer:*:status \
+    --output-channel consumer:*:output \
+    --processor-file /path/to/hpcAdImageProcessorExample.py \
+    --processor-class HpcAdImageProcessor \
+    --report-period 10 \
+    --server-queue-size 100 \
+    --monitor-queue-size 1000 \
+    --n-consumers 2 \
+    --distributor-updates 1
 ```
 
 On terminal 2 we run as before:
@@ -358,7 +436,18 @@ We can also scale the previous use case easily by updating the '--n-consumers'
 option. On terminal 1 run the following command:
 
 ```sh
-pvapy-hpc-consumer --input-channel pvapy:image --control-channel consumer:*:control --status-channel consumer:*:status --output-channel consumer:*:output --processor-file /path/to/hpcAdImageProcessorExample.py --processor-class HpcAdImageProcessor --report-period 10 --server-queue-size 100 --monitor-queue-size 1000 --n-consumers 4 --distributor-updates 1
+pvapy-hpc-consumer \
+    --input-channel pvapy:image \
+    --control-channel consumer:*:control \
+    --status-channel consumer:*:status \
+    --output-channel consumer:*:output \
+    --processor-file /path/to/hpcAdImageProcessorExample.py \
+    --processor-class HpcAdImageProcessor \
+    --report-period 10 \
+    --server-queue-size 100 \
+    --monitor-queue-size 1000 \
+    --n-consumers 4 \
+    --distributor-updates 1
 ```
 
 On terminal 2 increase frame rate as well:
@@ -385,7 +474,18 @@ On terminal 1, start four consumers producing output on the 'processor:*:output'
 channels:
 
 ```sh
-$ pvapy-hpc-consumer --input-channel pvapy:image --control-channel processor:*:control --status-channel processor:*:status --output-channel processor:*:output --processor-file /path/to/hpcAdImageProcessorExample.py --processor-class HpcAdImageProcessor --report-period 10 --server-queue-size 100 --monitor-queue-size 1000 --n-consumers 4 --distributor-updates 8
+$ pvapy-hpc-consumer \
+    --input-channel pvapy:image \
+    --control-channel processor:*:control \
+    --status-channel processor:*:status \
+    --output-channel processor:*:output \
+    --processor-file /path/to/hpcAdImageProcessorExample.py \
+    --processor-class HpcAdImageProcessor \
+    --report-period 10 \
+    --server-queue-size 100 \
+    --monitor-queue-size 1000 \
+    --n-consumers 4 \
+    --distributor-updates 8
 ```
 
 Each processing consumer will be getting 8 sequential updates, and will be using
@@ -396,7 +496,17 @@ processor for saving output files:
 
 ```sh
 $ rm -rf /path/to/output/data &&  mkdir -p /path/to/output/data
-$ pvapy-hpc-consumer --input-channel processor:*:output --output-channel file:*:output --control-channel file:*:control --status-channel file:*:status --processor-class pvapy.hpc.adOutputFileProcessor.AdOutputFileProcessor --processor-args '{"outputDirectory" : "/path/to/output/data", "outputFileNameFormat" : "bdp_{uniqueId:06d}.{processorId}.tiff", "objectIdOffset" : "25"}' --n-consumers 4 --report-period 10 --server-queue-size 1000 --monitor-queue-size 10000
+$ pvapy-hpc-consumer \
+    --input-channel processor:*:output \
+    --output-channel file:*:output \
+    --control-channel file:*:control \
+    --status-channel file:*:status \
+    --processor-class pvapy.hpc.adOutputFileProcessor.AdOutputFileProcessor \
+    --processor-args '{"outputDirectory" : "/path/to/output/data", "outputFileNameFormat" : "bdp_{uniqueId:06d}.{processorId}.tiff", "objectIdOffset" : "25"}' \
+    --n-consumers 4 \
+    --report-period 10 \
+    --server-queue-size 1000 \
+    --monitor-queue-size 10000
 ```
 
 The input for this set of consumers is the output of the previous set. We 
@@ -425,6 +535,14 @@ the workflow and processed by each stage, resulting in files being saved
 in the designated output folder.
 
 ### Data Collector
+
+In this example we show how to use the 'pvapy-hpc-data-collector' utility
+for gathering streams distributed by an earlier processing stage. This utility
+establishes channel listeners for a number of 'producer' channels, queues 
+incoming objects, sorts them using the provided object id field ('uniqueId' 
+by default), processes them using the provided data processor class, and
+publishes new objects on its output channel. This channel can again be used
+as input into another processing stage.
 
 <p align="center">
   <img alt="Processing Chains with Data Collector" src="images/StreamingFrameworkProcessingChainDataCollector.jpg">
