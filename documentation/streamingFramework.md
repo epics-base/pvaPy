@@ -705,7 +705,7 @@ $ pvapy-ad-sim-server -cn pvapy:image -nx 128 -ny 128 -dt uint8 -rt 60 -fps 1
 After raw images start getting published, consumer terminals should start
 displaying encryption, decryption and processing outputs.
 
-On terminal 5 we can inspect various output channels:
+On terminal 5 we can inspect output from the different processing stages:
 
 ```sh
 $ pvget enc:1:output # encrypted data
