@@ -548,3 +548,84 @@ as input into another processing stage.
   <img alt="Processing Chains with Data Collector" src="images/StreamingFrameworkProcessingChainDataCollector.jpg">
 </p>
 
+To get this running, on terminal 1 start four consumers in the
+same way as in the previous example, producing output on the 
+'processor:*:output' channels:
+
+```sh
+$ pvapy-hpc-consumer \
+    --input-channel pvapy:image \
+    --control-channel processor:*:control \
+    --status-channel processor:*:status \
+    --output-channel processor:*:output \
+    --processor-file /path/to/hpcAdImageProcessorExample.py \
+    --processor-class HpcAdImageProcessor \
+    --report-period 10 \
+    --server-queue-size 100 \
+    --monitor-queue-size 1000 \
+    --n-consumers 4 \
+    --distributor-updates 8
+```
+
+On terminal 2, run the following collector command:
+
+```sh
+$ pvapy-hpc-collector \
+    --collector-id 1 \
+    --producer-id-list 1,2,3,4 \
+    --input-channel processor:*:output \
+    --control-channel collector:*:control \
+    --status-channel collector:*:status \
+    --output-channel collector:*:output \
+    --processor-class pvapy.hpc.userDataProcessor.UserDataProcessor \
+    --report-period 10 \
+    --server-queue-size 1000 \
+    --collector-cache-size 10000 \
+    --monitor-queue-size 2000
+```
+
+Here, we specified producer IDs, which will be used to construct input channel
+names by replacing the '*' character in the string given in the
+'--input-channel' option. In addition to server and client (monitor)
+queues, we also specified size for the collector cache used for sorting
+incoming objects. The collector will publish images sorted by the 'uniqueId'
+on its output channel 'collector:<collector id>:output'.
+
+On terminal 3, create output folder for saving images, and use the built-in
+processor for saving output files. The difference from the previous case
+is that we are using collector output as input, and we are also directing
+collector's PVA server to distribute one file at a time between all four
+file processors: 
+
+```sh
+$ rm -rf /path/to/output/data &&  mkdir -p /path/to/output/data
+$ pvapy-hpc-consumer \
+    --input-channel collector:1:output \
+    --output-channel file:*:output \
+    --control-channel file:*:control \
+    --status-channel file:*:status \
+    --processor-class pvapy.hpc.adOutputFileProcessor.AdOutputFileProcessor \
+    --processor-args '{"outputDirectory" : "/local/sveseli/BDP/DEMO/data", "outputFileNameFormat" : "bdp_{uniqueId:06d}.{processorId}.tiff"}' \
+    --n-consumers 4 \
+    --report-period 10 \
+    --server-queue-size 1000 \
+    --monitor-queue-size 2000 \
+    --distributor-updates 1
+```
+
+On terminal 4 run the mirror server as before, mirroring 'ad:image' to 
+'pvapy:image' channel:
+
+```sh
+$ pvapy-mirror-server --channel-map "(pvapy:image,ad:image,pva,1000)"
+```
+
+On terminal 5 generate images on the 'ad:image' channel:
+
+```sh
+$ pvapy-ad-sim-server -cn ad:image -nx 128 -ny 128 -dt uint8 -fps 2000 -rt 60 -rp 2000
+```
+
+Once the data source starts publishing images, they will be streamed through
+all the components of the system, and saved into the designated output folder.
+
