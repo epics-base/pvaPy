@@ -98,7 +98,10 @@ A medium range workstation (e.g. dual Intel Xeon E5-2620 2.40GHz CPU, 24
 logical cores, 64GB RAM, local SSD drives) should be able to run all
 examples shown here without any issues. Note that some commands use
 [sample AD image processor](../examples/hpcAdImageProcessorExample.py) as
-external (user) code.
+external (user) code. Also, instead of generating random image data, one
+could, for example, concatenate actual image data into a set of NumPy arrays
+and pass that file into the pvapy-ad-sim-server command using the
+'-if /path/to/images.npy' option.
 
 ### Single Consumer
 
@@ -112,7 +115,7 @@ built into the framework.
 </p>
 
 On terminal 1, run the consumer command (make sure to correct the path to the
-downloaded image proceessor example): 
+downloaded image processor example): 
 
 ```sh
 $ pvapy-hpc-consumer \
@@ -301,7 +304,7 @@ there are two options that can be used for protecting application against lost f
 
 - Server queue: EPICS libraries allow each client to request its own queue, which
 provides protection against the "overrun" problem, where the server replaces channel
-reecord before the client has a chance to retrieve it. Note that server queue sizes
+record before the client has a chance to retrieve it. Note that server queue sizes
 are configurable, and that they increase the server (IOC) memory footprint.
 - Client (monitor) queue: PvaPy channel monitor can copy incoming objects into a
 'PvObjectQueue' rather than process them immediately on monitor updates. This
@@ -629,3 +632,83 @@ $ pvapy-ad-sim-server -cn ad:image -nx 128 -ny 128 -dt uint8 -fps 2000 -rt 60 -r
 Once the data source starts publishing images, they will be streamed through
 all the components of the system, and saved into the designated output folder.
 
+### Data Encryption
+
+This example illustrates how data can be encrypted in the first processing
+stage of the streaming workflow, and decrypted before processing. This 
+example does require additional python packages ('rsa' and 'pycryptodome')
+that provide encryption utilities.
+
+<p align="center">
+  <img alt="Data Encryption" src="images/StreamingFrameworkDataEncryption.jpg">
+</p>
+
+On terminal 1 start the encryption consumer, which requires path to your 
+private SSH key as input (the key should not require passphrase):
+
+```sh
+$ pvapy-hpc-consumer \
+    --input-channel pvapy:image \
+    --control-channel enc:*:control \
+    --status-channel enc:*:status \
+    --output-channel enc:*:output \
+    --processor-class pvapy.hpc.adImageDataEncryptor.AdImageDataEncryptor \
+    --processor-args '{"privateKeyFilePath" : "/path/to/id_rsa", "sign" : 1}' 
+    --report-period 10 \
+    --log-level debug
+```
+
+The encrypted data will be signed, which will increase time needed for
+encryption.
+
+On terminal 2 run the decryption consumer, taking input from the encryption
+output channel:
+
+```sh
+$ pvapy-hpc-consumer \
+    --input-channel enc:*:output \
+    --control-channel dec:*:control \
+    --status-channel dec:*:status \
+    --output-channel dec:*:output \
+    --processor-class pvapy.hpc.adImageDataDecryptor.AdImageDataDecryptor \
+    --oid-field objectId \
+    --processor-args '{"privateKeyFilePath" : "/path/to/id_rsa", "verify" : 1}' \
+    --report-period 10 \
+    --log-level debug
+```
+
+Note that the encrypted object ID field is 'objectId', and that data will be 
+verified after decryption. The output of the encryption channel will
+be a standard AD image (NtNdArray) object.
+
+On terminal 3 run the sample processing consumer, which takes input
+from the decryption stage output and rotates images:
+
+```sh
+$ pvapy-hpc-consumer \
+    --input-channel dec:*:output \
+    --control-channel proc:*:control \
+    --status-channel proc:*:status \
+    --output-channel proc:*:output \
+    --processor-file /path/to/hpcAdImageProcessorExample.py \
+    --processor-class HpcAdImageProcessor \
+    --report-period 10 \
+    --log-level debug
+```
+
+On terminal 4 generate images:
+
+```sh
+$ pvapy-ad-sim-server -cn pvapy:image -nx 128 -ny 128 -dt uint8 -rt 60 -fps 1
+```
+
+After raw images start getting published, consumer terminals should start
+displaying encryption, decryption and processing outputs.
+
+On terminal 5 we can inspect various output channels:
+
+```sh
+$ pvget enc:1:output # encrypted data
+$ pvget dec:1:output # decrypted (raw) data
+$ pvget proc:1:output # processed image
+```
