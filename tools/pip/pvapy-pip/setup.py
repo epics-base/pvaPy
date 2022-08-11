@@ -73,6 +73,9 @@ setup(
     },
     install_requires=[
         'numpy>=1.22',
+        'pillow',
+        'pycryptodome',
+        'rsa' 
     ],
     entry_points = {
         'console_scripts': [
