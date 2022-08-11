@@ -33,6 +33,9 @@ requirements:
     #- numpy>=1.19,<1.21
     - epics-base={{ environ.get('EPICS_BASE_VERSION', '0.0') }}
     - pvapy-boost={{ environ.get('BOOST_VERSION', '0.0') }}
+    - pillow
+    - pycryptodome
+    - rsa
 
   run:
     - python
