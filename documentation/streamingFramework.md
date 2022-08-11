@@ -376,7 +376,7 @@ client queue.
 
 We first demonstrate what happens if we use application that cannot keep up
 with the data source. For this we agan use the sample AD image processor,
-and request both server and client (monitor) queues. On tereminal 1 run
+and request both server and client (monitor) queues. On terminal 1 run
 the following command:
 
 ```sh
