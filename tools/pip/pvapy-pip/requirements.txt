@@ -1,1 +1,4 @@
 numpy>=1.22
+pillow
+pycryptodome
+rsa

@@ -22,7 +22,7 @@ class DataProcessingController:
         # Assume NTND Arrays if object id field is not passed in
         self.objectIdField = configDict.get('objectIdField', 'uniqueId')
         # Do not process first object by default
-        self.processFirstUpdate = configDict.get('processFirstUpdate', False)
+        self.skipInitialUpdates = configDict.get('skipInitialUpdates', 1)
         # Object id processing offset used for statistics calculation
         self.objectIdOffset = int(configDict.get('objectIdOffset', 1))
         # Output channel is used for publishing processed objects
@@ -81,9 +81,9 @@ class DataProcessingController:
 
     def configure(self, configDict):
         if type(configDict) == dict:
-            if 'processFirstUpdate' in configDict: 
-                self.processFirstUpdate = configDict.get('processFirstUpdate')
-                self.logger.debug(f'Resetting processing of first update to {self.processFirstUpdate}')
+            if 'skipInitialUpdates' in configDict: 
+                self.skipInitialUpdates = int(configDict.get('skipInitialUpdates'))
+                self.logger.debug(f'Resetting processing of first update to {self.skipInitialUpdates}')
             if 'objectIdOffset' in configDict: 
                 self.objectIdOffset = int(configDict.get('objectIdOffset', 1))
                 self.logger.debug(f'Resetting object id offset to {self.objectIdOffset}')
@@ -97,8 +97,10 @@ class DataProcessingController:
         if self.lastObjectId is None: 
             self.lastObjectId = objectId
             self.createOutputChannel(pvObject)
-            if not self.processFirstUpdate:
-                return None
+        if self.skipInitialUpdates > 0:
+            self.skipInitialUpdates -= 1
+            self.logger.debug(f'Skipping initial update, {self.skipInitialUpdates} remain to be skipped')
+            return None
         if self.firstObjectId is None:
             self.firstObjectId = objectId
             self.firstObjectTime = now
