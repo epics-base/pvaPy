@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-import curses
 import time
 import threading
 import queue
@@ -108,6 +107,16 @@ class AdSimServer:
         self.startDelay = startDelay
         self.isDone = False
         self.screen = None
+        self.screenInitialized = False
+
+    def setupCurses(self):
+        screen = None
+        try:
+            import curses
+            screen = curses.initscr()
+        except ImportError as ex:
+            pass
+        return screen
 
     def frameProducer(self, extraFieldsPvObject=None):
         for frameId in range(0, self.nInputFrames):
@@ -153,11 +162,16 @@ class AdSimServer:
                 self.startTime = self.lastPublishedTime
             if self.reportPeriod > 0 and (self.nPublishedFrames % self.reportPeriod) == 0:
                 report = 'Published frame id {:6d} @ {:.3f}s (frame rate: {:.4f}fps; runtime: {:.3f}s)'.format(self.currentFrameId, self.lastPublishedTime, frameRate, runtime)
-                if not self.screen:
-                    self.screen = curses.initscr()
-                self.screen.erase()
-                self.screen.addstr(f'{report}\n')
-                self.screen.refresh()
+                if not self.screenInitialized:
+                    self.screenInitialized = True
+                    self.screen = self.setupCurses()
+
+                if self.screen:
+                    self.screen.erase()
+                    self.screen.addstr(f'{report}\n')
+                    self.screen.refresh()
+                else:
+                    print(report)
 
             if runtime > self.runtime:
                 if self.screen:

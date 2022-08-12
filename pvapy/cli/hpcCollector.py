@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-import curses
 import json
 import pprint
 import argparse
@@ -91,21 +90,26 @@ class CollectorController:
             LoggingManager.setLogLevel(args.log_level)
             if args.log_file:
                 LoggingManager.addFileHandler(args.log_file)
-                if not args.disable_curses:
-                    self.screen = curses.initscr()
             else:
                 LoggingManager.addStreamHandler()
-        else:
-            if not args.disable_curses:
-                self.screen = curses.initscr()
-
         self.logger = LoggingManager.getLogger(self.__class__.__name__)
+        self.screen = self.setupCurses(args)
         self.args = args
         self.isDone = False
         self.statsObjectId = 0
         self.statsEnabled = {}
         for statsType in ['monitor','queue','processor','user']:
             self.statsEnabled[f'{statsType}Stats'] = 'all' in args.report_stats or statsType in args.report_stats
+
+    def setupCurses(self, args):
+        screen = None
+        if not args.disable_curses and not args.log_level:
+            try:
+                import curses
+                screen = curses.initscr()
+            except ImportError as ex:
+                self.logger.warning(f'Disabling curses library: {ex}')
+        return screen
 
     def controlCallback(self, pv):
         t = time.time()
