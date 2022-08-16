@@ -51,7 +51,6 @@ ifeq ($(OS_CLASS),Darwin)
 LOADABLE_SHRLIB_SUFFIX = .so
 endif
 
-
 pvaccess_SRCS += pvaccess.cpp
 
 pvaccess_SRCS += pvaccess.constants.cpp
@@ -98,6 +97,7 @@ pvaccess_SRCS += pvaccess.RpcClient.cpp
 pvaccess_SRCS += pvaccess.RpcServer.cpp
 
 pvaccess_SRCS += pvaccess.ScalarArrayPyOwner.cpp
+pvaccess_SRCS += pvaccess.CaIoc.cpp
 
 pvaccess_SRCS += CaClient.cpp
 pvaccess_SRCS += Channel.cpp
@@ -171,6 +171,9 @@ pvaccess_SRCS += RpcServer.cpp
 pvaccess_SRCS += RpcTimeout.cpp
 pvaccess_SRCS += StringUtility.cpp
 
+pvaccess_SRCS += CaIoc.cpp
+pvaccess_SRCS += pvapy_registerRecordDeviceDriver.cpp
+
 with_pvaClient := $(shell $(PERL) -e "print $(PVA_API_VERSION) >= 450")
 pvaccess_1_SRCS += pvaccess.PvaMirrorServer.cpp
 pvaccess_1_SRCS += pvaccess.PvaServer.cpp
@@ -187,8 +190,10 @@ pvaccess_LIBS += $(pvaccess_$(with_pvaClient)_LIBS)
 
 pvaccess_LIBS += pvAccess
 pvaccess_LIBS += pvData
+pvaccess_LIBS += dbCore
+pvaccess_LIBS += dbRecStd
+pvaccess_LIBS += ca
 pvaccess_LIBS += Com
-
 
 # Build test clients on Linux
 
@@ -214,4 +219,9 @@ pvaccess.constants.cpp: $(PVACCESS_CONSTANTS_CPP_TEMPLATE) $(BUILD_CONF)
 	perl -p -e "s?version =.*?version = \"${PVAPY_VERSION}\"?g" ${SPHINX_CONF} > ${SPHINX_CONF}.2 
 	perl -p -e "s?release =.*?release = \"${PVAPY_VERSION}\"?g" ${SPHINX_CONF}.2 > ${SPHINX_CONF}
 	$(RM) ${SPHINX_CONF}.2 
+
+$(COMMON_DIR)/pvapy.dbd: $(EPICS_BASE)/dbd/softIoc.dbd
+	mkdir -p $(COMMON_DIR)
+	$(RM) $@
+	$(CP) $< $@
 

@@ -78,6 +78,7 @@ void wrapPvaMirrorServer();
 #endif // if PVA_API_VERSION >= 481
 
 void wrapScalarArrayPyOwner();
+void wrapCaIoc();
 
 // Exceptions
 PyObject* pvaException = NULL;
@@ -172,4 +173,5 @@ BOOST_PYTHON_MODULE(pvaccess)
 #endif // if PVA_API_VERSION >= 481
 
     wrapScalarArrayPyOwner(); 
+    wrapCaIoc();
 }
