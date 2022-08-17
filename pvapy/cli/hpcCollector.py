@@ -107,6 +107,7 @@ class CollectorController:
             try:
                 import curses
                 screen = curses.initscr()
+                self.curses = curses
             except ImportError as ex:
                 self.logger.warning(f'Disabling curses library: {ex}')
         return screen
@@ -350,7 +351,7 @@ class CollectorController:
 
     def stopScreen(self):
         if self.screen:
-            curses.endwin()
+            self.curses.endwin()
         self.screen = None
 
     def stopCollectors(self):

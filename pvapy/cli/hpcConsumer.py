@@ -93,6 +93,7 @@ class ConsumerController:
             try:
                 import curses
                 screen = curses.initscr()
+                self.curses = curses
             except ImportError as ex:
                 self.logger.warning(f'Disabling curses library: {ex}')
         return screen
@@ -336,7 +337,7 @@ class ConsumerController:
 
     def stopScreen(self):
         if self.screen:
-            curses.endwin()
+            self.curses.endwin()
         self.screen = None
 
     def stopConsumers(self):
@@ -448,7 +449,7 @@ class MultiprocessConsumerController(ConsumerController):
             mpProcess.join(WAIT_TIME)
             self.logger.info(f'Stopped consumer {consumerId}')
         if self.screen:
-            curses.endwin()
+            self.curses.endwin()
             self.screen = None
         self.logger.debug('Controller exiting')
         return statsDict

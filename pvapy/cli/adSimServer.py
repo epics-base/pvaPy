@@ -114,6 +114,7 @@ class AdSimServer:
         try:
             import curses
             screen = curses.initscr()
+            self.curses = curses
         except ImportError as ex:
             pass
         return screen
@@ -175,7 +176,7 @@ class AdSimServer:
 
             if runtime > self.runtime:
                 if self.screen:
-                    curses.endwin()
+                    self.curses.endwin()
                 print('Server exiting after reaching runtime of {:.3f} seconds'.format(self.runtime))
                 return
 
@@ -199,7 +200,7 @@ class AdSimServer:
         frameRate = 1.0/deltaT
         dataRate = FloatWithUnits(self.imageSize*frameRate/self.BYTES_IN_MEGABYTE, 'MBps')
         if self.screen:
-            curses.endwin()
+            self.curses.endwin()
         print('\nServer runtime: {:.4f} seconds'.format(runtime))
         print('Published frames: {:6d} @ {:.4f} fps'.format(self.nPublishedFrames, frameRate))
         print(f'Data rate: {dataRate}')
