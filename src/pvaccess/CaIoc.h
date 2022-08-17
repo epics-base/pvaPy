@@ -18,7 +18,7 @@ public:
     virtual void stop();
 
     virtual void loadDatabase(const std::string& fileName, const std::string& path, const std::string& substitutions); 
-    virtual void registerDeviceDriver();
+    virtual void registerRecordDeviceDriver();
     virtual void loadRecords(const std::string& fileName, const std::string& substitutions);
     virtual boost::python::list getRecordNames();
     virtual void putField(const std::string& name, const std::string& value);
@@ -27,7 +27,9 @@ public:
     // Wrappers for calls available in iocsh
     virtual int dbLoadDatabase(const std::string& fileName, const std::string& path, const std::string& substitutions); 
     virtual int dbLoadRecords(const std::string& fileName, const std::string& substitutions);
+    virtual int pvapyRegisterRecordDeviceDriver();
     virtual int iocInit();
+    virtual int iocShutdown();
     virtual int dbl(const std::string& recordType, const std::string& fields);
     virtual int dbpr(const std::string& name, int level);
     virtual int dbgf(const std::string& name);
