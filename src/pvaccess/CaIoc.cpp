@@ -29,7 +29,7 @@ CaIoc::~CaIoc()
 
 void CaIoc::start() 
 {
-    int status = iocInit();
+    int status = ::iocInit();
     if (status) {
         throw InvalidState("iocInit() failed with status of " + StringUtility::toString<int>(status));
     }
@@ -37,7 +37,7 @@ void CaIoc::start()
 
 void CaIoc::stop() 
 {
-    int status = iocShutdown();
+    int status = ::iocShutdown();
     if (status) {
         throw InvalidState("iocShutdown() failed with status of " + StringUtility::toString<int>(status));
     }
@@ -48,7 +48,7 @@ void CaIoc::loadDatabase(const std::string& fileName, const std::string& path, c
     if (fileName.size() == 0) {
         throw InvalidArgument("File name cannot be empty.");
     }
-    int status = dbReadDatabase(&pdbbase, fileName.c_str(), path.c_str(), substitutions.c_str());
+    int status = ::dbReadDatabase(&pdbbase, fileName.c_str(), path.c_str(), substitutions.c_str());
     if (status) {
         throw InvalidState("dbReadDatabase() failed with status of " + StringUtility::toString<int>(status));
     }
@@ -67,7 +67,7 @@ void CaIoc::loadRecords(const std::string& fileName, const std::string& substitu
     if (fileName.size() == 0) {
         throw InvalidArgument("File name cannot be empty.");
     }
-    int status = dbReadDatabase(&pdbbase, fileName.c_str(), 0, substitutions.c_str());
+    int status = ::dbReadDatabase(&pdbbase, fileName.c_str(), 0, substitutions.c_str());
     switch (status) {
         case 0: {
             if(dbLoadRecordsHook) {
@@ -115,7 +115,7 @@ void CaIoc::putField(const std::string& name, const std::string& value)
         throw InvalidArgument("Record name cannot be empty.");
     }
 
-    int status = dbpf(name.c_str(), value.c_str());
+    int status = ::dbpf(name.c_str(), value.c_str());
     switch (status) {
         case 0: {
             // ok
@@ -136,7 +136,7 @@ void CaIoc::printRecord(const std::string& name, int level)
         throw InvalidArgument("Record name cannot be empty.");
     }
 
-    int status = dbpr(name.c_str(), level);
+    int status = ::dbpr(name.c_str(), level);
     switch (status) {
         case 0: {
             // ok
@@ -156,22 +156,22 @@ void CaIoc::printRecord(const std::string& name, int level)
 //
 int CaIoc::dbLoadDatabase(const std::string& fileName, const std::string& path, const std::string& substitutions)
 {
-    return dbLoadDatabase(fileName.c_str(), path.c_str(), substitutions.c_str());
+    return ::dbLoadDatabase(fileName.c_str(), path.c_str(), substitutions.c_str());
 }
 
 int CaIoc::dbLoadRecords(const std::string& fileName, const std::string& substitutions)
 {
-    return dbLoadRecords(fileName.c_str(), substitutions.c_str());
+    return ::dbLoadRecords(fileName.c_str(), substitutions.c_str());
 }
 
 int CaIoc::iocInit() 
 {
-    return iocInit();
+    return ::iocInit();
 }
 
 int CaIoc::iocShutdown() 
 {
-    return iocShutdown();
+    return ::iocShutdown();
 }
 
 int CaIoc::pvapyRegisterRecordDeviceDriver()
@@ -181,20 +181,20 @@ int CaIoc::pvapyRegisterRecordDeviceDriver()
 
 int CaIoc::dbl(const std::string& recordType, const std::string& fields)
 {
-    return dbl(recordType.c_str(), fields.c_str());
+    return ::dbl(recordType.c_str(), fields.c_str());
 }
 
 int CaIoc::dbpr(const std::string& name, int level)
 {
-   return dbpr(name.c_str(), level);
+   return ::dbpr(name.c_str(), level);
 }
 
 int CaIoc::dbgf(const std::string& name)
 {
-    return dbgf(name.c_str());
+    return ::dbgf(name.c_str());
 }
 
 int CaIoc::dbpf(const std::string& name, const std::string& value)
 {
-    return dbpf(name.c_str(), value.c_str());
+    return ::dbpf(name.c_str(), value.c_str());
 }
