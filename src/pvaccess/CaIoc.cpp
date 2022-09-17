@@ -5,6 +5,8 @@
 #include <dbAccess.h>
 #include <dbTest.h>
 #include <dbStaticLib.h>
+#include <dbConvertJSON.h>
+
 #include "InvalidState.h"
 #include "InvalidArgument.h"
 #include "InvalidRequest.h"
@@ -85,6 +87,15 @@ void CaIoc::loadRecords(const std::string& fileName, const std::string& substitu
     }
 }
 
+void CaIoc::getRecordDbAddr(const std::string& name, DBADDR *dbAddr)
+{
+    int status = dbNameToAddr(name.c_str(), dbAddr);
+
+    if (status) {
+        throw ObjectNotFound("Record " + name + " not found");
+    }
+}
+
 // Modified from the dbl() code in dbTest.h to return list of record names
 bp::list CaIoc::getRecordNames()
 {
@@ -115,18 +126,46 @@ void CaIoc::putField(const std::string& name, const std::string& value)
         throw InvalidArgument("Record name cannot be empty.");
     }
 
-    int status = ::dbpf(name.c_str(), value.c_str());
-    switch (status) {
-        case 0: {
-            // ok
-            break;
+    if (value.size() == 0) {
+        throw InvalidArgument("Record value cannot be empty.");
+    }
+
+    DBADDR addr;
+    int status;
+    short dbrType = DBR_STRING;
+    long n = 1;
+    char *array = NULL;
+
+    getRecordDbAddr(name, &addr);
+
+    if (addr.precord->lset == NULL) {
+        throw InvalidState("Record " + name + " cannot be set before ioc is initialized");
+    }
+
+    if (addr.no_elements > 1) {
+        dbrType = addr.dbr_field_type;
+        if (addr.dbr_field_type == DBR_CHAR || addr.dbr_field_type == DBR_UCHAR) {
+            n = value.size() + 1;
+        } 
+        else {
+            n = addr.no_elements;
+            array = (char*)calloc(n, dbValueSize(dbrType));
+            if (!array) {
+                throw InvalidState("Record " + name + " cannot be set (out of memory)");
+            }
+            status = dbPutConvertJSON(value.c_str(), dbrType, array, &n);
+            if (status) {
+                throw InvalidState("dbPutConvertJSON() failed with status of " + StringUtility::toString<int>(status));
+            }
+            status = dbPutField(&addr, dbrType, array, n);
+            free(array);
         }
-        case -1: {
-            throw ObjectNotFound("Record " + name + " not found");
-        }
-        default: {
-            throw InvalidState("dbpf() failed with status of " + StringUtility::toString<int>(status));
-        }
+    }
+    else {
+        status = dbPutField(&addr, dbrType, value.c_str(), n);
+    }
+    if (status) {
+        throw InvalidState("dbPutField() failed with status of " + StringUtility::toString<int>(status));
     }
 }
 

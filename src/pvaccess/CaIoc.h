@@ -6,6 +6,7 @@
 
 #include <boost/python/list.hpp>
 #include <iocInit.h>
+#include <dbAddr.h>
 #include "PvaPyLogger.h"
 
 class CaIoc
@@ -37,6 +38,8 @@ public:
 
 private:
     static PvaPyLogger logger;
+    void getRecordDbAddr(const std::string& name, DBADDR *dbAddr);
+
 };
 
 #endif
