@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import time
+import random
 import threading
 import queue
 import argparse
@@ -20,13 +21,14 @@ class AdSimServer:
     NOTIFICATION_DELAY = 0.1
     BYTES_IN_MEGABYTE = 1000000
 
-    def __init__(self, inputDirectory, inputFile, mmapMode, frameRate, nf, nx, ny, datatype, minimum, maximum, runtime, channelName, notifyPv, notifyPvValue, startDelay, reportPeriod):
+    def __init__(self, inputDirectory, inputFile, mmapMode, frameRate, nf, nx, ny, datatype, minimum, maximum, runtime, channelName, notifyPv, notifyPvValue, metadataPv, startDelay, reportPeriod):
         self.deltaT = 0
         if frameRate > 0:
             self.deltaT = 1.0/frameRate
         self.runtime = runtime
         self.reportPeriod = reportPeriod 
 
+        self.setupMetadataPvs(metadataPv)
         inputFiles = []
         if inputDirectory is not None:
             inputFiles = [os.path.join(inputDirectory, f) for f in os.listdir(inputDirectory) if os.path.isfile(os.path.join(inputDirectory, f))]
@@ -119,6 +121,39 @@ class AdSimServer:
             pass
         return screen
 
+    def setupMetadataPvs(self, metadataPv):
+        self.metadataPvs = []
+        if metadataPv:
+            if not os.environ.get('EPICS_DB_INCLUDE_PATH'):
+                 print(f'EPICS_DB_INCLUDE_PATH should point to EPICS BASE dbd directory for metadata support')   
+            else:
+                self.metadataPvs = metadataPv.split(',')
+        print(f'Metadata PVs: {self.metadataPvs}')
+        if not self.metadataPvs:
+            return
+
+        # Create database and start IOC
+        import tempfile
+        dbFile = tempfile.NamedTemporaryFile(delete=False) 
+        dbFile.write(b'record(ao, "$(NAME)") {}\n')
+        dbFile.close()
+
+        self.metadataIoc = pva.CaIoc()
+        self.metadataIoc.loadDatabase('base.dbd', '', '')
+        self.metadataIoc.registerRecordDeviceDriver()
+        for mPv in self.metadataPvs: 
+            print(f'Creating metadata record: {mPv}')
+            self.metadataIoc.loadRecords(dbFile.name, f'NAME={mPv}')
+        self.metadataIoc.start()
+        os.unlink(dbFile.name)
+
+    def updateMetadataPvs(self):
+        if not self.metadataPvs:
+            return
+        for mPv in self.metadataPvs: 
+            value = random.uniform(0,1)
+            self.metadataIoc.putField(mPv, str(value))
+        
     def frameProducer(self, extraFieldsPvObject=None):
         for frameId in range(0, self.nInputFrames):
             if self.isDone:
@@ -152,6 +187,7 @@ class AdSimServer:
             self.server.update(self.channelName, frame)
             self.lastPublishedTime = time.time()
             self.nPublishedFrames += 1
+            self.updateMetadataPvs()
 
             runtime = 0
             frameRate = 0
@@ -222,6 +258,7 @@ def main():
     parser.add_argument('-cn', '--channel-name', type=str, dest='channel_name', default='pvapy:image', help='Server PVA channel name (default: pvapy:image)')
     parser.add_argument('-npv', '--notify-pv', type=str, dest='notify_pv', default=None, help='CA channel that should be notified on start; for the default Area Detector PVA driver PV that controls image acquisition is 13PVA1:cam1:Acquire')
     parser.add_argument('-nvl', '--notify-pv-value', type=str, dest='notify_pv_value', default='1', help='Value for the notification channel; for the Area Detector PVA driver PV this should be set to "Acquire" (default: 1)')
+    parser.add_argument('-mpv', '--metadata-pv', type=str, dest='metadata_pv', default=None, help='Comma-separated list of CA channels that should be contain simulated image metadata values')
     parser.add_argument('-sd', '--start-delay', type=float, dest='start_delay',  default=10.0, help='Server start delay in seconds (default: 10 seconds)')
     parser.add_argument('-rp', '--report-period', type=int, dest='report_period', default=1, help='Reporting period for publishing frames; if set to <=0 no frames will be reported as published (default: 1)')
 
@@ -230,7 +267,7 @@ def main():
         print('Unrecognized argument(s): %s' % ' '.join(unparsed))
         exit(1)
 
-    server = AdSimServer(inputDirectory=args.input_directory, inputFile=args.input_file, mmapMode=args.mmap_mode, frameRate=args.frame_rate, nf=args.n_frames, nx=args.n_x_pixels, ny=args.n_y_pixels, datatype=args.datatype, minimum=args.minimum, maximum=args.maximum, runtime=args.runtime, channelName=args.channel_name, notifyPv=args.notify_pv, notifyPvValue=args.notify_pv_value, startDelay=args.start_delay, reportPeriod=args.report_period)
+    server = AdSimServer(inputDirectory=args.input_directory, inputFile=args.input_file, mmapMode=args.mmap_mode, frameRate=args.frame_rate, nf=args.n_frames, nx=args.n_x_pixels, ny=args.n_y_pixels, datatype=args.datatype, minimum=args.minimum, maximum=args.maximum, runtime=args.runtime, channelName=args.channel_name, notifyPv=args.notify_pv, notifyPvValue=args.notify_pv_value, metadataPv=args.metadata_pv, startDelay=args.start_delay, reportPeriod=args.report_period)
 
     server.start()
     try:
