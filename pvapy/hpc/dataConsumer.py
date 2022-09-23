@@ -15,6 +15,7 @@ class DataConsumer:
         providerType = self.PROVIDER_TYPE_MAP.get(providerType.lower(), pva.PVA)
         self.logger.debug(f'Channel {inputChannel} provider type: {providerType}')
         self.channel = pva.Channel(inputChannel, providerType)
+        self.inputChannel = inputChannel
         self.serverQueueSize = serverQueueSize
         self.logger.debug(f'Server queue size: {serverQueueSize}')
         self.distributorPluginName = distributorPluginName
@@ -144,7 +145,7 @@ class DataConsumer:
             overrunRate = nOverruns/receivingTime
         monitorStats['receivedRate'] = FloatWithUnits(receivedRate, 'Hz')
         monitorStats['overrunRate'] = FloatWithUnits(overrunRate, 'Hz')
-        return {'monitorStats' : monitorStats, 'queueStats' : queueStats, 'processorStats' : processorStats, 'userStats' : userStats}
+        return {'inputChannel' : self.inputChannel, 'monitorStats' : monitorStats, 'queueStats' : queueStats, 'processorStats' : processorStats, 'userStats' : userStats}
 
     def getConsumerId(self):
         return self.consumerId
