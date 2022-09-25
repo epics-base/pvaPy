@@ -24,7 +24,6 @@ class AdSimServer:
         'value' : pva.DOUBLE,
         'timeStamp' : pva.PvTimeStamp()
     }
- 
 
     def __init__(self, inputDirectory, inputFile, mmapMode, frameRate, nf, nx, ny, datatype, minimum, maximum, runtime, channelName, notifyPv, notifyPvValue, metadataPv, startDelay, reportPeriod):
         self.deltaT = 0
@@ -32,6 +31,8 @@ class AdSimServer:
             self.deltaT = 1.0/frameRate
         self.runtime = runtime
         self.reportPeriod = reportPeriod 
+        self.pvaServer = pva.PvaServer()
+        self.metadataIoc = None
 
         self.setupMetadataPvs(metadataPv)
         inputFiles = []
@@ -95,8 +96,7 @@ class AdSimServer:
         print(f'Expected data rate: {self.expectedDataRate}')
 
         self.channelName = channelName
-        self.server = pva.PvaServer()
-        self.server.addRecord(self.channelName, pva.NtNdArray())
+        self.pvaServer.addRecord(self.channelName, pva.NtNdArray())
         if notifyPv and notifyPvValue:
             try:
                 time.sleep(self.NOTIFICATION_DELAY)
@@ -127,43 +127,68 @@ class AdSimServer:
         return screen
 
     def setupMetadataPvs(self, metadataPv):
+        self.caMetadataPvs = []
+        self.pvaMetadataPvs = []
         self.metadataPvs = []
-        if metadataPv:
-            if not os.environ.get('EPICS_DB_INCLUDE_PATH'):
-                 print(f'EPICS_DB_INCLUDE_PATH should point to EPICS BASE dbd directory for metadata support')   
+        mPvs = metadataPv.split(',')
+        for mPv in mPvs:
+            if not mPv:
+                continue
+
+            # Assume CA is the default protocol
+            if mPv.startswith('pva://'):
+                self.pvaMetadataPvs.append(mPv.replace('pva://', ''))
             else:
-                self.metadataPvs = metadataPv.split(',')
-        print(f'Metadata PVs: {self.metadataPvs}')
-        if not self.metadataPvs:
-            return
+                self.caMetadataPvs.append(mPv.replace('ca://', ''))
+        self.metadataPvs = self.caMetadataPvs+self.pvaMetadataPvs
+        if self.caMetadataPvs:
+            if not os.environ.get('EPICS_DB_INCLUDE_PATH'):
+                print(f'EPICS_DB_INCLUDE_PATH should point to EPICS BASE dbd directory for CA metadata support')   
+                self.caMetadataPvs = []
 
-        # Create database and start IOC
-        import tempfile
-        dbFile = tempfile.NamedTemporaryFile(delete=False) 
-        dbFile.write(b'record(ao, "$(NAME)") {}\n')
-        dbFile.close()
+        print(f'CA Metadata PVs: {self.caMetadataPvs}')
+        if self.caMetadataPvs:
+            # Create database and start CA IOC
+            import tempfile
+            dbFile = tempfile.NamedTemporaryFile(delete=False) 
+            dbFile.write(b'record(ao, "$(NAME)") {}\n')
+            dbFile.close()
 
-        self.metadataIoc = pva.CaIoc()
-        self.metadataIoc.loadDatabase('base.dbd', '', '')
-        self.metadataIoc.registerRecordDeviceDriver()
-        for mPv in self.metadataPvs: 
-            print(f'Creating metadata record: {mPv}')
-            self.metadataIoc.loadRecords(dbFile.name, f'NAME={mPv}')
-        self.metadataIoc.start()
-        os.unlink(dbFile.name)
+            self.metadataIoc = pva.CaIoc()
+            self.metadataIoc.loadDatabase('base.dbd', '', '')
+            self.metadataIoc.registerRecordDeviceDriver()
+            for mPv in self.caMetadataPvs: 
+                print(f'Creating CA metadata record: {mPv}')
+                self.metadataIoc.loadRecords(dbFile.name, f'NAME={mPv}')
+            self.metadataIoc.start()
+            os.unlink(dbFile.name)
+
+        print(f'PVA Metadata PVs: {self.pvaMetadataPvs}')
+        if self.pvaMetadataPvs:
+            for mPv in self.pvaMetadataPvs: 
+                print(f'Creating PVA metadata record: {mPv}')
+                mPvObject = pva.PvObject(self.METADATA_TYPE_DICT)
+                self.pvaServer.addRecord(mPv, mPvObject)
 
     def getMetadataValueDict(self):
         metadataValueDict = {}
         for mPv in self.metadataPvs: 
             value = random.uniform(0,1)
-            metadataValueDict[mPv] = str(value)
+            metadataValueDict[mPv] = value
         return metadataValueDict
 
     def updateMetadataPvs(self, metadataValueDict):
         # Returns time when metadata is published
-        for mPv,value in metadataValueDict.items():
-            self.metadataIoc.putField(mPv, value)
+        # For CA metadata will be published before data timestamp
+        # For PVA metadata will have the same timestamp as data
+        for mPv in self.caMetadataPvs:
+            value = metadataValueDict.get(mPv)
+            self.metadataIoc.putField(mPv, str(value))
         t = time.time()
+        for mPv in self.pvaMetadataPvs:
+            value = metadataValueDict.get(mPv)
+            mPvObject = pva.PvObject(self.METADATA_TYPE_DICT, {'value' : value, 'timeStamp' : pva.PvTimeStamp(t)})
+            self.pvaServer.update(mPv, mPvObject)
         return t
         
     def frameProducer(self, extraFieldsPvObject=None):
@@ -208,7 +233,7 @@ class AdSimServer:
             frame = self.prepareFrame(updateTime)
 
             # Publish frame
-            self.server.update(self.channelName, frame)
+            self.pvaServer.update(self.channelName, frame)
             self.lastPublishedTime = time.time()
             self.nPublishedFrames += 1
 
@@ -248,12 +273,12 @@ class AdSimServer:
 
     def start(self):
         threading.Thread(target=self.frameProducer, daemon=True).start()
-        self.server.start()
+        self.pvaServer.start()
         threading.Timer(self.startDelay, self.framePublisher).start()
 
     def stop(self):
         self.isDone = True
-        self.server.stop()
+        self.pvaServer.stop()
         runtime = self.lastPublishedTime - self.startTime
         deltaT = runtime/(self.nPublishedFrames - 1)
         frameRate = 1.0/deltaT
