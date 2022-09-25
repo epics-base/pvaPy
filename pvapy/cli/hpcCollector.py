@@ -39,6 +39,7 @@ class CollectorController:
 
     PRODUCER_STATUS_TYPE_DICT = {
         'producerId' : pva.UINT,
+        'channel' : pva.STRING,
         'monitorStats' : {
             'nReceived' : pva.UINT,
             'receivedRate' : pva.DOUBLE,
@@ -239,6 +240,8 @@ class CollectorController:
                 statusTypeDict['userStats'] = processingController.getUserStatsPvaTypes()
         for producerId in self.producerIdList:
             statusTypeDict[f'producerStats_{producerId}'] = self.PRODUCER_STATUS_TYPE_DICT
+        for metadataChannelId in self.metadataChannelIdList:
+            statusTypeDict[f'metadataStats_{metadataChannelId}'] = self.PRODUCER_STATUS_TYPE_DICT
         return statusTypeDict
 
     def getProducerIdList(self, args):
@@ -257,6 +260,11 @@ class CollectorController:
 
         self.producerIdList = self.getProducerIdList(args)
         self.logger.debug(f'Producer id list: {self.producerIdList}')
+
+        self.metadataChannelIdList = []
+        if args.metadata_channels:
+            self.metadataChannelIdList = range(1,len(args.metadata_channels.split(','))+1)
+        self.logger.debug(f'Metadata channel id list: {self.metadataChannelIdList}')
 
         self.pvaServer = pva.PvaServer()
         self.statusChannel = args.status_channel
@@ -292,7 +300,7 @@ class CollectorController:
         objectIdField = self.processorConfig['objectIdField']
         objectIdOffset = self.processorConfig['objectIdOffset']
         fieldRequest = self.processorConfig['fieldRequest']
-        self.dataCollector = DataCollector(collectorId, inputChannel, producerIdList=self.producerIdList, objectIdField=objectIdField, objectIdOffset=objectIdOffset, fieldRequest=fieldRequest, serverQueueSize=args.server_queue_size, monitorQueueSize=args.monitor_queue_size, collectorCacheSize=args.collector_cache_size, processingController=processingController)
+        self.dataCollector = DataCollector(collectorId, inputChannel, producerIdList=self.producerIdList, objectIdField=objectIdField, objectIdOffset=objectIdOffset, fieldRequest=fieldRequest, serverQueueSize=args.server_queue_size, monitorQueueSize=args.monitor_queue_size, collectorCacheSize=args.collector_cache_size, metadataChannels=args.metadata_channels, processingController=processingController)
         return self.dataCollector
 
     def startCollectors(self):
@@ -342,10 +350,17 @@ class CollectorController:
             for producerId in self.producerIdList:
                 producerStatsDict = statsDict.get(f'producerStats', {})
                 producerStatsDict = producerStatsDict.get(f'producer-{producerId}', {})
-                producerStatusObject = {'producerId' : producerId}
+                producerStatusObject = {'producerId' : producerId, 'channel' : producerStatsDict.get('channel', '')}
                 producerStatusObject['monitorStats'] = producerStatsDict.get('monitorStats', {})
                 producerStatusObject['queueStats'] = producerStatsDict.get('queueStats', {})
                 statusObject[f'producerStats_{producerId}'] = producerStatusObject
+            for metadataChannelId in self.metadataChannelIdList:
+                producerStatsDict = statsDict.get(f'metadataStats', {})
+                producerStatsDict = producerStatsDict.get(f'metadata-{metadataChannelId}', {})
+                producerStatusObject = {'producerId' : metadataChannelId, 'channel' : producerStatsDict.get('channel', '')}
+                producerStatusObject['monitorStats'] = producerStatsDict.get('monitorStats', {})
+                producerStatusObject['queueStats'] = producerStatsDict.get('queueStats', {})
+                statusObject[f'metadataStats_{metadataChannelId}'] = producerStatusObject
             self.pvaServer.update(self.statusChannel, statusObject)
         return statsDict 
 
@@ -370,7 +385,7 @@ def main():
     parser = argparse.ArgumentParser(description='PvaPy HPC Collector utility. It can be used for receiving data from a set of producer processes, and processing this data using a specified implementation of the data processor interface.')
     parser.add_argument('-v', '--version', action='version', version='%(prog)s {version}'.format(version=__version__))
     parser.add_argument('-id', '--collector-id', dest='collector_id', type=int, default=1, help='Collector id (default: 1). This may be used for naming various PVA channels, so care must be taken when multiple collector processes are running independently of each other.')
-    parser.add_argument('-pir', '--producer-id-list', dest='producer_id_list', default='1,2', help='Comma-separated list of producer IDs (default: 1,2). This option can also be specified as "range(<firstId>,<lastId+1>[,<idStep>)."')
+    parser.add_argument('-pid', '--producer-id-list', dest='producer_id_list', default='1,2', help='Comma-separated list of producer IDs (default: 1,2). This option can also be specified as "range(<firstId>,<lastId+1>[,<idStep>)."')
     parser.add_argument('-ic', '--input-channel', dest='input_channel', required=True, help='Input PV channel name. It shuld contain the "*" character which will be replaced with <producerId>.')
     parser.add_argument('-oc', '--output-channel', dest='output_channel', default=None, help='Output PVA channel name (default: None). If specified, this channel can be used for publishing processing results. The value of "_" indicates that the output channel name will be set to "pvapy:collector:<collectorId>:output", while the "*" character will be replaced with <collectorId>. Note that this parameter is ignored if processor arguments dictionary contains "outputChannel" key.')
     parser.add_argument('-sc', '--status-channel', dest='status_channel', default=None, help='Status PVA channel name (default: None). If specified, this channel will provide collector status. The value of "_" indicates that the status channel name will be set to "pvapy:collector:<collectorId>:status", while the "*" character will be replaced with <collectorId>.')
@@ -385,6 +400,7 @@ def main():
     parser.add_argument('-oo', '--oid-offset', type=int, dest='oid_offset', default=1, help='This parameter determines by how much object id should change between the two PV updates, and is used for determining the number of missed PV updates (default: 1). This parameter is ignored if processor arguments dictionary contains "objectIdOffset" key.')
     parser.add_argument('-fr', '--field-request', dest='field_request', default='', help='PV field request string (default: None). This parameter can be used to request only a subset of the data available in the input channel. The system will automatically append object id field to the specified request string. Note that this parameter is ignored when data distributor is used.')
     parser.add_argument('-siu', '--skip-initial-updates', type=int, dest='skip_initial_updates', default=1, help='Number of initial PV updates that should not be processed (default: 1). This parameter is ignored if processor arguments dictionary contains "skipInitialUpdates" key.')
+    parser.add_argument('-mc', '--metadata-channels', dest='metadata_channels', default=None, help='Comma-separated list of metadata channels specified in the form "protocol:\\<channelName>", where protocol can be either "ca" or "pva". If channel name is specified without a protocol, "ca" is assumed.')
     parser.add_argument('-rt', '--runtime', type=float, dest='runtime', default=0, help='Server runtime in seconds; values <=0 indicate infinite runtime (default: infinite).')
     parser.add_argument('-rp', '--report-period', type=float, dest='report_period', default=0, help='Statistics report period for the collector in seconds; values <=0 indicate no reporting (default: 0).')
     parser.add_argument('-rs', '--report-stats', dest='report_stats', default='all', help='Comma-separated list of statistics subsets that should be reported (default: all); possible values: monitor, queue, processor, user, all.')
