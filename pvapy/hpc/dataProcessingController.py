@@ -186,7 +186,7 @@ class DataProcessingController:
             'nMissed' : self.nMissed, 
             'missedRate' : FloatWithUnits(missedRate, 'Hz'),
             'nErrors' : self.nErrors, 
-            'errorRate' : FloatWithUnits(errorRate, 'Hz'),
+            'errorRate' : FloatWithUnits(errorRate, 'Hz')
         }
         return processorStats
 
