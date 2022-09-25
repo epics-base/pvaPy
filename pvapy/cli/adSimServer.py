@@ -20,6 +20,11 @@ class AdSimServer:
     DELAY_CORRECTION = 0.0001
     NOTIFICATION_DELAY = 0.1
     BYTES_IN_MEGABYTE = 1000000
+    METADATA_TYPE_DICT = {
+        'value' : pva.DOUBLE,
+        'timeStamp' : pva.PvTimeStamp()
+    }
+ 
 
     def __init__(self, inputDirectory, inputFile, mmapMode, frameRate, nf, nx, ny, datatype, minimum, maximum, runtime, channelName, notifyPv, notifyPvValue, metadataPv, startDelay, reportPeriod):
         self.deltaT = 0
@@ -147,12 +152,19 @@ class AdSimServer:
         self.metadataIoc.start()
         os.unlink(dbFile.name)
 
-    def updateMetadataPvs(self):
-        if not self.metadataPvs:
-            return
+    def getMetadataValueDict(self):
+        metadataValueDict = {}
         for mPv in self.metadataPvs: 
             value = random.uniform(0,1)
-            self.metadataIoc.putField(mPv, str(value))
+            metadataValueDict[mPv] = str(value)
+        return metadataValueDict
+
+    def updateMetadataPvs(self, metadataValueDict):
+        # Returns time when metadata is published
+        for mPv,value in metadataValueDict.items():
+            self.metadataIoc.putField(mPv, value)
+        t = time.time()
+        return t
         
     def frameProducer(self, extraFieldsPvObject=None):
         for frameId in range(0, self.nInputFrames):
@@ -162,7 +174,7 @@ class AdSimServer:
             frame = self.frames[frameId]
             self.frameMap[frameId] = AdImageUtility.generateNtNdArray2D(frameId, frame, extraFieldsPvObject)
 
-    def prepareFrame(self):
+    def prepareFrame(self, t=0):
         # Get cached frame
         cachedFrameId = self.currentFrameId % self.nInputFrames
         if cachedFrameId not in self.frameMap:
@@ -173,7 +185,9 @@ class AdSimServer:
         # Correct image id and timestamps
         self.currentFrameId += 1
         frame['uniqueId'] = self.currentFrameId
-        ts = pva.PvTimeStamp(time.time())
+        if t <= 0:
+            t = time.time()
+        ts = pva.PvTimeStamp(t)
         frame['timeStamp'] = ts
         frame['dataTimeStamp'] = ts
         return frame
@@ -183,11 +197,20 @@ class AdSimServer:
             if self.isDone:
                 return
 
-            frame = self.prepareFrame()
+            # Prepare metadata
+            metadataValueDict = self.getMetadataValueDict()
+
+            # Update metadata and take timestamp
+            updateTime = self.updateMetadataPvs(metadataValueDict)
+
+            # Prepare frame with a given timestamp
+            # so that metadata and image times are as close as possible
+            frame = self.prepareFrame(updateTime)
+
+            # Publish frame
             self.server.update(self.channelName, frame)
             self.lastPublishedTime = time.time()
             self.nPublishedFrames += 1
-            self.updateMetadataPvs()
 
             runtime = 0
             frameRate = 0
