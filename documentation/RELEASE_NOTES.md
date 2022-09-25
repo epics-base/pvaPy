@@ -1,3 +1,20 @@
+## Release 5.1.0 (2022/09/DD)
+
+- Resolved dependency issues with the curses library
+- Implemented CaIoc class that has ability to run basic CA IOC and
+  provides interfaces for loading databases, as well as loading,
+  retrieving and updating records
+- Area Detector Simulator enhancements:
+  - added ability to generate and publish image metadata, either
+    as CA or as PVA channels
+- Streaming Framework enhancements:
+  - implemented ability to receive CA and PVA metadata in the data collector,
+    and to process those together with the data objects
+- conda/pip package dependencies: 
+  - EPICS BASE = 7.0.6.1.C2.3
+  - BOOST      = 1.78.0
+  - NUMPY      >= 1.22 (for python >= 3.8); < 1.21 (for python < 3.8)
+
 ## Release 5.0.0 (2022/08/11)
 
 - PvaMirrorServer enhancements:
