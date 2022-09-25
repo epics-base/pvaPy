@@ -6,6 +6,7 @@ from pvapy.hpc.adImageProcessor import AdImageProcessor
 from pvapy.utility.floatWithUnits import FloatWithUnits
 
 # Example AD Image Processor for the streaming framework
+# Rotates images by swapping x and y axes
 class HpcAdImageProcessor(AdImageProcessor):
 
     def __init__(self, configDict={}):
