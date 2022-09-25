@@ -37,6 +37,7 @@ class ConsumerController:
 
     CONSUMER_STATUS_TYPE_DICT = {
         'consumerId' : pva.UINT,
+        'inputChannel' : pva.STRING,
         'objectId' : pva.UINT,
         'objectTime' : pva.DOUBLE,
         'objectTimestamp' : pva.PvTimeStamp(),
@@ -314,7 +315,8 @@ class ConsumerController:
         t = time.time()
         if self.pvaServer:
             consumerId = self.dataConsumer.getConsumerId()
-            statusObject = pva.PvObject(self.statusTypeDict, {'consumerId' : consumerId, 'objectId' : self.statsObjectId, 'objectTime' : t, 'objectTimestamp' : pva.PvTimeStamp(t)})
+            inputChannel = self.dataConsumer.inputChannel
+            statusObject = pva.PvObject(self.statusTypeDict, {'consumerId' : consumerId, 'inputChannel' : inputChannel, 'objectId' : self.statsObjectId, 'objectTime' : t, 'objectTimestamp' : pva.PvTimeStamp(t)})
             statusObject['monitorStats'] = statsDict.get('monitorStats', {})
             statusObject['queueStats'] = statsDict.get('queueStats', {})
             statusObject['processorStats'] = statsDict.get('processorStats', {})
