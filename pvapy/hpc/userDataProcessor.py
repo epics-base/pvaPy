@@ -31,6 +31,7 @@ class UserDataProcessor:
         self.pvaServer = None
         self.outputChannel = None
         self.objectIdField = None
+        self.metadataQueueMap = {}
 
     def start(self):
         '''
