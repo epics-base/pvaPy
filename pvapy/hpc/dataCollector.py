@@ -81,7 +81,7 @@ class CollectorSourceChannel(pva.Channel):
 class PvaMetadataChannel(CollectorSourceChannel):
     def __init__(self, producerId, channelName, serverQueueSize, monitorQueueSize, dataCollector):
         loggerName = f'pvaMetadata-{producerId}'
-        CollectorSourceChannel.__init__(self, producerId, channelName, pva.CA, serverQueueSize, monitorQueueSize, loggerName, dataCollector)
+        CollectorSourceChannel.__init__(self, producerId, channelName, pva.PVA, serverQueueSize, monitorQueueSize, loggerName, dataCollector)
 
 class CaMetadataChannel(CollectorSourceChannel):
     def __init__(self, producerId, channelName, serverQueueSize, monitorQueueSize, dataCollector):
@@ -272,15 +272,15 @@ class DataCollector:
             metadataQueueMap = {}
             for metadataChannel in metadataChannelList:
                 metadataChannelId += 1
-                if metadataChannel.startswith('pva:\\'):
-                    cName = metadataChannel.replace('pva:\\', '')
+                if metadataChannel.startswith('pva://'):
+                    cName = metadataChannel.replace('pva://', '')
                     self.logger.debug(f'Creating PVA metadata channel {cName} with id {metadataChannelId}')
                     c = PvaMetadataChannel(metadataChannelId, cName, serverQueueSize, self.metadataMonitorQueueSize, self)
                     self.metadataChannelMap[metadataChannelId] = c
                     metadataQueueMap[cName] = c.pvObjectQueue
                 else:
                     # Assume CA metadata channel 
-                    cName = metadataChannel.replace('ca:\\', '')
+                    cName = metadataChannel.replace('ca://', '')
                     self.logger.debug(f'Creating CA metadata channel {cName} with id {metadataChannelId}')
                     c = CaMetadataChannel(metadataChannelId, cName, serverQueueSize, self.metadataMonitorQueueSize, self)
                     self.metadataChannelMap[metadataChannelId] = c
