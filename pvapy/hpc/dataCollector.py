@@ -266,10 +266,10 @@ class DataCollector:
 
         # Metadata channels
         self.metadataChannelMap = {}
+        metadataQueueMap = {}
         if metadataChannels:
             metadataChannelList = metadataChannels.split(',')
             metadataChannelId = 0
-            metadataQueueMap = {}
             for metadataChannel in metadataChannelList:
                 metadataChannelId += 1
                 if metadataChannel.startswith('pva://'):
