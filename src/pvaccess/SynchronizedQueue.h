@@ -8,6 +8,7 @@
 #include <string>
 #include <map>
 #include <epicsEvent.h>
+#include <epicsTime.h>
 #include <pv/pvData.h>
 #include "QueueEmpty.h"
 #include "QueueFull.h"
@@ -54,6 +55,8 @@ public:
     const std::map<std::string,unsigned int>& getCounterMap();
     void setCounter(const std::string& key, unsigned int value);
     void addToCounter(const std::string& key, unsigned int value);
+    double getTimeSinceLastPush();
+    double getTimeSinceLastPop();
 
 private:
     void throwQueueEmptyIfEmpty() ;
@@ -62,7 +65,9 @@ private:
 
     epics::pvData::Mutex mutex;
     epicsEvent itemPushedEvent;
+    epicsTimeStamp lastPushedTime;
     epicsEvent itemPoppedEvent;
+    epicsTimeStamp lastPoppedTime;
     int maxLength;
 
     // Statistics counters
@@ -77,7 +82,9 @@ SynchronizedQueue<T>::SynchronizedQueue(int maxLength_)
     : std::queue<T>()
     , mutex()
     , itemPushedEvent()
+    , lastPushedTime()
     , itemPoppedEvent()
+    , lastPoppedTime()
     , maxLength(maxLength_)
     , counterMap()
     , nReceived(0)
@@ -175,6 +182,7 @@ T SynchronizedQueue<T>::frontAndPopUnsynchronized()
     bool isFull = (maxLength > 0 && std::queue<T>::size() >= maxLength);
     T t = std::queue<T>::front();
     std::queue<T>::pop();
+    epicsTimeGetCurrent(&lastPoppedTime);
     nDelivered++;
     if (isFull) {
         // Signal pop when queue was full
@@ -188,6 +196,7 @@ void SynchronizedQueue<T>::pushUnsynchronized(const T& t)
 {
     bool isEmpty = std::queue<T>::empty();
     std::queue<T>::push(t);
+    epicsTimeGetCurrent(&lastPushedTime);
     nReceived++;
     if (isEmpty) {
         // Signal push when queue was empty
@@ -226,6 +235,7 @@ void SynchronizedQueue<T>::pop()
     if (size > 0) {
         bool isFull = (maxLength > 0 && size >= maxLength); 
         std::queue<T>::pop();
+        epicsTimeGetCurrent(&lastPoppedTime);
         nDelivered++;
         if (isFull) {
             // Signal pop when queue was full
@@ -245,6 +255,7 @@ bool SynchronizedQueue<T>::popIfNotEmpty()
     if (size > 0) {
         bool isFull = (maxLength > 0 && size >= maxLength); 
         std::queue<T>::pop();
+        epicsTimeGetCurrent(&lastPoppedTime);
         nDelivered++;
         if (isFull) {
             // Signal pop when queue was full
@@ -295,6 +306,7 @@ bool SynchronizedQueue<T>::pushIfNotFull(const T& t)
         return false;
     }
     std::queue<T>::push(t);
+    epicsTimeGetCurrent(&lastPushedTime);
     nReceived++;
     if (size == 0) {
         // Signal push when queue was empty
@@ -411,6 +423,22 @@ void SynchronizedQueue<T>::addToCounter(const std::string& key, unsigned int val
     else {
         counterMap[key] = value;
     }
+}
+
+template <class T>
+double SynchronizedQueue<T>::getTimeSinceLastPush()
+{
+    epicsTimeStamp ts;
+    epicsTimeGetCurrent(&ts);
+    return epicsTimeDiffInSeconds(&ts, &lastPushedTime);
+}
+
+template <class T>
+double SynchronizedQueue<T>::getTimeSinceLastPop()
+{
+    epicsTimeStamp ts;
+    epicsTimeGetCurrent(&ts);
+    return epicsTimeDiffInSeconds(&ts, &lastPoppedTime);
 }
 
 typedef std::tr1::shared_ptr<SynchronizedQueue<std::string> > StringQueuePtr;

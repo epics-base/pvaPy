@@ -10,6 +10,7 @@ import multiprocessing as mp
 from ..utility.loggingManager import LoggingManager
 from ..utility.objectUtility import ObjectUtility
 from ..utility.pvapyPrettyPrinter import PvaPyPrettyPrinter
+from ..hpc.sourceChannel import SourceChannel
 from ..hpc.dataConsumer import DataConsumer
 from ..hpc.dataProcessingController import DataProcessingController
 
@@ -239,6 +240,8 @@ class ConsumerController:
             userStatsTypeDict = processingController.getUserStatsPvaTypes()
             if userStatsTypeDict:
                 statusTypeDict['userStats'] = processingController.getUserStatsPvaTypes()
+        for metadataChannelId in self.metadataChannelIdList:
+            statusTypeDict[f'metadataStats_{metadataChannelId}'] = SourceChannel.STATUS_TYPE_DICT
         return statusTypeDict
 
     def createConsumer(self, consumerId, args):
@@ -247,6 +250,11 @@ class ConsumerController:
 
         inputChannel = args.input_channel.replace('*', f'{consumerId}')
         self.logger.debug(f'Input channel name: {inputChannel}')
+
+        self.metadataChannelIdList = []
+        if args.metadata_channels:
+            self.metadataChannelIdList = range(1,len(args.metadata_channels.split(','))+1)
+        self.logger.debug(f'Metadata channel id list: {self.metadataChannelIdList}')
 
         self.pvaServer = pva.PvaServer()
         self.statusChannel = args.status_channel
@@ -281,7 +289,7 @@ class ConsumerController:
 
         objectIdField = self.processorConfig['objectIdField']
         fieldRequest = self.processorConfig['fieldRequest']
-        self.dataConsumer = DataConsumer(consumerId, inputChannel, providerType=args.input_provider_type, objectIdField=objectIdField, fieldRequest=fieldRequest, serverQueueSize=args.server_queue_size, monitorQueueSize=args.monitor_queue_size, distributorPluginName=args.distributor_plugin_name, distributorGroupId=args.distributor_group, distributorSetId=args.distributor_set, distributorTriggerFieldName=args.distributor_trigger, distributorUpdates=args.distributor_updates, distributorUpdateMode=None, processingController=processingController)
+        self.dataConsumer = DataConsumer(consumerId, inputChannel, providerType=args.input_provider_type, objectIdField=objectIdField, fieldRequest=fieldRequest, serverQueueSize=args.server_queue_size, monitorQueueSize=args.monitor_queue_size, accumulateObjects=args.accumulate_objects, accumulationTimeout=args.accumulation_timeout, distributorPluginName=args.distributor_plugin_name, distributorGroupId=args.distributor_group, distributorSetId=args.distributor_set, distributorTriggerFieldName=args.distributor_trigger, distributorUpdates=args.distributor_updates, distributorUpdateMode=None, metadataChannels=args.metadata_channels, processingController=processingController)
         return self.dataConsumer
 
     def startConsumers(self):
@@ -328,6 +336,13 @@ class ConsumerController:
                     if k in userStatsPvaTypes:
                         filteredUserStats[k] = v
                 statusObject['userStats'] = filteredUserStats
+            for metadataChannelId in self.metadataChannelIdList:
+                producerStatsDict = self.statusTypeDict.get(f'metadataStats', {})
+                producerStatsDict = producerStatsDict.get(f'metadata-{metadataChannelId}', {})
+                producerStatusObject = {'producerId' : metadataChannelId, 'channel' : producerStatsDict.get('channel', '')}
+                producerStatusObject['monitorStats'] = producerStatsDict.get('monitorStats', {})
+                producerStatusObject['queueStats'] = producerStatsDict.get('queueStats', {})
+                statusObject[f'metadataStats_{metadataChannelId}'] = producerStatusObject
             self.pvaServer.update(self.statusChannel, statusObject)
         return statsDict 
 
@@ -552,6 +567,8 @@ def main():
     parser.add_argument('-cc', '--control-channel', dest='control_channel', default=None, help='Control channel name (default: None). If specified, this channel can be used to control consumer configuration and processing. The value of "_" indicates that the control channel name will be set to "pvapy:consumer:<consumerId>:control", while the "*" character will be replaced with <consumerId>. The control channel object has two strings: command and args. The only allowed values for the command string are: "configure", "reset_stats", "get_stats" and "stop". The configure command is used to allow for runtime configuration changes; in this case the keyword arguments string should be in json format to allow data consumer to convert it into python dictionary that contains new configuration. For example, sending configuration dictionary via pvput command might look like this: pvput input_channel:consumer:2:control \'{"command" : "configure", "args" : "{\\"x\\":100}"}\'. Note that system parameters that can be modified at runtime are the following: "monitorQueueSize" (only if client monitor queue has been configured at the start), "skipInitialUpdates" (affects processing behavior after resetting stats), and "objectIdOffset" (may be used to adjust offset if consumers have been added or removed from processing). The reset_stats command will cause consumer to reset its statistics data, the get_stats will force statistics data update, and the stop command will result in consumer process exiting; for all of these commands args string is not needed.')
     parser.add_argument('-sqs', '--server-queue-size', type=int, dest='server_queue_size', default=0, help='Server queue size (default: 0); this setting will increase memory usage on the server side, but may help prevent missed PV updates.')
     parser.add_argument('-mqs', '--monitor-queue-size', type=int, dest='monitor_queue_size', default=-1, help='PVA channel monitor (client) queue size (default: -1); if < 0, PV updates will be processed immediately without copying them into PvObjectQueue; if >= 0, PvObjectQueue will be used for receving PV updates (value of zero indicates infinite queue size).')
+    parser.add_argument('-ao', '--accumulate-objects', type=int, dest='accumulate_objects', default=-1, help='Number of objects to accumulate in the PVA channel monitor (client) queue before they can be processed (default: -1); if <= 0 the processing happens regarding of the current monitor queue length. This option is ignored unless monitor (client) queue size is set (i.e., >= 0). Note that after accumulation timeout, all objects in the queue will be processed.')
+    parser.add_argument('-at', '--accumulation-timeout', type=float, dest='accumulation_timeout', default=1, help='Time period since last received item after which objects in the PVA channel monitor (client) queue will be processed regardless of the current queue length (default: 1 second). This option is ignored unless monitor (client) queue size is set (i.e, >= 0) and if number of accumulated objects is not set (i.e., <= 0).')
     parser.add_argument('-pf', '--processor-file', dest='processor_file', default=None, help='Full path to the python file containing user processor class. If this option is not used, the processor class should be specified using "<modulePath>.<className>" notation.')
     parser.add_argument('-pc', '--processor-class', dest='processor_class', default=None, help='Name of the class located in the user processor file that will be processing PV updates. Alternatively, if processor file is not given, the processor class should be specified using the "<modulePath>.<className>" notation. The class should be initialized with a dictionary and must implement the "process(self, pv)" method.')
     parser.add_argument('-pa', '--processor-args', dest='processor_args', default=None, help='JSON-formatted string that can be converted into dictionary and used for initializing user processor object.')
@@ -565,6 +582,7 @@ def main():
     parser.add_argument('-dt', '--distributor-trigger', dest='distributor_trigger', default=None, help='PV structure field that data distributor uses to distinguish different channel updates (default: None). This parameter should be used only if data distributor plugin will be distributing data between multiple clients. In case of, for example, area detector applications, the "uniqueId" field would be a good choice for distinguishing between the different frames.')
     parser.add_argument('-du', '--distributor-updates', dest='distributor_updates', default=None, help='Number of sequential PV channel updates that a client (or a set of clients) will receive (default: None). This parameter should be used only if data distributor plugin will be distributing data between multiple clients.')
     parser.add_argument('-nds', '--n-distributor-sets', type=int, dest='n_distributor_sets', default=1, help='Number of distributor client sets (default: 1). This setting is used to determine appropriate value for the processor object id offset in case where multiple instances of this command are running separately for different client sets. If distributor client set is not specified, this setting is ignored.')
+    parser.add_argument('-mc', '--metadata-channels', dest='metadata_channels', default=None, help='Comma-separated list of metadata channels specified in the form "protocol:\\<channelName>", where protocol can be either "ca" or "pva". If channel name is specified without a protocol, "ca" is assumed.')
     parser.add_argument('-rt', '--runtime', type=float, dest='runtime', default=0, help='Server runtime in seconds; values <=0 indicate infinite runtime (default: infinite).')
     parser.add_argument('-rp', '--report-period', type=float, dest='report_period', default=0, help='Statistics report period for all consumers in seconds; values <=0 indicate no reporting (default: 0).')
     parser.add_argument('-rs', '--report-stats', dest='report_stats', default='all', help='Comma-separated list of statistics subsets that should be reported (default: all); possible values: monitor, queue, processor, user, all.')

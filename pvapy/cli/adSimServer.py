@@ -130,6 +130,8 @@ class AdSimServer:
         self.caMetadataPvs = []
         self.pvaMetadataPvs = []
         self.metadataPvs = []
+        if not metadataPv:
+            return
         mPvs = metadataPv.split(',')
         for mPv in mPvs:
             if not mPv:

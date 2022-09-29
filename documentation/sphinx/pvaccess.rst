@@ -260,3 +260,11 @@ RpcClient
     :members:
     :inherited-members:
 
+CaIoc
+-----
+
+.. autoclass:: pvaccess.CaIoc()
+    :show-inheritance: 
+    :members:
+    :inherited-members:
+

@@ -133,6 +133,20 @@ class_<PvObjectQueue>("PvObjectQueue",
         "::\n\n"
         "    pvq.addToCounter('myCnt', 1)\n\n")
 
+    .def("getTimeSinceLastPut",
+        static_cast<double(PvObjectQueue::*)()>(&PvObjectQueue::getTimeSinceLastPush),
+        "Returns number of seconds since last item was pushed into the queue.\n\n"
+        ":Returns: seconds after last push\n\n"
+        "::\n\n"
+        "    t = pvq.getTimeSinceLastPut()\n\n")
+
+    .def("getTimeSinceLastGet",
+        static_cast<double(PvObjectQueue::*)()>(&PvObjectQueue::getTimeSinceLastPop),
+        "Returns number of seconds since last item was popped from the queue.\n\n"
+        ":Returns: seconds after last pop\n\n"
+        "::\n\n"
+        "    t = pvq.getTimeSinceLastGet()\n\n")
+
     .add_property("maxLength", &PvObjectQueue::getMaxLength, &PvObjectQueue::setMaxLength)
 
 ;

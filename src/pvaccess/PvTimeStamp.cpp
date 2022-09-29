@@ -23,16 +23,23 @@ boost::python::dict PvTimeStamp::createStructureDict()
     return pyDict;
 }
 
-PvTimeStamp::PvTimeStamp()
-    : PvObject(createStructureDict(), StructureId)
+PvTimeStamp PvTimeStamp::getCurrent() 
+{
+    epicsTimeStamp ts;
+    epicsTimeGetCurrent(&ts);
+    return PvTimeStamp(ts);
+}
+
+PvTimeStamp::PvTimeStamp() : 
+    PvObject(createStructureDict(), StructureId)
 {
     setSecondsPastEpoch(0);
     setNanoseconds(0);
     setUserTag(UnknownUserTag);
 }
 
-PvTimeStamp::PvTimeStamp(double time)
-    : PvObject(createStructureDict(), StructureId)
+PvTimeStamp::PvTimeStamp(double time) : 
+    PvObject(createStructureDict(), StructureId)
 {
     long long secondsPastEpoch(time);
     int nanoseconds((time-secondsPastEpoch)*NanosecondsInSecond);
@@ -41,34 +48,50 @@ PvTimeStamp::PvTimeStamp(double time)
     setUserTag(UnknownUserTag);
 }
 
-PvTimeStamp::PvTimeStamp(long long secondsPastEpoch, int nanoseconds)
-    : PvObject(createStructureDict(), StructureId)
+PvTimeStamp::PvTimeStamp(const epicsTimeStamp& ts) :
+    PvObject(createStructureDict(), StructureId)
+{
+    setSecondsPastEpoch(ts.secPastEpoch);
+    setNanoseconds(ts.nsec);
+}
+
+PvTimeStamp::PvTimeStamp(const epicsTimeStamp* ts) :
+    PvObject(createStructureDict(), StructureId)
+{
+    if(ts != NULL) {
+        setSecondsPastEpoch(ts->secPastEpoch);
+        setNanoseconds(ts->nsec);
+    }
+}
+
+PvTimeStamp::PvTimeStamp(long long secondsPastEpoch, int nanoseconds) :
+    PvObject(createStructureDict(), StructureId)
 {
     setSecondsPastEpoch(secondsPastEpoch);
     setNanoseconds(nanoseconds);
     setUserTag(UnknownUserTag);
 }
 
-PvTimeStamp::PvTimeStamp(long long secondsPastEpoch, int nanoseconds, int userTag)
-    : PvObject(createStructureDict(), StructureId)
+PvTimeStamp::PvTimeStamp(long long secondsPastEpoch, int nanoseconds, int userTag) :
+    PvObject(createStructureDict(), StructureId)
 {
     setSecondsPastEpoch(secondsPastEpoch);
     setNanoseconds(nanoseconds);
     setUserTag(userTag);
 }
 
-PvTimeStamp::PvTimeStamp(const boost::python::dict& pyDict, const std::string& structureId)
-    : PvObject(pyDict, structureId)
+PvTimeStamp::PvTimeStamp(const boost::python::dict& pyDict, const std::string& structureId) :
+    PvObject(pyDict, structureId)
 {
 }
 
-PvTimeStamp::PvTimeStamp(const PvTimeStamp& pvTimeStamp)
-    : PvObject(pvTimeStamp.pvStructurePtr)
+PvTimeStamp::PvTimeStamp(const PvTimeStamp& pvTimeStamp) :
+    PvObject(pvTimeStamp.pvStructurePtr)
 {
 }
 
-PvTimeStamp::PvTimeStamp(const epics::pvData::PVStructurePtr& pvStructurePtr)
-    : PvObject(pvStructurePtr)
+PvTimeStamp::PvTimeStamp(const epics::pvData::PVStructurePtr& pvStructurePtr) :
+    PvObject(pvStructurePtr)
 {
 }
 
@@ -76,11 +99,38 @@ PvTimeStamp::~PvTimeStamp()
 {
 }
 
+PvTimeStamp& PvTimeStamp::operator=(const PvTimeStamp& pvTimeStamp)
+{
+    setSecondsPastEpoch(pvTimeStamp.getSecondsPastEpoch());
+    setNanoseconds(pvTimeStamp.getNanoseconds());
+    return *this;
+}
+
 PvTimeStamp::operator double() const 
 {
     long long s = pvStructurePtr->getSubField<epics::pvData::PVLong>(SecondsPastEpochFieldKey)->get();
     int ns = pvStructurePtr->getSubField<epics::pvData::PVInt>(NanosecondsFieldKey)->get();
     return (s+ns/NanosecondsInSecond);
+}
+
+double PvTimeStamp::operator-(const PvTimeStamp& pvTimeStamp) const
+{
+    double diff = double(*this) - double(pvTimeStamp);
+    return diff;
+}
+
+bool PvTimeStamp::PvTimeStamp::operator==(const PvTimeStamp& pvTimeStamp) const
+{
+    long long s = pvStructurePtr->getSubField<epics::pvData::PVLong>(SecondsPastEpochFieldKey)->get();
+    int ns = pvStructurePtr->getSubField<epics::pvData::PVInt>(NanosecondsFieldKey)->get();
+    long long s2 = pvTimeStamp.pvStructurePtr->getSubField<epics::pvData::PVLong>(SecondsPastEpochFieldKey)->get();
+    int ns2 = pvTimeStamp.pvStructurePtr->getSubField<epics::pvData::PVInt>(NanosecondsFieldKey)->get();
+    return (s==s2 && ns==ns2);
+}
+
+bool PvTimeStamp::operator!=(const PvTimeStamp& pvTimeStamp) const
+{
+    return !(*this == pvTimeStamp);
 }
 
 void PvTimeStamp::setSecondsPastEpoch(long long secondsPastEpoch)

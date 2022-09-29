@@ -7,6 +7,7 @@ configure/*.local
 **/O.*
 **/dist
 **/*.pyc
+**/*.swp
 **/__pycache__
 tools/pip/**/build
 tools/local/**/build
