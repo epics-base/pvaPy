@@ -2,6 +2,7 @@
 
 import time
 import pvaccess as pva
+from .metadataChannelFactory import MetadataChannelFactory
 from ..utility.loggingManager import LoggingManager
 from ..utility.floatWithUnits import FloatWithUnits
 
@@ -9,7 +10,7 @@ class DataConsumer:
 
     PROVIDER_TYPE_MAP = { 'pva' : pva.PVA, 'ca' : pva.CA }
 
-    def __init__(self, consumerId, inputChannel, providerType=pva.PVA, objectIdField='uniqueId', fieldRequest='', serverQueueSize=-1, monitorQueueSize=-1, distributorPluginName='pydistributor', distributorGroupId=None, distributorSetId=None, distributorTriggerFieldName=None, distributorUpdates=None, distributorUpdateMode=None, processingController=None):
+    def __init__(self, consumerId, inputChannel, providerType=pva.PVA, objectIdField='uniqueId', fieldRequest='', serverQueueSize=-1, monitorQueueSize=-1, accumulateObjects=-1, accumulationTimeout=-1, distributorPluginName='pydistributor', distributorGroupId=None, distributorSetId=None, distributorTriggerFieldName=None, distributorUpdates=None, distributorUpdateMode=None, metadataChannels=None, processingController=None):
         self.logger = LoggingManager.getLogger(f'consumer-{consumerId}')
         self.consumerId = consumerId
         providerType = self.PROVIDER_TYPE_MAP.get(providerType.lower(), pva.PVA)
@@ -31,6 +32,10 @@ class DataConsumer:
         if monitorQueueSize >= 0:
             self.pvObjectQueue = pva.PvObjectQueue(monitorQueueSize)
             self.logger.debug(f'Using PvObjectQueue of size: {monitorQueueSize}')
+        self.accumulateObjects = accumulateObjects
+        self.accumulationTimeout = accumulationTimeout 
+        self.logger.debug(f'Will accumulate {self.accumulateObjects} objects before processing, with accumulation timeout of {self.accumulationTimeout}')
+
         self.processingController = processingController
         self.startTime = None
         self.endTime = None
@@ -39,6 +44,12 @@ class DataConsumer:
         self.nReceivedOffset = 0
         if self.processingController and hasattr(self.processingController, 'ignoreFirstObject') and self.processingController.ignoreFirstObject:
             self.nReceivedOffset = 1
+
+        # Metadata channels
+        self.metadataChannelMap, self.metadataQueueMap = MetadataChannelFactory.createMetadataChannels(metadataChannels, serverQueueSize, monitorQueueSize, self)
+
+        if self.processingController and self.processingController.userDataProcessor:
+            self.processingController.userDataProcessor.metadataQueueMap = self.metadataQueueMap
 
         self.logger.debug(f'Created data consumer {consumerId}')
 
@@ -95,14 +106,23 @@ class DataConsumer:
 
     # Return true if object was processed, False otherwise
     def processFromQueue(self, waitTime):
-        if self.pvObjectQueue is not None:
-            try:
-                pvObject = self.pvObjectQueue.get(waitTime)
-                self.process(pvObject)
-                return True
-            except pva.QueueEmpty as ex:
-                # Ignore empty queue
-                pass
+        if self.pvObjectQueue is None:
+            return False
+        # If we are accumulating objects before processing,
+        # we also have to make sure timout did not occur
+        if self.accumulateObjects > 0:
+            if len(self.pvObjectQueue) < self.accumulateObjects:
+                timeSinceLastPut = self.pvObjectQueue.getTimeSinceLastPut()
+                if self.accumulationTimeout > timeSinceLastPut:
+                    self.logger.debug(f'Accumulation timeout did not occur yet (last put was {timeSinceLastPut} seconds ago')
+                    return False
+        try:
+            pvObject = self.pvObjectQueue.get(waitTime)
+            self.process(pvObject)
+            return True
+        except pva.QueueEmpty as ex:
+            # Ignore empty queue
+            pass
         return False
 
     def resetStats(self):
@@ -145,7 +165,11 @@ class DataConsumer:
             overrunRate = nOverruns/receivingTime
         monitorStats['receivedRate'] = FloatWithUnits(receivedRate, 'Hz')
         monitorStats['overrunRate'] = FloatWithUnits(overrunRate, 'Hz')
-        return {'inputChannel' : self.inputChannel, 'monitorStats' : monitorStats, 'queueStats' : queueStats, 'processorStats' : processorStats, 'userStats' : userStats}
+        metadataStats = {}
+        for metadataChannelId,metadataChannel in self.metadataChannelMap.items():
+            metadataStats[f'metadata-{metadataChannelId}'] = metadataChannel.getStats(receivingTime)
+
+        return {'inputChannel' : self.inputChannel, 'monitorStats' : monitorStats, 'queueStats' : queueStats, 'metadataStats' : metadataStats, 'processorStats' : processorStats, 'userStats' : userStats}
 
     def getConsumerId(self):
         return self.consumerId
@@ -160,13 +184,16 @@ class DataConsumer:
         else:
             self.logger.debug('Starting process monitor')
             self.channel.monitor(self.process, request)
-
+        for metadataChannelId,metadataChannel in self.metadataChannelMap.items():
+            metadataChannel.start()
         if self.processingController:
             self.processingController.start()
 
     def stop(self):
         self.endTime = time.time()
         self.channel.stopMonitor()
+        for metadataChannelId,metadataChannel in self.metadataChannelMap.items():
+            metadataChannel.stop()
         if self.processingController:
             self.processingController.stop()
 
