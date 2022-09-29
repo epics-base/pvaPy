@@ -50,6 +50,8 @@ public:
     const std::map<std::string,unsigned int>& getCounterMap() { return sQueuePtr->getCounterMap(); }
     void setCounter(const std::string& key, unsigned int value) { sQueuePtr->setCounter(key, value); }
     void addToCounter(const std::string& key, unsigned int value) { sQueuePtr->addToCounter(key, value); }
+    double getTimeSinceLastPush() { return sQueuePtr->getTimeSinceLastPush(); }
+    double getTimeSinceLastPop() { return sQueuePtr->getTimeSinceLastPop(); }
 
     // Python interface
     PvObject get();
