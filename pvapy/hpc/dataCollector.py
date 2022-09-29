@@ -3,104 +3,19 @@
 import time
 import threading
 import pvaccess as pva
+from .sourceChannel import SourceChannel
+from .metadataChannelFactory import MetadataChannelFactory
 from ..utility.loggingManager import LoggingManager
 from ..utility.floatWithUnits import FloatWithUnits
 
-class CollectorSourceChannel(pva.Channel):
-    def __init__(self, producerId, channelName, channelProtocol, serverQueueSize, monitorQueueSize, loggerName, dataCollector):
-        self.logger = LoggingManager.getLogger(loggerName)
-        self.channelName = channelName
-        self.dataCollector = dataCollector
-        self.producerId = producerId
-        self.serverQueueSize = serverQueueSize
-        self.monitorQueueSize = monitorQueueSize
-        self.pvObjectQueue = None
-        if monitorQueueSize >= 0:
-            self.logger.debug(f'Collector source channel {self.channelName} using monitor queue size {monitorQueueSize}')
-            self.pvObjectQueue = pva.PvObjectQueue(monitorQueueSize)
-        pva.Channel.__init__(self, channelName, channelProtocol)
-        self.logger.debug(f'Created collector source channel {self.channelName}, protocol {channelProtocol}')
-
-    def configure(self, configDict):
-        if type(configDict) == dict:
-            if 'monitorQueueSize' in configDict and self.pvObjectQueue is not None:
-                monitorQueueSize = int(configDict.get('monitorQueueSize'))
-                if monitorQueueSize >= 0:
-                    self.monitorQueueSize = monitorQueueSize
-                    self.pvObjectQueue.maxLength = monitorQueueSize
-                    self.logger.debug(f'Collector source channel client queue size is set to {monitorQueueSize}')
-
-    def getPvMonitorRequest(self):
-        recordStr = ''
-        if self.serverQueueSize > 0:
-            recordStr = f'record[queueSize={self.serverQueueSize}]'
-        request = f'{recordStr}field()'
-        return request
-
-    def resetStats(self):
-        self.resetMonitorCounters()
-        if self.pvObjectQueue is not None:
-            self.pvObjectQueue.resetCounters()
-
-    def getMonitorStats(self):
-        return self.getMonitorCounters()
-        
-    def getQueueStats(self):
-        if self.pvObjectQueue is not None:
-            return self.pvObjectQueue.getCounters()
-        return {}
-
-    def process(self, pvObject):
-        pass
-
-    # Return true if object was processed, False otherwise
-    def processFromQueue(self, waitTime=0):
-        return False
-        
-    def waitOnQueue(self, waitTime):
-        if self.pvObjectQueue is not None:
-            self.pvObjectQueue.waitForPut(waitTime)
-            self.dataCollector.setEvent()
-
-    def start(self):
-        self.startTime = time.time()
-        request = self.getPvMonitorRequest()
-        self.logger.debug(f'Collector source channel {self.channelName} using request string {request}')
-        if self.pvObjectQueue is not None:
-            self.logger.debug('Starting queue monitor')
-            self.qMonitor(self.pvObjectQueue, request)
-        else:
-            self.logger.debug('Starting process monitor')
-            self.monitor(self.process, request)
-
-    def stop(self):
-        self.endTime = time.time()
-        self.stopMonitor()
-        self.logger.debug(f'Collector source channel {self.channelName} stopped monitor')
-
-class PvaMetadataChannel(CollectorSourceChannel):
-    def __init__(self, producerId, channelName, serverQueueSize, monitorQueueSize, dataCollector):
-        loggerName = f'pvaMetadata-{producerId}'
-        CollectorSourceChannel.__init__(self, producerId, channelName, pva.PVA, serverQueueSize, monitorQueueSize, loggerName, dataCollector)
-
-class CaMetadataChannel(CollectorSourceChannel):
-    def __init__(self, producerId, channelName, serverQueueSize, monitorQueueSize, dataCollector):
-        loggerName = f'caMetadata-{producerId}'
-        CollectorSourceChannel.__init__(self, producerId, channelName, pva.CA, serverQueueSize, monitorQueueSize, loggerName, dataCollector)
-
-    def getPvMonitorRequest(self):
-        recordStr = ''
-        if self.serverQueueSize > 0:
-            recordStr = f'record[queueSize={self.serverQueueSize}]'
-        request = f'{recordStr}field(value,timeStamp)'
-        return request
-
-class ProducerChannel(CollectorSourceChannel):
+class ProducerChannel(SourceChannel):
     def __init__(self, producerId, channelName, serverQueueSize, monitorQueueSize, objectIdField, fieldRequest, dataCollector):
         loggerName = f'producer-{producerId}'
-        CollectorSourceChannel.__init__(self, producerId, channelName, pva.PVA, serverQueueSize, monitorQueueSize, loggerName, dataCollector)
+        SourceChannel.__init__(self, producerId, channelName, pva.PVA, serverQueueSize, monitorQueueSize, loggerName, dataCollector)
+        self.producerId = producerId
         self.objectIdField = objectIdField
         self.fieldRequest = fieldRequest
+        self.dataCollector = dataCollector
 
     def getPvMonitorRequest(self):
         fieldRequest = ''
@@ -226,9 +141,6 @@ class DataCollector:
     # Default queue sizing factor
     CACHE_SIZE_SCALING_FACTOR = 10
 
-    # Default metadata queue size
-    DEFAULT_METADATA_QUEUE_SIZE = 1000
-
     def __init__(self, collectorId, inputChannel, producerIdList=[1], objectIdField='uniqueId', objectIdOffset=1, fieldRequest='', serverQueueSize=0, monitorQueueSize=-1, collectorCacheSize=-1, metadataChannels=None, processingController=None):
         self.logger = LoggingManager.getLogger(f'collector-{collectorId}')
         self.eventLock = threading.Lock()
@@ -252,8 +164,6 @@ class DataCollector:
         self.logger.debug(f'Collector cache size is set to {self.collectorCacheSize}')
         self.monitorQueueSize = self.getClientQueueSize(monitorQueueSize)
         self.logger.debug(f'Client queue size is set to {self.monitorQueueSize}')
-        self.metadataMonitorQueueSize = self.getMetadataClientQueueSize(monitorQueueSize)
-        self.logger.debug(f'Metadata client queue size is set to {self.metadataMonitorQueueSize}')
         self.cacheLock = threading.Lock()
         self.collectorCacheMap = {}
 
@@ -265,30 +175,11 @@ class DataCollector:
             self.producerChannelMap[producerId] = ProducerChannel(producerId, cName, serverQueueSize, self.monitorQueueSize, objectIdField, fieldRequest, self)
 
         # Metadata channels
-        self.metadataChannelMap = {}
-        metadataQueueMap = {}
-        if metadataChannels:
-            metadataChannelList = metadataChannels.split(',')
-            metadataChannelId = 0
-            for metadataChannel in metadataChannelList:
-                metadataChannelId += 1
-                if metadataChannel.startswith('pva://'):
-                    cName = metadataChannel.replace('pva://', '')
-                    self.logger.debug(f'Creating PVA metadata channel {cName} with id {metadataChannelId}')
-                    c = PvaMetadataChannel(metadataChannelId, cName, serverQueueSize, self.metadataMonitorQueueSize, self)
-                    self.metadataChannelMap[metadataChannelId] = c
-                    metadataQueueMap[cName] = c.pvObjectQueue
-                else:
-                    # Assume CA metadata channel 
-                    cName = metadataChannel.replace('ca://', '')
-                    self.logger.debug(f'Creating CA metadata channel {cName} with id {metadataChannelId}')
-                    c = CaMetadataChannel(metadataChannelId, cName, serverQueueSize, self.metadataMonitorQueueSize, self)
-                    self.metadataChannelMap[metadataChannelId] = c
-                    metadataQueueMap[cName] = c.pvObjectQueue
+        self.metadataChannelMap, self.metadataQueueMap = MetadataChannelFactory.createMetadataChannels(metadataChannels, serverQueueSize, monitorQueueSize, self)
 
         self.processingController = processingController
         if self.processingController.userDataProcessor:
-            self.processingController.userDataProcessor.metadataQueueMap = metadataQueueMap
+            self.processingController.userDataProcessor.metadataQueueMap = self.metadataQueueMap
 
         self.processingThread = ProcessingThread(f'ProcessingThread-{self.collectorId}', self)
         self.startTime = None
@@ -313,13 +204,6 @@ class DataCollector:
         if collectorCacheSize > minCollectorCacheSize: 
             return collectorCacheSize
         return minCollectorCacheSize 
-
-    def getMetadataClientQueueSize(self, monitorQueueSize):
-        # If regular producer channels do not use monitor queues, use default size
-        # Otherwise, use the same size
-        if monitorQueueSize < 0:
-            return self.DEFAULT_METADATA_QUEUE_SIZE 
-        return monitorQueueSize 
 
     def getClientQueueSize(self, monitorQueueSize):
         if monitorQueueSize <= 0:
@@ -418,20 +302,6 @@ class DataCollector:
         self.nMissed = 0
         self.lastObjectId = None
        
-    def getProducerStats(self, producerChannel, receivingTime):
-        monitorStats = producerChannel.getMonitorStats()
-        queueStats = producerChannel.getQueueStats()
-        receivedRate = 0
-        overrunRate = 0
-        nOverruns = monitorStats.get('nOverruns', 0)
-        nReceived = monitorStats.get('nReceived', 0)-self.nReceivedOffset
-        if receivingTime > 0 and nReceived >= 0:
-            receivedRate = nReceived/receivingTime
-            overrunRate = nOverruns/receivingTime
-        monitorStats['receivedRate'] = FloatWithUnits(receivedRate, 'Hz')
-        monitorStats['overrunRate'] = FloatWithUnits(overrunRate, 'Hz')
-        return {'channel' : producerChannel.channelName, 'monitorStats' : monitorStats, 'queueStats' : queueStats}
-        
     def getCollectorStats(self, receivingTime):
         collectorStats = {
             'nCollected' : self.nCollected, 
@@ -467,10 +337,10 @@ class DataCollector:
         collectorStats = self.getCollectorStats(receivingTime)
         producerStats = {}
         for producerId,producerChannel in self.producerChannelMap.items():
-            producerStats[f'producer-{producerId}'] = self.getProducerStats(producerChannel, receivingTime)
+            producerStats[f'producer-{producerId}'] = producerChannel.getStats(receivingTime, self.nReceivedOffset)
         metadataStats = {}
         for metadataChannelId,metadataChannel in self.metadataChannelMap.items():
-            metadataStats[f'metadata-{metadataChannelId}'] = self.getProducerStats(metadataChannel, receivingTime)
+            metadataStats[f'metadata-{metadataChannelId}'] = metadataChannel.getStats(receivingTime)
         return {'producerStats' : producerStats, 'metadataStats' : metadataStats, 'processorStats' : processorStats, 'userStats' : userStats, 'collectorStats' : collectorStats}
 
     def start(self):
