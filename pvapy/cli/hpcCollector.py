@@ -12,6 +12,7 @@ import multiprocessing as mp
 from ..utility.loggingManager import LoggingManager
 from ..utility.objectUtility import ObjectUtility
 from ..utility.pvapyPrettyPrinter import PvaPyPrettyPrinter
+from ..hpc.sourceChannel import SourceChannel
 from ..hpc.dataCollector import DataCollector
 from ..hpc.dataProcessingController import DataProcessingController
 
@@ -241,7 +242,7 @@ class CollectorController:
         for producerId in self.producerIdList:
             statusTypeDict[f'producerStats_{producerId}'] = self.PRODUCER_STATUS_TYPE_DICT
         for metadataChannelId in self.metadataChannelIdList:
-            statusTypeDict[f'metadataStats_{metadataChannelId}'] = self.PRODUCER_STATUS_TYPE_DICT
+            statusTypeDict[f'metadataStats_{metadataChannelId}'] = SourceChannel.STATUS_TYPE_DICT
         return statusTypeDict
 
     def getProducerIdList(self, args):
