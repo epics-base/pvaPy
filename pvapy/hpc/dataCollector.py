@@ -141,6 +141,37 @@ class DataCollector:
     # Default queue sizing factor
     CACHE_SIZE_SCALING_FACTOR = 10
 
+    STATUS_TYPE_DICT = {
+        'collectorId' : pva.UINT,
+        'objectId' : pva.UINT,
+        'objectTime' : pva.DOUBLE,
+        'objectTimestamp' : pva.PvTimeStamp(),
+        'collectorStats' : {
+            'nCollected' : pva.UINT,
+            'collectedRate' : pva.DOUBLE,
+            'nRejected' : pva.UINT,
+            'rejectedRate' : pva.DOUBLE,
+            'nMissed' : pva.UINT,
+            'missedRate' : pva.DOUBLE
+        },
+        'processorStats' : {
+            'runtime' : pva.DOUBLE,
+            'startTime' : pva.DOUBLE,
+            'endTime' : pva.DOUBLE,
+            'receivingTime' : pva.DOUBLE,
+            'firstObjectTime' : pva.DOUBLE,
+            'lastObjectTime' : pva.DOUBLE,
+            'firstObjectId' : pva.UINT,
+            'lastObjectId' : pva.UINT,
+            'nProcessed' : pva.UINT,
+            'processedRate' : pva.DOUBLE,
+            'nErrors' : pva.UINT,
+            'errorRate' : pva.DOUBLE,
+            'nMissed' : pva.UINT,
+            'missedRate' : pva.DOUBLE
+        }
+    }
+
     def __init__(self, collectorId, inputChannel, producerIdList=[1], objectIdField='uniqueId', objectIdOffset=1, fieldRequest='', serverQueueSize=0, monitorQueueSize=-1, collectorCacheSize=-1, metadataChannels=None, processingController=None):
         self.logger = LoggingManager.getLogger(f'collector-{collectorId}')
         self.eventLock = threading.Lock()
