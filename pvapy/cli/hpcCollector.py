@@ -38,23 +38,6 @@ class CollectorController:
         'statusMessage' : pva.STRING
     }
 
-    PRODUCER_STATUS_TYPE_DICT = {
-        'producerId' : pva.UINT,
-        'channel' : pva.STRING,
-        'monitorStats' : {
-            'nReceived' : pva.UINT,
-            'receivedRate' : pva.DOUBLE,
-            'nOverruns' : pva.UINT, 
-            'overrunRate' : pva.DOUBLE
-        },
-        'queueStats' : {
-            'nReceived' : pva.UINT,
-            'nRejected' : pva.UINT,
-            'nDelivered' : pva.UINT,
-            'nQueued' : pva.UINT
-        },
-    }
-
     COLLECTOR_STATUS_TYPE_DICT = {
         'collectorId' : pva.UINT,
         'objectId' : pva.UINT,
@@ -240,7 +223,7 @@ class CollectorController:
             if userStatsTypeDict:
                 statusTypeDict['userStats'] = processingController.getUserStatsPvaTypes()
         for producerId in self.producerIdList:
-            statusTypeDict[f'producerStats_{producerId}'] = self.PRODUCER_STATUS_TYPE_DICT
+            statusTypeDict[f'producerStats_{producerId}'] = SourceChannel.STATUS_TYPE_DICT
         for metadataChannelId in self.metadataChannelIdList:
             statusTypeDict[f'metadataStats_{metadataChannelId}'] = SourceChannel.STATUS_TYPE_DICT
         return statusTypeDict
