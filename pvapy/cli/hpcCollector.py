@@ -1,338 +1,12 @@
 #!/usr/bin/env python
 
-import json
-import pprint
 import argparse
-import threading
 import time
-import json
-import queue
 import pvaccess as pva
-import multiprocessing as mp
 from ..utility.loggingManager import LoggingManager
-from ..utility.objectUtility import ObjectUtility
-from ..utility.pvapyPrettyPrinter import PvaPyPrettyPrinter
-from ..hpc.sourceChannel import SourceChannel
-from ..hpc.dataCollector import DataCollector
-from ..hpc.dataProcessingController import DataProcessingController
+from ..hpc.dataCollectorController import DataCollectorController
 
 __version__ = pva.__version__
-
-WAIT_TIME = 1.0
-MIN_STATUS_UPDATE_PERIOD = 10.0
-COMMAND_EXEC_DELAY = 0.1
-
-GET_STATS_COMMAND = 'get_stats'
-RESET_STATS_COMMAND = 'reset_stats'
-CONFIGURE_COMMAND = 'configure'
-STOP_COMMAND = 'stop'
-
-class CollectorController:
-
-    COLLECTOR_CONTROL_TYPE_DICT = {
-        'collectorId' : pva.UINT,
-        'objectTime' : pva.DOUBLE,
-        'objectTimestamp' : pva.PvTimeStamp(),
-        'command' : pva.STRING,
-        'args' : pva.STRING,
-        'statusMessage' : pva.STRING
-    }
-
-    def __init__(self, args):
-        self.screen = None
-        if args.log_level:
-            LoggingManager.setLogLevel(args.log_level)
-            if args.log_file:
-                LoggingManager.addFileHandler(args.log_file)
-            else:
-                LoggingManager.addStreamHandler()
-        self.logger = LoggingManager.getLogger(self.__class__.__name__)
-        self.screen = self.setupCurses(args)
-        self.args = args
-        self.isDone = False
-        self.statsObjectId = 0
-        self.statsEnabled = {}
-        for statsType in ['monitor','queue','processor','user']:
-            self.statsEnabled[f'{statsType}Stats'] = 'all' in args.report_stats or statsType in args.report_stats
-
-    def setupCurses(self, args):
-        screen = None
-        if not args.disable_curses and not args.log_level:
-            try:
-                import curses
-                screen = curses.initscr()
-                self.curses = curses
-            except ImportError as ex:
-                self.logger.warning(f'Disabling curses library: {ex}')
-        return screen
-
-    def controlCallback(self, pv):
-        t = time.time()
-        if 'command' not in pv:
-            statusMessage = f'Ignoring invalid request (no command specified): {pv}'
-            self.logger.warning(statusMessage)
-            self.controlPvObject.set({'statusMessage' : statusMessage, 'objectTime' : t, 'objectTimestamp' : pva.PvTimeStamp(t)})
-            return
-        command = pv['command']
-        self.logger.debug(f'Got command: {command}')
-        if command == RESET_STATS_COMMAND:
-            self.logger.info('Control channel: resetting collector statistics')
-            cTimer = threading.Timer(COMMAND_EXEC_DELAY, self.controlResetStats)
-        elif command == GET_STATS_COMMAND:
-            self.logger.info('Control channel: getting collector statistics')
-            cTimer = threading.Timer(COMMAND_EXEC_DELAY, self.controlGetStats)
-        elif command == CONFIGURE_COMMAND:
-            args = ''
-            if 'args' not in pv:
-                self.logger.debug('Empty keyword arguments string for the configure request')
-            else:
-                args = pv['args']
-            self.logger.info(f'Control channel: configuring collector with args: {args}')
-            cTimer = threading.Timer(COMMAND_EXEC_DELAY, self.controlConfigure, args=[args])
-        elif command == STOP_COMMAND:
-            self.logger.info(f'Control channel: stopping collector')
-            cTimer = threading.Timer(COMMAND_EXEC_DELAY, self.controlStop)
-        else: 
-            statusMessage = f'Ignoring invalid request (unrecognized command specified): {pv}'
-            self.logger.warning(statusMessage)
-            self.controlPvObject.set({'statusMessage' : statusMessage, 'objectTime' : t, 'objectTimestamp' : pva.PvTimeStamp(t)})
-            return
-        statusMessage = 'Command successful'
-        self.controlPvObject.set({'statusMessage' : statusMessage, 'objectTime' : t, 'objectTimestamp' : pva.PvTimeStamp(t)})
-        cTimer.start()
-
-    def controlConfigure(self, configDict):
-        self.logger.debug(f'Configuring collector {self.dataCollector.collectorId} with: {configDict}')
-        try:
-            configDict = json.loads(configDict)
-            self.logger.debug(f'Converted configuration args string from JSON: {configDict}')
-        except Exception as ex:
-            self.logger.debug(f'Cannot convert string {configDict} from JSON: {ex}')
-        try:
-            self.dataCollector.configure(configDict)
-            statusMessage = 'Configuration successful'
-            self.logger.debug(statusMessage)
-        except Exception as ex:
-            self.stopScreen()
-            statusMessage = f'Configuration failed: {ex}'
-            self.logger.warning(statusMessage)
-        self.controlPvObject['statusMessage'] = statusMessage
-
-    def controlResetStats(self):
-        self.logger.debug(f'Resetting stats for collector {self.dataCollector.collectorId}')
-        self.dataCollector.resetStats()
-        statusMessage = 'Stats reset successful'
-        self.controlPvObject['statusMessage'] = statusMessage
-
-    def controlGetStats(self):
-        self.logger.debug(f'Getting stats for collector {self.dataCollector.collectorId}')
-        self.reportCollectorStats()
-        statusMessage = 'Stats update successful'
-        self.controlPvObject['statusMessage'] = statusMessage
-
-    def controlStop(self):
-        self.logger.debug(f'Stopping collector {self.dataCollector.collectorId}')
-        self.isDone = True
-        statusMessage = 'Stop flag set'
-        self.controlPvObject['statusMessage'] = statusMessage
-
-    def createProcessorConfig(self, collectorId, args):
-        inputChannel = args.input_channel
-        self.logger.debug(f'Input channel: {inputChannel}')
-
-        outputChannel = args.output_channel
-        if outputChannel == '_':
-            outputChannel = f'pvapy:collector:{collectorId}:output'
-        if outputChannel:
-            outputChannel = outputChannel.replace('*', f'{collectorId}')
-            self.logger.debug(f'Processor output channel name: {outputChannel}')
-
-        processorConfig = {}
-        if args.processor_args:
-            processorConfig = json.loads(args.processor_args)
-        processorConfig['inputChannel'] = inputChannel
-        if not 'processorId' in processorConfig:
-            processorConfig['processorId'] = collectorId
-        if not 'skipInitialUpdates' in processorConfig:
-            processorConfig['skipInitialUpdates'] = args.skip_initial_updates
-        if not 'objectIdField' in processorConfig:
-            processorConfig['objectIdField'] = args.oid_field
-        if not 'objectIdOffset' in processorConfig:
-            processorConfig['objectIdOffset'] = args.oid_offset
-        if not 'fieldRequest' in processorConfig:
-            processorConfig['fieldRequest'] = args.field_request
-        if not 'outputChannel' in processorConfig:
-            processorConfig['outputChannel'] = outputChannel
-        self.processorConfig = processorConfig
-        return processorConfig
-
-    def createProcessor(self, collectorId, args):
-        # Create config dict
-        processorConfig = self.createProcessorConfig(collectorId, args)
-    
-        self.logger.debug(f'Using processor configuration: {processorConfig}')
-        userDataProcessor = None
-        if args.processor_file and args.processor_class:
-            userDataProcessor = ObjectUtility.createObjectInstanceFromFile(args.processor_file, 'userDataProcessorModule', args.processor_class, processorConfig)
-        elif args.processor_class:
-            userDataProcessor = ObjectUtility.createObjectInstanceFromClassPath(args.processor_class, processorConfig)
-
-        if userDataProcessor is not None:
-            self.logger.debug(f'Created data processor {collectorId}: {userDataProcessor}')
-            userDataProcessor.processorId = collectorId
-            userDataProcessor.collectorId = collectorId
-            userDataProcessor.objectIdField = processorConfig['objectIdField']
-        processingController = DataProcessingController(processorConfig, userDataProcessor)
-        return processingController
-            
-    def getCollectorStatusTypeDict(self, processingController):
-        statusTypeDict = DataCollector.STATUS_TYPE_DICT
-        if processingController:
-            userStatsTypeDict = processingController.getUserStatsPvaTypes()
-            if userStatsTypeDict:
-                statusTypeDict['userStats'] = processingController.getUserStatsPvaTypes()
-        for producerId in self.producerIdList:
-            statusTypeDict[f'producerStats_{producerId}'] = SourceChannel.STATUS_TYPE_DICT
-        for metadataChannelId in self.metadataChannelIdList:
-            statusTypeDict[f'metadataStats_{metadataChannelId}'] = SourceChannel.STATUS_TYPE_DICT
-        return statusTypeDict
-
-    def getProducerIdList(self, args):
-        # Evaluate producer id list; it should be given either as range() spec
-        # or as comma-separated list.
-        producerIdList = args.producer_id_list
-        if not producerIdList.startswith('range') and not producerIdList.startswith('['):
-            producerIdList = f'[{producerIdList}]'
-        producerIdList = list(eval(producerIdList))
-        return producerIdList
-
-    def createCollector(self, collectorId, args):
-        processingController = self.createProcessor(collectorId, args)
-        inputChannel = args.input_channel
-        self.logger.debug(f'Input channel name: {inputChannel}')
-
-        self.producerIdList = self.getProducerIdList(args)
-        self.logger.debug(f'Producer id list: {self.producerIdList}')
-
-        self.metadataChannelIdList = []
-        if args.metadata_channels:
-            self.metadataChannelIdList = range(1,len(args.metadata_channels.split(','))+1)
-        self.logger.debug(f'Metadata channel id list: {self.metadataChannelIdList}')
-
-        self.pvaServer = pva.PvaServer()
-        self.statusChannel = args.status_channel
-        if self.statusChannel == '_':
-            self.statusChannel = f'pvapy:collector:{collectorId}:status'
-        if self.statusChannel:
-            self.statusChannel = self.statusChannel.replace('*', f'{collectorId}')
-            self.logger.debug(f'Collector status channel name: {self.statusChannel}')
-        if self.statusChannel:
-            self.statusTypeDict = self.getCollectorStatusTypeDict(processingController)
-            statusPvObject = pva.PvObject(self.statusTypeDict, {'collectorId' : collectorId})
-            self.pvaServer.addRecord(self.statusChannel, statusPvObject)
-            self.logger.debug(f'Created collector status channel: {self.statusChannel}')
-
-        self.controlChannel = args.control_channel
-        if self.controlChannel == '_':
-            self.controlChannel = f'pvapy:collector:{collectorId}:control'
-        if self.controlChannel:
-            self.controlChannel = self.controlChannel.replace('*', f'{collectorId}')
-            self.logger.debug(f'Collector control channel name: {self.controlChannel}')
-        if self.controlChannel:
-            # Keep reference to the control object so we can
-            # update it
-            self.controlPvObject = pva.PvObject(self.COLLECTOR_CONTROL_TYPE_DICT, {'collectorId' : collectorId})
-            self.pvaServer.addRecord(self.controlChannel, self.controlPvObject, self.controlCallback)
-            self.logger.debug(f'Created collector control channel: {self.controlChannel}')
-
-        # Share PVA server
-        if processingController:
-            processingController.pvaServer = self.pvaServer
-            processingController.createUserDefinedOutputChannel()
-
-        objectIdField = self.processorConfig['objectIdField']
-        objectIdOffset = self.processorConfig['objectIdOffset']
-        fieldRequest = self.processorConfig['fieldRequest']
-        self.dataCollector = DataCollector(collectorId, inputChannel, producerIdList=self.producerIdList, objectIdField=objectIdField, objectIdOffset=objectIdOffset, fieldRequest=fieldRequest, serverQueueSize=args.server_queue_size, monitorQueueSize=args.monitor_queue_size, collectorCacheSize=args.collector_cache_size, metadataChannels=args.metadata_channels, processingController=processingController)
-        return self.dataCollector
-
-    def startCollectors(self):
-        self.createCollector(self.args.collector_id, args=self.args)
-        self.dataCollector.start()
-        if self.pvaServer:
-            self.pvaServer.start()
-        self.logger.info(f'Started collector {self.dataCollector.collectorId}')
-
-    def reportCollectorStats(self, statsDict=None):
-        if not statsDict:
-            statsDict = self.getCollectorStats()
-        collectorId = self.dataCollector.collectorId
-        statsDict['collectorId'] = collectorId
-        pp = PvaPyPrettyPrinter()
-        report = pp.pformat(statsDict)
-
-        if self.screen:
-            try:
-                self.screen.erase()
-                self.screen.addstr(report)
-                self.screen.refresh()
-                return
-            except Exception as ex:
-                # Turn screen off on errors
-                self.stopScreen()
-        print(report)
-
-    def getCollectorStats(self):
-        statsDict = self.dataCollector.getStats()
-        self.statsObjectId += 1
-        statsDict['objectId'] = self.statsObjectId
-        t = time.time()
-        if self.pvaServer:
-            collectorId = self.dataCollector.collectorId
-            statusObject = pva.PvObject(self.statusTypeDict, {'collectorId' : collectorId, 'objectId' : self.statsObjectId, 'objectTime' : t, 'objectTimestamp' : pva.PvTimeStamp(t)})
-            statusObject['processorStats'] = statsDict.get('processorStats', {})
-            userStatsPvaTypes = self.statusTypeDict.get('userStats', {})
-            if userStatsPvaTypes: 
-                userStats = statsDict.get('userStats', {})
-                filteredUserStats = {}
-                for k,v in userStats.items():
-                    if k in userStatsPvaTypes:
-                        filteredUserStats[k] = v
-                statusObject['userStats'] = filteredUserStats
-            statusObject['collectorStats'] = statsDict.get('collectorStats', {})
-            for producerId in self.producerIdList:
-                producerStatsDict = statsDict.get(f'producerStats', {})
-                producerStatsDict = producerStatsDict.get(f'producer-{producerId}', {})
-                producerStatusObject = {'producerId' : producerId, 'channel' : producerStatsDict.get('channel', '')}
-                producerStatusObject['monitorStats'] = producerStatsDict.get('monitorStats', {})
-                producerStatusObject['queueStats'] = producerStatsDict.get('queueStats', {})
-                statusObject[f'producerStats_{producerId}'] = producerStatusObject
-            for metadataChannelId in self.metadataChannelIdList:
-                producerStatsDict = statsDict.get(f'metadataStats', {})
-                producerStatsDict = producerStatsDict.get(f'metadata-{metadataChannelId}', {})
-                producerStatusObject = {'producerId' : metadataChannelId, 'channel' : producerStatsDict.get('channel', '')}
-                producerStatusObject['monitorStats'] = producerStatsDict.get('monitorStats', {})
-                producerStatusObject['queueStats'] = producerStatsDict.get('queueStats', {})
-                statusObject[f'metadataStats_{metadataChannelId}'] = producerStatusObject
-            self.pvaServer.update(self.statusChannel, statusObject)
-        return statsDict 
-
-    def stopScreen(self):
-        if self.screen:
-            self.curses.endwin()
-        self.screen = None
-
-    def stopCollectors(self):
-        self.logger.debug('Controller exiting')
-        try: 
-            self.dataCollector.stop()
-            self.logger.info(f'Stopping collector {self.dataCollector.collectorId}')
-        except Exception as ex:
-            self.logger.warn(f'Could not stop collector {self.dataCollector.collectorId}')
-
-        statsDict = self.dataCollector.getStats()
-        self.stopScreen()
-        return statsDict
 
 def main():
     parser = argparse.ArgumentParser(description='PvaPy HPC Collector utility. It can be used for receiving data from a set of producer processes, and processing this data using a specified implementation of the data processor interface.')
@@ -367,12 +41,13 @@ def main():
         exit(1)
 
     logger = LoggingManager.getLogger('collectorMain')
-    controller = CollectorController(args)
-    controller.startCollectors()
+    controller = DataCollectorController(args)
+    controller.start()
     startTime = time.time()
     lastReportTime = startTime
     lastStatusUpdateTime = startTime
-    waitTime = WAIT_TIME
+    waitTime = DataCollectorController.WAIT_TIME
+    minStatusUpdatePeriod = DataCollectorController.MIN_STATUS_UPDATE_PERIOD
     while True:
         try:
             now = time.time()
@@ -386,9 +61,9 @@ def main():
             if args.report_period > 0 and now-lastReportTime > args.report_period:
                 lastReportTime = now
                 lastStatusUpdateTime = now
-                controller.reportCollectorStats()
+                controller.reportStats()
 
-            if args.status_channel and now-lastStatusUpdateTime > MIN_STATUS_UPDATE_PERIOD:
+            if args.status_channel and now-lastStatusUpdateTime > minStatusUpdatePeriod:
                 lastStatusUpdateTime = now
                 controller.getCollectorStats()
 
@@ -401,10 +76,10 @@ def main():
             break
 
     print()
-    statsDict = controller.stopCollectors()
-    controller.reportCollectorStats(statsDict)
+    statsDict = controller.stop()
+    controller.reportStats(statsDict)
     # Allow clients monitoring various channels to get last update
-    time.sleep(WAIT_TIME)
+    time.sleep(waitTime)
 
 if __name__ == '__main__':
     main()
