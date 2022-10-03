@@ -65,7 +65,7 @@ def main():
 
             if args.status_channel and now-lastStatusUpdateTime > minStatusUpdatePeriod:
                 lastStatusUpdateTime = now
-                controller.getCollectorStats()
+                controller.getStats()
 
             # Check if we need to sleep
             delay = wakeTime-time.time()
@@ -77,9 +77,9 @@ def main():
 
     print()
     statsDict = controller.stop()
-    controller.reportStats(statsDict)
     # Allow clients monitoring various channels to get last update
     time.sleep(waitTime)
+    controller.reportStats(statsDict)
 
 if __name__ == '__main__':
     main()
