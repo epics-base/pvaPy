@@ -82,9 +82,6 @@ class MpDataConsumerController(HpcController):
                 self.logger.error(f'No stats received from consumer {consumerId}')
         return statsDict
 
-    def processPvUpdate(self, updateWaitTime):
-        return False
-
     def stop(self):
         for consumerId in range(self.args.consumer_id, self.args.consumer_id+self.args.n_consumers):
             requestQueue = self.requestQueueMap[consumerId]
@@ -99,13 +96,14 @@ class MpDataConsumerController(HpcController):
             try:
                 responseQueue = self.responseQueueMap[consumerId]
                 statsDict[consumerId] = responseQueue.get(block=True, timeout=self.WAIT_TIME)
+                self.logger.debug(f'Received final stats for consumer {consumerId}')
             except queue.Empty:
                 self.stopScreen()
                 self.logger.error(f'No stats received from consumer {consumerId}')
         for consumerId in range(self.args.consumer_id, self.args.consumer_id+self.args.n_consumers):
             mpProcess = self.mpProcessMap[consumerId]
             mpProcess.join(self.WAIT_TIME)
-            self.logger.info(f'Stopped consumer {consumerId}')
+            self.logger.info(f'Stopped process for consumer {consumerId}')
         if self.screen:
             self.curses.endwin()
             self.screen = None
@@ -126,7 +124,7 @@ class MpdcControllerRequestProcessingThread(threading.Thread):
         self.logger.debug(f'Request processing thread for consumer {self.consumerId} starting')
         while True:
             try:
-                if self.controller.isDone:
+                if self.controller.isStopped:
                     self.logger.debug(f'Consumer {self.consumerId} is done, request processing thread is exiting')
                     break
 
@@ -135,8 +133,7 @@ class MpdcControllerRequestProcessingThread(threading.Thread):
                     request = self.requestQueue.get(block=True, timeout=self.controller.WAIT_TIME)
                     self.logger.debug(f'Received request: {request}')
                     if request == self.controller.STOP_COMMAND:
-                        self.controller.isDone = True
-                        self.logger.debug(f'Consumer {self.consumerId} received stop command, request processing thread is exiting')
+                        self.controller.shouldBeStopped = True
                         break
                     elif request == self.controller.GET_STATS_COMMAND:
                         statsDict = self.controller.getStats()
@@ -165,8 +162,7 @@ def mpdcController(consumerId, requestQueue, responseQueue, args):
     waitTime = controller.WAIT_TIME
     while True:
         try:
-            if controller.isDone:
-                logger.debug(f'Consumer {consumerId} is done')
+            if controller.shouldBeStopped:
                 break
 
             now = time.time()
@@ -186,11 +182,14 @@ def mpdcController(consumerId, requestQueue, responseQueue, args):
             logger.error(f'Processing error: {ex}')
 
     try: 
+        logger.debug(f'Stopping controller for consumer {consumerId}')
         controller.stop()
     except Exception as ex:
-        self.logger.warn(f'Could not stop consumer {dataConsumer.getConsumerId()}')
-    statsDict = controller.getStats()
+        self.logger.warn(f'Could not stop controller for consumer {consumerId}')
     try:
+        logger.debug(f'Requesting final stats for consumer {consumerId}')
+        statsDict = controller.getStats()
+        logger.debug(f'Reporting final stats for consumer {consumerId}')
         responseQueue.put(statsDict, block=True, timeout=controller.WAIT_TIME)
     except Exception as ex:
         logger.error(f'Consumer {consumerId} cannot report stats on exit: {ex}')

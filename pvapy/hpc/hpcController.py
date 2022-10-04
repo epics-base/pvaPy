@@ -42,6 +42,7 @@ class HpcController:
         return d
 
     def __init__(self, args):
+        self.lock = threading.Lock()
         self.screen = None
         if args.log_level:
             LoggingManager.setLogLevel(args.log_level)
@@ -52,7 +53,9 @@ class HpcController:
         self.logger = LoggingManager.getLogger(self.__class__.__name__)
         self.screen = self.setupCurses(args)
         self.args = args
-        self.isDone = False
+        self.isStopped = True
+        self.shouldBeStopped = False
+        self.isRunning = False
         self.statsObjectId = 0
         self.statsEnabled = {}
         for statsType in ['monitor','queue','processor','user']:
@@ -138,7 +141,7 @@ class HpcController:
 
     def controlStop(self):
         self.logger.debug(f'Stopping {self.CONTROLLER_TYPE} {self.hpcObjectId}')
-        self.isDone = True
+        self.shouldBeStopped = True
         statusMessage = 'Stop flag set'
         self.controlPvObject['statusMessage'] = statusMessage
 
@@ -205,10 +208,27 @@ class HpcController:
         return {}
 
     def start(self):
-        self.hpcObject.start()
-        if self.pvaServer:
-            self.pvaServer.start()
-        self.logger.info(f'Started {self.CONTROLLER_TYPE} {self.hpcObjectId}')
+        self.lock.acquire()
+        try:
+            if not self.isStopped:
+                self.logger.warn(f'Controller for hpc {self.CONTROLLER_TYPE} {self.hpcObjectId} is already started')
+                return
+            self.isStopped = False
+            self.shouldBeStopped = False
+            self.logger.debug(f'Controller for hpc {self.CONTROLLER_TYPE} {self.hpcObjectId} is starting')
+
+            try: 
+                self.logger.info(f'Starting hpc {self.CONTROLLER_TYPE} {self.hpcObjectId}')
+                self.hpcObject.start()
+                self.logger.info(f'Started hpc {self.CONTROLLER_TYPE} {self.hpcObjectId}')
+            except Exception as ex:
+                self.logger.warn(f'Could not start hpc {self.CONTROLLER_TYPE} {self.hpcObjectId}: {ex}')
+                raise
+
+            if self.pvaServer:
+                self.pvaServer.start()
+        finally:
+            self.lock.release()
 
     def reportStats(self, statsDict=None):
         if not statsDict:
@@ -230,20 +250,88 @@ class HpcController:
     def getStats(self):
         return {}
 
+    def processPvUpdate(self, updateWaitTime):
+        return False
+
     def stopScreen(self):
         if self.screen:
             self.curses.endwin()
         self.screen = None
 
     def stop(self):
-        self.logger.debug('Controller exiting')
-        try: 
-            self.hpcObject.stop()
-            self.logger.info(f'Stopping {self.CONTROLLER_TYPE} {self.hpcObjectId}')
-        except Exception as ex:
-            self.logger.warn(f'Could not stop {self.CONTROLLER_TYPE} {self.hpcObjectId}')
+        self.lock.acquire()
+        try:
+            if self.isStopped:
+                self.logger.warn(f'Controller for hpc {self.CONTROLLER_TYPE} {self.hpcObjectId} is already stopped')
+                return
+            if self.isRunning:
+                # Stop running thread
+                self.shouldBeStopped = True
+            self.isStopped = True
+            self.logger.debug(f'Controller for hpc {self.CONTROLLER_TYPE} {self.hpcObjectId} is stopping')
+            try: 
+                self.logger.info(f'Stopping hpc {self.CONTROLLER_TYPE} {self.hpcObjectId}')
+                self.hpcObject.stop()
+            except Exception as ex:
+                self.logger.warn(f'Could not stop hpc {self.CONTROLLER_TYPE} {self.hpcObjectId}')
+            statsDict = self.hpcObject.getStats()
+            self.stopScreen()
+            return statsDict
+        finally:
+            self.lock.release()
 
-        statsDict = self.hpcObject.getStats()
-        self.stopScreen()
-        return statsDict
+    def run(self, runtime=0, reportPeriod=0):
+        self.lock.acquire()
+        try:
+            if self.isRunning:
+                self.logger.warn(f'Controller for {self.CONTROLLER_TYPE} {self.hpcObjectId} is already running')
+                return
+            self.isRunning = True
+            self.shouldBeStopped = False
+        finally:
+            self.lock.release()
+        self.start()
+        startTime = time.time()
+        lastReportTime = startTime
+        lastStatusUpdateTime = startTime
+        waitTime = self.WAIT_TIME
+        minStatusUpdatePeriod = self.MIN_STATUS_UPDATE_PERIOD
+        while True:
+            try:
+                now = time.time()
+                wakeTime = now+waitTime
+                if self.shouldBeStopped:
+                    break
+                if runtime > 0:
+                    rt = now - startTime
+                    if rt > runtime:
+                        break
+                if reportPeriod > 0 and now-lastReportTime > reportPeriod:
+                    lastReportTime = now
+                    lastStatusUpdateTime = now
+                    self.reportStats()
 
+                if now-lastStatusUpdateTime > minStatusUpdatePeriod:
+                    lastStatusUpdateTime = now
+                    self.getStats()
+
+                try:
+                    hasProcessedObject = self.processPvUpdate(waitTime)
+                    if not hasProcessedObject:
+                        # Check if we need to sleep
+                        delay = wakeTime-time.time()
+                        if delay > 0:
+                            time.sleep(delay)
+                except Exception as ex:
+                    self.stopScreen()
+                    self.logger.error(f'Processing error: {ex}')
+
+            except KeyboardInterrupt as ex:
+                break
+
+        print()
+        statsDict = self.stop()
+        # Allow clients monitoring various channels to get last update
+        time.sleep(waitTime)
+        self.reportStats(statsDict)
+        self.isRunning = False

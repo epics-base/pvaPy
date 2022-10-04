@@ -62,50 +62,7 @@ def main():
         controller = DataConsumerController(args)
     else:
         controller = MpDataConsumerController(args)
-    controller.start()
-    startTime = time.time()
-    lastReportTime = startTime
-    lastStatusUpdateTime = startTime
-    waitTime = controller.WAIT_TIME
-    minStatusUpdatePeriod = controller.MIN_STATUS_UPDATE_PERIOD
-    while True:
-        try:
-            now = time.time()
-            wakeTime = now+waitTime
-            if controller.isDone:
-                break
-            if args.runtime > 0:
-                runtime = now - startTime
-                if runtime > args.runtime:
-                    break
-            if args.report_period > 0 and now-lastReportTime > args.report_period:
-                lastReportTime = now
-                lastStatusUpdateTime = now
-                controller.reportStats()
-
-            if args.status_channel and now-lastStatusUpdateTime > minStatusUpdatePeriod:
-                lastStatusUpdateTime = now
-                controller.getStats()
-
-            try:
-                hasProcessedObject = controller.processPvUpdate(waitTime)
-                if not hasProcessedObject:
-                    # Check if we need to sleep
-                    delay = wakeTime-time.time()
-                    if delay > 0:
-                        time.sleep(delay)
-            except Exception as ex:
-                controller.stopScreen()
-                logger.error(f'Processing error: {ex}')
-
-        except KeyboardInterrupt as ex:
-            break
-
-    print()
-    statsDict = controller.stop()
-    # Allow clients monitoring various channels to get last update
-    time.sleep(waitTime)
-    controller.reportStats(statsDict)
+    controller.run(args.runtime, args.report_period)
 
 if __name__ == '__main__':
     main()
