@@ -57,6 +57,7 @@ class HpcController:
         self.statsEnabled = {}
         for statsType in ['monitor','queue','processor','user']:
             self.statsEnabled[f'{statsType}Stats'] = 'all' in args.report_stats or statsType in args.report_stats
+        self.prettyPrinter = PvaPyPrettyPrinter()
         self.hpcObject = None
         self.hpcObjectId = None
 
@@ -213,8 +214,7 @@ class HpcController:
         if not statsDict:
             statsDict = self.getStats()
         statsDict[f'{self.getControllerIdField()}'] = self.hpcObjectId
-        pp = PvaPyPrettyPrinter()
-        report = pp.pformat(statsDict)
+        report = self.prettyPrinter.pformat(statsDict)
 
         if self.screen:
             try:

@@ -10,6 +10,42 @@ class DataConsumer:
 
     PROVIDER_TYPE_MAP = { 'pva' : pva.PVA, 'ca' : pva.CA }
 
+    STATUS_TYPE_DICT = {
+        'consumerId' : pva.UINT,
+        'inputChannel' : pva.STRING,
+        'objectId' : pva.UINT,
+        'objectTime' : pva.DOUBLE,
+        'objectTimestamp' : pva.PvTimeStamp(),
+        'monitorStats' : {
+            'nReceived' : pva.UINT,
+            'receivedRate' : pva.DOUBLE,
+            'nOverruns' : pva.UINT,
+            'overrunRate' : pva.DOUBLE
+        },
+        'queueStats' : {
+            'nReceived' : pva.UINT,
+            'nRejected' : pva.UINT,
+            'nDelivered' : pva.UINT,
+            'nQueued' : pva.UINT
+        },
+        'processorStats' : {
+            'runtime' : pva.DOUBLE,
+            'startTime' : pva.DOUBLE,
+            'endTime' : pva.DOUBLE,
+            'receivingTime' : pva.DOUBLE,
+            'firstObjectTime' : pva.DOUBLE,
+            'lastObjectTime' : pva.DOUBLE,
+            'firstObjectId' : pva.UINT,
+            'lastObjectId' : pva.UINT,
+            'nProcessed' : pva.UINT,
+            'processedRate' : pva.DOUBLE,
+            'nErrors' : pva.UINT,
+            'errorRate' : pva.DOUBLE,
+            'nMissed' : pva.UINT,
+            'missedRate' : pva.DOUBLE
+        }
+    }
+
     def __init__(self, consumerId, inputChannel, providerType=pva.PVA, objectIdField='uniqueId', fieldRequest='', serverQueueSize=-1, monitorQueueSize=-1, accumulateObjects=-1, accumulationTimeout=-1, distributorPluginName='pydistributor', distributorGroupId=None, distributorSetId=None, distributorTriggerFieldName=None, distributorUpdates=None, distributorUpdateMode=None, metadataChannels=None, processingController=None):
         self.logger = LoggingManager.getLogger(f'consumer-{consumerId}')
         self.consumerId = consumerId
