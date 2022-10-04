@@ -5,8 +5,7 @@ import threading
 import time
 import pvaccess as pva
 from ..utility.objectUtility import ObjectUtility
-from ..utility.pvapyPrettyPrinter import PvaPyPrettyPrinter
-from ..hpc.dataProcessingController import DataProcessingController
+from .dataProcessingController import DataProcessingController
 from .sourceChannel import SourceChannel
 from .dataCollector import DataCollector
 from .hpcController import HpcController
