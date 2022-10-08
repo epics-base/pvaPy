@@ -186,23 +186,20 @@ class HpcController:
         return processorConfig
 
     def createDataProcessor(self, processorId, args):
-        processorConfig = self.createDataProcessorConfig(processorId, args)
-        self.logger.debug(f'Using processor configuration: {processorConfig}')
+        self.processorConfig = self.createDataProcessorConfig(processorId, args)
+        self.logger.debug(f'Using processor configuration: {self.processorConfig}')
         userDataProcessor = None
         if args.processor_file and args.processor_class:
-            userDataProcessor = ObjectUtility.createObjectInstanceFromFile(args.processor_file, 'userDataProcessorModule', args.processor_class, processorConfig)
+            userDataProcessor = ObjectUtility.createObjectInstanceFromFile(args.processor_file, 'userDataProcessorModule', args.processor_class, self.processorConfig)
         elif args.processor_class:
-            userDataProcessor = ObjectUtility.createObjectInstanceFromClassPath(args.processor_class, processorConfig)
+            userDataProcessor = ObjectUtility.createObjectInstanceFromClassPath(args.processor_class, self.processorConfig)
 
         if userDataProcessor is not None:
             self.logger.debug(f'Created data processor {processorId}: {userDataProcessor}')
             userDataProcessor.processorId = processorId
-            userDataProcessor.objectIdField = processorConfig['objectIdField']
-        processingController = DataProcessingController(processorConfig, userDataProcessor)
-        if processingController:
-            processingController.pvaServer = self.pvaServer
-            processingController.createUserDefinedOutputChannel()
-        return processingController
+            userDataProcessor.objectIdField = self.processorConfig['objectIdField']
+        self.processingController = DataProcessingController(self.processorConfig, userDataProcessor)
+        return self.processingController
             
     def getStatusTypeDict(self, processingController):
         return {}

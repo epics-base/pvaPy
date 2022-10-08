@@ -18,7 +18,7 @@ class DataConsumerController(HpcController):
         HpcController.__init__(self, args)
         self.createConsumer(args.consumer_id, args=self.args)
 
-    def createProcessorConfig(self, consumerId, args):
+    def createDataProcessorConfig(self, consumerId, args):
         oidOffset = 1
         if args.oid_offset > 0:
             oidOffset = args.oid_offset
@@ -63,25 +63,6 @@ class DataConsumerController(HpcController):
         self.processorConfig = processorConfig
         return processorConfig
 
-    def createProcessor(self, consumerId, args):
-        processorConfig = self.createProcessorConfig(consumerId, args)
-        self.logger.debug(f'Using processor configuration: {processorConfig}')
-
-        userDataProcessor = None
-        if args.processor_file and args.processor_class:
-            userDataProcessor = ObjectUtility.createObjectInstanceFromFile(args.processor_file, 'userDataProcessorModule', args.processor_class, processorConfig)
-        elif args.processor_class:
-            userDataProcessor = ObjectUtility.createObjectInstanceFromClassPath(args.processor_class, processorConfig)
-
-        if userDataProcessor is not None:
-            self.logger.debug(f'Created data processor {consumerId}: {userDataProcessor}')
-            userDataProcessor.processorId = consumerId
-            userDataProcessor.consumerId = consumerId
-            userDataProcessor.objectIdField = processorConfig['objectIdField']
-        processingController = DataProcessingController(processorConfig, userDataProcessor)
-        self.processorConfig = processorConfig
-        return processingController
-            
     def getStatusTypeDict(self):
         statusTypeDict = DataConsumer.STATUS_TYPE_DICT
         if self.processingController:
@@ -93,7 +74,7 @@ class DataConsumerController(HpcController):
         return statusTypeDict
 
     def createConsumer(self, consumerId, args):
-        self.processingController = self.createProcessor(consumerId, args)
+        self.processingController = self.createDataProcessor(consumerId, args)
         self.usingPvObjectQueue = (args.monitor_queue_size >= 0)
 
         inputChannel = args.input_channel.replace('*', f'{consumerId}')

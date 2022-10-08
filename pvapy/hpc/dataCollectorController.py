@@ -19,7 +19,7 @@ class DataCollectorController(HpcController):
         HpcController.__init__(self, args)
         self.createCollector(args.collector_id, args=self.args)
 
-    def createProcessorConfig(self, collectorId, args):
+    def createDataProcessorConfig(self, collectorId, args):
         inputChannel = args.input_channel
         self.logger.debug(f'Input channel: {inputChannel}')
 
@@ -49,25 +49,6 @@ class DataCollectorController(HpcController):
         self.processorConfig = processorConfig
         return processorConfig
 
-    def createProcessor(self, collectorId, args):
-        # Create config dict
-        processorConfig = self.createProcessorConfig(collectorId, args)
-    
-        self.logger.debug(f'Using processor configuration: {processorConfig}')
-        userDataProcessor = None
-        if args.processor_file and args.processor_class:
-            userDataProcessor = ObjectUtility.createObjectInstanceFromFile(args.processor_file, 'userDataProcessorModule', args.processor_class, processorConfig)
-        elif args.processor_class:
-            userDataProcessor = ObjectUtility.createObjectInstanceFromClassPath(args.processor_class, processorConfig)
-
-        if userDataProcessor is not None:
-            self.logger.debug(f'Created data processor {collectorId}: {userDataProcessor}')
-            userDataProcessor.processorId = collectorId
-            userDataProcessor.collectorId = collectorId
-            userDataProcessor.objectIdField = processorConfig['objectIdField']
-        processingController = DataProcessingController(processorConfig, userDataProcessor)
-        return processingController
-            
     def getStatusTypeDict(self):
         statusTypeDict = DataCollector.STATUS_TYPE_DICT
         if self.processingController:
@@ -90,7 +71,7 @@ class DataCollectorController(HpcController):
         return producerIdList
 
     def createCollector(self, collectorId, args):
-        self.processingController = self.createProcessor(collectorId, args)
+        self.processingController = self.createDataProcessor(collectorId, args)
         inputChannel = args.input_channel
         self.logger.debug(f'Input channel name: {inputChannel}')
 
