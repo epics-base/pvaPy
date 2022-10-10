@@ -105,18 +105,21 @@ bp::list CaIoc::getRecordNames()
 
     DBENTRY dbentry;
     DBENTRY *pdbentry=&dbentry;
-    int status;
+    int status = 0;
 
     if (!pdbbase) {
         throw InvalidState("No database loaded.");
     }
     dbInitEntry(pdbbase, pdbentry);
+    status = dbFirstRecordType(pdbentry);
+
     while (!status) {
         status = dbFirstRecord(pdbentry);
         while (!status) {
-            recordNames.append(dbGetRecordName(pdbentry));
+            recordNames.append(std::string(dbGetRecordName(pdbentry)));
             status = dbNextRecord(pdbentry);
         }
+        status = dbNextRecordType(pdbentry);
     }
     dbFinishEntry(pdbentry);
     return recordNames;
