@@ -74,16 +74,40 @@ class_<CaIoc>("CaIoc",
         "    recordNames = caIoc.getRecordNames()\n\n")
 
     .def("putField",
+        static_cast<void(CaIoc::*)(const std::string&, const bp::object&)>(&CaIoc::putField),
+        args("name", "value"),
+        "Put field. This method is equivalent to dbpf(), which does not throw any exceptions.\n\n"
+        ":Parameter: *name* (str) - Field name.\n\n"
+        ":Parameter: *value* (object) - Field value as a python object.\n\n"
+        ":Raises: *InvalidArgument* - in case of empty field name.\n\n"
+        ":Raises: *ObjectNotFound* - in case of unknown field name.\n\n"
+        ":Raises: *InvalidState* - in case of attempting to call this method before initializing IOC, out of memory, or any other errors.\n\n"
+        "::\n\n"
+        "    caIoc.putField('I1', 5)\n\n")
+
+    .def("putField",
         static_cast<void(CaIoc::*)(const std::string&, const std::string&)>(&CaIoc::putField),
         args("name", "value"),
         "Put field. This method is equivalent to dbpf(), which does not throw any exceptions.\n\n"
         ":Parameter: *name* (str) - Field name.\n\n"
-        ":Parameter: *value* (str) - Field value.\n\n"
+        ":Parameter: *value* (str) - Field value as a string.\n\n"
         ":Raises: *InvalidArgument* - in case of empty field name.\n\n"
         ":Raises: *ObjectNotFound* - in case of unknown field name.\n\n"
         ":Raises: *InvalidState* - in case of attempting to call this method before initializing IOC, out of memory, or any other errors.\n\n"
         "::\n\n"
         "    caIoc.putField('I1', '5')\n\n")
+
+    .def("getField",
+        static_cast<bp::object(CaIoc::*)(const std::string&)>(&CaIoc::getField),
+        args("name"),
+        "Get field.\n\n"
+        ":Parameter: *name* (str) - Field name.\n\n"
+        ":Returns: Field value, which may be a list if the number if elements in the record is greater than 1.\n\n"
+        ":Raises: *InvalidArgument* - in case of empty field name.\n\n"
+        ":Raises: *ObjectNotFound* - in case of unknown field name.\n\n"
+        ":Raises: *InvalidState* - in case of attempting to call this method before initializing IOC, out of memory, or any other errors.\n\n"
+        "::\n\n"
+        "    value = caIoc.getField('I1')\n\n")
 
     .def("printRecord",
         static_cast<void(CaIoc::*)(const std::string&, int)>(&CaIoc::printRecord),
