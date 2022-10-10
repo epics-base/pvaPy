@@ -1,0 +1,4 @@
+record(waveform, "$(NAME)") {
+    field(NELM, "10")
+}
+
