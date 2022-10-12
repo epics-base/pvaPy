@@ -109,7 +109,6 @@ void PvaServer::start()
     bool printInfo = logger.hasLogLevel(PvaPyLogger::PVAPY_LOG_LEVEL_INFO|PvaPyLogger::PVAPY_LOG_LEVEL_DEBUG);
     server = epics::pvAccess::startPVAServer(epics::pvAccess::PVACCESS_ALL_PROVIDERS, 0, true, printInfo);
     isRunning = true;
-    startCallbackThread();
 }
 
 void PvaServer::stop() 
@@ -149,6 +148,9 @@ void PvaServer::disableRecordProcessing(const std::string& channelName)
 
 void PvaServer::initRecord(const std::string& channelName, const PvObject& pvObject, const boost::python::object& onWriteCallback) 
 {
+    if (!callbackThreadRunning) {
+        startCallbackThread();
+    }
     PyPvRecordPtr record(PyPvRecord::create(channelName, pvObject, callbackQueuePtr, onWriteCallback));
     if(!record.get()) {
         throw PvaException("Failed to create PyPvRecord: " + channelName);
@@ -165,6 +167,9 @@ void PvaServer::initRecord(const std::string& channelName, const PvObject& pvObj
 
 void PvaServer::initRecord(const std::string& channelName, const PvObject& pvObject, int asLevel, const std::string& asGroup, const boost::python::object& onWriteCallback) 
 {
+    if (!callbackThreadRunning) {
+        startCallbackThread();
+    }
     PyPvRecordPtr record(PyPvRecord::create(channelName, pvObject, asLevel, asGroup, callbackQueuePtr, onWriteCallback));
     if(!record.get()) {
         throw PvaException("Failed to create PyPvRecord: " + channelName);
