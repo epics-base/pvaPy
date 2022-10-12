@@ -149,6 +149,7 @@ class DataCollectorController(HpcController):
                 producerStatusObject['monitorStats'] = producerStatsDict.get('monitorStats', {})
                 producerStatusObject['queueStats'] = producerStatsDict.get('queueStats', {})
                 statusObject[f'metadataStats_{metadataChannelId}'] = producerStatusObject
-            self.pvaServer.update(self.statusChannel, statusObject)
+            if self.statusChannel:
+                self.pvaServer.update(self.statusChannel, statusObject)
         return statsDict 
 
