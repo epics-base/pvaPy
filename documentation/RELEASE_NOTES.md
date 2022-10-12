@@ -8,10 +8,10 @@
   - added ability to generate and publish image metadata, either
     as CA or as PVA channels
 - Streaming Framework enhancements:
-  - implemented ability to receive CA and PVA metadata in the data collector
+  - implemented ability to receive CA and PVA metadata in both data collector
     and data consumer, and to process those together with the data objects
 - conda/pip package dependencies: 
-  - EPICS BASE = 7.0.6.1.C2.3
+  - EPICS BASE = 7.0.7
   - BOOST      = 1.78.0
   - NUMPY      >= 1.22 (for python >= 3.8); < 1.21 (for python < 3.8)
 
