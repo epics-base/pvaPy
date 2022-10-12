@@ -1,9 +1,7 @@
 #!/usr/bin/env python
 
 import argparse
-import time
 import pvaccess as pva
-from ..utility.loggingManager import LoggingManager
 from ..hpc.dataCollectorController import DataCollectorController
 
 __version__ = pva.__version__
