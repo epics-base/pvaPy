@@ -199,9 +199,24 @@ class MpdcControllerRequestProcessingThread(threading.Thread):
                 self.logger.error(f'Request processing error: {ex}')
 
         self.logger.debug(f'Request processing thread for consumer {self.consumerId} exited')
-   
+
+def mpdcControllerInit():
+    # Try to avoid epicsThread stderr messages related to forking new process
+    try:
+        import sys
+        stderr = sys.stderr
+        stdout = sys.stdout
+        sys.stderr = None
+        sys.stdout = None
+        pva.PvObjectQueue()
+    except:
+        pass
+    sys.stderr = stderr
+    sys.stdout = stdout
+    
 def mpdcController(requestQueue, responseQueue, inputChannel, outputChannel, statusChannel, controlChannel, processorFile, processorClass, processorArgs, objectIdField, objectIdOffset, fieldRequest, skipInitialUpdates, reportStatsList, logLevel, logFile, disableCurses, consumerId, nConsumers, inputProviderType, serverQueueSize, monitorQueueSize, accumulateObjects, accumulationTimeout, distributorPluginName, distributorGroup, distributorSet, distributorTrigger, distributorUpdates, nDistributorSets, metadataChannels):
     logger = LoggingManager.getLogger(f'mpdcController-{consumerId}')
+    mpdcControllerInit()
     controller = DataConsumerController(
         inputChannel,
         outputChannel=outputChannel,
