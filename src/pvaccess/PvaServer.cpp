@@ -26,6 +26,7 @@ PvaServer::PvaServer() :
     isRunning(false),
     callbackQueuePtr(new SynchronizedQueue<std::string>()),
     callbackThreadRunning(false),
+    callbackThreadNeeded(false),
     callbackThreadMutex(),
     callbackThreadExitEvent()
 {
@@ -41,8 +42,8 @@ PvaServer::PvaServer(const std::string& channelName, const PvObject& pvObject) :
     callbackThreadMutex(),
     callbackThreadExitEvent()
 {
-    initRecord(channelName, pvObject);
     start();
+    initRecord(channelName, pvObject);
 }
 
 PvaServer::PvaServer(const std::string& channelName, const PvObject& pvObject, const boost::python::object& onWriteCallback) :
@@ -53,8 +54,8 @@ PvaServer::PvaServer(const std::string& channelName, const PvObject& pvObject, c
     callbackThreadMutex(),
     callbackThreadExitEvent()
 {
-    initRecord(channelName, pvObject, onWriteCallback);
     start();
+    initRecord(channelName, pvObject, onWriteCallback);
 }
 
 PvaServer::PvaServer(const PvaServer& pvaServer) :
@@ -104,12 +105,14 @@ void PvaServer::start()
         logger.warn("PVA Server is already running.");
         return;
     }
+    isRunning = true;
+    if (callbackThreadNeeded) {
+        startCallbackThread();
+    }
     PyGilManager::evalInitThreads();
     epics::pvDatabase::ChannelProviderLocalPtr channelProvider = epics::pvDatabase::getChannelProviderLocal();
     bool printInfo = logger.hasLogLevel(PvaPyLogger::PVAPY_LOG_LEVEL_INFO|PvaPyLogger::PVAPY_LOG_LEVEL_DEBUG);
     server = epics::pvAccess::startPVAServer(epics::pvAccess::PVACCESS_ALL_PROVIDERS, 0, true, printInfo);
-    isRunning = true;
-    startCallbackThread();
 }
 
 void PvaServer::stop() 
@@ -149,6 +152,9 @@ void PvaServer::disableRecordProcessing(const std::string& channelName)
 
 void PvaServer::initRecord(const std::string& channelName, const PvObject& pvObject, const boost::python::object& onWriteCallback) 
 {
+    if (!callbackThreadRunning) {
+        startCallbackThread();
+    }
     PyPvRecordPtr record(PyPvRecord::create(channelName, pvObject, callbackQueuePtr, onWriteCallback));
     if(!record.get()) {
         throw PvaException("Failed to create PyPvRecord: " + channelName);
@@ -165,6 +171,9 @@ void PvaServer::initRecord(const std::string& channelName, const PvObject& pvObj
 
 void PvaServer::initRecord(const std::string& channelName, const PvObject& pvObject, int asLevel, const std::string& asGroup, const boost::python::object& onWriteCallback) 
 {
+    if (!callbackThreadRunning) {
+        startCallbackThread();
+    }
     PyPvRecordPtr record(PyPvRecord::create(channelName, pvObject, asLevel, asGroup, callbackQueuePtr, onWriteCallback));
     if(!record.get()) {
         throw PvaException("Failed to create PyPvRecord: " + channelName);
@@ -345,6 +354,7 @@ void PvaServer::startCallbackThread()
     epics::pvData::Lock lock(callbackThreadMutex);
     if (!callbackThreadRunning) {
         epicsThreadCreate("CallbackThread", epicsThreadPriorityHigh, epicsThreadGetStackSize(epicsThreadStackSmall), (EPICSTHREADFUNC)callbackThread, this);
+        callbackThreadNeeded = true;
     }
     else {
         logger.warn("Callback thread is already running.");

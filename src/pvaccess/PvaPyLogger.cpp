@@ -250,7 +250,7 @@ void PvaPyLogger::log(const char* messageLevel, const char* message, va_list mes
     char timeStamp[MaxTimeStampLength];
     prepareTimeStamp(timeStamp, MaxTimeStampLength, TimeStampFormat);
     if (useEpicsLog) {
-        errlogPrintf("%s %s %s:  ", timeStamp, messageLevel, name);
+        errlogPrintf("%s %s %s:  ", timeStamp, name, messageLevel);
         errlogVprintf(message, messageArgs);
         errlogPrintf("\n");
     }
@@ -258,12 +258,12 @@ void PvaPyLogger::log(const char* messageLevel, const char* message, va_list mes
         // On vxWorks fflush() fails frequently, so only use
         // fprintf() if logging goes into a file.
         if (usePrintf) {
-            printf("%s %s %s:  ", timeStamp, messageLevel, name);
+            printf("%s %s %s:  ", timeStamp, name, messageLevel);
             vprintf(message, messageArgs);
             printf("\n");
         }
         else {
-            fprintf(logFile, "%s %s %s:  ", timeStamp, messageLevel, name);
+            fprintf(logFile, "%s %s %s:  ", timeStamp, name, messageLevel);
             vfprintf(logFile, message, messageArgs);
             fprintf(logFile, "\n");
             fflush(logFile);

@@ -83,6 +83,7 @@ private:
 
     StringQueuePtr callbackQueuePtr;
     bool callbackThreadRunning;
+    bool callbackThreadNeeded;
     epics::pvData::Mutex callbackThreadMutex;
     epicsEvent callbackThreadExitEvent;
 };

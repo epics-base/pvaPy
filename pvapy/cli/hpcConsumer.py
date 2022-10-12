@@ -1,17 +1,7 @@
 #!/usr/bin/env python
 
 import argparse
-import threading
-import time
-import json
-import queue
 import pvaccess as pva
-import multiprocessing as mp
-from ..utility.loggingManager import LoggingManager
-from ..utility.objectUtility import ObjectUtility
-from ..hpc.sourceChannel import SourceChannel
-from ..hpc.dataConsumer import DataConsumer
-from ..hpc.dataProcessingController import DataProcessingController
 from ..hpc.dataConsumerController import DataConsumerController
 from ..hpc.mpDataConsumerController import MpDataConsumerController
 
@@ -57,7 +47,6 @@ def main():
         print('Unrecognized argument(s): {}'.format(' '.join(unparsed)))
         exit(1)
 
-    logger = LoggingManager.getLogger('consumerMain')
     if args.n_consumers == 1:
         ControllerClass = DataConsumerController
     else:
