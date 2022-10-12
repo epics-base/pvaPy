@@ -44,15 +44,6 @@ class HpcController:
     def __init__(self, inputChannel, outputChannel=None, statusChannel=None, controlChannel=None, processorFile=None, processorClass=None, processorArgs=None, objectIdField='uniqueId', objectIdOffset=0, fieldRequest='', skipInitialUpdates=1, reportStatsList='all', logLevel=None, logFile=None, disableCurses=False):
         self.lock = threading.Lock()
         self.screen = None
-        if logLevel:
-            LoggingManager.setLogLevel(logLevel)
-            if logFile:
-                LoggingManager.addFileHandler(logFile)
-            else:
-                LoggingManager.addStreamHandler()
-        self.logger = LoggingManager.getLogger(self.__class__.__name__)
-        self.screen = self.setupCurses(disableCurses, logLevel)
-
         self.inputChannel = inputChannel
         self.outputChannel = outputChannel
         self.statusChannel = statusChannel
@@ -79,6 +70,19 @@ class HpcController:
         self.prettyPrinter = PvaPyPrettyPrinter()
         self.hpcObject = None
         self.hpcObjectId = None
+
+        self.logger = self.setupLogging(logLevel, logFile)
+        self.screen = self.setupCurses(self.disableCurses, self.logLevel)
+
+    def setupLogging(self, logLevel, logFile):
+        if logLevel:
+            LoggingManager.setLogLevel(logLevel)
+            if logFile:
+                LoggingManager.addFileHandler(logFile)
+            else:
+                LoggingManager.addStreamHandler()
+        logger = LoggingManager.getLogger(self.__class__.__name__)
+        return logger
 
     def setupCurses(self, disableCurses, logLevel):
         screen = None
@@ -165,14 +169,16 @@ class HpcController:
         return {}
 
     def createOutputChannels(self, hpcObjectId):
-        self.pvaServer = pva.PvaServer()
+        self.pvaServer = None
+        if self.statusChannel or self.controlChannel or self.outputChannel:
+            self.pvaServer = pva.PvaServer()
         if self.statusChannel == '_':
             self.statusChannel = f'pvapy:{self.CONTROLLER_TYPE}:{hpcObjectId}:status'
         if self.statusChannel:
             self.statusChannel = self.statusChannel.replace('*', f'{hpcObjectId}')
             self.logger.debug(f'Status channel name: {self.statusChannel}')
+        self.statusTypeDict = self.getStatusTypeDict()
         if self.statusChannel:
-            self.statusTypeDict = self.getStatusTypeDict()
             statusPvObject = pva.PvObject(self.statusTypeDict, {f'{self.getControllerIdField()}' : hpcObjectId})
             self.pvaServer.addRecord(self.statusChannel, statusPvObject)
             self.logger.debug(f'Created {self.CONTROLLER_TYPE} status channel: {self.statusChannel}')
