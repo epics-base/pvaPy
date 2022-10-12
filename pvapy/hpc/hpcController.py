@@ -41,32 +41,48 @@ class HpcController:
         d.update(cls.CONTROL_TYPE_DICT)
         return d
 
-    def __init__(self, args):
+    def __init__(self, inputChannel, outputChannel=None, statusChannel=None, controlChannel=None, processorFile=None, processorClass=None, processorArgs=None, objectIdField='uniqueId', objectIdOffset=0, fieldRequest='', skipInitialUpdates=1, reportStatsList='all', logLevel=None, logFile=None, disableCurses=False):
         self.lock = threading.Lock()
         self.screen = None
-        if args.log_level:
-            LoggingManager.setLogLevel(args.log_level)
-            if args.log_file:
-                LoggingManager.addFileHandler(args.log_file)
+        if logLevel:
+            LoggingManager.setLogLevel(logLevel)
+            if logFile:
+                LoggingManager.addFileHandler(logFile)
             else:
                 LoggingManager.addStreamHandler()
         self.logger = LoggingManager.getLogger(self.__class__.__name__)
-        self.screen = self.setupCurses(args)
-        self.args = args
+        self.screen = self.setupCurses(disableCurses, logLevel)
+
+        self.inputChannel = inputChannel
+        self.outputChannel = outputChannel
+        self.statusChannel = statusChannel
+        self.controlChannel = controlChannel
+        self.processorFile = processorFile
+        self.processorClass = processorClass
+        self.processorArgs = processorArgs
+        self.objectIdField = objectIdField
+        self.objectIdOffset = objectIdOffset
+        self.fieldRequest = fieldRequest
+        self.skipInitialUpdates = skipInitialUpdates
+        self.reportStatsList = reportStatsList
+        self.logLevel = logLevel
+        self.logFile = logFile
+        self.disableCurses = disableCurses
+
         self.isStopped = True
         self.shouldBeStopped = False
         self.isRunning = False
         self.statsObjectId = 0
         self.statsEnabled = {}
         for statsType in ['monitor','queue','processor','user']:
-            self.statsEnabled[f'{statsType}Stats'] = 'all' in args.report_stats or statsType in args.report_stats
+            self.statsEnabled[f'{statsType}Stats'] = 'all' in reportStatsList or statsType in reportStatsList
         self.prettyPrinter = PvaPyPrettyPrinter()
         self.hpcObject = None
         self.hpcObjectId = None
 
-    def setupCurses(self, args):
+    def setupCurses(self, disableCurses, logLevel):
         screen = None
-        if not args.disable_curses and not args.log_level:
+        if not disableCurses and not logLevel:
             try:
                 import curses
                 screen = curses.initscr()
@@ -148,9 +164,8 @@ class HpcController:
     def getStatusTypeDict(self):
         return {}
 
-    def createOutputChannels(self, hpcObjectId, args):
+    def createOutputChannels(self, hpcObjectId):
         self.pvaServer = pva.PvaServer()
-        self.statusChannel = args.status_channel
         if self.statusChannel == '_':
             self.statusChannel = f'pvapy:{self.CONTROLLER_TYPE}:{hpcObjectId}:status'
         if self.statusChannel:
@@ -162,7 +177,6 @@ class HpcController:
             self.pvaServer.addRecord(self.statusChannel, statusPvObject)
             self.logger.debug(f'Created {self.CONTROLLER_TYPE} status channel: {self.statusChannel}')
 
-        self.controlChannel = args.control_channel
         if self.controlChannel == '_':
             self.controlChannel = f'pvapy:{self.CONTROLLER_TYPE}:{hpcObjectId}:control'
         if self.controlChannel:
@@ -175,24 +189,27 @@ class HpcController:
             self.pvaServer.addRecord(self.controlChannel, self.controlPvObject, self.controlCallback)
             self.logger.debug(f'Created {self.CONTROLLER_TYPE} control channel: {self.controlChannel}')
 
-    def createDataProcessorConfig(self, processorId, args):
+    def createDataProcessorConfig(self, processorId):
         processorConfig = {}
-        if args.processor_args:
-            processorConfig = json.loads(args.processor_args)
-        processorConfig['inputChannel'] = inputChannel
-        if not 'processorId' in processorConfig:
-            processorConfig['processorId'] = processorId
-        self.processorConfig = processorConfig
+        if self.processorArgs:
+            processorConfig = json.loads(self.processorArgs)
+        processorConfig['processorId'] = processorId
+        processorConfig['inputChannel'] = self.inputChannel
+        processorConfig['outputChannel'] = self.outputChannel
+        processorConfig['objectIdField'] = self.objectIdField
+        processorConfig['skipInitialUpdates'] = self.skipInitialUpdates
+        processorConfig['objectIdOffset'] = self.objectIdOffset
+        processorConfig['fieldRequest'] = self.fieldRequest
         return processorConfig
 
-    def createDataProcessor(self, processorId, args):
-        self.processorConfig = self.createDataProcessorConfig(processorId, args)
+    def createDataProcessor(self, processorId):
+        self.processorConfig = self.createDataProcessorConfig(processorId)
         self.logger.debug(f'Using processor configuration: {self.processorConfig}')
         userDataProcessor = None
-        if args.processor_file and args.processor_class:
-            userDataProcessor = ObjectUtility.createObjectInstanceFromFile(args.processor_file, 'userDataProcessorModule', args.processor_class, self.processorConfig)
-        elif args.processor_class:
-            userDataProcessor = ObjectUtility.createObjectInstanceFromClassPath(args.processor_class, self.processorConfig)
+        if self.processorFile and self.processorClass:
+            userDataProcessor = ObjectUtility.createObjectInstanceFromFile(self.processorFile, 'userDataProcessorModule', self.processorClass, self.processorConfig)
+        elif self.processorClass:
+            userDataProcessor = ObjectUtility.createObjectInstanceFromClassPath(self.processorClass, self.processorConfig)
 
         if userDataProcessor is not None:
             self.logger.debug(f'Created data processor {processorId}: {userDataProcessor}')
@@ -326,7 +343,6 @@ class HpcController:
             except KeyboardInterrupt as ex:
                 break
 
-        print()
         statsDict = self.stop()
         # Allow clients monitoring various channels to get last update
         time.sleep(waitTime)

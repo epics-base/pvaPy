@@ -24,7 +24,7 @@ def main():
     parser.add_argument('-nc', '--n-consumers', type=int, dest='n_consumers', default=1, help='Number of consumers to instantiate (default: 1). If > 1, multiprocessing module will be used for receiving and processing data in separate processes.')
     parser.add_argument('-ic', '--input-channel', dest='input_channel', required=True, help='Input PV channel name. The "*" character will be replaced with <consumerId>.')
     parser.add_argument('-ipt', '--input-provider-type', dest='input_provider_type', default='pva', help='Input PV channel provider type, it must be either "pva" or "ca" (default: pva).')
-    parser.add_argument('-oc', '--output-channel', dest='output_channel', default=None, help='Output PVA channel name (default: None). If specified, this channel can be used for publishing processing results. The value of "_" indicates that the output channel name will be set to "pvapy:consumer:<consumerId>:output", while the "*" character will be replaced with <consumerId>. Note that this parameter is ignored if processor arguments dictionary contains "outputChannel" key.')
+    parser.add_argument('-oc', '--output-channel', dest='output_channel', default=None, help='Output PVA channel name (default: None). If specified, this channel can be used for publishing processing results. The value of "_" indicates that the output channel name will be set to "pvapy:consumer:<consumerId>:output", while the "*" character will be replaced with <consumerId>.')
     parser.add_argument('-sc', '--status-channel', dest='status_channel', default=None, help='Status PVA channel name (default: None). If specified, this channel will provide consumer status. The value of "_" indicates that the status channel name will be set to "pvapy:consumer:<consumerId>:status", while the "*" character will be replaced with <consumerId>.')
     parser.add_argument('-cc', '--control-channel', dest='control_channel', default=None, help='Control channel name (default: None). If specified, this channel can be used to control consumer configuration and processing. The value of "_" indicates that the control channel name will be set to "pvapy:consumer:<consumerId>:control", while the "*" character will be replaced with <consumerId>. The control channel object has two strings: command and args. The only allowed values for the command string are: "configure", "reset_stats", "get_stats" and "stop". The configure command is used to allow for runtime configuration changes; in this case the keyword arguments string should be in json format to allow data consumer to convert it into python dictionary that contains new configuration. For example, sending configuration dictionary via pvput command might look like this: pvput input_channel:consumer:2:control \'{"command" : "configure", "args" : "{\\"x\\":100}"}\'. Note that system parameters that can be modified at runtime are the following: "monitorQueueSize" (only if client monitor queue has been configured at the start), "skipInitialUpdates" (affects processing behavior after resetting stats), and "objectIdOffset" (may be used to adjust offset if consumers have been added or removed from processing). The reset_stats command will cause consumer to reset its statistics data, the get_stats will force statistics data update, and the stop command will result in consumer process exiting; for all of these commands args string is not needed.')
     parser.add_argument('-sqs', '--server-queue-size', type=int, dest='server_queue_size', default=0, help='Server queue size (default: 0); this setting will increase memory usage on the server side, but may help prevent missed PV updates.')
@@ -34,10 +34,10 @@ def main():
     parser.add_argument('-pf', '--processor-file', dest='processor_file', default=None, help='Full path to the python file containing user processor class. If this option is not used, the processor class should be specified using "<modulePath>.<className>" notation.')
     parser.add_argument('-pc', '--processor-class', dest='processor_class', default=None, help='Name of the class located in the user processor file that will be processing PV updates. Alternatively, if processor file is not given, the processor class should be specified using the "<modulePath>.<className>" notation. The class should be initialized with a dictionary and must implement the "process(self, pv)" method.')
     parser.add_argument('-pa', '--processor-args', dest='processor_args', default=None, help='JSON-formatted string that can be converted into dictionary and used for initializing user processor object.')
-    parser.add_argument('-of', '--oid-field', dest='oid_field', default='uniqueId', help='PV update id field used for calculating data processor statistics (default: uniqueId). This parameter is ignored if processor argumentss dictionary contains "objectIdField" key.')
-    parser.add_argument('-oo', '--oid-offset', type=int, dest='oid_offset', default=0, help='This parameter determines by how much object id should change between the two PV updates, and is used for determining the number of missed PV updates (default: 0). This parameter is ignored if processor arguments dictionary contains "objectIdOffset" key, and should be modified only if data distributor plugin will be distributing data between multiple clients, in which case it should be set to "(<nConsumers>-1)*<nUpdates>+1" for a single client set, or to "(<nSets>-1)*<nUpdates>+1" for multiple client sets. Values <= 0 will be replaced with the appropriate value depending on the number of client sets specified. Note that this relies on using the same value for the --n-distributor-sets when multiple instances of this command are running separately.')
+    parser.add_argument('-of', '--oid-field', dest='oid_field', default='uniqueId', help='PV update id field used for calculating data processor statistics (default: uniqueId).')
+    parser.add_argument('-oo', '--oid-offset', type=int, dest='oid_offset', default=0, help='This parameter determines by how much object id should change between the two PV updates, and is used for determining the number of missed PV updates (default: 0). This parameter should be modified only if data distributor plugin will be distributing data between multiple clients, in which case it should be set to "(<nConsumers>-1)*<nUpdates>+1" for a single client set, or to "(<nSets>-1)*<nUpdates>+1" for multiple client sets. Values <= 0 will be replaced with the appropriate value depending on the number of client sets specified. Note that this relies on using the same value for the --n-distributor-sets when multiple instances of this command are running separately.')
     parser.add_argument('-fr', '--field-request', dest='field_request', default='', help='PV field request string (default: None). This parameter can be used to request only a subset of the data available in the input channel. The system will automatically append object id field to the specified request string. Note that this parameter is ignored when data distributor is used.')
-    parser.add_argument('-siu', '--skip-initial-updates', type=int, dest='skip_initial_updates', default=1, help='Number of initial PV updates that should not be processed (default: 1). This parameter is ignored if processor arguments dictionary contains "skipInitialUpdates" key.')
+    parser.add_argument('-siu', '--skip-initial-updates', type=int, dest='skip_initial_updates', default=1, help='Number of initial PV updates that should not be processed (default: 1).')
     parser.add_argument('-dpn', '--distributor-plugin-name', dest='distributor_plugin_name', default='pydistributor', help='Distributor plugin name (default: pydistributor).')
     parser.add_argument('-dg', '--distributor-group', dest='distributor_group', default=None, help='Distributor client group that application belongs to (default: None). This parameter should be used only if data distributor plugin will be distributing data between multiple clients. Note that different distributor groups are completely independent of each other.')
     parser.add_argument('-ds', '--distributor-set', dest='distributor_set', default=None, help='Distributor client set that application belongs to within its group (default: None). This parameter should be used only if data distributor plugin will be distributing data between multiple clients. Note that all clients belonging to the same set receive the same PV updates. If set id is not specified (i.e., if a group does not have multiple sets of clients), a PV update will be distributed to only one client.')
@@ -59,9 +59,41 @@ def main():
 
     logger = LoggingManager.getLogger('consumerMain')
     if args.n_consumers == 1:
-        controller = DataConsumerController(args)
+        ControllerClass = DataConsumerController
     else:
-        controller = MpDataConsumerController(args)
+        ControllerClass = MpDataConsumerController
+
+    controller = ControllerClass(
+        args.input_channel, 
+        outputChannel=args.output_channel,
+        statusChannel=args.status_channel,
+        controlChannel=args.control_channel,
+        processorFile=args.processor_file,
+        processorClass=args.processor_class,
+        processorArgs=args.processor_args,
+        objectIdField=args.oid_field,
+        objectIdOffset=args.oid_offset,
+        fieldRequest=args.field_request,
+        skipInitialUpdates=args.skip_initial_updates,
+        reportStatsList=args.report_stats,
+        logLevel=args.log_level,
+        logFile=args.log_file,
+        disableCurses=args.disable_curses,
+        consumerId=args.consumer_id,
+        nConsumers=args.n_consumers,
+        inputProviderType=args.input_provider_type,
+        serverQueueSize=args.server_queue_size,
+        monitorQueueSize=args.monitor_queue_size,
+        accumulateObjects=args.accumulate_objects,
+        accumulationTimeout=args.accumulation_timeout,
+        distributorPluginName=args.distributor_plugin_name,
+        distributorGroup=args.distributor_group,
+        distributorSet=args.distributor_set,
+        distributorTrigger=args.distributor_trigger,
+        distributorUpdates=args.distributor_updates,
+        nDistributorSets=args.n_distributor_sets,
+        metadataChannels=args.metadata_channels
+    )
     controller.run(args.runtime, args.report_period)
 
 if __name__ == '__main__':
