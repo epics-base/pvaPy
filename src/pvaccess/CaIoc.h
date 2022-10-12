@@ -22,7 +22,9 @@ public:
     virtual void registerRecordDeviceDriver();
     virtual void loadRecords(const std::string& fileName, const std::string& substitutions);
     virtual boost::python::list getRecordNames();
+    virtual void putField(const std::string& name, const boost::python::object& value);
     virtual void putField(const std::string& name, const std::string& value);
+    virtual boost::python::object getField(const std::string& name);
     virtual void printRecord(const std::string& name, int level);
 
     // Wrappers for calls available in iocsh
@@ -39,7 +41,17 @@ public:
 private:
     static PvaPyLogger logger;
     void getRecordDbAddr(const std::string& name, DBADDR *dbAddr);
+    template <typename T>
+    void bufferToPyList(void* buffer, boost::python::list pyList, int nElements) {
+        int elementSize = sizeof(T);
+        for (int i = 0; i < nElements; i++) {
+            T val = *(T*)buffer;
+            pyList.append(val);
+            buffer = (char*)buffer + elementSize;
+        }
+    }
+
 
 };
 
-#endif
+#endif // CA_IOC_H

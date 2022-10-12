@@ -2,6 +2,7 @@
 // found in the file LICENSE that is included with the distribution
 
 
+#include <algorithm>
 #include <dbAccess.h>
 #include <dbTest.h>
 #include <dbStaticLib.h>
@@ -12,6 +13,7 @@
 #include "InvalidRequest.h"
 #include "ObjectNotFound.h"
 #include "StringUtility.h"
+#include "PyUtility.h"
 #include "CaIoc.h"
 
 namespace bp = boost::python;
@@ -103,21 +105,30 @@ bp::list CaIoc::getRecordNames()
 
     DBENTRY dbentry;
     DBENTRY *pdbentry=&dbentry;
-    int status;
+    int status = 0;
 
     if (!pdbbase) {
         throw InvalidState("No database loaded.");
     }
     dbInitEntry(pdbbase, pdbentry);
+    status = dbFirstRecordType(pdbentry);
+
     while (!status) {
         status = dbFirstRecord(pdbentry);
         while (!status) {
-            recordNames.append(dbGetRecordName(pdbentry));
+            recordNames.append(std::string(dbGetRecordName(pdbentry)));
             status = dbNextRecord(pdbentry);
         }
+        status = dbNextRecordType(pdbentry);
     }
     dbFinishEntry(pdbentry);
     return recordNames;
+}
+
+void CaIoc::putField(const std::string& name, const bp::object& pyValue)
+{
+    std::string value = PyUtility::extractStringFromPyObject(pyValue);
+    putField(name, value);
 }
 
 void CaIoc::putField(const std::string& name, const std::string& value)
@@ -167,6 +178,101 @@ void CaIoc::putField(const std::string& name, const std::string& value)
     if (status) {
         throw InvalidState("dbPutField() failed with status of " + StringUtility::toString<int>(status));
     }
+}
+
+bp::object CaIoc::getField(const std::string& name)
+{
+    if (name.size() == 0) {
+        throw InvalidArgument("Record name cannot be empty.");
+    }
+
+    DBADDR addr;
+    getRecordDbAddr(name, &addr);
+    long nElements = addr.no_elements; 
+    int bufferSize = std::max(static_cast<int>(nElements*addr.field_size), MAX_STRING_SIZE);
+
+    char buffer[bufferSize];
+    char *pBuffer = &buffer[0];
+
+    long options = 0;
+    long status = dbGetField(&addr, addr.dbr_field_type, pBuffer,
+            &options, &nElements, NULL);
+    if (status) {
+        throw InvalidState("dbGetField() failed with status of " + StringUtility::toString<int>(status));
+    }
+
+    bp::list pyList;
+    switch (addr.dbr_field_type) {
+        case DBR_STRING: {
+            for(int i = 0; i < nElements; i++) {
+                pyList.append(std::string(pBuffer));
+                pBuffer = (char*)pBuffer + MAX_STRING_SIZE;
+            }
+            break;
+        }
+
+        case DBR_CHAR: {
+            bufferToPyList<epicsInt8>(pBuffer, pyList, nElements);
+            break;
+        }
+
+        case DBR_UCHAR: {
+            bufferToPyList<epicsUInt8>(pBuffer, pyList, nElements);
+        }
+
+        case DBR_SHORT: {
+            bufferToPyList<epicsInt16>(pBuffer, pyList, nElements);
+            break;
+        }
+
+        case DBR_USHORT: {
+            bufferToPyList<epicsUInt16>(pBuffer, pyList, nElements);
+            break;
+        }
+
+        case DBR_LONG: {
+            bufferToPyList<epicsInt32>(pBuffer, pyList, nElements);
+            break;
+        }
+
+        case DBR_ULONG: {
+            bufferToPyList<epicsUInt32>(pBuffer, pyList, nElements);
+            break;
+        }
+
+        case DBR_INT64: {
+            bufferToPyList<epicsInt64>(pBuffer, pyList, nElements);
+            break;
+        }
+
+        case DBR_UINT64: {
+            bufferToPyList<epicsUInt64>(pBuffer, pyList, nElements);
+            break;
+        }
+
+        case DBR_FLOAT: {
+            bufferToPyList<epicsFloat32>(pBuffer, pyList, nElements);
+            break;
+        }
+
+        case DBR_DOUBLE: {
+            bufferToPyList<epicsFloat64>(pBuffer, pyList, nElements);
+            break;
+        }
+
+        case DBR_ENUM: {
+            bufferToPyList<epicsEnum16>(pBuffer, pyList, nElements);
+            break;
+        }
+        default: {
+            throw InvalidState("dbGetField() returned unknown record type " + StringUtility::toString<int>(addr.dbr_field_type));
+            break;
+        }
+    }
+    if (nElements == 1) {
+        return pyList[0];
+    }
+    return pyList;
 }
 
 void CaIoc::printRecord(const std::string& name, int level)

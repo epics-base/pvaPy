@@ -14,6 +14,7 @@ class UserDataProcessor:
     \t\- *outputChannel* (str)     : output channel\n
     \t\- *objectIdField* (str)     : name of the object id field\n
     \t\- *pvaServer* (PvaServer)   : PVA Server instance for publishing output objects\n
+    \t\- *metadataQueueMap* (dict) : dictionary of available PvObject queues for metadata channels\n
   
     **UserDataProcessor(configDict={})**
 
