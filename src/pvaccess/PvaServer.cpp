@@ -13,6 +13,7 @@
 #include "QueueEmpty.h"
 #include "PvaServer.h"
 #include "PyGilManager.h"
+#include "PyUtility.h"
 
 namespace epvd = epics::pvData;
 namespace epvdb = epics::pvDatabase;
@@ -102,14 +103,13 @@ bool PvaServer::isAsActive()
 void PvaServer::start() 
 {
     if (isRunning) {
-        logger.warn("PVA Server is already running.");
         return;
     }
     isRunning = true;
+    PyGilManager::evalInitThreads();
     if (callbackThreadNeeded) {
         startCallbackThread();
     }
-    PyGilManager::evalInitThreads();
     epics::pvDatabase::ChannelProviderLocalPtr channelProvider = epics::pvDatabase::getChannelProviderLocal();
     bool printInfo = logger.hasLogLevel(PvaPyLogger::PVAPY_LOG_LEVEL_INFO|PvaPyLogger::PVAPY_LOG_LEVEL_DEBUG);
     server = epics::pvAccess::startPVAServer(epics::pvAccess::PVACCESS_ALL_PROVIDERS, 0, true, printInfo);
@@ -118,7 +118,6 @@ void PvaServer::start()
 void PvaServer::stop() 
 {
     if (!isRunning) {
-        logger.warn("PVA Server is already stopped.");
         return;
     }
     server->shutdown();
@@ -152,7 +151,7 @@ void PvaServer::disableRecordProcessing(const std::string& channelName)
 
 void PvaServer::initRecord(const std::string& channelName, const PvObject& pvObject, const boost::python::object& onWriteCallback) 
 {
-    if (!callbackThreadRunning) {
+    if (!callbackThreadRunning && !PyUtility::isPyNone(onWriteCallback)) {
         startCallbackThread();
     }
     PyPvRecordPtr record(PyPvRecord::create(channelName, pvObject, callbackQueuePtr, onWriteCallback));
@@ -171,7 +170,7 @@ void PvaServer::initRecord(const std::string& channelName, const PvObject& pvObj
 
 void PvaServer::initRecord(const std::string& channelName, const PvObject& pvObject, int asLevel, const std::string& asGroup, const boost::python::object& onWriteCallback) 
 {
-    if (!callbackThreadRunning) {
+    if (!callbackThreadRunning && !PyUtility::isPyNone(onWriteCallback)) {
         startCallbackThread();
     }
     PyPvRecordPtr record(PyPvRecord::create(channelName, pvObject, asLevel, asGroup, callbackQueuePtr, onWriteCallback));
@@ -353,6 +352,7 @@ void PvaServer::startCallbackThread()
 {
     epics::pvData::Lock lock(callbackThreadMutex);
     if (!callbackThreadRunning) {
+        PyGilManager::evalInitThreads();
         epicsThreadCreate("CallbackThread", epicsThreadPriorityHigh, epicsThreadGetStackSize(epicsThreadStackSmall), (EPICSTHREADFUNC)callbackThread, this);
         callbackThreadNeeded = true;
     }

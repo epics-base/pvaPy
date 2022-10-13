@@ -1,9 +1,11 @@
-## Release 5.1.0 (2022/09/DD)
+## Release 5.1.0 (2022/10/14)
 
 - Resolved dependency issues with the curses library
 - Implemented CaIoc class that has ability to run basic CA IOC and
   provides interfaces for loading databases, as well as loading,
   retrieving and updating records
+- PvaServer enhancements:
+  - callback thread is not started until database records require it
 - Area Detector Simulator enhancements:
   - added ability to generate and publish image metadata, either
     as CA or as PVA channels
