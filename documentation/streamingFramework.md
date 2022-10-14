@@ -718,7 +718,7 @@ This command will start CA IOC and generate CA metadata channels 'x', 'y', and '
 Note that it requires path to the EPICS Base dbd folder. For example, if you are using PvaPy
 conda package, this folder would be located at '/path/to/conda/envs/env-name/opt/epics/dbd'.
 
-### Metadata Handling with Distributed Consumers
+### Metadata Handling with Data Consumers
 
 Distributing metadata processing should allow one to handle higher frame rates. In this example
 we also use mirror server for all image and metadata channels.
