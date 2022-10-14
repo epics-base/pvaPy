@@ -732,16 +732,29 @@ On terminal 1, we used the following command to spawn 1 or more
 consumer processes:
 
 ```sh
-$ pvapy-hpc-consumer --input-channel pvapy:image --control-channel consumer:*:control --status-channel consumer:*:status --output-channel consumer:*:output --processor-class pvapy.hpc.userDataProcessor.UserDataProcessor --report-period 10 --server-queue-size SERVER_QUEUE_SIZE --n-consumers N_CONSUMERS [--distributor-updates 1]
+$ pvapy-hpc-consumer \
+    --input-channel pvapy:image \
+    --control-channel consumer:*:control \
+    --status-channel consumer:*:status \
+    --output-channel consumer:*:output \
+    --processor-class pvapy.hpc.userDataProcessor.UserDataProcessor \
+    --report-period 10 \
+    --server-queue-size SERVER_QUEUE_SIZE \
+    --n-consumers N_CONSUMERS \
+    [--distributor-updates 1]
 ```
 
+Server queue size varied according to the test image size.
 Whenever we used multiple consumers (N_CONSUMERS > 1) data distributor was
-turned on using the '--distributor-updates 1' option.
+turned on using the '--distributor-updates 1' option. For a single consumer
+this option was left out.
 
 On terminal 2 images were generated for 60 seconds using the following command:
 
 ```sh
-$ pvapy-ad-sim-server -cn ad:image -nx FRAME_SIZE -ny FRAME_SIZE -dt uint8 -rt 60 -fps FRAME_RATE -rp FRAME_RATE -nf 100
+$ pvapy-ad-sim-server \
+    -cn ad:image -nf 100 -dt uint8 -rt 60 \
+    -nx FRAME_SIZE -ny FRAME_SIZE -fps FRAME_RATE -rp FRAME_RATE
 ```
 
 The above command was able to reliably generate images at constant rates 
@@ -750,7 +763,7 @@ missed during the 60 second server runtime. Results for the maximum
 simulated image detector rate that consumers were able to sustain 
 without missing any frames are shown below:
 
-* Image: 4096 x 4096 (uint8, 16.78 MB); Server queue size: 100
+* Image size: 4096 x 4096 (uint8, 16.78 MB); Server queue size: 100
 
 | Consumers | Frames/second  | Frames/second/consumer | Frames/minute | Data rate/consumer | Total data rate |
 | ---:      | ---:           | ---:                   | ---:          | ---:               | ---:            |
@@ -759,5 +772,28 @@ without missing any frames are shown below:
 |        8  |     1000       |     125                |    60000      |      2.10 GBps     |   16.78 GBps    |
 |       10  |     1200       |     120                |    72000      |      2.01 GBps     |   20.13 GBps    |
 
-* Image: 2048 x 2048 (uint8, 4.19 MB); Server queue size: 200
+* Image size: 2048 x 2048 (uint8, 4.19 MB); Server queue size: 200
+
+| Consumers | Frames/second  | Frames/second/consumer | Frames/minute | Data rate/consumer | Total data rate |
+| ---:      | ---:           | ---:                   | ---:          | ---:               | ---:            |
+|        1  |      700       |     700                |    42000      |      2.94 GBps     |    2.94 GBps    |
+|        4  |     2600       |     650                |   156000      |      2.73 GBps     |   10.91 GBps    |
+|        8  |     4000       |     500                |   240000      |      2.10 GBps     |   16.78 GBps    |
+|       10  |     4500       |     450                |   270000      |      1.89 GBps     |   18.88 GBps    |
+
+* Image size: 1024 x 1024 (uint8, 1.05 MB); Server queue size: 500
+
+| Consumers | Frames/second  | Frames/second/consumer | Frames/minute | Data rate/consumer | Total data rate |
+| ---:      | ---:           | ---:                   | ---:          | ---:               | ---:            |
+|        1  |     3200       |    3200                |   192000      |      3.36 GBps     |    3.36 GBps    |
+|        4  |     10000      |    2500                |   600000      |      2.62 GBps     |   10.49 GBps    |
+|        8  |     12000      |    1500                |   720000      |      1.57 GBps     |   12.58 GBps    |
+|       10  |     14000      |    1400                |   840000      |      1.47 GBps     |   14.68 GBps    |
+
+* Image size: 512 x 512 (uint8, 0.26 MB); Server queue size: 1000
+
+| Consumers | Frames/second  | Frames/second/consumer | Frames/minute | Data rate/consumer | Total data rate |
+| ---:      | ---:           | ---:                   | ---:          | ---:               | ---:            |
+|        1  |     10000      |    10000               |	  600000      |      2.62 GBps     |    2.62 GBps    |
+|        4  |     20000      |     5000               |  1200000      |      1.31 GBps     |    5.24 GBps    |
 
