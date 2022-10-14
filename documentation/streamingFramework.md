@@ -712,3 +712,52 @@ $ pvget enc:1:output # encrypted data
 $ pvget dec:1:output # decrypted (raw) data
 $ pvget proc:1:output # processed image
 ```
+
+## Performance Testing
+
+All tests described in this section have been performed with PvaPy version 
+5.1.0 on a 64-bit linux machine with 96 logical cores (Intel Xeon 
+Gold 6342 CPU with hyperthreading enabled) running at 3.5 GHz, and 
+with 2TB of RAM. Image server and all consumers were running on the
+same machine. 
+
+### Throughput Tests
+
+In order to asses how much data can be pushed through the framework we
+ran a series of tests using the [base system user processor] (../pvapy/hpc/userDataProcessor.py)
+that does not manipulate image and hence does not generate any additional
+load on the test machine. 
+
+On terminal 1, we used the following command to spawn 1 or more
+consumer processes:
+
+```sh
+$ pvapy-hpc-consumer --input-channel pvapy:image --control-channel consumer:*:control --status-channel consumer:*:status --output-channel consumer:*:output --processor-class pvapy.hpc.userDataProcessor.UserDataProcessor --report-period 10 --server-queue-size SERVER_QUEUE_SIZE --n-consumers N_CONSUMERS [--distributor-updates 1]
+```
+
+Whenever we used multiple consumers (N_CONSUMERS > 1) data distributor was
+turned on using the '--distributor-updates 1' option.
+
+On terminal 2 images were generated for 60 seconds using the following command:
+
+```sh
+$ pvapy-ad-sim-server -cn ad:image -nx FRAME_SIZE -ny FRAME_SIZE -dt uint8 -rt 60 -fps FRAME_RATE -rp FRAME_RATE -nf 100
+```
+
+The above command was able to reliably generate images at constant rates 
+of up to 20 KHz. A given test was deemed successful if no frames were 
+missed during the 60 second server runtime. Results for the maximum
+simulated image detector rate that consumers were able to sustain 
+without missing any frames are shown below:
+
+* Image: 4096 x 4096 (uint8, 16.78 MB); Server queue size: 100
+
+| Consumers | Frames/second  | Frames/second/consumer | Frames/minute | Data rate/consumer | Total data rate |
+| ---:      | ---:           | ---:                   | ---:          | ---:               | ---:            |
+|        1  |      150       |     150                |     9000      |      2.52 GBps     |    2.52 GBps    |
+|        4  |      600       |     150                |    36000      |      2.52 GBps     |   10.07 GBps    |
+|        8  |     1000       |     125                |    60000      |      2.10 GBps     |   16.78 GBps    |
+|       10  |     1200       |     120                |    72000      |      2.01 GBps     |   20.13 GBps    |
+
+* Image: 2048 x 2048 (uint8, 4.19 MB); Server queue size: 200
+
