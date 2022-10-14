@@ -20,6 +20,12 @@ class UserDataProcessor:
 
     def __init__(self, configDict={}):
         ...
+        # The following will be set after object gets created.
+        self.processorId = None
+        self.pvaServer = None
+        self.outputChannel = None
+        self.objectIdField = None
+        self.metadataQueueMap = {}
 
     # Method called at start
     def start(self):
@@ -97,7 +103,8 @@ might have to be tweaked in order for examples to run without lost frames.
 A medium range workstation (e.g. dual Intel Xeon E5-2620 2.40GHz CPU, 24
 logical cores, 64GB RAM, local SSD drives) should be able to run all
 examples shown here without any issues. Note that some commands use
-[sample AD image processor](../examples/hpcAdImageProcessorExample.py) as
+[sample AD image processor](../examples/hpcAdImageProcessorExample.py) or
+[sample AD metadata processor](../examples/hpcAdMetadataProcessorExample.py) as
 external (user) code. Also, instead of generating random image data, one
 could, for example, concatenate actual image data into a set of NumPy arrays
 and pass that file into the pvapy-ad-sim-server command using the
@@ -632,6 +639,82 @@ $ pvapy-ad-sim-server -cn ad:image -nx 128 -ny 128 -dt uint8 -fps 2000 -rt 60 -r
 Once the data source starts publishing images, they will be streamed through
 all the components of the system, and saved into the designated output folder.
 
+### Metadata Handling with Data Collector
+
+In many cases images need to be associated with with various pieces of metadata (e.g., position information)
+before processing. The streaming framework allows one to receive PV updates from any number of metadata channels
+(CA or PVA), which are made available to the user processing module as a dictionary of metadata 
+channel names/PvObject queues.
+
+<p align="center">
+  <img alt="Metadata Handling with Data Collector" src="images/StreamingFrameworkMetadataHandlingDataCollector.jpg">
+</p>
+
+This example uses [sample AD metadata processor](../examples/hpcAdMetadataProcessorExample.py) module which is capable of 
+associating images with available metadata based on their timestamp comparison. 
+
+Donwload the sample metadata processor and start data collector on terminal 1 using the following command:
+
+```sh
+$ pvapy-hpc-collector \
+    --collector-id 1 \
+    --producer-id-list 1 \
+    --input-channel pvapy:image \
+    --control-channel collector:*:control \
+    --status-channel collector:*:status \
+    --output-channel collector:*:output \
+    --processor-file /path/to/hpcAdMetadataProcessorExample.py \
+    --processor-class HpcAdMetadataProcessor \
+    --report-period 10 \
+    --server-queue-size 100 \
+    --collector-cache-size 100 \
+    --monitor-queue-size 1000 \
+    --metadata-channels pva://x,pva://y,pva://z
+```
+
+On terminal 2 generate test images on channel pvapy:image and PVA metadata on channels x, y, and z:
+
+```sh
+$ pvapy-ad-sim-server -cn pvapy:image -nx 128 -ny 128 -fps 100 -rp 100 -rt 60 \
+    -mpv pva://x,pva://y,pva://z
+```
+
+Once image generation starts, on terminal 3 inspect both the original and processed images. The output channel 
+should contain the original image data plus values for x, y, and z attributes:
+
+```sh
+$ pvget pvapy:image # original image, no metadata
+$ pvget collector:1:output # should contain x,y,z metadata
+```
+
+Note that the generated PVA metadata channels will have a structure containing value and timestamp:
+
+```sh
+$ pvinfo x
+x
+Server: ...
+Type:
+    structure
+        double value
+        time_t timeStamp
+            long secondsPastEpoch
+            int nanoseconds
+            int userTag
+```
+
+Since retrieving PVs from CA IOCs results in the same channel structure as above, 
+the sample metadata processor works with either CA or PVA metadata channels. This can be verified
+by requesting the AD simulation server to generate CA metadata:
+
+```sh
+$ EPICS_DB_INCLUDE_PATH=/path/to/epics-base/dbd pvapy-ad-sim-server \
+    -cn pvapy:image -nx 128 -ny 128 -fps 1 -rt 60 -mpv x,y,z
+```
+
+The above command will start CA IOC and generate CA metadata channels x, y, and z. It requires 
+path to EPICS Base dbd folder. For example, if you ar eusing PvaPy conda package, this folder would
+be /path/to/conda/envs/env-name/opt/epics/dbd.
+
 ### Data Encryption
 
 This example illustrates how data can be encrypted in the first processing
@@ -716,7 +799,7 @@ $ pvget proc:1:output # processed image
 ## Performance Testing
 
 All tests described in this section have been performed with PvaPy version 
-5.1.0 on a 64-bit linux machine with 96 logical cores (Intel Xeon 
+5.1.0 (Python 3.9 conda package) on a 64-bit linux machine with 96 logical cores (Intel Xeon 
 Gold 6342 CPU with hyperthreading enabled) running at 3.5 GHz, and 
 with 2TB of RAM. Image server and all consumers were running on the
 same machine. 
@@ -757,10 +840,13 @@ $ pvapy-ad-sim-server \
     -nx FRAME_SIZE -ny FRAME_SIZE -fps FRAME_RATE -rp FRAME_RATE
 ```
 
-The above command was able to reliably generate images at constant rates 
-of up to 20 KHz. A given test was deemed successful if no frames were 
+The above command was able to reliably generate images at stable rates 
+of up to 20 KHz. Going beyond that number, the resulting frame output frame rate varied 
+too much (more than a few Hz).
+
+A given test was deemed successful if no frames were 
 missed during the 60 second server runtime. Results for the maximum
-simulated image detector rate that consumers were able to sustain 
+simulated detector rate that image consumers were able to sustain 
 without missing any frames are shown below:
 
 * Image size: 4096 x 4096 (uint8, 16.78 MB); Server queue size: 100
