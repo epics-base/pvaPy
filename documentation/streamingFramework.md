@@ -20,7 +20,7 @@ class UserDataProcessor:
 
     def __init__(self, configDict={}):
         ...
-        # The following will be set after object gets created.
+        # The following will be set after processor gets instantiated.
         self.processorId = None
         self.pvaServer = None
         self.outputChannel = None
@@ -651,9 +651,10 @@ channel names/PvObject queues.
 </p>
 
 This example uses [sample AD metadata processor](../examples/hpcAdMetadataProcessorExample.py) module which is capable of 
-associating images with available metadata based on their timestamp comparison. 
-
-Donwload the sample metadata processor and start data collector on terminal 1 using the following command:
+associating images with available metadata based on their timestamp comparison, and producing NtNdArray objects
+that contain additional metadata attributes. To see how it works, 
+download the sample metadata processor and start data collector on terminal 1 
+using the following command:
 
 ```sh
 $ pvapy-hpc-collector \
@@ -672,14 +673,15 @@ $ pvapy-hpc-collector \
     --metadata-channels pva://x,pva://y,pva://z
 ```
 
-On terminal 2 generate test images on channel pvapy:image and PVA metadata on channels x, y, and z:
+On terminal 2 generate test images on channel 'pvapy:image' and PVA metadata on channels 'x', 'y', and 'z':
 
 ```sh
-$ pvapy-ad-sim-server -cn pvapy:image -nx 128 -ny 128 -fps 100 -rp 100 -rt 60 \
+$ pvapy-ad-sim-server \
+    -cn pvapy:image -nx 128 -ny 128 -fps 100 -rp 100 -rt 60 \
     -mpv pva://x,pva://y,pva://z
 ```
 
-Once image generation starts, on terminal 3 inspect both the original and processed images. The output channel 
+After image generation starts, on terminal 3 inspect both the original and processed images. The output channel 
 should contain the original image data plus values for x, y, and z attributes:
 
 ```sh
@@ -687,7 +689,7 @@ $ pvget pvapy:image # original image, no metadata
 $ pvget collector:1:output # should contain x,y,z metadata
 ```
 
-Note that the generated PVA metadata channels will have a structure containing value and timestamp:
+Note that the generated PVA metadata channels have a structure containing value and timestamp:
 
 ```sh
 $ pvinfo x
@@ -702,18 +704,72 @@ Type:
             int userTag
 ```
 
-Since retrieving PVs from CA IOCs results in the same channel structure as above, 
+Since retrieving PVs from CA IOCs results in the same channel structure as in the above example, 
 the sample metadata processor works with either CA or PVA metadata channels. This can be verified
-by requesting the AD simulation server to generate CA metadata:
+by replacing the AD simulation server command with the following:
 
 ```sh
 $ EPICS_DB_INCLUDE_PATH=/path/to/epics-base/dbd pvapy-ad-sim-server \
-    -cn pvapy:image -nx 128 -ny 128 -fps 1 -rt 60 -mpv x,y,z
+    -cn pvapy:image -nx 128 -ny 128 -fps 1 -rt 60 \
+    -mpv x,y,z
 ```
 
-The above command will start CA IOC and generate CA metadata channels x, y, and z. It requires 
-path to EPICS Base dbd folder. For example, if you ar eusing PvaPy conda package, this folder would
-be /path/to/conda/envs/env-name/opt/epics/dbd.
+This command will start CA IOC and generate CA metadata channels 'x', 'y', and 'z'. 
+Note that it requires path to the EPICS Base dbd folder. For example, if you are using PvaPy
+conda package, this folder would be located at '/path/to/conda/envs/env-name/opt/epics/dbd'.
+
+### Metadata Handling with Distributed Consumers
+
+Distributing metadata processing should allow one to handle higher frame rates. In this example
+we also use mirror server for all image and metadata channels.
+
+<p align="center">
+  <img alt="Metadata Handling with Distributed Consumers" src="images/StreamingFrameworkMetadataHandlingDataConsumers.jpg">
+</p>
+
+On terminal 1, start 4 metadata processors listening on 'pvapy:image' channel:
+
+```sh
+$ pvapy-hpc-consumer \
+    --consumer-id 1 \
+    --n-consumers 4 \
+    --input-channel pvapy:image \
+    --control-channel consumer:*:control \
+    --status-channel consumer:*:status \
+    --output-channel consumer:*:output \
+    --processor-file /path/to/hpcAdMetadataProcessorExample.py \
+    --processor-class HpcAdMetadataProcessor \
+    --processor-args '{"timestampTolerance" : 0.00025}' \
+    --report-period 10 \
+    --server-queue-size 2000 \
+    --accumulate-objects 10 \
+    --monitor-queue-size 0 \
+    --distributor-updates 1 \
+    --metadata-channels pva://pvapy:x,pva://pvapy:y,pva://pvapy:z
+```
+
+Each consumer will accumulate 10 images in the queue before processing them, in order to make sure
+all metadata arrives before it is needed.
+
+On terminal 2, start mirror server mapping all channels:
+
+```sh
+$ pvapy-mirror-server \
+    --channel-map "(pvapy:image,ad:image,pva,1000),(pvapy:x,ad:x,pva,1000),(pvapy:y,ad:y,pva,1000),(pvapy:z,ad:z,pva,1000)"
+```
+
+On terminal 3 generate images and metadata:
+
+```sh
+$ pvapy-ad-sim-server \
+    -cn ad:image -nx 128 -ny 128 -fps 2000 -rp 2000 -rt 60 \
+    -mpv pva://ad:x,pva://ad:y,pva://ad:z
+```
+
+Processing speed gains are not linear when compared to the single consumer case, because
+each consumer receives alternate set of images and all metadata values, and hence some
+metadata values will have to be discarded. This will be reflected in the metadata
+processor statistics.
 
 ### Data Encryption
 
