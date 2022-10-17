@@ -897,8 +897,8 @@ $ pvapy-ad-sim-server \
 ```
 
 The above command was able to reliably generate images at stable rates 
-of up to 20 KHz. Going beyond that number, the resulting frame output frame rate varied 
-too much (more than a few Hz).
+of up to 20 KHz. Going beyond that number, the resulting output frame rate varied 
+more than 1-2 Hz, and was not deemed to be stable enough for testing.
 
 A given test was deemed successful if no frames were 
 missed during the 60 second server runtime. Results for the maximum
