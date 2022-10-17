@@ -29,8 +29,8 @@ requirements:
     - python
     - sphinx
     - sphinx_rtd_theme
-    - numpy>=1.22
-    #- numpy>=1.19,<1.21
+    - numpy=1.22             # python >= 3.8
+    #- numpy=1.19            # python < 3.8
     - epics-base={{ environ.get('EPICS_BASE_VERSION', '0.0') }}
     - pvapy-boost={{ environ.get('BOOST_VERSION', '0.0') }}
     - pillow
@@ -39,8 +39,8 @@ requirements:
 
   run:
     - python
-    - numpy>=1.22
-    #- numpy>=1.19,<1.21
+    - numpy>=1.22            # python >= 3.8
+    #- numpy>=1.19,<1.21     # python < 3.8
     - epics-base={{ environ.get('EPICS_BASE_VERSION', '0.0') }}
     - pvapy-boost={{ environ.get('BOOST_VERSION', '0.0') }}
     - pillow

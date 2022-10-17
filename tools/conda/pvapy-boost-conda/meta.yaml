@@ -11,11 +11,13 @@ build:
 requirements:
   build:
     - python
-    - numpy>=1.22
+    - numpy=1.22            # python >= 3.8
+    #- numpy=1.19           # python < 3.8
 
   run:
     - python
-    - numpy>=1.22
+    - numpy>=1.22           # python >= 3.8
+    #- numpy>=1.19,<1.21    # python < 3.8
 
 about:
   home: http://www.boost.org
