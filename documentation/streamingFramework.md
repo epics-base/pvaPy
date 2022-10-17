@@ -943,7 +943,7 @@ without missing any frames are shown below:
 
 * Image size: 512 x 512 (uint8, 0.26 MB); Server queue size: 1000
 
-| Consumers | Frames/second  | Frames/second/<br>consumer | Frames/minute | Data rate/<br>consumer | Total data rate |
+| Consumers | Frames/<br>second  | Frames/second/<br>consumer | Frames/<br>minute | Data rate/<br>consumer | Total data rate |
 | ---:      | ---:           | ---:                       | ---:          | ---:                   | ---:            |
 |        1  |     10000      |    10000                   |   600000      |      2.62 GBps         |    2.62 GBps    |
 |        4  |     20000      |     5000                   |  1200000      |      1.31 GBps         |    5.24 GBps    |
@@ -1038,6 +1038,6 @@ and process are shown below:
 
 As the number of data consumers increases, number of metadata updates that each consumer has to 
 discard increases as well, and hence gains in processing capabilities and in the corresponding
-data throughput are getting smaller. Also, not that some optimization could be achieved by batching 
+data throughput are getting smaller. Also, note that some optimization could be achieved by batching 
 sequential images received by consumers (e.g., using '--distributor-updates 10' option).
 
