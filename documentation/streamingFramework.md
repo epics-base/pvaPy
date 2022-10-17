@@ -939,3 +939,96 @@ without missing any frames are shown below:
 |        1  |     10000      |    10000               |	  600000      |      2.62 GBps     |    2.62 GBps    |
 |        4  |     20000      |     5000               |  1200000      |      1.31 GBps     |    5.24 GBps    |
 
+### Metadata Handling Tests
+
+In order to asses how much data can be pushed through the system in combination with metadata we
+ran a series of tests using the [sample AD metadata processor](../examples/hpcAdMetadataProcessorExample.py) module.
+For all tests we used 6 PVA metadata channels.
+
+On terminal 1, we used the following command to spawn 1 or more
+consumer processes:
+
+```sh
+$ pvapy-hpc-consumer \
+    --input-channel pvapy:image \
+    --control-channel consumer:*:control \
+    --status-channel consumer:*:status \
+    --output-channel consumer:*:output \
+    --processor-file /path/to/hpcAdMetadataProcessorExample.py \
+    --processor-class HpcAdMetadataProcessor \
+    --processor-class pvapy.hpc.userDataProcessor.UserDataProcessor \
+    --report-period 10 \
+    --metadata-channels pva://m1,pva://m2,pva://m3,pva://m4,pva://m5,pva://m6
+    --accumulate-objects 10 \
+    --server-queue-size SERVER_QUEUE_SIZE \
+    --n-consumers N_CONSUMERS \
+    [--distributor-updates 1]
+```
+
+Server queue size varied according to the test image size. Image processing was 
+slightly delayed via the '--accumulate-objects 10' option, in order to make sure
+all metadata is available when before image is processed.
+Whenever we used multiple consumers (N_CONSUMERS > 1) data distributor was
+turned on using the '--distributor-updates 1'. For a single consumer
+this option was left out. Keep in mind that while image data are distributed between 
+consumers, metadata updates are not, and hence each image consumer received
+six times more metadata updates than image updates.
+
+On terminal 2 images were generated for 60 seconds using the following command:
+
+```sh
+$ pvapy-ad-sim-server \
+    -cn pvapy:image -nf 100 -dt uint8 -rt 60 \
+    -mpv pva://m1,pva://m2,pva://m3,pva://m4,pva://m5,pva://m6 \
+    -nx FRAME_SIZE -ny FRAME_SIZE -fps FRAME_RATE -rp FRAME_RATE
+```
+
+The above command was able to reliably generate images at rates required for all tests.
+
+A given test was deemed successful if no frames and metadata updates were 
+missed during the 60 second server runtime, and if all images were associated
+with metadata without any errors. Results for the maximum
+simulated detector rate that image consumers were able to sustain 
+and process are shown below:
+
+* Image size: 4096 x 4096 (uint8, 16.78 MB); Server queue size: 400
+
+| Consumers | Frames/second  | Frames/second/consumer | Frames/minute | Metadata/second | Metadata/minute | Data rate/consumer | Total data rate |
+| ---:      | ---:           | ---:                   | ---:          | ---:            | ---:            | ---:               | ---:            |
+|        1  |      150       |     150                |     9000      |       900       |     54000       |      2.52 GBps     |    2.52 GBps    |
+|        4  |      400       |     100                |    24000      |      2400       |    144000       |      1.68 GBps     |    6.71 GBps    |
+|        8  |      600       |      75                |    36000      |      3600       |    216000       |      1.26 GBps     |   10.07 GBps    |
+|       10  |      700       |      70                |    42000      |      4200       |    252000       |      1.17 GBps     |   11.74 GBps    |
+
+* Image size: 2048 x 2048 (uint8, 4.19 MB); Server queue size: 600
+
+| Consumers | Frames/second  | Frames/second/consumer | Frames/minute | Metadata/second | Metadata/minute | Data rate/consumer | Total data rate |
+| ---:      | ---:           | ---:                   | ---:          | ---:            | ---:            | ---:               | ---:            |
+|        1  |      500       |     500                |    30000      |      3000       |    180000       |      2.10 GBps     |    2.10 GBps    |
+|        4  |      800       |     200                |    48000      |      4800       |    288000       |      0.84 GBps     |    3.36 GBps    |
+|        8  |     1000       |     125                |    60000      |      6000       |    360000       |      0.52 GBps     |    4.19 GBps    |
+|       10  |     1200       |     120                |    72000      |      7200       |    432000       |      0.50 GBps     |    5.03 GBps    |
+
+* Image size: 1024 x 1024 (uint8, 1.05 MB); Server queue size: 1000
+
+| Consumers | Frames/second  | Frames/second/consumer | Frames/minute | Metadata/second | Metadata/minute | Data rate/consumer | Total data rate |
+| ---:      | ---:           | ---:                   | ---:          | ---:            | ---:            | ---:               | ---:            |
+|        1  |     1200       |    1200                |    72000      |      7200       |    432000       |      1.26 GBps     |    1.26 GBps    |
+|        4  |     1600       |     400                |    96000      |      9600       |    576000       |      0.42 GBps     |    1.68 GBps    |
+|        8  |     1800       |     225                |   108000      |     10800       |    648000       |      0.24 GBps     |    1.89 GBps    |
+|       10  |     2000       |     200                |   120000      |     12000       |    720000       |      0.21 GBps     |    2.10 GBps    |
+
+* Image size: 512 x 512 (uint8, 0.26 MB); Server queue size: 1500
+
+| Consumers | Frames/second  | Frames/second/consumer | Frames/minute | Metadata/second | Metadata/minute | Data rate/consumer | Total data rate |
+| ---:      | ---:           | ---:                   | ---:          | ---:            | ---:            | ---:               | ---:            |
+|        1  |     1500       |    1500                |    90000      |      9000       |    540000       |      0.39 GBps     |    0.39 GBps    |
+|        4  |     2400       |     600                |   144000      |     14400       |    864000       |      0.16 GBps     |    0.63 GBps    |
+|        8  |     2800       |     350                |   168000      |     16800       |   1008000       |      0.09 GBps     |    0.73 GBps    |
+|       10  |     3000       |     300                |   180000      |     18000       |   1080000       |      0.08 GBps     |    0.78 GBps    |
+
+As the number of data consumers increases, number of metadata updates that each consumer has to 
+discard increases as well, and hence gains in processing capabilities and in the corresponding
+data throughput are getting smaller. Also, not that some optimization could be achieved by batching 
+sequential images received by consumers (e.g., using '--distributor-updates 10' option).
+
