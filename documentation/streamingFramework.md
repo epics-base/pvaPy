@@ -907,7 +907,7 @@ without missing any frames are shown below:
 
 * Image size: 4096 x 4096 (uint8, 16.78 MB); Server queue size: 100
 
-| Consumers | Frames/second  | Frames/second /consumer | Frames/minute | Data rate /consumer | Total data rate |
+| Consumers | Frames/second  | Frames/second<br>/consumer | Frames/minute | Data rate<br>/consumer | Total data rate |
 | ---:      | ---:           | ---:                    | ---:          | ---:                | ---:            |
 |        1  |      150       |     150                 |     9000      | 2.52 GBps           |    2.52 GBps    |
 |        4  |      600       |     150                 |    36000      | 2.52 GBps           |   10.07 GBps    |
