@@ -857,8 +857,10 @@ $ pvget proc:1:output # processed image
 All tests described in this section have been performed with PvaPy version 
 5.1.0 (Python 3.9 conda package) on a 64-bit linux machine with 96 logical cores (Intel Xeon 
 Gold 6342 CPU with hyperthreading enabled) running at 3.5 GHz, and 
-with 2TB of RAM. Image server and all consumers were running on the
-same machine. 
+with 2TB of RAM. Note that image server and all consumers were running on the
+same machine, and hence were using the loopback device. If these tests were performed using multiple
+machines, results would vary significantly depending on the network connection between the machines, network
+configuration, etc.
 
 ### Throughput Tests
 
