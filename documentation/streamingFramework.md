@@ -907,21 +907,33 @@ without missing any frames are shown below:
 
 * Image size: 4096 x 4096 (uint8, 16.78 MB); Server queue size: 100
 
-| Consumers | Frames/second  | Frames/second/consumer | Frames/minute | Data rate/consumer | Total data rate |
-| ---:      | ---:           | ---:                   | ---:          | ---:               | ---:            |
-|        1  |      150       |     150                |     9000      |      2.52 GBps     |    2.52 GBps    |
-|        4  |      600       |     150                |    36000      |      2.52 GBps     |   10.07 GBps    |
-|        8  |     1000       |     125                |    60000      |      2.10 GBps     |   16.78 GBps    |
-|       10  |     1200       |     120                |    72000      |      2.01 GBps     |   20.13 GBps    |
+| Consumers | Frames/second  | Frames/second | Frames/minute | Data rate | Total data rate |
+|           |                | /consumer     |               | /consumer |                 |
+| ---:      | ---:           | ---:          | ---:          | ---:      | ---:            |
+|        1  |      150       |     150       |     9000      | 2.52 GBps |    2.52 GBps    |
+|        4  |      600       |     150       |    36000      | 2.52 GBps |   10.07 GBps    |
+|        8  |     1000       |     125       |    60000      | 2.10 GBps |   16.78 GBps    |
+|       10  |     1200       |     120       |    72000      | 2.01 GBps |   20.13 GBps    |
 
 * Image size: 2048 x 2048 (uint8, 4.19 MB); Server queue size: 200
 
-| Consumers | Frames/second  | Frames/second/consumer | Frames/minute | Data rate/consumer | Total data rate |
-| ---:      | ---:           | ---:                   | ---:          | ---:               | ---:            |
-|        1  |      700       |     700                |    42000      |      2.94 GBps     |    2.94 GBps    |
-|        4  |     2600       |     650                |   156000      |      2.73 GBps     |   10.91 GBps    |
-|        8  |     4000       |     500                |   240000      |      2.10 GBps     |   16.78 GBps    |
-|       10  |     4500       |     450                |   270000      |      1.89 GBps     |   18.88 GBps    |
+| Consumers | Frames/second  | Frames/second | Frames/minute | Data rate | Total data rate |
+|           |                | /consumer     |               | /consumer |                 |
+| ---:      | ---:           | ---:          | ---:          | ---:      | ---:            |
+|        1  |      700       |     700       |    42000      | 2.94 GBps |    2.94 GBps    |
+|        4  |     2600       |     650       |   156000      | 2.73 GBps |   10.91 GBps    |
+|        8  |     4000       |     500       |   240000      | 2.10 GBps |   16.78 GBps    |
+|       10  |     4500       |     450       |   270000      | 1.89 GBps |   18.88 GBps    |
+
+* Image size: 1536 x 1024 (int16, 3.15 MB); Server queue size: 400
+
+| Consumers | Frames/second  | Frames/second | Frames/minute | Data rate | Total data rate |
+|           |                | /consumer     |               | /consumer |                 |
+| ---:      | ---:           | ---:          | ---:          | ---:      | ---:            |
+|        1  |     1200       |    1200       |    72000      | 3.77 GBps |    3.77 GBps    |
+|        4  |     3600       |     900       |   216000      | 2.83 GBps |   11.32 GBps    |
+|        8  |     5600       |     700       |   336000      | 2.20 GBps |   17.62 GBps    |
+|       10  |     6000       |     600       |   360000      | 1.89 GBps |   18.87 GBps    |
 
 * Image size: 1024 x 1024 (uint8, 1.05 MB); Server queue size: 500
 
@@ -958,7 +970,7 @@ $ pvapy-hpc-consumer \
     --processor-class HpcAdMetadataProcessor \
     --processor-class pvapy.hpc.userDataProcessor.UserDataProcessor \
     --report-period 10 \
-    --metadata-channels pva://m1,pva://m2,pva://m3,pva://m4,pva://m5,pva://m6
+    --metadata-channels pva://m1,pva://m2,pva://m3,pva://m4,pva://m5,pva://m6 \
     --accumulate-objects 10 \
     --server-queue-size SERVER_QUEUE_SIZE \
     --n-consumers N_CONSUMERS \
@@ -993,12 +1005,13 @@ and process are shown below:
 
 * Image size: 4096 x 4096 (uint8, 16.78 MB); Server queue size: 400
 
-| Consumers | Frames/second  | Frames/second/consumer | Frames/minute | Metadata/second | Metadata/minute | Data rate/consumer | Total data rate |
-| ---:      | ---:           | ---:                   | ---:          | ---:            | ---:            | ---:               | ---:            |
-|        1  |      150       |     150                |     9000      |       900       |     54000       |      2.52 GBps     |    2.52 GBps    |
-|        4  |      400       |     100                |    24000      |      2400       |    144000       |      1.68 GBps     |    6.71 GBps    |
-|        8  |      600       |      75                |    36000      |      3600       |    216000       |      1.26 GBps     |   10.07 GBps    |
-|       10  |      700       |      70                |    42000      |      4200       |    252000       |      1.17 GBps     |   11.74 GBps    |
+| Consumers | Frames/second  | Frames/second | Frames/minute | Metadata/second | Metadata/minute | Data rate | Total data rate |
+|           | Frames/second  | /consumer     | Frames/minute | Metadata/second | Metadata/minute | /consumer | Total data rate |
+| ---:      | ---:           | ---:          | ---:          | ---:            | ---:            | ---:      | ---:            |
+|        1  |      150       |     150       |     9000      |       900       |     54000       | 2.52 GBps |    2.52 GBps    |
+|        4  |      400       |     100       |    24000      |      2400       |    144000       | 1.68 GBps |    6.71 GBps    |
+|        8  |      600       |      75       |    36000      |      3600       |    216000       | 1.26 GBps |   10.07 GBps    |
+|       10  |      700       |      70       |    42000      |      4200       |    252000       | 1.17 GBps |   11.74 GBps    |
 
 * Image size: 2048 x 2048 (uint8, 4.19 MB); Server queue size: 600
 
