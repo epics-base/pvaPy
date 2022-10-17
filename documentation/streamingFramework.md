@@ -907,7 +907,7 @@ without missing any frames are shown below:
 
 * Image size: 4096 x 4096 (uint8, 16.78 MB); Server queue size: 100
 
-| Consumers | Frames/second  | Frames/second/<br>consumer | Frames/minute | Data rate/<br>consumer | Total data rate |
+| Consumers | Frames/<br>second  | Frames/second/<br>consumer | Frames/<br>minute | Data rate/<br>consumer | Total data rate |
 | ---:      | ---:           | ---:                       | ---:          | ---:                   | ---:            |
 |        1  |      150       |     150                    |     9000      | 2.52 GBps              |    2.52 GBps    |
 |        4  |      600       |     150                    |    36000      | 2.52 GBps              |   10.07 GBps    |
@@ -916,7 +916,7 @@ without missing any frames are shown below:
 
 * Image size: 2048 x 2048 (uint8, 4.19 MB); Server queue size: 200
 
-| Consumers | Frames/second  | Frames/second/<br>consumer | Frames/minute | Data rate/<br>consumer | Total data rate |
+| Consumers | Frames/<br>second  | Frames/second/<br>consumer | Frames/<br>minute | Data rate/<br>consumer | Total data rate |
 | ---:      | ---:           | ---:                       | ---:          | ---:                   | ---:            |
 |        1  |      700       |     700                    |    42000      | 2.94 GBps              |    2.94 GBps    |
 |        4  |     2600       |     650                    |   156000      | 2.73 GBps              |   10.91 GBps    |
@@ -925,7 +925,7 @@ without missing any frames are shown below:
 
 * Image size: 1536 x 1024 (int16, 3.15 MB); Server queue size: 400
 
-| Consumers | Frames/second  | Frames/second/<br>consumer | Frames/minute | Data rate/<br>consumer | Total data rate |
+| Consumers | Frames/<br>second  | Frames/second/<br>consumer | Frames/<br>minute | Data rate/<br>consumer | Total data rate |
 | ---:      | ---:           | ---:                       | ---:          | ---:                   | ---:            |
 |        1  |     1200       |    1200                    |    72000      | 3.77 GBps              |    3.77 GBps    |
 |        4  |     3600       |     900                    |   216000      | 2.83 GBps              |   11.32 GBps    |
@@ -934,7 +934,7 @@ without missing any frames are shown below:
 
 * Image size: 1024 x 1024 (uint8, 1.05 MB); Server queue size: 500
 
-| Consumers | Frames/second  | Frames/second/<br>consumer | Frames/minute | Data rate/<br>consumer | Total data rate |
+| Consumers | Frames/<br>second  | Frames/second/<br>consumer | Frames/<br>minute | Data rate/<br>consumer | Total data rate |
 | ---:      | ---:           | ---:                       | ---:          | ---:                   | ---:            |
 |        1  |     3200       |    3200                    |   192000      |      3.36 GBps         |    3.36 GBps    |
 |        4  |     10000      |    2500                    |   600000      |      2.62 GBps         |   10.49 GBps    |
@@ -1002,7 +1002,7 @@ and process are shown below:
 
 * Image size: 4096 x 4096 (uint8, 16.78 MB); Server queue size: 400
 
-| Consumers | Frames/second  | Frames/second/<br>consumer | Frames/minute | Metadata/second | Metadata/minute | Data rate/<br>consumer | Total data rate |
+| Consumers | Frames/<br>second  | Frames/second/<br>consumer | Frames/<br>minute | Metadata/<br>second | Metadata/<br>minute | Data rate/<br>consumer | Total data rate |
 | ---:      | ---:           | ---:                       | ---:          | ---:            | ---:            | ---:                   | ---:            |
 |        1  |      150       |     150                    |     9000      |       900       |     54000       | 2.52 GBps              |    2.52 GBps    |
 |        4  |      400       |     100                    |    24000      |      2400       |    144000       | 1.68 GBps              |    6.71 GBps    |
@@ -1011,7 +1011,7 @@ and process are shown below:
 
 * Image size: 2048 x 2048 (uint8, 4.19 MB); Server queue size: 600
 
-| Consumers | Frames/second  | Frames/second/<br>consumer | Frames/minute | Metadata/second | Metadata/minute | Data rate/<br>consumer | Total data rate |
+| Consumers | Frames/<br>second  | Frames/second/<br>consumer | Frames/<br>minute | Metadata/<br>second | Metadata/<br>minute | Data rate/<br>consumer | Total data rate |
 | ---:      | ---:           | ---:                       | ---:          | ---:            | ---:            | ---:                   | ---:            |
 |        1  |      500       |     500                    |    30000      |      3000       |    180000       |      2.10 GBps         |    2.10 GBps    |
 |        4  |      800       |     200                    |    48000      |      4800       |    288000       |      0.84 GBps         |    3.36 GBps    |
@@ -1020,7 +1020,7 @@ and process are shown below:
 
 * Image size: 1024 x 1024 (uint8, 1.05 MB); Server queue size: 1000
 
-| Consumers | Frames/second  | Frames/second/<br>consumer | Frames/minute | Metadata/second | Metadata/minute | Data rate/<br>consumer | Total data rate |
+| Consumers | Frames/<br>second  | Frames/second/<br>consumer | Frames/<br>minute | Metadata/<br>second | Metadata/<br>minute | Data rate/<br>consumer | Total data rate |
 | ---:      | ---:           | ---:                       | ---:          | ---:            | ---:            | ---:                   | ---:            |
 |        1  |     1200       |    1200                    |    72000      |      7200       |    432000       |      1.26 GBps         |    1.26 GBps    |
 |        4  |     1600       |     400                    |    96000      |      9600       |    576000       |      0.42 GBps         |    1.68 GBps    |
@@ -1029,7 +1029,7 @@ and process are shown below:
 
 * Image size: 512 x 512 (uint8, 0.26 MB); Server queue size: 1500
 
-| Consumers | Frames/second  | Frames/second/<br>consumer | Frames/minute | Metadata/second | Metadata/minute | Data rate/<br>consumer | Total data rate |
+| Consumers | Frames/<br>second  | Frames/second/<br>consumer | Frames/<br>minute | Metadata/<br>second | Metadata/<br>minute | Data rate/<br>consumer | Total data rate |
 | ---:      | ---:           | ---:                       | ---:          | ---:            | ---:            | ---:                   | ---:            |
 |        1  |     1500       |    1500                    |    90000      |      9000       |    540000       |      0.39 GBps         |    0.39 GBps    |
 |        4  |     2400       |     600                    |   144000      |     14400       |    864000       |      0.16 GBps         |    0.63 GBps    |
