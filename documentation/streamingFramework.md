@@ -892,7 +892,7 @@ On terminal 2 images were generated for 60 seconds using the following command:
 
 ```sh
 $ pvapy-ad-sim-server \
-    -cn ad:image -nf 100 -dt uint8 -rt 60 \
+    -cn pvapy:image -nf 100 -dt uint8 -rt 60 \
     -nx FRAME_SIZE -ny FRAME_SIZE -fps FRAME_RATE -rp FRAME_RATE
 ```
 
