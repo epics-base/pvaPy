@@ -220,8 +220,7 @@ pvaccess.constants.cpp: $(PVACCESS_CONSTANTS_CPP_TEMPLATE) $(BUILD_CONF)
 	perl -p -e "s?release =.*?release = \"${PVAPY_VERSION}\"?g" ${SPHINX_CONF}.2 > ${SPHINX_CONF}
 	$(RM) ${SPHINX_CONF}.2 
 
-$(COMMON_DIR)/pvapy.dbd: $(EPICS_BASE)/dbd/softIoc.dbd
-	mkdir -p $(COMMON_DIR)
+pvapy.dbd: $(EPICS_BASE)/dbd/softIoc.dbd
 	$(RM) $@
 	$(CP) $< $@
 
