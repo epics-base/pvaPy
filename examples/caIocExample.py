@@ -42,5 +42,3 @@ for i in range(0,10):
     time.sleep(1)
 
 time.sleep(60)
-time.sleep(60)
-
