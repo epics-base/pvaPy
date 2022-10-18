@@ -96,7 +96,7 @@ class AdSimServer:
         print(f'Expected data rate: {self.expectedDataRate}')
 
         self.channelName = channelName
-        self.pvaServer.addRecord(self.channelName, pva.NtNdArray())
+        self.pvaServer.addRecord(self.channelName, pva.NtNdArray(), None)
         if notifyPv and notifyPvValue:
             try:
                 time.sleep(self.NOTIFICATION_DELAY)
@@ -170,7 +170,7 @@ class AdSimServer:
             for mPv in self.pvaMetadataPvs: 
                 print(f'Creating PVA metadata record: {mPv}')
                 mPvObject = pva.PvObject(self.METADATA_TYPE_DICT)
-                self.pvaServer.addRecord(mPv, mPvObject)
+                self.pvaServer.addRecord(mPv, mPvObject, None)
 
     def getMetadataValueDict(self):
         metadataValueDict = {}

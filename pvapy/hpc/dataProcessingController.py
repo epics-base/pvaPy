@@ -53,7 +53,7 @@ class DataProcessingController:
     def createOutputChannel(self, pvObject):
         if self.outputChannel and self.pvaServer and not self.outputRecordAdded:
             self.outputRecordAdded = True
-            self.pvaServer.addRecord(self.outputChannel, pvObject.copy())
+            self.pvaServer.addRecord(self.outputChannel, pvObject.copy(), None)
             self.logger.debug(f'Added output channel {self.outputChannel}')
 
     def start(self):
