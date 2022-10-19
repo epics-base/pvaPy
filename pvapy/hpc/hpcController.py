@@ -180,7 +180,7 @@ class HpcController:
         self.statusTypeDict = self.getStatusTypeDict()
         if self.statusChannel:
             statusPvObject = pva.PvObject(self.statusTypeDict, {f'{self.getControllerIdField()}' : hpcObjectId})
-            self.pvaServer.addRecord(self.statusChannel, statusPvObject)
+            self.pvaServer.addRecord(self.statusChannel, statusPvObject, None)
             self.logger.debug(f'Created {self.CONTROLLER_TYPE} status channel: {self.statusChannel}')
 
         if self.controlChannel == '_':

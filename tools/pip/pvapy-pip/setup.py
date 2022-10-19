@@ -72,7 +72,8 @@ setup(
         'pvapy' :  PVAPY_FILES,
     },
     install_requires=[
-        'numpy>=1.22',
+        'numpy>=1.19,<1.21; python_version < "3.8"',
+        'numpy>=1.22; python_version >= "3.8"',
         'pillow',
         'pycryptodome',
         'rsa' 

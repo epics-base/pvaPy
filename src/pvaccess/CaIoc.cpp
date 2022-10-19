@@ -3,6 +3,7 @@
 
 
 #include <algorithm>
+#include <vector>
 #include <dbAccess.h>
 #include <dbTest.h>
 #include <dbStaticLib.h>
@@ -156,7 +157,7 @@ void CaIoc::putField(const std::string& name, const std::string& value)
     if (addr.no_elements > 1) {
         dbrType = addr.dbr_field_type;
         if (addr.dbr_field_type == DBR_CHAR || addr.dbr_field_type == DBR_UCHAR) {
-            n = value.size() + 1;
+            n = (long)(value.size() + 1);
         } 
         else {
             n = addr.no_elements;
@@ -191,8 +192,8 @@ bp::object CaIoc::getField(const std::string& name)
     long nElements = addr.no_elements; 
     int bufferSize = std::max(static_cast<int>(nElements*addr.field_size), MAX_STRING_SIZE);
 
-    char buffer[bufferSize];
-    char *pBuffer = &buffer[0];
+    std::vector<char> buffer(bufferSize);
+    char *pBuffer = &(buffer.data()[0]);
 
     long options = 0;
     long status = dbGetField(&addr, addr.dbr_field_type, pBuffer,
@@ -266,7 +267,6 @@ bp::object CaIoc::getField(const std::string& name)
         }
         default: {
             throw InvalidState("dbGetField() returned unknown record type " + StringUtility::toString<int>(addr.dbr_field_type));
-            break;
         }
     }
     if (nElements == 1) {
