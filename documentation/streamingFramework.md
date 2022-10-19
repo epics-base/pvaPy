@@ -954,7 +954,7 @@ without missing any frames are shown below:
 
 In order to asses how much data can be pushed through the system in combination with metadata we
 ran a series of tests using the [sample AD metadata processor](../examples/hpcAdMetadataProcessorExample.py) module.
-For all tests we used 6 PVA metadata channels.
+For all tests we used six PVA metadata channels that were updated every time new image was generated.
 
 On terminal 1, we used the following command to spawn 1 or more
 consumer processes:
