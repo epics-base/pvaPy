@@ -174,6 +174,9 @@ eval $cmd
 make doc || exit 1
 rsync -arvl documentation/sphinx/_build/html $PVACCESS_DOC_DIR/
 
+echo "Copying epics dbd files"
+rsync -arvl $EPICS_BASE_DIR/dbd $PVACCESS_DIR
+
 # Done
 cd $CURRENT_DIR
 

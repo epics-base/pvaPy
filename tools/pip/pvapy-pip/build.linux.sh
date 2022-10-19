@@ -130,6 +130,9 @@ for lib in $EPICS_LIBS $BOOST_LIBS; do
     rsync -arvl ${lib}* $PVACCESS_LIB_DIR/$EPICS_HOST_ARCH/
 done
 
+echo "Copying epics dbd files"
+rsync -arvl $EPICS_BASE_DIR/dbd $PVACCESS_DIR
+
 # Fix rpath
 cd $PVACCESS_DIR
 newRpath="\$ORIGIN/lib/$EPICS_HOST_ARCH"
