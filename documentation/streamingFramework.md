@@ -544,6 +544,81 @@ Once the data source starts publishing images, they will be streamed through
 the workflow and processed by each stage, resulting in files being saved
 in the designated output folder.
 
+### Parallel Processing Chains
+
+For certain use cases it might be beneficial to split the raw data stream into multiple
+parallel streams before processing it. This can be accomplished by inserting a 
+passthrough/distributor stage in front of the processing stages. 
+
+<p align="center">
+  <img alt="Parallel Processing Chains" src="images/StreamingFrameworkParallelProcessingChains.jpg">
+</p>
+
+On terminal 1, start two consumers splitting the incoming 'pvapy:image' stream to two 'passthrough:*:output' 
+channels:
+
+```sh
+$ pvapy-hpc-consumer \
+    --input-channel pvapy:image \
+    --control-channel passthrough:*:control \
+    --status-channel passthrough:*:status \
+    --output-channel passthrough:*:output \
+    --processor-class pvapy.hpc.userDataProcessor.UserDataProcessor \
+    --server-queue-size 100 \
+    --report-period 10 \
+    --distributor-updates 8 \
+    --n-consumers 2
+```
+
+In this case we are splitting the stream between the two passthrough consumers 
+in batches of 8 frames.
+
+On terminal 2, start the first set of processing consumers (1-4) using the following command:
+
+```sh
+$ pvapy-hpc-consumer \
+    --consumer-id 1 \
+    --input-channel passthrough:1:output \
+    --control-channel consumer:*:control \
+    --status-channel consumer:*:status \
+    --output-channel consumer:*:output \
+    --processor-file /path/to/hpcAdImageProcessorExample.py \
+    --processor-class HpcAdImageProcessor \
+    --report-period 10 \
+    --server-queue-size 100 \
+    --n-consumers 4 \
+    --distributor-updates 8 \
+    --oid-offset 57
+```
+
+On terminal 3, start the second set of processing consumers (5-8) using the following command:
+
+```sh
+$ pvapy-hpc-consumer \
+    --consumer-id 5 \
+    --input-channel passthrough:2:output \
+    --control-channel consumer:*:control \
+    --status-channel consumer:*:status \
+    --output-channel consumer:*:output \
+    --processor-file /path/to/hpcAdImageProcessorExample.py \
+    --processor-class HpcAdImageProcessor \
+    --report-period 10 \
+    --server-queue-size 100 \
+    --n-consumers 4 \
+    --distributor-updates 8 \
+    --oid-offset 57
+```
+
+On terminal 4 generate images on the 'pvapy:image' channel:
+
+```sh
+$ pvapy-ad-sim-server -cn pvapy:image -nx 128 -ny 128 -dt uint8 -rt 60 -fps 8000 -rp 8000
+```
+
+Once the simulation server starts publishing images, the consumer statistics
+should indicate that the passthrough and processing consumers are receiving frames
+at one half and one eighth of the original input stream data rate, respectively.
+
 ### Data Collector
 
 In this example we show how to use the 'pvapy-hpc-data-collector' utility
