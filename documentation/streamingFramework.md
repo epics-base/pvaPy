@@ -64,12 +64,6 @@ class UserDataProcessor:
         return None
 ```
 
-A python class that derives from UserDataProcessor class and implements 
-the above interface is passed into one of the two main command line utilities:
-- pvapy-hpc-consumer: used for splitting streams and processing stream objects
-- pvapy-hpc-collector: used for gathering streams, sorting and processing
-stream objects
-
 A working example of a simple processor that rotates Area Detector images
 can be found [here](../examples/hpcAdImageProcessorExample.py). There are
 also several processor classes for Area Detector images that can be used 
@@ -81,7 +75,14 @@ images
 - [AD Output File Processor](../pvapy/hpc/adOutputFileProcessor.py): saves output files
 
 The encryptor and decryptor processors require python 'rsa' and 'pycryptodome'
-packages for encryption utilities.
+packages for encryption utilities, while the output file processor requires python
+'PIL' module ('pillow' package).
+
+A python class that derives from UserDataProcessor class and implements 
+the above interface is passed into one of the two main command line utilities:
+- pvapy-hpc-consumer: used for splitting streams and processing stream objects
+- pvapy-hpc-collector: used for gathering streams, sorting and processing
+stream objects
 
 In addition to the above consumer and collector commands, the streaming 
 framework also relies on the following:
@@ -727,9 +728,28 @@ channel names/PvObject queues.
 
 This example uses [sample AD metadata processor](../examples/hpcAdMetadataProcessorExample.py) module which is capable of 
 associating images with available metadata based on their timestamp comparison, and producing NtNdArray objects
-that contain additional metadata attributes. To see how it works, 
-download the sample metadata processor and start data collector on terminal 1 
-using the following command:
+that contain additional metadata attributes. Note that the streaming framework itself does not care what structure
+metadata channels produce, as anything that comes out of metadata channels is simply added
+to metadata queues. However, the actual user processor must know the structure of the metadata PvObject in
+order to make use of it. In particular, the sample metadata processor works with objects produced
+by the simulation server that have the following structure for both CA and PVA metadata channels:
+
+```sh
+$ pvinfo x
+x
+Server: ...
+Type:
+    structure
+        double value
+        time_t timeStamp
+            long secondsPastEpoch
+            int nanoseconds
+            int userTag
+```
+
+To see how things work in this example, 
+[download](../examples/hpcAdMetadataProcessorExample.py) the sample metadata processor
+and start data collector on terminal 1 using the following command:
 
 ```sh
 $ pvapy-hpc-collector \
@@ -764,7 +784,7 @@ $ pvget pvapy:image # original image, no metadata
 $ pvget collector:1:output # should contain x,y,z metadata
 ```
 
-Note that the generated PVA metadata channels have a structure containing value and timestamp:
+Keep in mind that the generated PVA metadata channels have a structure containing value and timestamp:
 
 ```sh
 $ pvinfo x
@@ -844,7 +864,7 @@ $ pvapy-ad-sim-server \
 Processing speed gains are not linear when compared to the single consumer case, because
 each consumer receives alternate set of images and all metadata values, and hence some
 metadata values will have to be discarded. This will be reflected in the metadata
-processor statistics.
+processor statistics. 
 
 ### Data Encryption
 
@@ -1115,6 +1135,8 @@ and process are shown below:
 
 As the number of data consumers increases, number of metadata updates that each consumer has to 
 discard increases as well, and hence gains in processing capabilities and in the corresponding
-data throughput are getting smaller. Also, note that some optimization could be achieved by batching 
-sequential images received by consumers (e.g., using '--distributor-updates 10' option).
+data throughput are getting smaller. Some optimization could be achieved by batching 
+sequential images received by consumers (e.g., using '--distributor-updates 10' option), as well as 
+by reducing client load on the image data source via the mirror server or by using the parallel
+processing chains as in one of the previous examples.
 
