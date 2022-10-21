@@ -547,7 +547,8 @@ in the designated output folder.
 
 ### Parallel Processing Chains
 
-For certain use cases it might be beneficial to split the raw data stream into multiple
+In certain cases (e.g., when reducing client load on the PVA server is needed)
+it might be beneficial to split the raw data stream into multiple
 parallel streams before processing it. This can be accomplished by inserting a 
 passthrough/distributor stage in front of the processing stages. 
 
