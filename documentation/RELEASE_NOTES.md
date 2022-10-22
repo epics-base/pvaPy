@@ -1,6 +1,18 @@
+## Release 5.1.2 (2022/10/22)
+
+- Pip packaging changes: streaming framework dependencies are optional
+- Conda/pip package dependencies: 
+  - EPICS BASE = 7.0.7
+  - BOOST      = 1.78.0
+  - NUMPY      >= 1.22 (for python >= 3.8); >= 1.19, < 1.21 (for python < 3.8)
+
 ## Release 5.1.1 (2022/10/19)
 
 - Streaming framework fixes for windows
+- Conda/pip package dependencies: 
+  - EPICS BASE = 7.0.7
+  - BOOST      = 1.78.0
+  - NUMPY      >= 1.22 (for python >= 3.8); >= 1.19, < 1.21 (for python < 3.8)
 
 ## Release 5.1.0 (2022/10/14)
 

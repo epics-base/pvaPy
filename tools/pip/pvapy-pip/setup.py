@@ -74,10 +74,11 @@ setup(
     install_requires=[
         'numpy>=1.19,<1.21; python_version < "3.8"',
         'numpy>=1.22; python_version >= "3.8"',
-        'pillow',
-        'pycryptodome',
-        'rsa' 
     ],
+    extras_require = {
+        'image-processing':  ['pillow'],
+        'encryption':  ['pycryptodome','rsa'],
+    },
     entry_points = {
         'console_scripts': [
             'pvapy-ad-sim-server=pvapy.cli.adSimServer:main',

@@ -64,12 +64,6 @@ class UserDataProcessor:
         return None
 ```
 
-A python class that derives from UserDataProcessor class and implements 
-the above interface is passed into one of the two main command line utilities:
-- pvapy-hpc-consumer: used for splitting streams and processing stream objects
-- pvapy-hpc-collector: used for gathering streams, sorting and processing
-stream objects
-
 A working example of a simple processor that rotates Area Detector images
 can be found [here](../examples/hpcAdImageProcessorExample.py). There are
 also several processor classes for Area Detector images that can be used 
@@ -81,7 +75,14 @@ images
 - [AD Output File Processor](../pvapy/hpc/adOutputFileProcessor.py): saves output files
 
 The encryptor and decryptor processors require python 'rsa' and 'pycryptodome'
-packages for encryption utilities.
+packages for encryption utilities, while the output file processor requires python
+'PIL' module ('pillow' package).
+
+A python class that derives from UserDataProcessor class and implements 
+the above interface is passed into one of the two main command line utilities:
+- pvapy-hpc-consumer: used for splitting streams and processing stream objects
+- pvapy-hpc-collector: used for gathering streams, sorting and processing
+stream objects
 
 In addition to the above consumer and collector commands, the streaming 
 framework also relies on the following:
@@ -544,6 +545,82 @@ Once the data source starts publishing images, they will be streamed through
 the workflow and processed by each stage, resulting in files being saved
 in the designated output folder.
 
+### Parallel Processing Chains
+
+In certain cases (e.g., when reducing client load on the PVA server is needed)
+it might be beneficial to split the raw data stream into multiple
+parallel streams before processing it. This can be accomplished by inserting a 
+passthrough/distributor stage in front of the processing stages. 
+
+<p align="center">
+  <img alt="Parallel Processing Chains" src="images/StreamingFrameworkParallelProcessingChains.jpg">
+</p>
+
+On terminal 1, start two consumers splitting the incoming 'pvapy:image' stream to two 'passthrough:*:output' 
+channels:
+
+```sh
+$ pvapy-hpc-consumer \
+    --input-channel pvapy:image \
+    --control-channel passthrough:*:control \
+    --status-channel passthrough:*:status \
+    --output-channel passthrough:*:output \
+    --processor-class pvapy.hpc.userDataProcessor.UserDataProcessor \
+    --server-queue-size 100 \
+    --report-period 10 \
+    --distributor-updates 8 \
+    --n-consumers 2
+```
+
+In this case we are splitting the stream between the two passthrough consumers 
+in batches of 8 frames.
+
+On terminal 2, start the first set of processing consumers (1-4) using the following command:
+
+```sh
+$ pvapy-hpc-consumer \
+    --consumer-id 1 \
+    --input-channel passthrough:1:output \
+    --control-channel consumer:*:control \
+    --status-channel consumer:*:status \
+    --output-channel consumer:*:output \
+    --processor-file /path/to/hpcAdImageProcessorExample.py \
+    --processor-class HpcAdImageProcessor \
+    --report-period 10 \
+    --server-queue-size 100 \
+    --n-consumers 4 \
+    --distributor-updates 8 \
+    --oid-offset 57
+```
+
+On terminal 3, start the second set of processing consumers (5-8) using the following command:
+
+```sh
+$ pvapy-hpc-consumer \
+    --consumer-id 5 \
+    --input-channel passthrough:2:output \
+    --control-channel consumer:*:control \
+    --status-channel consumer:*:status \
+    --output-channel consumer:*:output \
+    --processor-file /path/to/hpcAdImageProcessorExample.py \
+    --processor-class HpcAdImageProcessor \
+    --report-period 10 \
+    --server-queue-size 100 \
+    --n-consumers 4 \
+    --distributor-updates 8 \
+    --oid-offset 57
+```
+
+On terminal 4 generate images on the 'pvapy:image' channel:
+
+```sh
+$ pvapy-ad-sim-server -cn pvapy:image -nx 128 -ny 128 -dt uint8 -rt 60 -fps 8000 -rp 8000
+```
+
+Once the simulation server starts publishing images, the consumer statistics
+should indicate that the passthrough and processing consumers are receiving frames
+at one half and one eighth of the original input stream data rate, respectively.
+
 ### Data Collector
 
 In this example we show how to use the 'pvapy-hpc-data-collector' utility
@@ -652,9 +729,28 @@ channel names/PvObject queues.
 
 This example uses [sample AD metadata processor](../examples/hpcAdMetadataProcessorExample.py) module which is capable of 
 associating images with available metadata based on their timestamp comparison, and producing NtNdArray objects
-that contain additional metadata attributes. To see how it works, 
-download the sample metadata processor and start data collector on terminal 1 
-using the following command:
+that contain additional metadata attributes. Note that the streaming framework itself does not care what structure
+metadata channels produce, as anything that comes out of metadata channels is simply added
+to metadata queues. However, the actual user processor must know the structure of the metadata PvObject in
+order to make use of it. In particular, the sample metadata processor works with objects produced
+by the simulation server that have the following structure for both CA and PVA metadata channels:
+
+```sh
+$ pvinfo x
+x
+Server: ...
+Type:
+    structure
+        double value
+        time_t timeStamp
+            long secondsPastEpoch
+            int nanoseconds
+            int userTag
+```
+
+To see how things work in this example, 
+[download](../examples/hpcAdMetadataProcessorExample.py) the sample metadata processor
+and start data collector on terminal 1 using the following command:
 
 ```sh
 $ pvapy-hpc-collector \
@@ -689,7 +785,7 @@ $ pvget pvapy:image # original image, no metadata
 $ pvget collector:1:output # should contain x,y,z metadata
 ```
 
-Note that the generated PVA metadata channels have a structure containing value and timestamp:
+Keep in mind that the generated PVA metadata channels have a structure containing value and timestamp:
 
 ```sh
 $ pvinfo x
@@ -769,7 +865,7 @@ $ pvapy-ad-sim-server \
 Processing speed gains are not linear when compared to the single consumer case, because
 each consumer receives alternate set of images and all metadata values, and hence some
 metadata values will have to be discarded. This will be reflected in the metadata
-processor statistics.
+processor statistics. 
 
 ### Data Encryption
 
@@ -1040,6 +1136,8 @@ and process are shown below:
 
 As the number of data consumers increases, number of metadata updates that each consumer has to 
 discard increases as well, and hence gains in processing capabilities and in the corresponding
-data throughput are getting smaller. Also, note that some optimization could be achieved by batching 
-sequential images received by consumers (e.g., using '--distributor-updates 10' option).
+data throughput are getting smaller. Some optimization could be achieved by batching 
+sequential images received by consumers (e.g., using '--distributor-updates 10' option), as well as 
+by reducing client load on the image data source via the mirror server or by using the parallel
+processing chains as in one of the previous examples.
 
