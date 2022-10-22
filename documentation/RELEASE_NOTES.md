@@ -1,6 +1,6 @@
-## Release 5.1.2 (2022/10/DD)
+## Release 5.1.2 (2022/10/22)
 
-- Made streaming framework dependencies optional for pip packages
+- Pip packaging changes: streaming framework dependencies are optional
 - Conda/pip package dependencies: 
   - EPICS BASE = 7.0.7
   - BOOST      = 1.78.0
