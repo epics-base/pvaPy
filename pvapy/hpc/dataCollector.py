@@ -172,7 +172,7 @@ class DataCollector:
         }
     }
 
-    def __init__(self, collectorId, inputChannel, producerIdList=[1], objectIdField='uniqueId', objectIdOffset=1, fieldRequest='', serverQueueSize=0, monitorQueueSize=-1, collectorCacheSize=-1, metadataChannels=None, processingController=None):
+    def __init__(self, collectorId, inputChannel, producerIdList=[1], idFormatSpec=None, objectIdField='uniqueId', objectIdOffset=1, fieldRequest='', serverQueueSize=0, monitorQueueSize=-1, collectorCacheSize=-1, metadataChannels=None, processingController=None):
         self.logger = LoggingManager.getLogger(f'collector-{collectorId}')
         self.eventLock = threading.Lock()
         self.event = threading.Event()
@@ -199,9 +199,13 @@ class DataCollector:
         self.collectorCacheMap = {}
 
         # Producer channels
+        self.logger.debug(f'Using producer id format spec: {idFormatSpec}')
         self.producerChannelMap = {}
         for producerId in producerIdList:
-            cName = f'{inputChannel}'.replace('*', str(producerId))
+            producerIdString = str(producerId)
+            if idFormatSpec: 
+                producerIdString = f'{producerId:{idFormatSpec}}'
+            cName = f'{inputChannel}'.replace('*', producerIdString)
             self.logger.debug(f'Creating channel {cName} for producer {producerId}')
             self.producerChannelMap[producerId] = ProducerChannel(producerId, cName, serverQueueSize, self.monitorQueueSize, objectIdField, fieldRequest, self)
 

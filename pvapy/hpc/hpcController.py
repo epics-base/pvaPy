@@ -41,13 +41,25 @@ class HpcController:
         d.update(cls.CONTROL_TYPE_DICT)
         return d
 
-    def __init__(self, inputChannel, outputChannel=None, statusChannel=None, controlChannel=None, processorFile=None, processorClass=None, processorArgs=None, objectIdField='uniqueId', objectIdOffset=0, fieldRequest='', skipInitialUpdates=1, reportStatsList='all', logLevel=None, logFile=None, disableCurses=False):
+    @classmethod
+    def generateIdList(cls, listSpec):
+        # List spec should be given either as range() spec
+        # or as comma-separated list. 
+        idList = listSpec
+        if type(listSpec) == str:
+            if not listSpec.startswith('range') and not listSpec.startswith('['):
+                idList = f'[{listSpec}]'
+            idList = eval(idList)
+        return list(idList)
+
+    def __init__(self, inputChannel, outputChannel=None, statusChannel=None, controlChannel=None, processorFile=None, processorClass=None, processorArgs=None, idFormatSpec=None, objectIdField='uniqueId', objectIdOffset=0, fieldRequest='', skipInitialUpdates=1, reportStatsList='all', logLevel=None, logFile=None, disableCurses=False):
         self.lock = threading.Lock()
         self.screen = None
         self.inputChannel = inputChannel
         self.outputChannel = outputChannel
         self.statusChannel = statusChannel
         self.controlChannel = controlChannel
+        self.idFormatSpec = idFormatSpec
         self.processorFile = processorFile
         self.processorClass = processorClass
         self.processorArgs = processorArgs
@@ -94,6 +106,11 @@ class HpcController:
             except ImportError as ex:
                 self.logger.warning(f'Disabling curses library: {ex}')
         return screen
+
+    def formatIdString(self, idValue):
+        if self.idFormatSpec:
+            return f'{idValue:{self.idFormatSpec}}'
+        return f'{idValue}'
 
     def controlCallback(self, pv):
         t = time.time()
@@ -170,12 +187,13 @@ class HpcController:
 
     def createOutputChannels(self, hpcObjectId):
         self.pvaServer = None
+        hpcObjectIdString = self.formatIdString(hpcObjectId)
         if self.statusChannel or self.controlChannel or self.outputChannel:
             self.pvaServer = pva.PvaServer()
         if self.statusChannel == '_':
-            self.statusChannel = f'pvapy:{self.CONTROLLER_TYPE}:{hpcObjectId}:status'
+            self.statusChannel = f'pvapy:{self.CONTROLLER_TYPE}:{hpcObjectIdString}:status'
         if self.statusChannel:
-            self.statusChannel = self.statusChannel.replace('*', f'{hpcObjectId}')
+            self.statusChannel = self.statusChannel.replace('*', hpcObjectIdString)
             self.logger.debug(f'Status channel name: {self.statusChannel}')
         self.statusTypeDict = self.getStatusTypeDict()
         if self.statusChannel:
@@ -184,9 +202,9 @@ class HpcController:
             self.logger.debug(f'Created {self.CONTROLLER_TYPE} status channel: {self.statusChannel}')
 
         if self.controlChannel == '_':
-            self.controlChannel = f'pvapy:{self.CONTROLLER_TYPE}:{hpcObjectId}:control'
+            self.controlChannel = f'pvapy:{self.CONTROLLER_TYPE}:{hpcObjectIdString}:control'
         if self.controlChannel:
-            self.controlChannel = self.controlChannel.replace('*', f'{hpcObjectId}')
+            self.controlChannel = self.controlChannel.replace('*', hpcObjectIdString)
             self.logger.debug(f'Control channel name: {self.controlChannel}')
         if self.controlChannel:
             # Keep reference to the control object so we can

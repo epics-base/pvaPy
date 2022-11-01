@@ -18,12 +18,13 @@ class DataCollectorController(HpcController):
     ''' 
     Controller class for data collector.
   
-    **DataCollectorController(inputChannel, outputChannel=None, statusChannel=None, controlChannel=None, processorFile=None, processorClass=None, processorArgs=None, objectIdField='uniqueId', objectIdOffset=0, fieldRequest='', skipInitialUpdates=1, reportStatsList='all', logLevel=None, logFile=None, disableCurses=False, collectorId=1, producerIdList='1,2', serverQueueSize=0, monitorQueueSize=-1, collectorCacheSize=-1, metadataChannels=None)**
+    **DataCollectorController(inputChannel, outputChannel=None, statusChannel=None, controlChannel=None, idFormatSpec=None, processorFile=None, processorClass=None, processorArgs=None, objectIdField='uniqueId', objectIdOffset=0, fieldRequest='', skipInitialUpdates=1, reportStatsList='all', logLevel=None, logFile=None, disableCurses=False, collectorId=1, producerIdList='1,2', serverQueueSize=0, monitorQueueSize=-1, collectorCacheSize=-1, metadataChannels=None)**
 
-    :Parameter: *inputChannel* (str) - Input PV channel name. The "*" character will be replaced with <producerId>.
-    :Parameter: *outputChannel* (str) - Output PVA channel name (default: None). If specified, this channel can be used for publishing processing results. The value of "_" indicates that the output channel name will be set to "pvapy:collector:<collectorId>:output", while the "*" character will be replaced with <collectorId>.
-    :Parameter: *statusChannel* (str) - Status PVA channel name (default: None). If specified, this channel will provide collector status. The value of "_" indicates that the status channel name will be set to "pvapy:collector:<collectorId>:status", while the "*" character will be replaced with <collectorId>.
-    :Parameter: *controlChannel* (str) - Control channel name (default: None). If specified, this channel can be used to control collector configuration and processing. The value of "_" indicates that the control channel name will be set to "pvapy:collector:<collectorId>:control", while the "*" character will be replaced with <collectorId>. The control channel object has two strings: command and args. The only allowed values for the command string are: "configure", "reset_stats", "get_stats" and "stop". The configure command is used to allow for runtime configuration changes; in this case the keyword arguments string should be in json format to allow data collector to convert it into python dictionary that contains new configuration. For example, sending configuration dictionary via pvput command might look like this: pvput pvapy:collector:1:control \'{"command" : "configure", "args" : "{\\"x\\":100}"}\'. Note that system parameters that can be modified at runtime are the following: "collectorCacheSize", "monitorQueueSize" (only if client monitor queues have been configured at the start), "skipInitialUpdates" (affects processing behavior after resetting stats), and "objectIdOffset". The reset_stats command will cause collector to reset its statistics data, the get_stats will force statistics data update, and the stop command will result in collector process exiting; for all of these commands args string is not needed.
+    :Parameter: *inputChannel* (str) - Input PV channel name. The "*" character will be replaced with <producerId> formatted using <idFormatSpec> specification.
+    :Parameter: *outputChannel* (str) - Output PVA channel name (default: None). If specified, this channel can be used for publishing processing results. The value of "_" indicates that the output channel name will be set to "pvapy:collector:<collectorId>:output", while the "*" character will be replaced with <collectorId> formatted using <idFormatSpec> specification.
+    :Parameter: *statusChannel* (str) - Status PVA channel name (default: None). If specified, this channel will provide collector status. The value of "_" indicates that the status channel name will be set to "pvapy:collector:<collectorId>:status", while the "*" character will be replaced with <collectorId> formatted using <idFormatSpec> specification.
+    :Parameter: *controlChannel* (str) - Control channel name (default: None). If specified, this channel can be used to control collector configuration and processing. The value of "_" indicates that the control channel name will be set to "pvapy:collector:<collectorId>:control", while the "*" character will be replaced with <collectorId> formatted using <idFormatSpec> specification. The control channel object has two strings: command and args. The only allowed values for the command string are: "configure", "reset_stats", "get_stats" and "stop". The configure command is used to allow for runtime configuration changes; in this case the keyword arguments string should be in json format to allow data collector to convert it into python dictionary that contains new configuration. For example, sending configuration dictionary via pvput command might look like this: pvput pvapy:collector:1:control \'{"command" : "configure", "args" : "{\\"x\\":100}"}\'. Note that system parameters that can be modified at runtime are the following: "collectorCacheSize", "monitorQueueSize" (only if client monitor queues have been configured at the start), "skipInitialUpdates" (affects processing behavior after resetting stats), and "objectIdOffset". The reset_stats command will cause collector to reset its statistics data, the get_stats will force statistics data update, and the stop command will result in collector process exiting; for all of these commands args string is not needed.
+    :Parameter: *idFormatSpec* (str) - Specification to be used for producer or collector id when forming input, output, status and control channel names (default: None).
     :Parameter: *processorFile* (str) - Full path to the python file containing user processor class. If this option is not used, the processor class should be specified using "<modulePath>.<className>" notation.
     :Parameter: *processorClass* (str) - Name of the class located in the user processor file that will be processing PV updates. Alternatively, if processor file is not given, the processor class should be specified using the "<modulePath>.<className>" notation. The class should be initialized with a dictionary and must implement the "process(self, pv)" method.
     :Parameter: *processorArgs* (str) - JSON-formatted string that can be converted into dictionary and used for initializing user processor object.
@@ -42,12 +43,12 @@ class DataCollectorController(HpcController):
     :Parameter: *collectorCacheSize* (int) - Collector cache size (default: -1). Collector puts all received PV updates into its cache; once the cache is full, PV updates are sorted by the objectIdField value, removed from the cache and further processed. If specified cache size is negative, or smaller than the minimum allowed value (nProducers*10), this option will be ignored.
     :Parameter: *metadataChannels* (str) - Comma-separated list of metadata channels specified in the form "protocol:\\<channelName>", where protocol can be either "ca" or "pva". If channel name is specified without a protocol, "ca" is assumed.
     '''
-    def __init__(self, inputChannel, outputChannel=None, statusChannel=None, controlChannel=None, processorFile=None, processorClass=None, processorArgs=None, objectIdField='uniqueId', objectIdOffset=0, fieldRequest='', skipInitialUpdates=1, reportStatsList='all', logLevel=None, logFile=None, disableCurses=False, collectorId=1, producerIdList='1,2', serverQueueSize=0, monitorQueueSize=-1, collectorCacheSize=-1, metadataChannels=None):
+    def __init__(self, inputChannel, outputChannel=None, statusChannel=None, controlChannel=None, idFormatSpec=None, processorFile=None, processorClass=None, processorArgs=None, objectIdField='uniqueId', objectIdOffset=0, fieldRequest='', skipInitialUpdates=1, reportStatsList='all', logLevel=None, logFile=None, disableCurses=False, collectorId=1, producerIdList='1,2', serverQueueSize=0, monitorQueueSize=-1, collectorCacheSize=-1, metadataChannels=None):
 
-        HpcController.__init__(self, inputChannel, outputChannel=outputChannel, statusChannel=statusChannel, controlChannel=controlChannel, processorFile=processorFile, processorClass=processorClass, processorArgs=processorArgs, objectIdField=objectIdField, objectIdOffset=objectIdOffset, fieldRequest=fieldRequest, skipInitialUpdates=skipInitialUpdates, reportStatsList=reportStatsList, logLevel=logLevel, logFile=logFile, disableCurses=disableCurses)
+        HpcController.__init__(self, inputChannel, outputChannel=outputChannel, statusChannel=statusChannel, controlChannel=controlChannel, idFormatSpec=idFormatSpec, processorFile=processorFile, processorClass=processorClass, processorArgs=processorArgs, objectIdField=objectIdField, objectIdOffset=objectIdOffset, fieldRequest=fieldRequest, skipInitialUpdates=skipInitialUpdates, reportStatsList=reportStatsList, logLevel=logLevel, logFile=logFile, disableCurses=disableCurses)
 
         self.collectorId = collectorId
-        self.producerIdList = producerIdList 
+        self.producerIdListSpec = producerIdList 
         self.serverQueueSize = serverQueueSize
         self.monitorQueueSize = monitorQueueSize
         self.collectorCacheSize = collectorCacheSize 
@@ -58,10 +59,11 @@ class DataCollectorController(HpcController):
     def createDataProcessorConfig(self, collectorId):
         self.logger.debug(f'Input channel: {self.inputChannel}')
 
+        collectorIdString = self.formatIdString(collectorId)
         if self.outputChannel == '_':
-            self.outputChannel = f'pvapy:collector:{collectorId}:output'
+            self.outputChannel = f'pvapy:collector:{collectorIdString}:output'
         if self.outputChannel:
-            self.outputChannel = self.outputChannel.replace('*', f'{collectorId}')
+            self.outputChannel = self.outputChannel.replace('*', collectorIdString)
             self.logger.debug(f'Processor output channel name: {self.outputChannel}')
 
         # Create config dict
@@ -79,22 +81,10 @@ class DataCollectorController(HpcController):
             statusTypeDict[f'metadataStats_{metadataChannelId}'] = SourceChannel.STATUS_TYPE_DICT
         return statusTypeDict
 
-    def generateProducerIdList(self):
-        # Evaluate producer id list; it should be given either as range() spec
-        # or as comma-separated list.
-        if type(self.producerIdList) == list:
-            return
-        producerIdList = self.producerIdList
-        if not producerIdList.startswith('range') and not producerIdList.startswith('['):
-            producerIdList = f'[{producerIdList}]'
-        producerIdList = list(eval(producerIdList))
-        self.producerIdList = producerIdList
-        return self.producerIdList
-
     def createCollector(self, collectorId):
         self.logger.debug(f'Input channel name: {self.inputChannel}')
 
-        self.generateProducerIdList()
+        self.producerIdList = self.generateIdList(self.producerIdListSpec)
         self.logger.debug(f'Producer id list: {self.producerIdList}')
 
         self.metadataChannelIdList = []
@@ -109,7 +99,7 @@ class DataCollectorController(HpcController):
         self.processingController.pvaServer = self.pvaServer
         self.processingController.createUserDefinedOutputChannel()
 
-        self.dataCollector = DataCollector(collectorId, self.inputChannel, producerIdList=self.producerIdList, objectIdField=self.objectIdField, objectIdOffset=self.objectIdOffset, fieldRequest=self.fieldRequest, serverQueueSize=self.serverQueueSize, monitorQueueSize=self.monitorQueueSize, collectorCacheSize=self.collectorCacheSize, metadataChannels=self.metadataChannels, processingController=self.processingController)
+        self.dataCollector = DataCollector(collectorId, self.inputChannel, producerIdList=self.producerIdList, idFormatSpec=self.idFormatSpec, objectIdField=self.objectIdField, objectIdOffset=self.objectIdOffset, fieldRequest=self.fieldRequest, serverQueueSize=self.serverQueueSize, monitorQueueSize=self.monitorQueueSize, collectorCacheSize=self.collectorCacheSize, metadataChannels=self.metadataChannels, processingController=self.processingController)
 
         # References used in the base class
         self.hpcObject = self.dataCollector
