@@ -1,9 +1,10 @@
 ## Release 5.1.3 (2022/11/02)
 
 - Streaming Framework enhancements:
-  - enabled formating consumer/producer id in channel names using format
-    specifier
-  - added ability to specify arbitrary consumer id list
+  - enabled format specifier for id replacements in channel names for both
+    pvapy-hpc-consumer and pvapy-hpc-collector command line interfaces
+  - added ability to specify arbitrary consumer id list for the 
+    pvapy-hpc-consumer command line interface
 - Conda/pip package dependencies: 
   - EPICS BASE = 7.0.7
   - BOOST      = 1.78.0
