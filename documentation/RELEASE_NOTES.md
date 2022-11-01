@@ -1,3 +1,14 @@
+## Release 5.1.3 (2022/11/02)
+
+- Streaming Framework enhancements:
+  - enabled formating consumer/producer id in channel names using format
+    specifier
+  - added ability to specify arbitrary consumer id list
+- Conda/pip package dependencies: 
+  - EPICS BASE = 7.0.7
+  - BOOST      = 1.78.0
+  - NUMPY      >= 1.22 (for python >= 3.8); >= 1.19, < 1.21 (for python < 3.8)
+
 ## Release 5.1.2 (2022/10/22)
 
 - Packaging changes: streaming framework dependencies are optional

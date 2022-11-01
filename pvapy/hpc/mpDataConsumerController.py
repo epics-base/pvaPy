@@ -35,6 +35,7 @@ class MpDataConsumerController(HpcController):
     :Parameter: *disableCurses* (bool) - Disable curses library screen handling. This is enabled by default, except when logging into standard output is turned on.
     :Parameter: *consumerId* (int) - First consumer id; for each subsequent consumer id will be increased by 1. Note that consumer id is used for naming various PVA channels, so care must be taken when multiple consumer processes are running independently of each other.
     :Parameter: *nConsumers* (int) - Number of consumers to instantiate (default: 1). Multiprocessing module will be used for receiving and processing data in separate processes.
+    :Parameter: *consumerIdList* (str) - Comma-separated list of consumer IDs (default: None). This option can also be specified as "range(<firstId>,<lastId+1>[,<idStep>). If this option is used, values given for <consumerId> and <nConsumers> options will be ignored.
     :Parameter: *inputProviderType* (str) - Input PV channel provider type, it must be either "pva" or "ca" (default: pva).
     :Parameter: *serverQueueSize* (int) - Server queue size (default: 0); this setting will increase memory usage on the server side, but may help prevent missed PV updates.
     :Parameter: *monitorQueueSize* (int) - PVA channel monitor (client) queue size (default: -1); if < 0, PV updates will be processed immediately without copying them into PvObjectQueue; if >= 0, PvObjectQueue will be used for receving PV updates (value of zero indicates infinite queue size).
@@ -48,11 +49,20 @@ class MpDataConsumerController(HpcController):
     :Parameter: *nDistributorSets* (int) - Number of distributor client sets (default: 1). This setting is used to determine appropriate value for the processor object id offset in case where multiple instances of this command are running separately for different client sets. If distributor client set is not specified, this setting is ignored.
     :Parameter: *metadataChannels* (str) - Comma-separated list of metadata channels specified in the form "protocol:\\<channelName>", where protocol can be either "ca" or "pva". If channel name is specified without a protocol, "ca" is assumed.
     '''
-    def __init__(self, inputChannel, outputChannel=None, statusChannel=None, controlChannel=None, idFormatSpec=None, processorFile=None, processorClass=None, processorArgs=None, objectIdField='uniqueId', objectIdOffset=0, fieldRequest='', skipInitialUpdates=1, reportStatsList='all', logLevel=None, logFile=None, disableCurses=False, consumerId=1, nConsumers=1, inputProviderType='pva', serverQueueSize=0, monitorQueueSize=-1, accumulateObjects=-1, accumulationTimeout=1, distributorPluginName='pydistributor', distributorGroup=None, distributorSet=None, distributorTrigger=None, distributorUpdates=None, nDistributorSets=1, metadataChannels=None):
+    def __init__(self, inputChannel, outputChannel=None, statusChannel=None, controlChannel=None, idFormatSpec=None, processorFile=None, processorClass=None, processorArgs=None, objectIdField='uniqueId', objectIdOffset=0, fieldRequest='', skipInitialUpdates=1, reportStatsList='all', logLevel=None, logFile=None, disableCurses=False, consumerId=1, nConsumers=1, consumerIdList=None, inputProviderType='pva', serverQueueSize=0, monitorQueueSize=-1, accumulateObjects=-1, accumulationTimeout=1, distributorPluginName='pydistributor', distributorGroup=None, distributorSet=None, distributorTrigger=None, distributorUpdates=None, nDistributorSets=1, metadataChannels=None):
 
         HpcController.__init__(self, inputChannel, outputChannel=outputChannel, statusChannel=statusChannel, controlChannel=controlChannel, idFormatSpec=idFormatSpec, processorFile=processorFile, processorClass=processorClass, processorArgs=processorArgs, objectIdField=objectIdField, objectIdOffset=objectIdOffset, fieldRequest=fieldRequest, skipInitialUpdates=skipInitialUpdates, reportStatsList=reportStatsList, logLevel=logLevel, logFile=logFile, disableCurses=disableCurses)
         self.consumerId = consumerId # used as a start of the consumer id range
         self.nConsumers = nConsumers
+        self.consumerIdListSpec = consumerIdList
+        if consumerIdList:
+            self.consumerIdList = self.generateIdList(consumerIdList)
+            self.nConsumers = len(self.consumerIdList)
+            self.consumerId = self.consumerIdList[0]
+        else:
+            self.consumerIdList = list(range(self.consumerId, self.consumerId+self.nConsumers))
+        self.logger.debug(f'Consumer id list: {self.consumerIdList}')
+
         self.inputProviderType = inputProviderType
         self.serverQueueSize = serverQueueSize
         self.monitorQueueSize = monitorQueueSize
@@ -76,7 +86,7 @@ class MpDataConsumerController(HpcController):
         # so we can exit cleanly
         import signal
         originalSigintHandler = signal.signal(signal.SIGINT, signal.SIG_IGN)
-        for consumerId in range(self.consumerId, self.consumerId+self.nConsumers):
+        for consumerId in self.consumerIdList:
             requestQueue = mp.Queue()
             self.requestQueueMap[consumerId] = requestQueue
             responseQueue = mp.Queue()
@@ -108,7 +118,7 @@ class MpDataConsumerController(HpcController):
         print(report[0:-1])
 
     def getStats(self):
-        for consumerId in range(self.consumerId, self.consumerId+self.nConsumers):
+        for consumerId in self.consumerIdList:
             requestQueue = self.requestQueueMap[consumerId]
             try:
                 requestQueue.put(self.GET_STATS_COMMAND, block=True, timeout=self.WAIT_TIME)
@@ -116,7 +126,7 @@ class MpDataConsumerController(HpcController):
                 self.stopScreen()
                 self.logger.error(f'Cannot request stats from consumer {consumerId}: {ex}')
         statsDict = {}
-        for consumerId in range(self.consumerId, self.consumerId+self.nConsumers):
+        for consumerId in self.consumerIdList:
             statsDict[consumerId] = {}
             lastStatsObjectId = self.lastStatsObjectIdMap.get(consumerId, 0)
             try:
@@ -135,7 +145,7 @@ class MpDataConsumerController(HpcController):
         return statsDict
 
     def stop(self):
-        for consumerId in range(self.consumerId, self.consumerId+self.nConsumers):
+        for consumerId in self.consumerIdList:
             requestQueue = self.requestQueueMap[consumerId]
             try:
                 requestQueue.put(self.STOP_COMMAND, block=True, timeout=self.WAIT_TIME)
@@ -143,7 +153,7 @@ class MpDataConsumerController(HpcController):
                 self.stopScreen()
                 self.logger.error(f'Cannot stop consumer {consumerId}: {ex}')
         statsDict = {}
-        for consumerId in range(self.consumerId, self.consumerId+self.nConsumers):
+        for consumerId in self.consumerIdList:
             statsDict[consumerId] = {}
             try:
                 responseQueue = self.responseQueueMap[consumerId]
@@ -152,7 +162,7 @@ class MpDataConsumerController(HpcController):
             except queue.Empty:
                 self.stopScreen()
                 self.logger.error(f'No stats received from consumer {consumerId}')
-        for consumerId in range(self.consumerId, self.consumerId+self.nConsumers):
+        for consumerId in self.consumerIdList:
             mpProcess = self.mpProcessMap[consumerId]
             mpProcess.join(self.WAIT_TIME)
             self.logger.info(f'Stopped process for consumer {consumerId}')
@@ -237,6 +247,7 @@ def mpdcController(requestQueue, responseQueue, inputChannel, outputChannel, sta
         disableCurses=disableCurses,
         consumerId=consumerId,
         nConsumers=nConsumers,
+        consumerIdList=None,
         inputProviderType=inputProviderType,
         serverQueueSize=serverQueueSize,
         monitorQueueSize=monitorQueueSize,

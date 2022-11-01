@@ -37,6 +37,7 @@ class DataConsumerController(HpcController):
     :Parameter: *disableCurses* (bool) - Disable curses library screen handling. This is enabled by default, except when logging into standard output is turned on.
     :Parameter: *consumerId* (int) - Consumer id (default: 1). Note that consumer id is used for naming various PVA channels, so care must be taken when multiple consumer processes are running independently of each other.
     :Parameter: *nConsumers* (int) - Number of consumers that will be instantiated (default: 1).
+    :Parameter: *consumerIdList* (str) - Comma-separated list of consumer IDs (default: None). This option can also be specified as "range(<firstId>,<lastId+1>[,<idStep>). If this option is used, values given for <consumerId> and <nConsumers> options will be ignored; the first value from this list will be used as <consumerId>, and the length of the list will determine <nConsumers>.
     :Parameter: *inputProviderType* (str) - Input PV channel provider type, it must be either "pva" or "ca" (default: pva).
     :Parameter: *serverQueueSize* (int) - Server queue size (default: 0); this setting will increase memory usage on the server side, but may help prevent missed PV updates.
     :Parameter: *monitorQueueSize* (int) - PVA channel monitor (client) queue size (default: -1); if < 0, PV updates will be processed immediately without copying them into PvObjectQueue; if >= 0, PvObjectQueue will be used for receving PV updates (value of zero indicates infinite queue size).
@@ -50,11 +51,16 @@ class DataConsumerController(HpcController):
     :Parameter: *nDistributorSets* (int) - Number of distributor client sets (default: 1). This setting is used to determine appropriate value for the processor object id offset in case where multiple instances of this command are running separately for different client sets. If distributor client set is not specified, this setting is ignored.
     :Parameter: *metadataChannels* (str) - Comma-separated list of metadata channels specified in the form "protocol:\\<channelName>", where protocol can be either "ca" or "pva". If channel name is specified without a protocol, "ca" is assumed.
     '''
-    def __init__(self, inputChannel, outputChannel=None, statusChannel=None, controlChannel=None, idFormatSpec=None, processorFile=None, processorClass=None, processorArgs=None, objectIdField='uniqueId', objectIdOffset=0, fieldRequest='', skipInitialUpdates=1, reportStatsList='all', logLevel=None, logFile=None, disableCurses=False, consumerId=1, nConsumers=1, inputProviderType='pva', serverQueueSize=0, monitorQueueSize=-1, accumulateObjects=-1, accumulationTimeout=1, distributorPluginName='pydistributor', distributorGroup=None, distributorSet=None, distributorTrigger=None, distributorUpdates=None, nDistributorSets=1, metadataChannels=None):
+    def __init__(self, inputChannel, outputChannel=None, statusChannel=None, controlChannel=None, idFormatSpec=None, processorFile=None, processorClass=None, processorArgs=None, objectIdField='uniqueId', objectIdOffset=0, fieldRequest='', skipInitialUpdates=1, reportStatsList='all', logLevel=None, logFile=None, disableCurses=False, consumerId=1, nConsumers=1, consumerIdList=None, inputProviderType='pva', serverQueueSize=0, monitorQueueSize=-1, accumulateObjects=-1, accumulationTimeout=1, distributorPluginName='pydistributor', distributorGroup=None, distributorSet=None, distributorTrigger=None, distributorUpdates=None, nDistributorSets=1, metadataChannels=None):
 
         HpcController.__init__(self, inputChannel, outputChannel=outputChannel, statusChannel=statusChannel, controlChannel=controlChannel, idFormatSpec=idFormatSpec, processorFile=processorFile, processorClass=processorClass, processorArgs=processorArgs, objectIdField=objectIdField, objectIdOffset=objectIdOffset, fieldRequest=fieldRequest, skipInitialUpdates=skipInitialUpdates, reportStatsList=reportStatsList, logLevel=logLevel, logFile=logFile, disableCurses=disableCurses)
         self.consumerId = consumerId
         self.nConsumers = nConsumers
+        if consumerIdList:
+            cidList = self.generateIdList(consumerIdList)
+            self.nConsumers = len(cidList)
+            self.consumerId = cidList[0]
+
         self.inputProviderType = inputProviderType
         self.serverQueueSize = serverQueueSize
         self.monitorQueueSize = monitorQueueSize

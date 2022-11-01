@@ -12,6 +12,7 @@ def main():
     parser.add_argument('-v', '--version', action='version', version='%(prog)s {version}'.format(version=__version__))
     parser.add_argument('-id', '--consumer-id', dest='consumer_id', type=int, default=1, help='Consumer id (default: 1). If spawning multiple consumers, this option will be interpreted as the first consumer id; for each subsequent consumer id will be increased by 1. Note that consumer id is used for naming various PVA channels, so care must be taken when multiple consumer processes are running independently of each other.')
     parser.add_argument('-nc', '--n-consumers', type=int, dest='n_consumers', default=1, help='Number of consumers to instantiate (default: 1). If > 1, multiprocessing module will be used for receiving and processing data in separate processes.')
+    parser.add_argument('-cid', '--consumer-id-list', dest='consumer_id_list', default=None, help='Comma-separated list of consumer IDs (default: None). This option can also be specified as "range(<firstId>,<lastId+1>[,<idStep>)". If this option is used, values given for <consumerId> and <nConsumers> options will be ignored.')
     parser.add_argument('-ic', '--input-channel', dest='input_channel', required=True, help='Input PV channel name. The "*" character will be replaced with <consumerId> formatted using <idFormatSpec> specification.')
     parser.add_argument('-ipt', '--input-provider-type', dest='input_provider_type', default='pva', help='Input PV channel provider type, it must be either "pva" or "ca" (default: pva).')
     parser.add_argument('-oc', '--output-channel', dest='output_channel', default=None, help='Output PVA channel name (default: None). If specified, this channel can be used for publishing processing results. The value of "_" indicates that the output channel name will be set to "pvapy:consumer:<consumerId>:output", while the "*" character will be replaced with <consumerId> formatted using <idFormatSpec> specification.')
@@ -48,7 +49,14 @@ def main():
         print('Unrecognized argument(s): {}'.format(' '.join(unparsed)))
         exit(1)
 
-    if args.n_consumers == 1:
+    nConsumers = args.n_consumers
+    consumerId = args.consumer_id
+    consumerIdList = None
+    if args.consumer_id_list:
+        consumerIdList = DataConsumerController.generateIdList(args.consumer_id_list)
+        consumerId = consumerIdList[0]
+        nConsumers = len(consumerIdList)
+    if nConsumers == 1:
         ControllerClass = DataConsumerController
     else:
         ControllerClass = MpDataConsumerController
@@ -70,8 +78,9 @@ def main():
         logLevel=args.log_level,
         logFile=args.log_file,
         disableCurses=args.disable_curses,
-        consumerId=args.consumer_id,
-        nConsumers=args.n_consumers,
+        consumerId=consumerId,
+        nConsumers=nConsumers,
+        consumerIdList=consumerIdList,
         inputProviderType=args.input_provider_type,
         serverQueueSize=args.server_queue_size,
         monitorQueueSize=args.monitor_queue_size,
