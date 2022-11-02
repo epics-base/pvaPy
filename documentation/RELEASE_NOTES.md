@@ -5,6 +5,8 @@
     pvapy-hpc-consumer and pvapy-hpc-collector command line interfaces
   - added ability to specify arbitrary consumer id list for the 
     pvapy-hpc-consumer command line interface
+  - user processor class can take input channel structure to define
+    its output structure
 - Conda/pip package dependencies: 
   - EPICS BASE = 7.0.7
   - BOOST      = 1.78.0

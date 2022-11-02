@@ -23,6 +23,7 @@ class UserDataProcessor:
         # The following will be set after processor gets instantiated.
         self.processorId = None
         self.pvaServer = None
+        self.inputChannel = None
         self.outputChannel = None
         self.objectIdField = None
         self.metadataQueueMap = {}
@@ -60,7 +61,7 @@ class UserDataProcessor:
     # Define output PvObject
     # This method does not need to be implemented if output
     # object has the same structure as the input object
-    def getOutputPvObjectType(self):
+    def getOutputPvObjectType(self, pvObject=None):
         return None
 ```
 

@@ -40,15 +40,16 @@ class DataProcessingController:
     def setPvaServer(self, pvaServer):
         self.pvaServer = pvaServer
 
-    def createUserDefinedOutputChannel(self):
+    def createUserDefinedOutputChannel(self, pvObject=None):
         # Create output channel if user processing class defines it
+        # Input pvObject will come from the first channel update
         if self.userDataProcessor:
-            pvObject = self.userDataProcessor.getOutputPvObjectType()
-            if pvObject:
-                self.logger.debug(f'User data processor defines output channel as: {pvObject.getStructureDict()}')
-                self.createOutputChannel(pvObject)
+            outputPvObject = self.userDataProcessor.getOutputPvObjectType(pvObject)
+            if outputPvObject:
+                self.logger.debug(f'User data processor defined output channel as: {outputPvObject.getStructureDict()}')
+                self.createOutputChannel(outputPvObject)
             else:
-                self.logger.debug('User data processor does not define output channel')
+                self.logger.debug('User data processor did not define output channel')
                 
     def createOutputChannel(self, pvObject):
         if self.outputChannel and self.pvaServer and not self.outputRecordAdded:
@@ -67,6 +68,7 @@ class DataProcessingController:
         if self.userDataProcessor:
             self.userDataProcessor.pvaServer = self.pvaServer
             self.userDataProcessor.outputChannel = self.outputChannel
+            self.userDataProcessor.inputChannel = self.inputChannel
             self.userDataProcessor.start()
 
     def stop(self):
@@ -96,6 +98,10 @@ class DataProcessingController:
         objectId = pvObject[self.objectIdField]
         if self.lastObjectId is None: 
             self.lastObjectId = objectId
+            # First try to create user defined output record, and
+            # if that does not succeed, create output record based
+            # on input type
+            self.createUserDefinedOutputChannel(pvObject)
             self.createOutputChannel(pvObject)
         if self.skipInitialUpdates > 0:
             self.skipInitialUpdates -= 1
