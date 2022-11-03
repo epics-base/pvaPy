@@ -61,7 +61,7 @@ class UserDataProcessor:
     # Define output PvObject
     # This method does not need to be implemented if output
     # object has the same structure as the input object
-    def getOutputPvObjectType(self, pvObject=None):
+    def getOutputPvObjectType(self, pvObject):
         return None
 ```
 

@@ -88,16 +88,12 @@ class UserDataProcessor:
         '''
         return {}
 
-    def getOutputPvObjectType(self, pvObject=None):
+    def getOutputPvObjectType(self, pvObject):
         '''
         Method invoked at processing startup that defines PVA structure for
-        the output (processed) PvObject. It is called before the first input channel 
-        update is received, as well as immediately after receiving the first input 
-        channel update if the initial call did not result in a valid PVA structure.
-        If the definition of the output (processed) object requires input channel 
-        object, this method should return None until it is called with the first
-        input channel update.
-
+        the output (processed) PvObject. This method is called immediately after
+        receiving the first input channel update. 
+        
         There is no need to override this method if the structure of input and
         output objects are the same, or if the application will not publish 
         processing output.

@@ -1,12 +1,12 @@
-## Release 5.1.3 (2022/11/02)
+## Release 5.2.0 (2022/11/04)
 
 - Streaming Framework enhancements:
   - enabled format specifier for id replacements in channel names for both
     pvapy-hpc-consumer and pvapy-hpc-collector command line interfaces
   - added ability to specify arbitrary consumer id list for the 
     pvapy-hpc-consumer command line interface
-  - user processor class can take input channel structure to define
-    its output structure
+  - updated user processor interface for creating output record so
+    that it can use input channel object
 - Conda/pip package dependencies: 
   - EPICS BASE = 7.0.7
   - BOOST      = 1.78.0

@@ -40,18 +40,18 @@ class DataProcessingController:
     def setPvaServer(self, pvaServer):
         self.pvaServer = pvaServer
 
-    def createUserDefinedOutputChannel(self, pvObject=None):
+    def addUserDefinedOutputRecord(self, pvObject):
         # Create output channel if user processing class defines it
         # Input pvObject will come from the first channel update
         if self.userDataProcessor:
             outputPvObject = self.userDataProcessor.getOutputPvObjectType(pvObject)
             if outputPvObject:
                 self.logger.debug(f'User data processor defined output channel as: {outputPvObject.getStructureDict()}')
-                self.createOutputChannel(outputPvObject)
+                self.addOutputRecordIfItDoesNotExist(outputPvObject)
             else:
                 self.logger.debug('User data processor did not define output channel')
                 
-    def createOutputChannel(self, pvObject):
+    def addOutputRecordIfItDoesNotExist(self, pvObject):
         if self.outputChannel and self.pvaServer and not self.outputRecordAdded:
             self.outputRecordAdded = True
             self.pvaServer.addRecord(self.outputChannel, pvObject.copy(), None)
@@ -101,8 +101,8 @@ class DataProcessingController:
             # First try to create user defined output record, and
             # if that does not succeed, create output record based
             # on input type
-            self.createUserDefinedOutputChannel(pvObject)
-            self.createOutputChannel(pvObject)
+            self.addUserDefinedOutputRecord(pvObject)
+            self.addOutputRecordIfItDoesNotExist(pvObject)
         if self.skipInitialUpdates > 0:
             self.skipInitialUpdates -= 1
             self.logger.debug(f'Skipping initial update, {self.skipInitialUpdates} remain to be skipped')

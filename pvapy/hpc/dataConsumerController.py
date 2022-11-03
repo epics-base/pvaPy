@@ -131,7 +131,6 @@ class DataConsumerController(HpcController):
 
         # Share PVA server
         self.processingController.pvaServer = self.pvaServer
-        self.processingController.createUserDefinedOutputChannel()
 
         self.dataConsumer = DataConsumer(consumerId, self.inputChannel, providerType=self.inputProviderType, objectIdField=self.objectIdField, fieldRequest=self.fieldRequest, serverQueueSize=self.serverQueueSize, monitorQueueSize=self.monitorQueueSize, accumulateObjects=self.accumulateObjects, accumulationTimeout=self.accumulationTimeout, distributorPluginName=self.distributorPluginName, distributorGroupId=self.distributorGroup, distributorSetId=self.distributorSet, distributorTriggerFieldName=self.distributorTrigger, distributorUpdates=self.distributorUpdates, distributorUpdateMode=None, metadataChannels=self.metadataChannels, processingController=self.processingController)
 

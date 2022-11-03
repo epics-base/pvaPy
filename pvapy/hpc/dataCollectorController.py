@@ -97,7 +97,6 @@ class DataCollectorController(HpcController):
 
         # Share PVA server
         self.processingController.pvaServer = self.pvaServer
-        self.processingController.createUserDefinedOutputChannel()
 
         self.dataCollector = DataCollector(collectorId, self.inputChannel, producerIdList=self.producerIdList, idFormatSpec=self.idFormatSpec, objectIdField=self.objectIdField, objectIdOffset=self.objectIdOffset, fieldRequest=self.fieldRequest, serverQueueSize=self.serverQueueSize, monitorQueueSize=self.monitorQueueSize, collectorCacheSize=self.collectorCacheSize, metadataChannels=self.metadataChannels, processingController=self.processingController)
 

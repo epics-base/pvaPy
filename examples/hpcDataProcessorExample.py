@@ -40,6 +40,6 @@ class HpcDataProcessor(UserDataProcessor):
     # Define output PvObject
     # This method does not need to be implemented if output
     # object has the same structure as the input object
-    def getOutputPvObjectType(self):
+    def getOutputPvObjectType(self, pvObject):
         return None
 
