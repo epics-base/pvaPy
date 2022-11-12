@@ -295,7 +295,7 @@ class AdSimServer:
                     ntnda = AdImageUtility.generateNtNdArray2D(frameId, frame, extraFieldsPvObject)
                     self.addFrameToCache(frameId, ntnda)
                     frameId += 1
-                    if self.reportPeriod > 0 and (frameId % self.reportPeriod) == 0:
+                    if not self.nPublishedFrames and self.reportPeriod > 0 and (frameId % self.reportPeriod) == 0:
                         now = time.time()
                         genTime = now - startTime
                         genRate = frameId/genTime
