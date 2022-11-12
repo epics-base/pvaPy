@@ -348,7 +348,7 @@ class AdSimServer:
             else:
                 self.startTime = self.lastPublishedTime
             if self.reportPeriod > 0 and (self.nPublishedFrames % self.reportPeriod) == 0:
-                report = 'Published frame id {:6d} @ {:.3f}s (pub rate: {:.4f}fps; pub time: {:.3f}s)'.format(self.currentFrameId, self.lastPublishedTime, frameRate, runtime)
+                report = 'Published frame id {:6d} @ {:.3f}s (frame rate: {:.4f}fps; runtime: {:.3f}s)'.format(self.currentFrameId, self.lastPublishedTime, frameRate, runtime)
                 self.printReport(report)
 
             if runtime > self.runtime:
