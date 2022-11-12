@@ -295,16 +295,10 @@ class AdSimServer:
                     ntnda = AdImageUtility.generateNtNdArray2D(frameId, frame, extraFieldsPvObject)
                     self.addFrameToCache(frameId, ntnda)
                     frameId += 1
-                    if not self.nPublishedFrames and self.reportPeriod > 0 and (frameId % self.reportPeriod) == 0:
-                        now = time.time()
-                        genTime = now - startTime
-                        genRate = frameId/genTime
-                        report = 'Generated frame id {:6d} @ {:.3f}s (gen rate: {:.4f}fps; gen time: {:.3f}s)'.format(frameId, now, genRate, genTime)
-                        self.printReport(report)
             if not self.usingQueue:
-                # All frames in cache
+                # All frames are in cache
                 break
-        self.printReport(f'Frame producer thread is done after {frameId} generated frames')
+        self.printReport(f'Frame producer is done after {frameId} generated frames')
 
     def prepareFrame(self, t=0):
         # Get cached frame
