@@ -48,7 +48,7 @@ PvTimeStamp::PvTimeStamp(double time) :
     setUserTag(UnknownUserTag);
 }
 
-PvTimeStamp::PvTimeStamp(double int userTag) : 
+PvTimeStamp::PvTimeStamp(double time, int userTag) : 
     PvObject(createStructureDict(), StructureId)
 {
     long long secondsPastEpoch(time);
