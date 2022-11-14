@@ -1,6 +1,7 @@
 ## Release 5.2.1 (2022/11/DD)
 
 - Fixed issue with put into PvObjectQueue when timeout is given
+- Updated default value for PvTimeStamp userTag field to 0
 - Area Detector Simulator enhancements:
   - added ability to load images from HDF5 files
 - Conda/pip package dependencies: 

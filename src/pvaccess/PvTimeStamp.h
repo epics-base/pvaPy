@@ -29,6 +29,7 @@ public:
     // Instance methods
     PvTimeStamp();
     PvTimeStamp(double time);
+    PvTimeStamp(double time, int userTag);
     PvTimeStamp(const epicsTimeStamp* ts);
     PvTimeStamp(const epicsTimeStamp& ts);
     PvTimeStamp(long long secondsPastEpoch, int nanoseconds);
