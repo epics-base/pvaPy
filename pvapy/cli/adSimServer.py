@@ -13,6 +13,10 @@ try:
     import h5py as h5
 except ImportError:
     h5 = None
+try:
+    import hdf5plugin
+except ImportError:
+    pass
 
 import pvaccess as pva
 from ..utility.adImageUtility import AdImageUtility
@@ -20,6 +24,156 @@ from ..utility.floatWithUnits import FloatWithUnits
 from ..utility.intWithUnits import IntWithUnits
 
 __version__ = pva.__version__
+
+class FrameGenerator:
+    def __init__(self):
+        self.frames = None
+        self.nInputFrames = 0
+        self.rows = 0
+        self.cols = 0
+        self.dtype = None
+        self.compressorName = None
+
+    def getFrameData(self, frameId):
+        if frameId < self.nInputFrames and frameId >= 0:
+            return self.frames[frameId]
+        return None
+
+    def getFrameInfo(self):
+        if self.frames is not None and not self.nInputFrames:
+            self.nInputFrames, self.rows, self.cols = self.frames.shape
+            self.dtype = self.frames.dtype
+        return (self.nInputFrames, self.rows, self.cols, self.dtype, self.compressorName)
+
+    def getUncompressedFrameSize(self):
+        return self.rows*self.cols*self.frames[0].itemsize
+
+    def getCompressedFrameSize(self):
+        if self.compressorName:
+            return len(self.getFrameData(0))
+        else:
+            return self.getUncompressedFrameSize()
+
+    def getCompressorName(self):
+        return self.compressorName
+
+class HdfFileGenerator(FrameGenerator):
+
+    COMPRESSOR_NAME_MAP = {
+        '32001' : 'blosc'
+    }
+
+    def __init__(self, filePath, datasetPath, compressionMode=False):
+        FrameGenerator.__init__(self)
+        self.filePath = filePath
+        self.datasetPath = datasetPath
+        self.dataset = None
+        self.compressionMode = compressionMode
+        if not h5:
+            raise Exception(f'Missing HDF support.')
+        if not filePath:
+            raise Exception(f'Invalid input file path.')
+        if not datasetPath:
+            raise Exception(f'Missing HDF dataset specification for input file {filePath}.')
+        self.loadInputFile()
+
+    def loadInputFile(self):
+        try:
+            self.file = h5.File(self.filePath, 'r')
+            self.dataset = self.file[self.datasetPath]
+            self.frames = self.dataset
+            if self.compressionMode:
+                for id,params in self.dataset._filters.items():
+                    compressorName = self.COMPRESSOR_NAME_MAP.get(id)
+                    if compressorName:
+                        self.compressorName = compressorName
+                        break
+            print(f'Loaded input file {self.filePath} (compressor: {self.compressorName})')
+        except Exception as ex:
+            print(f'Cannot load input file {self.filePath}: {ex}')
+            raise
+
+    def getFrameData(self, frameId):
+        frameData = None
+        if frameId < self.nInputFrames and frameId >= 0:
+            if not self.compressorName:
+                # Read uncompressed data
+                frameData = self.frames[frameId]
+            else:
+                # Read compressed data directly into numpy array
+                data = self.dataset.id.read_direct_chunk((frameId,0,0))
+                frameData = np.frombuffer(data[1], dtype=np.uint8)
+        return frameData
+
+class NumpyFileGenerator(FrameGenerator):
+
+    def __init__(self, filePath, mmapMode):
+        FrameGenerator.__init__(self)
+        self.filePath = filePath
+        self.mmapMode = mmapMode
+        if not filePath:
+            raise Exception(f'Invalid input file path.')
+        self.loadInputFile()
+
+    def loadInputFile(self):
+        try:
+            if self.mmapMode:
+                self.frames = np.load(self.filePath, mmapMode='r')
+            else:
+                self.frames = np.load(self.filePath)
+            print(f'Loaded input file {self.filePath}')
+        except Exception as ex:
+            print(f'Cannot load input file {self.filePath}: {ex}')
+            raise
+
+class NumpyRandomGenerator(FrameGenerator):
+
+    def __init__(self, nf, nx, ny, datatype, minimum, maximum):
+        FrameGenerator.__init__(self)
+        self.nf = nf
+        self.nx = nx
+        self.ny = ny
+        self.datatype = datatype
+        self.minimum = minimum
+        self.maximum = maximum
+        self.generateFrames()
+
+    def generateFrames(self):
+        print('Generating random frames')
+
+        # Example frame:
+        # frame = np.array([[0,0,0,0,0,0,0,0,0,0],
+        #                  [0,0,0,0,1,1,0,0,0,0],
+        #                  [0,0,0,1,2,3,2,0,0,0],
+        #                  [0,0,0,1,2,3,2,0,0,0],
+        #                  [0,0,0,1,2,3,2,0,0,0],
+        #                  [0,0,0,0,0,0,0,0,0,0]], dtype=np.uint16)
+
+        dt = np.dtype(self.datatype)
+        if not self.datatype.startswith('float'):
+            dtinfo = np.iinfo(dt)
+            mn = dtinfo.min
+            if self.minimum is not None:
+                mn = int(max(dtinfo.min, self.minimum))
+            mx = dtinfo.max
+            if self.maximum is not None:
+                mx = int(min(dtinfo.max, self.maximum))
+            self.frames = np.random.randint(mn, mx, size=(self.nf, self.ny, self.nx), dtype=dt)
+        else:
+            # Use float32 for min/max, to prevent overflow errors
+            dtinfo = np.finfo(np.float32)
+            mn = dtinfo.min
+            if self.minimum is not None:
+                mn = float(max(dtinfo.min, self.minimum))
+            mx = dtinfo.max
+            if self.maximum is not None:
+                mx = float(min(dtinfo.max, self.maximum))
+            self.frames = np.random.uniform(mn, mx, size=(self.nf, self.ny, self.nx))
+            if datatype == 'float32':
+                self.frames = np.float32(self.frames)
+
+        print(f'Generated frame shape: {self.frames[0].shape}')
+        print(f'Range of generated values: [{mn},{mx}]')
 
 class AdSimServer:
 
@@ -38,7 +192,7 @@ class AdSimServer:
         'timeStamp' : pva.PvTimeStamp()
     }
 
-    def __init__(self, inputDirectory, inputFile, mmapMode, hdfDataset, frameRate, nFrames, cacheSize, nx, ny, datatype, minimum, maximum, runtime, channelName, notifyPv, notifyPvValue, metadataPv, startDelay, reportPeriod, disableCurses):
+    def __init__(self, inputDirectory, inputFile, mmapMode, hdfDataset, hdfCompressionMode, frameRate, nFrames, cacheSize, nx, ny, datatype, minimum, maximum, runtime, channelName, notifyPv, notifyPvValue, metadataPv, startDelay, reportPeriod, disableCurses):
         self.lock = threading.Lock()
         self.deltaT = 0
         self.cacheTimeout = self.CACHE_TIMEOUT
@@ -48,7 +202,7 @@ class AdSimServer:
         self.runtime = runtime
         self.reportPeriod = reportPeriod 
         self.metadataIoc = None
-        self.frameSourceList = []
+        self.frameGeneratorList = []
         self.frameCacheSize = max(cacheSize, self.MIN_CACHE_SIZE)
         self.nFrames = nFrames
 
@@ -57,30 +211,33 @@ class AdSimServer:
             inputFiles = [os.path.join(inputDirectory, f) for f in os.listdir(inputDirectory) if os.path.isfile(os.path.join(inputDirectory, f))]
         if inputFile is not None:
             inputFiles.append(inputFile)
+        allowedHdfExtensions = ['h5', 'hdf', 'hdf5']
         for f in inputFiles:
-            frames = self.loadInputFile(f, mmapMode=mmapMode, hdfDatasetPath=hdfDataset)
-            if frames is not None:
-                self.frameSourceList.append(frames)
+            ext = f.split('.')[-1]
+            if ext in allowedHdfExtensions:
+                self.frameGeneratorList.append(HdfFileGenerator(f, hdfDataset, hdfCompressionMode))
+            else:
+                self.frameGeneratorList.append(NumpyFileGenerator(f, mmapMode))
 
-        if not self.frameSourceList:
+        if not self.frameGeneratorList:
             nf = nFrames
             if nf <= 0:
                 nf = self.frameCacheSize
-            frames = self.generateFrames(nf, nx, ny, datatype, minimum, maximum)
-            self.frameSourceList.append(frames)
+            self.frameGeneratorList.append(NumpyRandomGenerator(nf, nx, ny, datatype, minimum, maximum))
 
         self.nInputFrames = 0
-        for fs in self.frameSourceList:
-            nInputFrames, self.rows, self.cols = fs.shape
+        for fg in self.frameGeneratorList:
+            nInputFrames, self.rows, self.cols, self.dtype, self.compressorName = fg.getFrameInfo()
             self.nInputFrames += nInputFrames
         if self.nFrames > 0:
             self.nInputFrames = min(self.nFrames, self.nInputFrames)
 
-        frames = self.frameSourceList[0]
-
+        fg = self.frameGeneratorList[0]
         self.frameRate = frameRate
-        self.imageSize = IntWithUnits(self.rows*self.cols*frames[0].itemsize, 'B')
-        self.expectedDataRate = FloatWithUnits(self.imageSize*self.frameRate/self.BYTES_IN_MEGABYTE, 'MBps')
+        self.uncompressedImageSize = IntWithUnits(fg.getUncompressedFrameSize(), 'B')
+        self.compressedImageSize = IntWithUnits(fg.getCompressedFrameSize(), 'B')
+        self.compressedDataRate = FloatWithUnits(self.compressedImageSize*self.frameRate/self.BYTES_IN_MEGABYTE, 'MBps')
+        self.uncompressedDataRate = FloatWithUnits(self.uncompressedImageSize*self.frameRate/self.BYTES_IN_MEGABYTE, 'MBps')
 
         self.channelName = channelName
         self.pvaServer = pva.PvaServer()
@@ -105,9 +262,9 @@ class AdSimServer:
         else:
             self.frameCache = {}
 
-        print(f'Number of input frames: {self.nInputFrames} (size: {self.cols}x{self.rows}, {self.imageSize}, type: {frames.dtype})')
+        print(f'Number of input frames: {self.nInputFrames} (size: {self.cols}x{self.rows}, {self.uncompressedImageSize}, type: {self.dtype}, compressor: {self.compressorName}, compressed size: {self.compressedImageSize})')
         print(f'Frame cache type: {type(self.frameCache)} (cache size: {self.frameCacheSize})')
-        print(f'Expected data rate: {self.expectedDataRate}')
+        print(f'Expected data rate: {self.compressedDataRate} (uncompressed: {self.uncompressedDataRate})')
 
         self.currentFrameId = 0
         self.nPublishedFrames = 0
@@ -129,69 +286,6 @@ class AdSimServer:
             except ImportError as ex:
                 pass
         return screen
-
-    def loadInputFile(self, filePath, mmapMode=False, hdfDatasetPath=None):
-        try:
-            frames = None
-            allowedHdfExtensions = ['.h5', '.hdf', '.hdf5']
-            isHdf = False
-            for ext in allowedHdfExtensions:
-                if filePath.endswith(ext):
-                    isHdf = True
-                    break
-            if isHdf:
-                if not h5:
-                    raise Exception(f'Missing HDF support.')
-                if not hdfDatasetPath:
-                    raise Exception(f'Missing HDF dataset specification for input file {filePath}.')
-                hdfFile = h5.File(filePath, 'r')
-                hdfDataset = hdfFile[hdfDatasetPath]
-                frames = hdfDataset
-            else:
-                if mmapMode:
-                    frames = np.load(filePath, mmapMode='r')
-                else:
-                    frames = np.load(filePath)
-            print(f'Loaded input file {filePath}')
-        except Exception as ex:
-            print(f'Cannot load input file {filePath}, skipping it: {ex}')
-        return frames
-
-    def generateFrames(self, nf, nx, ny, datatype, minimum, maximum):
-        print('Generating random frames')
-        # Example frame:
-        # frame = np.array([[0,0,0,0,0,0,0,0,0,0],
-        #                  [0,0,0,0,1,1,0,0,0,0],
-        #                  [0,0,0,1,2,3,2,0,0,0],
-        #                  [0,0,0,1,2,3,2,0,0,0],
-        #                  [0,0,0,1,2,3,2,0,0,0],
-        #                  [0,0,0,0,0,0,0,0,0,0]], dtype=np.uint16)
-        dt = np.dtype(datatype)
-        if datatype != 'float32' and datatype != 'float64':
-            dtinfo = np.iinfo(dt)
-            mn = dtinfo.min
-            if minimum is not None:
-                mn = int(max(dtinfo.min, minimum))
-            mx = dtinfo.max
-            if maximum is not None:
-                mx = int(min(dtinfo.max, maximum))
-            frames = np.random.randint(mn, mx, size=(nf, ny, nx), dtype=dt)
-        else:
-            # Use float32 for min/max, to prevent overflow errors
-            dtinfo = np.finfo(np.float32)
-            mn = dtinfo.min
-            if minimum is not None:
-                mn = float(max(dtinfo.min, minimum))
-            mx = dtinfo.max
-            if maximum is not None:
-                mx = float(min(dtinfo.max, maximum))
-            frames = np.random.uniform(mn, mx, size=(nf, ny, nx))
-            if datatype == 'float32':
-                frames = np.float32(frames)
-
-        print(f'Generated frame shape: {frames[0].shape}')
-        print(f'Range of generated values: [{mn},{mx}]')
-        return frames
 
     def setupMetadataPvs(self, metadataPv):
         self.caMetadataPvs = []
@@ -288,11 +382,13 @@ class AdSimServer:
         startTime = time.time()
         frameId = 0
         while not self.isDone:
-            for frames in self.frameSourceList:
-                for frame in frames:
+            for fg in self.frameGeneratorList:
+                nInputFrames, ny, nx, dtype, compressorName = fg.getFrameInfo()
+                for fgFrameId in range(0,nInputFrames):
                     if self.isDone or (self.nFrames > 0 and frameId >= self.nFrames):
                         break
-                    ntnda = AdImageUtility.generateNtNdArray2D(frameId, frame, extraFieldsPvObject)
+                    frameData = fg.getFrameData(fgFrameId)
+                    ntnda = AdImageUtility.generateNtNdArray2D(frameId, frameData, nx, ny, dtype, compressorName, extraFieldsPvObject)
                     self.addFrameToCache(frameId, ntnda)
                     frameId += 1
             if not self.usingQueue:
@@ -388,7 +484,7 @@ class AdSimServer:
         if self.nPublishedFrames > 1:
             deltaT = runtime/(self.nPublishedFrames - 1)
             frameRate = 1.0/deltaT
-        dataRate = FloatWithUnits(self.imageSize*frameRate/self.BYTES_IN_MEGABYTE, 'MBps')
+        dataRate = FloatWithUnits(self.uncompressedImageSize*frameRate/self.BYTES_IN_MEGABYTE, 'MBps')
         time.sleep(self.SHUTDOWN_DELAY)
         if self.screen:
             self.curses.endwin()
@@ -403,6 +499,7 @@ def main():
     parser.add_argument('-if', '--input-file', type=str, dest='input_file', default=None, help='Input file to be streamed; if input directory or input file are not provided, random images will be generated')
     parser.add_argument('-mm', '--mmap-mode', action='store_true', dest='mmap_mode', default=False, help='Use NumPy memory map to load the specified input file. This flag typically results in faster startup and lower memory usage for large files.')
     parser.add_argument('-hds', '--hdf-dataset', dest='hdf_dataset', default=None, help='HDF5 dataset path. This option must be specified if HDF5 files are used as input, but otherwise it is ignored.')
+    parser.add_argument('-hcm', '--hdf-compression-mode', dest='hdf_compression_mode', default=False, action='store_true', help='Use compressed data from HDF5 file. By default, data will be uncompressed before streaming it.')
     parser.add_argument('-fps', '--frame-rate', type=float, dest='frame_rate', default=20, help='Frames per second (default: 20 fps)')
     parser.add_argument('-nx', '--n-x-pixels', type=int, dest='n_x_pixels', default=256, help='Number of pixels in x dimension (default: 256 pixels; does not apply if input file file is given)')
     parser.add_argument('-ny', '--n-y-pixels', type=int, dest='n_y_pixels', default=256, help='Number of pixels in x dimension (default: 256 pixels; does not apply if input file is given)')
@@ -425,7 +522,7 @@ def main():
         print('Unrecognized argument(s): %s' % ' '.join(unparsed))
         exit(1)
 
-    server = AdSimServer(inputDirectory=args.input_directory, inputFile=args.input_file, mmapMode=args.mmap_mode, hdfDataset=args.hdf_dataset, frameRate=args.frame_rate, nFrames=args.n_frames, cacheSize=args.cache_size, nx=args.n_x_pixels, ny=args.n_y_pixels, datatype=args.datatype, minimum=args.minimum, maximum=args.maximum, runtime=args.runtime, channelName=args.channel_name, notifyPv=args.notify_pv, notifyPvValue=args.notify_pv_value, metadataPv=args.metadata_pv, startDelay=args.start_delay, reportPeriod=args.report_period, disableCurses=args.disable_curses)
+    server = AdSimServer(inputDirectory=args.input_directory, inputFile=args.input_file, mmapMode=args.mmap_mode, hdfDataset=args.hdf_dataset, hdfCompressionMode=args.hdf_compression_mode, frameRate=args.frame_rate, nFrames=args.n_frames, cacheSize=args.cache_size, nx=args.n_x_pixels, ny=args.n_y_pixels, datatype=args.datatype, minimum=args.minimum, maximum=args.maximum, runtime=args.runtime, channelName=args.channel_name, notifyPv=args.notify_pv, notifyPvValue=args.notify_pv_value, metadataPv=args.metadata_pv, startDelay=args.start_delay, reportPeriod=args.report_period, disableCurses=args.disable_curses)
 
     server.start()
     try:
