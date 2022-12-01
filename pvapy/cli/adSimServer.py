@@ -381,33 +381,36 @@ class AdSimServer:
     def frameProducer(self, extraFieldsPvObject=None):
         startTime = time.time()
         frameId = 0
+        frameData = None
         while not self.isDone:
             for fg in self.frameGeneratorList:
                 nInputFrames, ny, nx, dtype, compressorName = fg.getFrameInfo()
                 for fgFrameId in range(0,nInputFrames):
-                    if self.isDone or (self.nFrames > 0 and frameId >= self.nFrames):
+                    if self.isDone or (self.nInputFrames > 0 and frameId >= self.nInputFrames):
                         break
                     frameData = fg.getFrameData(fgFrameId)
+                    if frameData is None:
+                        break
                     ntnda = AdImageUtility.generateNtNdArray2D(frameId, frameData, nx, ny, dtype, compressorName, extraFieldsPvObject)
                     self.addFrameToCache(frameId, ntnda)
                     frameId += 1
-            if not self.usingQueue:
-                # All frames are in cache
+            if self.isDone or not self.usingQueue or frameData is None or (self.nInputFrames > 0 and frameId >= self.nInputFrames):
+                # All frames are in cache or we cannot generate any more data
                 break
         self.printReport(f'Frame producer is done after {frameId} generated frames')
 
     def prepareFrame(self, t=0):
         # Get cached frame
         frame = self.getFrameFromCache()
-
-        # Correct image id and timestamps
-        self.currentFrameId += 1
-        frame['uniqueId'] = self.currentFrameId
-        if t <= 0:
-            t = time.time()
-        ts = pva.PvTimeStamp(t)
-        frame['timeStamp'] = ts
-        frame['dataTimeStamp'] = ts
+        if frame is not None:
+            # Correct image id and timestamps
+            self.currentFrameId += 1
+            frame['uniqueId'] = self.currentFrameId
+            if t <= 0:
+                t = time.time()
+            ts = pva.PvTimeStamp(t)
+            frame['timeStamp'] = ts
+            frame['dataTimeStamp'] = ts
         return frame
 
     def framePublisher(self):
@@ -425,6 +428,10 @@ class AdSimServer:
             # so that metadata and image times are as close as possible
             try:
                 frame = self.prepareFrame(updateTime)
+            except pva.QueueEmpty:
+                self.printReport(f'Server exiting after emptying queue')
+                self.isDone = True
+                return
             except Exception:
                 if self.isDone:
                     return
@@ -525,9 +532,15 @@ def main():
     server = AdSimServer(inputDirectory=args.input_directory, inputFile=args.input_file, mmapMode=args.mmap_mode, hdfDataset=args.hdf_dataset, hdfCompressionMode=args.hdf_compression_mode, frameRate=args.frame_rate, nFrames=args.n_frames, cacheSize=args.cache_size, nx=args.n_x_pixels, ny=args.n_y_pixels, datatype=args.datatype, minimum=args.minimum, maximum=args.maximum, runtime=args.runtime, channelName=args.channel_name, notifyPv=args.notify_pv, notifyPvValue=args.notify_pv_value, metadataPv=args.metadata_pv, startDelay=args.start_delay, reportPeriod=args.report_period, disableCurses=args.disable_curses)
 
     server.start()
+    expectedRuntime = args.runtime+args.start_delay+server.SHUTDOWN_DELAY
+    startTime = time.time()
     try:
-        waitTime = args.runtime+args.start_delay+server.SHUTDOWN_DELAY
-        time.sleep(waitTime)
+        while True:
+            time.sleep(1)
+            now = time.time()
+            runtime = now - startTime
+            if runtime > expectedRuntime or server.isDone:
+                break
     except KeyboardInterrupt as ex:
         pass
     server.stop()
