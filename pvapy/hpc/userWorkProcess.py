@@ -5,7 +5,7 @@ import queue
 import os
 import multiprocessing as mp
 from ..utility.loggingManager import LoggingManager
-from .baseController import BaseController
+from .hpcController import HpcController
 
 class UserWorkProcess(mp.Process):
 
@@ -68,7 +68,7 @@ class UserWorkProcess(mp.Process):
             if self.isStopped:
                 break
             try:
-                inputData = self.inputDataQueue.get(block=True, timeout=BaseController.WAIT_TIME)
+                inputData = self.inputDataQueue.get(block=True, timeout=HpcController.WAIT_TIME)
                 outputData = self.process(inputData)
                 if outputData is not None:
                     self.outputDataQueue.put(outputData, block=False)
@@ -95,32 +95,32 @@ class RequestProcessingThread(threading.Thread):
             try:
                 response = {}
                 returnValue = None
-                request = self.userWorkProcess.commandRequestQueue.get(block=True, timeout=BaseController.WAIT_TIME)
+                request = self.userWorkProcess.commandRequestQueue.get(block=True, timeout=HpcController.WAIT_TIME)
                 self.logger.debug(f'Received request: {request}')
                 command = request.get('command')
                 requestId = request.get('requestId')
                 response['requestId'] = requestId
-                if command == BaseController.STOP_COMMAND:
+                if command == HpcController.STOP_COMMAND:
                     returnValue = self.userWorkProcess.stop()
-                elif command == BaseController.CONFIGURE_COMMAND:
+                elif command == HpcController.CONFIGURE_COMMAND:
                     configDict = request.get('configDict')
                     self.userWorkProcess.configure(configDict)
-                elif command == BaseController.RESET_STATS_COMMAND:
+                elif command == HpcController.RESET_STATS_COMMAND:
                     self.userWorkProcess.resetStats()
-                elif command == BaseController.GET_STATS_COMMAND:
+                elif command == HpcController.GET_STATS_COMMAND:
                     returnValue = self.userWorkProcess.getStats()
-                response['returnCode'] = BaseController.SUCCESS_RETURN_CODE
+                response['returnCode'] = HpcController.SUCCESS_RETURN_CODE
                 if returnValue is not None:
                     response['returnValue'] = returnValue
             except queue.Empty:
                 pass
             except Exception as ex:
                 self.logger.error(f'Request processing error for worker {self.userWorkProcess.workerId}: {ex}')
-                response['returnCode'] = BaseController.ERROR_RETURN_CODE
+                response['returnCode'] = HpcController.ERROR_RETURN_CODE
                 response['error'] = str(ex)
             try:
                 if len(response):
-                    self.userWorkProcess.commandResponseQueue.put(response, block=True, timeout=BaseController.WAIT_TIME)
+                    self.userWorkProcess.commandResponseQueue.put(response, block=True, timeout=HpcController.WAIT_TIME)
             except Exception as ex:
                 self.logger.error(f'Response processing error for worker {self.userWorkProcess.workerId}: {ex}')
 
