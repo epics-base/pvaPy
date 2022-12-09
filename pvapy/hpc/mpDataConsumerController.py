@@ -7,10 +7,10 @@ import pvaccess as pva
 import multiprocessing as mp
 from ..utility.loggingManager import LoggingManager
 from .dataConsumer import DataConsumer
-from .hpcController import HpcController
+from .systemController import SystemController
 from .dataConsumerController import DataConsumerController
 
-class MpDataConsumerController(HpcController):
+class MpDataConsumerController(SystemController):
 
     ''' 
     Controller class for a multiple data consumers.
@@ -51,7 +51,7 @@ class MpDataConsumerController(HpcController):
     '''
     def __init__(self, inputChannel, outputChannel=None, statusChannel=None, controlChannel=None, idFormatSpec=None, processorFile=None, processorClass=None, processorArgs=None, objectIdField='uniqueId', objectIdOffset=0, fieldRequest='', skipInitialUpdates=1, reportStatsList='all', logLevel=None, logFile=None, disableCurses=False, consumerId=1, nConsumers=1, consumerIdList=None, inputProviderType='pva', serverQueueSize=0, monitorQueueSize=-1, accumulateObjects=-1, accumulationTimeout=1, distributorPluginName='pydistributor', distributorGroup=None, distributorSet=None, distributorTrigger=None, distributorUpdates=None, nDistributorSets=1, metadataChannels=None):
 
-        HpcController.__init__(self, inputChannel, outputChannel=outputChannel, statusChannel=statusChannel, controlChannel=controlChannel, idFormatSpec=idFormatSpec, processorFile=processorFile, processorClass=processorClass, processorArgs=processorArgs, objectIdField=objectIdField, objectIdOffset=objectIdOffset, fieldRequest=fieldRequest, skipInitialUpdates=skipInitialUpdates, reportStatsList=reportStatsList, logLevel=logLevel, logFile=logFile, disableCurses=disableCurses)
+        SystemController.__init__(self, inputChannel, outputChannel=outputChannel, statusChannel=statusChannel, controlChannel=controlChannel, idFormatSpec=idFormatSpec, processorFile=processorFile, processorClass=processorClass, processorArgs=processorArgs, objectIdField=objectIdField, objectIdOffset=objectIdOffset, fieldRequest=fieldRequest, skipInitialUpdates=skipInitialUpdates, reportStatsList=reportStatsList, logLevel=logLevel, logFile=logFile, disableCurses=disableCurses)
         self.consumerId = consumerId # used as a start of the consumer id range
         self.nConsumers = nConsumers
         self.consumerIdListSpec = consumerIdList
