@@ -34,7 +34,13 @@ class LoggingManager:
             logger.addHandler(handler)
 
     @classmethod
-    def getLogger(cls, name):
+    def getLogger(cls, name, logLevel=None, logFile=None):
+        if logLevel:
+            cls.setLogLevel(logLevel)
+            if logFile:
+                cls.addFileHandler(logFile)
+            else:
+                cls.addStreamHandler()
         logger = cls.loggerMap.get(name)
         if logger:
             return logger
