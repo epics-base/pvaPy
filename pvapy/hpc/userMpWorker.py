@@ -7,31 +7,29 @@ import multiprocessing as mp
 from ..utility.loggingManager import LoggingManager
 from .hpcController import HpcController
 
-class UserWorkProcess(mp.Process):
+class UserMpWorker(mp.Process):
 
     ''' 
-    User work process class.
+    User multiprocessing worker class.
   
-    **UserWorkProcess(workerId, userDataProcessor, commandRequestQueue, commandResponseQueue, inputDataQueue, outputDataQueue, logLevel=None, logFile=None)**
+    **UserMpWorker(workerId, userMpDataProcessor, commandRequestQueue, commandResponseQueue, inputDataQueue, logLevel=None, logFile=None)**
 
     :Parameter: *workerId* (str) - Worker id.
-    :Parameter: *userDataProceessor* (UserDataProcessor) - Instance of the UserDataProcessor class that will be processing data.
+    :Parameter: *userMpDataProceessor* (UserMpDataProcessor) - Instance of the UserMpDataProcessor class that will be processing data.
     :Parameter: *commandRequestQueue* (multiprocessing.Queue) - Command request queue.
     :Parameter: *commandResponseQueue* (multiprocessing.Queue) - Command response queue.
     :Parameter: *inputDataQueue* (multiprocessing.Queue) - Input data queue.
-    :Parameter: *outputDataQueue* (multiprocessing.Queue) - Output data queue.
     :Parameter: *logLevel* (str) - Log level; possible values: debug, info, warning, error, critical. If not provided, there will be no log output.
     :Parameter: *logFile* (str) - Log file.
     '''
-    def __init__(self, workerId, userDataProcessor, commandRequestQueue, commandResponseQueue, inputDataQueue, outputDataQueue, logLevel=None, logFile=None):
+    def __init__(self, workerId, userMpDataProcessor, commandRequestQueue, commandResponseQueue, inputDataQueue, logLevel=None, logFile=None):
  
         mp.Process.__init__(self) 
         self.logger = LoggingManager.getLogger(self.__class__.__name__, logLevel, logFile)
         self.workerId = workerId 
-        self.userDataProcessor = userDataProcessor
+        self.userMpDataProcessor = userMpDataProcessor
 
         self.inputDataQueue = inputDataQueue
-        self.outputDataQueue = outputDataQueue
         self.commandRequestQueue = commandRequestQueue
         self.commandResponseQueue = commandResponseQueue
         self.isStopped = True
@@ -40,25 +38,25 @@ class UserWorkProcess(mp.Process):
     def start(self):
         if self.isStopped:
             self.isStopped = False
-            self.userDataProcessor.start()
+            self.userMpDataProcessor.start()
             mp.Process.start(self)
 
     def getStats(self):
-        return self.userDataProcessor.getStats()
+        return self.userMpDataProcessor.getStats()
 
     def resetStats(self):
-        self.userDataProcessor.resetStats()
+        self.userMpDataProcessor.resetStats()
 
     def configure(configDict):
-        self.userDataProcessor.configure(configDict)
+        self.userMpDataProcessor.configure(configDict)
 
     def process(self, data):
-        return self.userDataProcessor.process(data)
+        return self.userMpDataProcessor.process(data)
 
     def stop(self):
         if not self.isStopped:
             self.isStopped = True
-            self.userDataProcessor.stop()
+            self.userMpDataProcessor.stop()
         return self.getStats()
 
     def run(self):
@@ -69,9 +67,7 @@ class UserWorkProcess(mp.Process):
                 break
             try:
                 inputData = self.inputDataQueue.get(block=True, timeout=HpcController.WAIT_TIME)
-                outputData = self.process(inputData)
-                if outputData is not None:
-                    self.outputDataQueue.put(outputData, block=False)
+                self.process(inputData)
             except queue.Empty:
                 pass
             except Exception as ex:

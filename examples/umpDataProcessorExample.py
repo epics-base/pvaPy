@@ -1,18 +1,17 @@
 #!/usr/bin/env python
 
 from pvapy.utility.loggingManager import LoggingManager
-from pvapy.hpc.userDataProcessor import UserDataProcessor
-from pvapy.hpc.userWorkProcessController import UserWorkProcessController
+from pvapy.hpc.userMpDataProcessor import UserMpDataProcessor
+from pvapy.hpc.userMpWorkerController import UserMpWorkerController
 import multiprocessing as mp
 
 # Example for implementing data processor that spawns separate unix process
-class UwpDataProcessor2(UserDataProcessor):
-    def __init__(self, configDict={}):
-        UserDataProcessor.__init__(self, configDict)
-        self.udp = UwpDataProcessor()
+class UmpDataProcessor2(UserMpDataProcessor):
+    def __init__(self):
+        UserMpDataProcessor.__init__(self)
+        self.udp = UmpDataProcessor()
         self.iq = mp.Queue()
-        self.oq = mp.Queue()
-        self.uwpc = UserWorkProcessController(2, self.udp, self.iq, self.oq)
+        self.uwpc = UserMpWorkerController(2, self.udp, self.iq)
 
     def start(self):
         self.uwpc.start()
@@ -33,10 +32,10 @@ class UwpDataProcessor2(UserDataProcessor):
     def stop(self):
         self.uwpc.stop()
 
-class UwpDataProcessor(UserDataProcessor):
+class UmpDataProcessor(UserMpDataProcessor):
 
-    def __init__(self, configDict={}):
-        UserDataProcessor.__init__(self, configDict)
+    def __init__(self):
+        UserMpDataProcessor.__init__(self)
         self.nProcessed = 0
 
     # Process monitor update
@@ -56,10 +55,9 @@ class UwpDataProcessor(UserDataProcessor):
 if __name__ == '__main__':
     LoggingManager.addStreamHandler()
     LoggingManager.setLogLevel('DEBUG')
-    udp = UwpDataProcessor2()
+    udp = UmpDataProcessor2()
     iq = mp.Queue()
-    oq = mp.Queue()
-    uwpc = UserWorkProcessController(1, udp, iq, oq)
+    uwpc = UserMpWorkerController(1, udp, iq)
     uwpc.start()
     import time
     for i in range(0,10):

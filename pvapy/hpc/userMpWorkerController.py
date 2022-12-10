@@ -4,34 +4,32 @@ import os
 import queue
 import multiprocessing as mp
 from ..utility.loggingManager import LoggingManager
-from .userWorkProcess import UserWorkProcess
+from .userMpWorker import UserMpWorker
 from .hpcController import HpcController
 
-class UserWorkProcessController(HpcController):
+class UserMpWorkerController(HpcController):
 
     CONTROLLER_TYPE = 'user'
 
     ''' 
     Controller class for user work process.
   
-    **UserWorkProcessController(workerId, userDataProcessor, inputDataQueue, outputDataQueue, logLevel=None, logFile=None)**
+    **UserMpWorkerController(workerId, userMpDataProcessor, inputDataQueue, logLevel=None, logFile=None)**
 
     :Parameter: *workerId* (str) - Worker id.
-    :Parameter: *userDataProceessor* (UserDataProcessor) - Instance of the UserDataProcessor class that will be processing data.
+    :Parameter: *userMpDataProcessor* (UserMpDataProcessor) - Instance of the UserMpDataProcessor class that will be processing data.
     :Parameter: *inputDataQueue* (multiprocessing.Queue) - Input data queue.
-    :Parameter: *outputDataQueue* (multiprocessing.Queue) - Output data queue.
     :Parameter: *logLevel* (str) - Log level; possible values: debug, info, warning, error, critical. If not provided, there will be no log output.
     :Parameter: *logFile* (str) - Log file.
     '''
-    def __init__(self, workerId, userDataProcessor, inputDataQueue, outputDataQueue, logLevel=None, logFile=None):
+    def __init__(self, workerId, userMpDataProcessor, inputDataQueue, logLevel=None, logFile=None):
         HpcController.__init__(self, logLevel, logFile) 
         self.workerId = workerId 
         self.inputDataQueue = inputDataQueue
-        self.outputDataQueue = outputDataQueue
         self.commandRequestQueue = mp.Queue()
         self.commandResponseQueue = mp.Queue()
         self.requestId = 0
-        self.uwProcess = UserWorkProcess(workerId, userDataProcessor, self.commandRequestQueue, self.commandResponseQueue, inputDataQueue, outputDataQueue, logLevel=None, logFile=None)
+        self.uwProcess = UserMpWorker(workerId, userMpDataProcessor, self.commandRequestQueue, self.commandResponseQueue, inputDataQueue, logLevel, logFile)
         self.pid = os.getpid()
         self.statsDict = {}
         self.isStopped = True
