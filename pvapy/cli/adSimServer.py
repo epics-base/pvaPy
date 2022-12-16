@@ -361,7 +361,8 @@ class AdSimServer:
         else:
             # Using PvObjectQueue
             try:
-                self.frameCache.put(ntnda, self.cacheTimeout)
+                waitTime = self.startDelay + self.cacheTimeout
+                self.frameCache.put(ntnda, waitTime)
             except pva.QueueFull:
                 pass
             
@@ -441,6 +442,10 @@ class AdSimServer:
             self.pvaServer.update(self.channelName, frame)
             self.lastPublishedTime = time.time()
             self.nPublishedFrames += 1
+            if self.usingQueue and self.nPublishedFrames >= self.nInputFrames:
+                self.printReport(f'Server exiting after publishing {self.nPublishedFrames}')
+                self.isDone = True
+                return
 
             runtime = 0
             frameRate = 0
@@ -513,8 +518,8 @@ def main():
     parser.add_argument('-dt', '--datatype', type=str, dest='datatype', default='uint8', help='Generated datatype. Possible options are int8, uint8, int16, uint16, int32, uint32, float32, float64 (default: uint8; does not apply if input file is given)')
     parser.add_argument('-mn', '--minimum', type=float, dest='minimum', default=None, help='Minimum generated value (does not apply if input file is given)')
     parser.add_argument('-mx', '--maximum', type=float, dest='maximum', default=None, help='Maximum generated value (does not apply if input file is given)')
-    parser.add_argument('-nf', '--n-frames', type=int, dest='n_frames', default=0, help='Number of different frames generate from the input sources; if set to <= 0, the server will use all images found in input files, or it will generate enough images to fill up the image cache if no input files were specified.')
-    parser.add_argument('-cs', '--cache-size', type=int, dest='cache_size', default=1000, help='Number of different frames to cache (default: 1000); if the cache size is smaller than the number of input frames, the new frames will be constantly regenerated as cached ones are published; otherwise, cached frames will be published over and over again as long as the server is running')
+    parser.add_argument('-nf', '--n-frames', type=int, dest='n_frames', default=0, help='Number of different frames to generate from the input sources; if set to <= 0, the server will use all images found in input files, or it will generate enough images to fill up the image cache if no input files were specified. If the requested number of input frames is greater than the cache size, the server will stop publishing after exhausting generated frames; otherwise, the generated frames will be constantly recycled and republished.')
+    parser.add_argument('-cs', '--cache-size', type=int, dest='cache_size', default=1000, help='Number of different frames to cache (default: 1000); if the cache size is smaller than the number of input frames, the new frames will be constantly regenerated as cached ones are published; otherwise, cached frames will be published over and over again as long as the server is running.')
     parser.add_argument('-rt', '--runtime', type=float, dest='runtime', default=300, help='Server runtime in seconds (default: 300 seconds)')
     parser.add_argument('-cn', '--channel-name', type=str, dest='channel_name', default='pvapy:image', help='Server PVA channel name (default: pvapy:image)')
     parser.add_argument('-npv', '--notify-pv', type=str, dest='notify_pv', default=None, help='CA channel that should be notified on start; for the default Area Detector PVA driver PV that controls image acquisition is 13PVA1:cam1:Acquire')
