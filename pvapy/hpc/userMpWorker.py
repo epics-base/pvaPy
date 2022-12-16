@@ -25,7 +25,8 @@ class UserMpWorker(mp.Process):
     def __init__(self, workerId, userMpDataProcessor, commandRequestQueue, commandResponseQueue, inputDataQueue, logLevel=None, logFile=None):
  
         mp.Process.__init__(self) 
-        self.logger = LoggingManager.getLogger(self.__class__.__name__, logLevel, logFile)
+        self.logger =
+	LoggingManager.getLogger(f'{self.__class__.__name__}.{workerId}', logLevel, logFile)
         self.workerId = workerId 
         self.userMpDataProcessor = userMpDataProcessor
 
