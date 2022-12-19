@@ -92,13 +92,15 @@ class UserMpWorkerController(HpcController):
 
     def resetStats(self):
         try:
-            self._invokeCommandRequest(self.RESET_STATS_COMMAND)
+            if not self.isStopped:
+                self._invokeCommandRequest(self.RESET_STATS_COMMAND)
         except Exception as ex:
             self.logger.error(f'Cannot reset stats for worker {self.workerId}: {ex}')
 
     def configure(configDict):
         try:
-            self._invokeCommandRequest(self.CONFIGURE_COMMAND, {'configDict' : configDict})
+            if not self.isStopped:
+                self._invokeCommandRequest(self.CONFIGURE_COMMAND, {'configDict' : configDict})
         except Exception as ex:
             self.logger.error(f'Cannot configure worker {self.workerId}: {ex}')
 
@@ -106,7 +108,8 @@ class UserMpWorkerController(HpcController):
         self.logger.debug(f'Stopping user work process: {self.uwProcess}')
         statsDict = self.statsDict
         try:
-            statsDict = self._invokeCommandRequest(self.STOP_COMMAND)
+            if not self.isStopped:
+                statsDict = self._invokeCommandRequest(self.STOP_COMMAND)
         except self.ProcessNotResponding as ex:
             pass
         except Exception as ex:
