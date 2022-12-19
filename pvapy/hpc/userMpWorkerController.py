@@ -75,7 +75,7 @@ class UserMpWorkerController(HpcController):
         signal.signal(signal.SIGINT, originalSigintHandler)
         self.isStopped = False
 
-    def getStats(self):
+    def getStats(self, keyPrefix=None):
         statsDict = self.statsDict
         try:
             if not self.isStopped:
@@ -83,6 +83,11 @@ class UserMpWorkerController(HpcController):
                 self.statsDict = statsDict
         except Exception as ex:
             self.logger.warn(f'Cannot get stats for worker {self.workerId}: {ex}')
+        if keyPrefix:
+            statsDict2 = {}
+            for key, value in statsDict.items():
+                statsDict2[f'{keyPrefix}.{key}'] = value
+            return statsDict2
         return statsDict
 
     def resetStats(self):
