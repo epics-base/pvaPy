@@ -79,8 +79,12 @@ class UserMpWorkerController(HpcController):
         statsDict = self.statsDict
         try:
             if not self.isStopped:
-                statsDict = self._invokeCommandRequest(self.GET_STATS_COMMAND)
-                self.statsDict = statsDict
+                statsDict2 = self._invokeCommandRequest(self.GET_STATS_COMMAND)
+                if type(statsDict2) == dict:
+                    statsDict = statsDict2
+                    self.statsDict = statsDict2
+                else:
+                    self.logger.warn(f'Worker {self.workerId} generated invalid stats dict: {statsDict2}')
         except Exception as ex:
             self.logger.warn(f'Cannot get stats for worker {self.workerId}: {ex}')
         if keyPrefix:
@@ -104,12 +108,16 @@ class UserMpWorkerController(HpcController):
         except Exception as ex:
             self.logger.error(f'Cannot configure worker {self.workerId}: {ex}')
 
-    def stop(self):
+    def stop(self, keyPrefix=None):
         self.logger.debug(f'Stopping user work process: {self.uwProcess}')
         statsDict = self.statsDict
+        if self.isStopped:
+            return statsDict
         try:
-            if not self.isStopped:
-                statsDict = self._invokeCommandRequest(self.STOP_COMMAND)
+            statsDict2 = self._invokeCommandRequest(self.STOP_COMMAND)
+            if type(statsDict2) == dict:
+                statsDict = statsDict2
+                self.statsDict = statsDict2
         except self.ProcessNotResponding as ex:
             pass
         except Exception as ex:
