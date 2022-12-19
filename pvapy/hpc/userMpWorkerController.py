@@ -86,7 +86,7 @@ class UserMpWorkerController(HpcController):
         if keyPrefix:
             statsDict2 = {}
             for key, value in statsDict.items():
-                statsDict2[f'{keyPrefix}.{key}'] = value
+                statsDict2[f'{keyPrefix}_{key}'] = value
             return statsDict2
         return statsDict
 
