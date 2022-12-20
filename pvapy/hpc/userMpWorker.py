@@ -62,8 +62,8 @@ class UserMpWorker(mp.Process):
                 self.logger.debug(f'Emptying input data queue for worker {self.workerId}, queue size is {self.inputDataQueue.qsize()}')
                 while not self.inputDataQueue.empty():
                     self.inputDataQueue.get(block=True, timeout=HpcController.WAIT_TIME)
-            except:
-                pass
+            except Exception as ex:
+                self.logger.warn(f'Error emptying input data queue for worker {self.workerId}: {ex}')
         return self.getStats()
 
     def run(self):
