@@ -36,24 +36,36 @@ class UserMpWorker(mp.Process):
         self.rpThread = RequestProcessingThread(self)
 
     def start(self):
+        '''
+        Method invoked at processing startup.
+        '''
         if self.isStopped:
             self.isStopped = False
             self.userMpDataProcessor.start()
             mp.Process.start(self)
 
-    def getStats(self):
-        return self.userMpDataProcessor.getStats()
-
-    def resetStats(self):
-        self.userMpDataProcessor.resetStats()
-
     def configure(configDict):
+        '''
+        Method invoked at user initiated runtime configuration changes.
+
+        :Parameter: *configDict* (dict) - dictionary containing configuration parameters
+        '''
         self.userMpDataProcessor.configure(configDict)
 
-    def process(self, data):
-        return self.userMpDataProcessor.process(data)
+    def process(self, mpqObject):
+        '''
+        Data processing method.
+
+        :Parameter: *mpqObject* (object) - object received from multiprocessing queue
+        '''
+        return self.userMpDataProcessor.process(mpqObject)
 
     def stop(self):
+        '''
+        Method invoked at processing shutdown.
+
+        :Returns: Dictionary containing application statistics parameters
+        '''
         if not self.isStopped:
             self.logger.debug(f'Stopping worker {self.workerId}, PID: {os.getpid()}')
             self.isStopped = True
@@ -66,7 +78,25 @@ class UserMpWorker(mp.Process):
                 self.logger.warn(f'Error emptying input data queue for worker {self.workerId}: {ex}')
         return self.getStats()
 
+    def resetStats(self):
+        '''
+        Method invoked at user initiated application statistics reset.
+        '''
+        self.userMpDataProcessor.resetStats()
+
+    def getStats(self):
+        '''
+        Method invoked periodically for generating application statistics.
+
+        :Returns: Dictionary containing application statistics parameters
+        '''
+        return self.userMpDataProcessor.getStats()
+
     def run(self):
+        '''
+        Data processing thread. It retrieves objects from the input 
+        queue and invokes user data processor process() method.
+        '''
         self.logger.debug(f'Data processing thread for worker {self.workerId} starting, PID: {os.getpid()}')
         self.rpThread.start()
         while True:
@@ -82,6 +112,9 @@ class UserMpWorker(mp.Process):
         self.logger.debug(f'Data processing thread for worker {self.workerId} is exiting')
 
 class RequestProcessingThread(threading.Thread):
+    ''' 
+    Request processing thread for the user multiprocessing worker class.
+    ''''
 
     def __init__(self, userWorkProcess):
         threading.Thread.__init__(self)

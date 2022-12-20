@@ -9,7 +9,7 @@ class UserMpDataProcessor:
     The following variables will be set after processor instance is created and before processing starts:\n
     \t\- *logger* (logging.Logger) : logger object\n
   
-    **UserMpDataProcessor(configDict={})**
+    **UserMpDataProcessor(processorId=1)**
 
     :Parameter: *processorId* (int) - processor id
     '''

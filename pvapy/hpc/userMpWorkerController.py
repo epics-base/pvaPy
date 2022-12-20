@@ -12,7 +12,7 @@ class UserMpWorkerController(HpcController):
     CONTROLLER_TYPE = 'user'
 
     ''' 
-    Controller class for user work process.
+    Controller class for user multiprocessing worker process.
   
     **UserMpWorkerController(workerId, userMpDataProcessor, inputDataQueue, logLevel=None, logFile=None)**
 
@@ -37,6 +37,15 @@ class UserMpWorkerController(HpcController):
     class ProcessNotResponding(Exception):
         def __init__(self, args):
             Exception.__init__(self, args)
+
+    @classmethod
+    def _renameDictKeys(cls, d, keyPrefix):
+        if keyPrefix:
+            d2 = {}
+            for key, value in d.items():
+                d2[f'{keyPrefix}{key}'] = value
+            return d2
+        return d
 
     def _invokeCommandRequest(self, command, args={}):
         returnCode = None
@@ -65,51 +74,39 @@ class UserMpWorkerController(HpcController):
         return returnValue
 
     def start(self):
+        '''
+        Method invoked at processing startup.
+        '''
         # Replace interrupt handler for worker processes
-        # so we can exit cleanly
+        # to allow clean exit
         import signal
         originalSigintHandler = signal.signal(signal.SIGINT, signal.SIG_IGN)
         self.logger.debug(f'Starting worker {self.workerId}')
         self.uwProcess.start()
-        self.logger.debug(f'Started user work process: {self.uwProcess}')
+        self.logger.debug(f'Started user worker process: {self.uwProcess}')
         signal.signal(signal.SIGINT, originalSigintHandler)
         self.isStopped = False
 
-    def getStats(self, keyPrefix=None):
-        statsDict = self.statsDict
-        try:
-            if not self.isStopped:
-                statsDict2 = self._invokeCommandRequest(self.GET_STATS_COMMAND)
-                if type(statsDict2) == dict:
-                    statsDict = statsDict2
-                    self.statsDict = statsDict2
-                else:
-                    self.logger.warn(f'Worker {self.workerId} generated invalid stats dict: {statsDict2}')
-        except Exception as ex:
-            self.logger.warn(f'Cannot get stats for worker {self.workerId}: {ex}')
-        if keyPrefix:
-            statsDict2 = {}
-            for key, value in statsDict.items():
-                statsDict2[f'{keyPrefix}_{key}'] = value
-            return statsDict2
-        return statsDict
-
-    def resetStats(self):
-        try:
-            if not self.isStopped:
-                self._invokeCommandRequest(self.RESET_STATS_COMMAND)
-        except Exception as ex:
-            self.logger.error(f'Cannot reset stats for worker {self.workerId}: {ex}')
-
     def configure(configDict):
+        '''
+        Method invoked at user initiated runtime configuration changes.
+
+        :Parameter: *configDict* (dict) - dictionary containing configuration parameters
+        '''
         try:
             if not self.isStopped:
                 self._invokeCommandRequest(self.CONFIGURE_COMMAND, {'configDict' : configDict})
         except Exception as ex:
             self.logger.error(f'Cannot configure worker {self.workerId}: {ex}')
 
-    def stop(self, keyPrefix=None):
-        self.logger.debug(f'Stopping user work process: {self.uwProcess}')
+    def stop(self, statsKeyPrefix=None):
+        '''
+        Method invoked at processing shutdown.
+
+        :Parameter: *statsKeyPrefix* (str) - optional prefix to be used for all statistics parameter keys; the prefix should start with a letter or underscore, and consist of alphanumeric and underscore characters only
+        :Returns: Dictionary containing application statistics parameters
+        '''
+        self.logger.debug(f'Stopping user worker process: {self.uwProcess}')
         statsDict = self.statsDict
         if self.isStopped:
             return statsDict
@@ -132,6 +129,36 @@ class UserMpWorkerController(HpcController):
             self.uwProcess.kill()
         except:
             pass
-        self.logger.debug(f'User work process {self.workerId} is done')
-        return statsDict
+        self.logger.debug(f'User worker process {self.workerId} is done')
+        return self._renameDictKeys(statsDict, statsKeyPrefix)
+
+    def resetStats(self):
+        '''
+        Method invoked at user initiated application statistics reset.
+        '''
+        try:
+            if not self.isStopped:
+                self._invokeCommandRequest(self.RESET_STATS_COMMAND)
+        except Exception as ex:
+            self.logger.error(f'Cannot reset stats for worker {self.workerId}: {ex}')
+
+    def getStats(self, statsKeyPrefix=None):
+        '''
+        Method invoked periodically for generating application statistics.
+
+        :Parameter: *statsKeyPrefix* (str) - optional prefix to be used for all statistics parameter keys; the prefix should start with a letter or underscore, and consist of alphanumeric and underscore characters only
+        :Returns: Dictionary containing application statistics parameters
+        '''
+        statsDict = self.statsDict
+        try:
+            if not self.isStopped:
+                statsDict2 = self._invokeCommandRequest(self.GET_STATS_COMMAND)
+                if type(statsDict2) == dict:
+                    statsDict = statsDict2
+                    self.statsDict = statsDict2
+                else:
+                    self.logger.warn(f'Worker {self.workerId} generated invalid stats dict: {statsDict2}')
+        except Exception as ex:
+            self.logger.warn(f'Cannot get stats for worker {self.workerId}: {ex}')
+        return self._renameDictKeys(statsDict, statsKeyPrefix)
 
