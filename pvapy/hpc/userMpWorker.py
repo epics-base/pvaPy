@@ -114,7 +114,7 @@ class UserMpWorker(mp.Process):
 class RequestProcessingThread(threading.Thread):
     ''' 
     Request processing thread for the user multiprocessing worker class.
-    ''''
+    '''
 
     def __init__(self, userWorkProcess):
         threading.Thread.__init__(self)
