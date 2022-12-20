@@ -55,8 +55,15 @@ class UserMpWorker(mp.Process):
 
     def stop(self):
         if not self.isStopped:
+            self.logger.debug(f'Stopping worker {self.workerId}, PID: {os.getpid()}')
             self.isStopped = True
             self.userMpDataProcessor.stop()
+            try:
+                self.logger.debug(f'Emptying input data queue for worker {self.workerId}, queue size is {self.inputDataQueue.qsize()}')
+                while not self.inputDataQueue.empty():
+                    self.inputDataQueue.get(block=True, timeout=HpcController.WAIT_TIME)
+            except:
+                pass
         return self.getStats()
 
     def run(self):

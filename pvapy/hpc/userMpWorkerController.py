@@ -113,6 +113,7 @@ class UserMpWorkerController(HpcController):
         statsDict = self.statsDict
         if self.isStopped:
             return statsDict
+        self.isStopped = True
         try:
             statsDict2 = self._invokeCommandRequest(self.STOP_COMMAND)
             if type(statsDict2) == dict:
@@ -127,7 +128,10 @@ class UserMpWorkerController(HpcController):
             self.uwProcess.join(self.WAIT_TIME)
         except:
             pass
-        self.isStopped = True
+        try:
+            self.uwProcess.kill()
+        except:
+            pass
         self.logger.debug(f'User work process {self.workerId} is done')
         return statsDict
 
