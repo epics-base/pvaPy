@@ -6,7 +6,7 @@
   - added ability to load images from HDF5 files (either compressed or uncompressed)
 - Conda/pip package dependencies: 
   - EPICS BASE = 7.0.7
-  - BOOST      = 1.78.0
+  - BOOST      = 1.81.0
   - NUMPY      >= 1.22 (for python >= 3.8); >= 1.19, < 1.21 (for python < 3.8)
 
 ## Release 5.2.0 (2022/11/04)
