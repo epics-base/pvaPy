@@ -1,4 +1,4 @@
-## Release 5.2.1 (2022/11/DD)
+## Release 5.2.1 (2022/12/24)
 
 - Fixed issue with put into PvObjectQueue when timeout is given
 - Updated default value for PvTimeStamp userTag field to 0
