@@ -11,6 +11,7 @@ class UserDataProcessor:
     The following variables will be set after processor instance is created and before processing starts:\n
     \t\- *logger* (logging.Logger) : logger object\n
     \t\- *processorId* (int)       : processor id\n
+    \t\- *inputChannel* (str)      : input channel\n
     \t\- *outputChannel* (str)     : output channel\n
     \t\- *objectIdField* (str)     : name of the object id field\n
     \t\- *pvaServer* (PvaServer)   : PVA Server instance for publishing output objects\n

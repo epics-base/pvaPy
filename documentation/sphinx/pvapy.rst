@@ -58,3 +58,27 @@ AdImageDataEncryptor
     :members:
     :inherited-members:
 
+UserMpDataProcessor
+-------------------
+
+.. autoclass:: pvapy.hpc.userMpDataProcessor.UserMpDataProcessor()
+    :show-inheritance: 
+    :members:
+    :inherited-members:
+
+UserMpWorker
+------------
+
+.. autoclass:: pvapy.hpc.userMpWorker.UserMpWorker()
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+UserMpWorkerController
+----------------------
+
+.. autoclass:: pvapy.hpc.userMpWorkerController.UserMpWorkerController()
+    :show-inheritance:
+    :members:
+    :inherited-members:
+

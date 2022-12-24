@@ -20,8 +20,8 @@ class_<PvTimeStamp, bases<PvObject> >("PvTimeStamp",
     "**PvTimeStamp(time)**\n\n"
     "\t:Parameter: *time* (float) - time represented as float, including seconds and fractional seconds\n\n"
     "\t::\n\n"
-    "\t\ttimeStamp2 = PvTimeStamp(1234567890.00123)\n\n"
-    "**PvTimeStamp(secondsPastEpoch, nanoseconds [, userTag=-1])**\n\n"
+    "\t\ttimeStamp2 = PvTimeStamp(1234567890.00123 [, userTag=0])\n\n"
+    "**PvTimeStamp(secondsPastEpoch, nanoseconds [, userTag=0])**\n\n"
     "\t:Parameter: *secondsPastEpoch* (long) - seconds past epoch\n\n"
     "\t:Parameter: *nanoseconds* (int) - nanoseconds\n\n"
     "\t:Parameter: *userTag* (int) - user tag\n\n"
@@ -31,6 +31,8 @@ class_<PvTimeStamp, bases<PvObject> >("PvTimeStamp",
     init<>())
 
     .def(init<double>())
+
+    .def(init<double, int>())
 
     .def(init<long long, int>())
 

@@ -11,7 +11,7 @@ const char* PvTimeStamp::SecondsPastEpochFieldKey("secondsPastEpoch");
 const char* PvTimeStamp::NanosecondsFieldKey("nanoseconds");
 const char* PvTimeStamp::UserTagFieldKey("userTag");
 
-const int PvTimeStamp::UnknownUserTag(-1);
+const int PvTimeStamp::UnknownUserTag(0);
 
 boost::python::dict PvTimeStamp::createStructureDict()
 {
@@ -46,6 +46,16 @@ PvTimeStamp::PvTimeStamp(double time) :
     setSecondsPastEpoch(secondsPastEpoch);
     setNanoseconds(nanoseconds);
     setUserTag(UnknownUserTag);
+}
+
+PvTimeStamp::PvTimeStamp(double time, int userTag) : 
+    PvObject(createStructureDict(), StructureId)
+{
+    long long secondsPastEpoch(time);
+    int nanoseconds((time-secondsPastEpoch)*NanosecondsInSecond);
+    setSecondsPastEpoch(secondsPastEpoch);
+    setNanoseconds(nanoseconds);
+    setUserTag(userTag);
 }
 
 PvTimeStamp::PvTimeStamp(const epicsTimeStamp& ts) :

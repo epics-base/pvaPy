@@ -8,10 +8,10 @@ from ..utility.objectUtility import ObjectUtility
 from .dataProcessingController import DataProcessingController
 from .sourceChannel import SourceChannel
 from .dataCollector import DataCollector
-from .hpcController import HpcController
+from .systemController import SystemController
 
 
-class DataCollectorController(HpcController):
+class DataCollectorController(SystemController):
 
     CONTROLLER_TYPE = 'collector'
 
@@ -45,7 +45,7 @@ class DataCollectorController(HpcController):
     '''
     def __init__(self, inputChannel, outputChannel=None, statusChannel=None, controlChannel=None, idFormatSpec=None, processorFile=None, processorClass=None, processorArgs=None, objectIdField='uniqueId', objectIdOffset=0, fieldRequest='', skipInitialUpdates=1, reportStatsList='all', logLevel=None, logFile=None, disableCurses=False, collectorId=1, producerIdList='1,2', serverQueueSize=0, monitorQueueSize=-1, collectorCacheSize=-1, metadataChannels=None):
 
-        HpcController.__init__(self, inputChannel, outputChannel=outputChannel, statusChannel=statusChannel, controlChannel=controlChannel, idFormatSpec=idFormatSpec, processorFile=processorFile, processorClass=processorClass, processorArgs=processorArgs, objectIdField=objectIdField, objectIdOffset=objectIdOffset, fieldRequest=fieldRequest, skipInitialUpdates=skipInitialUpdates, reportStatsList=reportStatsList, logLevel=logLevel, logFile=logFile, disableCurses=disableCurses)
+        SystemController.__init__(self, inputChannel, outputChannel=outputChannel, statusChannel=statusChannel, controlChannel=controlChannel, idFormatSpec=idFormatSpec, processorFile=processorFile, processorClass=processorClass, processorArgs=processorArgs, objectIdField=objectIdField, objectIdOffset=objectIdOffset, fieldRequest=fieldRequest, skipInitialUpdates=skipInitialUpdates, reportStatsList=reportStatsList, logLevel=logLevel, logFile=logFile, disableCurses=disableCurses)
 
         self.collectorId = collectorId
         self.producerIdListSpec = producerIdList 
@@ -67,7 +67,7 @@ class DataCollectorController(HpcController):
             self.logger.debug(f'Processor output channel name: {self.outputChannel}')
 
         # Create config dict
-        return HpcController.createDataProcessorConfig(self, collectorId)
+        return SystemController.createDataProcessorConfig(self, collectorId)
 
     def getStatusTypeDict(self):
         statusTypeDict = DataCollector.STATUS_TYPE_DICT

@@ -1,3 +1,14 @@
+## Release 5.2.1 (2022/11/DD)
+
+- Fixed issue with put into PvObjectQueue when timeout is given
+- Updated default value for PvTimeStamp userTag field to 0
+- Area Detector Simulator enhancements:
+  - added ability to load images from HDF5 files (either compressed or uncompressed)
+- Conda/pip package dependencies: 
+  - EPICS BASE = 7.0.7
+  - BOOST      = 1.81.0
+  - NUMPY      >= 1.22 (for python >= 3.8); >= 1.19, < 1.21 (for python < 3.8)
+
 ## Release 5.2.0 (2022/11/04)
 
 - Streaming Framework enhancements:

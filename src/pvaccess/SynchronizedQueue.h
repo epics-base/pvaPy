@@ -287,6 +287,7 @@ void SynchronizedQueue<T>::push(const T& t, double timeout)
         int size = std::queue<T>::size();
         if (maxLength <= 0 || size < maxLength) {
             pushUnsynchronized(t);
+            return;
         }
         // Clear pop event.
         itemPoppedEvent.tryWait();
