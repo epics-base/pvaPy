@@ -118,7 +118,7 @@ class NumpyFileGenerator(FrameGenerator):
     def loadInputFile(self):
         try:
             if self.mmapMode:
-                self.frames = np.load(self.filePath, mmapMode='r')
+                self.frames = np.load(self.filePath, mmap_mode='r')
             else:
                 self.frames = np.load(self.filePath)
             print(f'Loaded input file {self.filePath}')
