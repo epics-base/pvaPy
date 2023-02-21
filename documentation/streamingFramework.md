@@ -201,7 +201,7 @@ After server starts publishing images, the consumer terminal should display proc
 processed by consumer 1 should be accessible on the 'consumer:1:output' channel, and
 images processed by consumer 2 should be accessible on the 'consumer:2:output' channel.
 
-### Multiple Consumers with Data Distribution
+### Multiple Consumers With Data Distribution
 
 This example illustrates how to spawn multiple consumers that receive images in
 alternate order.
@@ -239,7 +239,7 @@ After server starts publishing images, the consumer terminal should display proc
 output, with one consumers receiving images (1,3,5,...) and the other one receiving images
 (2,4,6,...).
 
-### Multiple Consumer Sets with Data Distribution
+### Multiple Consumer Sets With Data Distribution
 
 This example illustrates how to distribute the same set of images between 
 multiple sets of consumers.
@@ -374,7 +374,7 @@ $ pvapy-ad-sim-server -cn pvapy:image -nx 128 -ny 128 -dt uint8 -rt 60 -fps 1000
 
 After 60 second server runtime, there should be no overruns and missed frames reported by the consumer process.
 
-#### Multiple Consumers with Data Distribution
+#### Multiple Consumers With Data Distribution
 
 With data distributor plugin, each consumer gets its own server and/or
 client queue.
@@ -634,7 +634,7 @@ resulting tiles for processing between multiple consumers.
 </p>
 
 On terminal 1, start a single consumer running the
-[split image processor](../examples/splitAdImageProcessor.py). This 
+[split image processor](../examples/splitAdImageProcessorExample.py). This 
 processor will connect to the 'pvapy:image' channel, split the original
 3840x2160 frames into four 1920x1080 tiles, and publish those on
 its output channel 'split:1:output':
@@ -786,7 +786,7 @@ $ pvapy-ad-sim-server -cn ad:image -nx 128 -ny 128 -dt uint8 -fps 2000 -rt 60 -r
 Once the data source starts publishing images, they will be streamed through
 all the components of the system, and saved into the designated output folder.
 
-### Metadata Handling with Data Collector
+### Metadata Handling With Data Collector
 
 In many cases images need to be associated with with various pieces of metadata (e.g., position information)
 before processing. The streaming framework allows one to receive PV updates from any number of metadata channels
@@ -884,7 +884,7 @@ This command will start CA IOC and generate CA metadata channels 'x', 'y', and '
 Note that it requires path to the EPICS Base dbd folder. For example, if you are using PvaPy
 conda package, this folder would be located at '/path/to/conda/envs/env-name/opt/epics/dbd'.
 
-### Metadata Handling with Data Consumers
+### Metadata Handling With Data Consumers
 
 Distributing metadata processing should allow one to handle higher frame rates. In this example
 we also use mirror server for all image and metadata channels.
