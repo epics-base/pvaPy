@@ -619,8 +619,77 @@ $ pvapy-ad-sim-server -cn pvapy:image -nx 128 -ny 128 -dt uint8 -rt 60 -fps 8000
 ```
 
 Once the simulation server starts publishing images, the consumer statistics
-should indicate that the passthrough and processing consumers are receiving frames
-at one half and one eighth of the original input stream data rate, respectively.
+should indicate that the passthrough and processing consumers are receiving 
+frames at one half and one eighth of the original input stream data rate, 
+respectively.
+
+
+### Splitting Images Into Tiles
+
+This example shows how one can split the original raw image and distribute
+resulting tiles for processing between multiple consumers. 
+
+<p align="center">
+  <img alt="Splitting Images" src="images/StreamingFrameworkSplittingImages.jpg">
+</p>
+
+On terminal 1, start a single consumer running the
+[split image processor](../examples/splitAdImageProcessor.py). This 
+processor will connect to the 'pvapy:image' channel, split the original
+3840x2160 frames into four 1920x1080 tiles, and publish those on
+its output channel 'split:1:output':
+
+```sh
+$ pvapy-hpc-consumer \
+    --input-channel pvapy:image \
+    --control-channel split:*:control \
+    --status-channel split:*:status \
+    --output-channel split:*:output \
+    --processor-file /path/to/splitAdImageProcessorExample.py \
+    --processor-class SplitAdImageProcessor \
+    --processor-args='{"nx" : 1920, "ny" : 1080}' \
+    --report-period 10 \
+    --server-queue-size 100
+```
+
+On terminal 2, start four consumers processing the 1920x1080 tiles
+from 'split:1:output' stream using the
+[passthrough system user processor](../pvapy/hpc/userDataProcessor.py):
+
+```sh
+$ pvapy-hpc-consumer \
+    --input-channel split:1:output \
+    --control-channel process:*:control \
+    --status-channel process:*:status \
+    --output-channel process:*:output \
+    --processor-class pvapy.hpc.userDataProcessor.UserDataProcessor \
+    --report-period 10 \
+    --server-queue-size 100 \
+    --n-consumers 4 \
+    --distributor-updates 1
+```
+
+Obviously, in order to actually process image tiles, in the above command
+one can replace the passthrough system processor with 
+the data processor class of their choice.
+
+On terminal 3 start generating 3840x2160 images on the 'pvapy:image' channel:
+
+```sh
+$ pvapy-ad-sim-server -cn pvapy:image -nx 3840 -ny 2160 -dt uint8 -fps 100 -rp 100 -rt 60
+```
+
+Once the simulation server starts publishing images, one can verify
+that images have been split by inspecting tile dimensions and looking for
+additional tile-related attributes inserted by the split image processor:
+
+```sh
+$ pvget pvapy:image # original image, 3840x2160
+$ pvget process:1:output # tile (0,0), 1920x1080
+$ pvget process:2:output # tile (0,1), 1920x1080
+$ pvget process:3:output # tile (1,0), 1920x1080
+$ pvget process:4:output # tile (1,1), 1920x1080
+```
 
 ### Data Collector
 
