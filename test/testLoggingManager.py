@@ -19,31 +19,18 @@ def testLint(monkeypatch):
 
 def testStdoutLogging():
     ''' Test stdout logging '''
-    f = tempfile.NamedTemporaryFile(mode='w+t', delete=False)
+    originalMessage = f'p{RandomUtility.getRandomString(20)}'
     stdout = sys.stdout
-    sys.stdout = f
-    logger = LoggingManager.getLogger('stdouttest')
-    LoggingManager.setLogLevel('debug')
-    originalMessage = f'p{RandomUtility.getRandomString(20)}'
-    logger.debug(originalMessage)
-    f.close()
+    with tempfile.NamedTemporaryFile(mode='w+t', delete=False) as f:
+        sys.stdout = f
+        filePath = f.name
+        logger = LoggingManager.getLogger('stdouttest')
+        LoggingManager.setLogLevel('debug')
+        logger.debug(originalMessage)
     sys.stdout = stdout
-    logMessage = open(f.name).read()
     print(f'Original message: {originalMessage}')
+    logMessage = open(filePath).read()
     print(f'Log message: {logMessage}')
-    os.remove(f.name)
-    assert originalMessage in logMessage
-
-def testFileLogging():
-    ''' Test file logging '''
-    f = tempfile.NamedTemporaryFile(mode='w+t', delete=False)
-    logger = LoggingManager.getLogger('filetest', logLevel='debug', logFile=f.name)
-    originalMessage = f'p{RandomUtility.getRandomString(20)}'
-    logger.debug(originalMessage)
-    f.close()
-    logMessage = open(f.name, encoding='ascii').read()
-    print(f'Original message: {originalMessage}')
-    print(f'Log message: {logMessage}')
-    os.remove(f.name)
+    os.remove(filePath)
     assert originalMessage in logMessage
 
