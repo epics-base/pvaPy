@@ -1,6 +1,5 @@
 
 import time
-import numpy as np
 import pvaccess as pva
 from pvapy.hpc.adImageProcessor import AdImageProcessor
 from pvapy.utility.adImageUtility import AdImageUtility
@@ -45,12 +44,12 @@ class SplitAdImageProcessor(AdImageProcessor):
                 for j in range (0,tiles.shape[1]):
                     self.logger.debug('Generating tile %s,%s', i, j)
                     tile = tiles[i,j]
-                    # Add tile coordinates as a extra fields. 
+                    # Add tile coordinates as a extra fields.
                     tileCoordinates = pva.PvObject({'tileIndexX' : pva.INT, 'tileIndexY' : pva.INT}, {'tileIndexX' : i, 'tileIndexY' : j})
                     tilePvObject = AdImageUtility.generateNtNdArray2D(frameId, tile, extraFieldsPvObject=tileCoordinates)
 
                     # Alternative approach for keeping track of tile
-                    # coordinates involves adding new attributes to the 
+                    # coordinates involves adding new attributes to the
                     # output image, as shown below.
                     # Note that in this case the getOutputPvObjectType() method
                     # does not need to be implemented.
@@ -79,7 +78,7 @@ class SplitAdImageProcessor(AdImageProcessor):
         processingRate = 0
         if self.nProcessed > 0:
             processingRate = self.nProcessed/self.processingTime
-        return { 
+        return {
             'nProcessed' : self.nProcessed,
             'processingTime' : FloatWithUnits(self.processingTime, 's'),
             'processingRate' : FloatWithUnits(processingRate, 'fps')
@@ -87,7 +86,7 @@ class SplitAdImageProcessor(AdImageProcessor):
 
     # Define PVA types for different stats variables
     def getStatsPvaTypes(self):
-        return { 
+        return {
             'nProcessed' : pva.UINT,
             'processingTime' : pva.DOUBLE,
             'processingRate' : pva.DOUBLE
@@ -95,7 +94,7 @@ class SplitAdImageProcessor(AdImageProcessor):
 
     # Define output PVA structure
     def getOutputPvObjectType(self, pvObject):
-        # This method does not need to be implemented if 
+        # This method does not need to be implemented if
         # NtAttributes are used for keeping track of tile coordinates.
         tileFieldsDict = {'tileIndexX' : pva.INT, 'tileIndexY' : pva.INT}
         return pva.NtNdArray(tileFieldsDict)
