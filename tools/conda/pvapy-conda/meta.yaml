@@ -20,6 +20,7 @@ build:
 test:
   requires:
     - nose
+    - pylint
 
   source_files:
     - test
