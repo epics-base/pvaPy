@@ -12,8 +12,8 @@ from pvapy.utility.loggingManager import LoggingManager
 
 def testLint(monkeypatch):
     ''' Test for linting errors '''
-    monkeypatch.setattr(sys, "exit", Mock())
-    pylint_opts = ["pvapy.utility.loggingManager", "--disable=all", "--enable=E,F", "--generated-members=loggingManager.*"]
+    monkeypatch.setattr(sys, 'exit', Mock())
+    pylint_opts = ['pvapy.utility.loggingManager', '--disable=all', '--enable=E,F', '--generated-members=loggingManager.*']
     pylint.lint.Run(pylint_opts)
     sys.exit.assert_called_once_with(0)
 

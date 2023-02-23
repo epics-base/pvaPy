@@ -1,14 +1,13 @@
 #!/usr/bin/env python
 
 '''
-    Basic logging utility.
+Basic logging utility.
 '''
 
 import sys
 import logging
 from logging import handlers
 
-# Basic logging utility
 class LoggingManager:
     '''
     Class that simplifies application logging by providing default
