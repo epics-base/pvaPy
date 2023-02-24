@@ -1,5 +1,9 @@
 #!/usr/bin/env python
+'''
+Data collector command line interface.
+'''
 
+import sys
 import argparse
 import pvaccess as pva
 from ..hpc.dataCollectorController import DataCollectorController
@@ -7,8 +11,9 @@ from ..hpc.dataCollectorController import DataCollectorController
 __version__ = pva.__version__
 
 def main():
+    ''' CLI method. '''
     parser = argparse.ArgumentParser(description='PvaPy HPC Collector utility. It can be used for receiving data from a set of producer processes, and processing this data using a specified implementation of the data processor interface.')
-    parser.add_argument('-v', '--version', action='version', version='%(prog)s {version}'.format(version=__version__))
+    parser.add_argument('-v', '--version', action='version', version=f'%(prog)s {__version__}')
     parser.add_argument('-id', '--collector-id', dest='collector_id', type=int, default=1, help='Collector id (default: 1). This may be used for naming various PVA channels, so care must be taken when multiple collector processes are running independently of each other.')
     parser.add_argument('-pid', '--producer-id-list', dest='producer_id_list', default='1,2', help='Comma-separated list of producer IDs (default: 1,2). This option can also be specified as "range(<firstId>,<lastId+1>[,<idStep>)".')
     parser.add_argument('-ic', '--input-channel', dest='input_channel', required=True, help='Input PV channel name. The "*" character will be replaced with <producerId> formatted using <idFormatSpec> specification.')
@@ -36,8 +41,8 @@ def main():
 
     args, unparsed = parser.parse_known_args()
     if len(unparsed) > 0:
-        print('Unrecognized argument(s): {}'.format(' '.join(unparsed)))
-        exit(1)
+        print(f'Unrecognized argument(s): {" ".join(unparsed)}')
+        sys.exit(1)
 
     controller = DataCollectorController(
         args.input_channel,
