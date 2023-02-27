@@ -180,7 +180,7 @@ class DataCollector:
         }
     }
 
-    def __init__(self, collectorId, inputChannel, producerIdList=[1], idFormatSpec=None, objectIdField='uniqueId', objectIdOffset=1, rejectOutOfOrderObjects=False, fieldRequest='', serverQueueSize=0, monitorQueueSize=-1, collectorCacheSize=-1, metadataChannels=None, processingController=None):
+    def __init__(self, collectorId, inputChannel, producerIdList=[1], idFormatSpec=None, objectIdField='uniqueId', objectIdOffset=1, fieldRequest='', serverQueueSize=0, monitorQueueSize=-1, collectorCacheSize=-1, metadataChannels=None, processingController=None):
         self.logger = LoggingManager.getLogger(f'collector-{collectorId}')
         self.eventLock = threading.Lock()
         self.event = threading.Event()
@@ -191,8 +191,6 @@ class DataCollector:
         self.logger.debug('Object id field: %s', objectIdField)
         self.objectIdOffset = objectIdOffset
         self.logger.debug('Object id offset: %s', objectIdOffset)
-        self.rejectOutOfOrderObjects = rejectOutOfOrderObjects
-        self.logger.debug('Reject out of order objects: %s', rejectOutOfOrderObjects)
         self.fieldRequest = fieldRequest
         self.logger.debug('Field request: %s', fieldRequest)
         self.serverQueueSize = serverQueueSize
@@ -292,9 +290,12 @@ class DataCollector:
             if self.minCachedObjectId is None:
                 self.minCachedObjectId = objectId
             if self.lastObjectId is not None and objectId <= self.lastObjectId:
-                self.nRejected += 1
-                self.logger.debug('Rejecting object id %s from producer %s (last processed object id: %s; total number of rejected objects: %s)', objectId, producerId, self.lastObjectId, self.nRejected)
-                return
+                if self.collectorCacheMap:
+                    self.nRejected += 1
+                    self.logger.debug('Rejecting object id %s from producer %s (last processed object id: %s; total number of rejected objects: %s)', objectId, producerId, self.lastObjectId, self.nRejected)
+                    return
+                self.logger.debug('Object id %s from producer %s is smaller than the last processed object id %s, resetting cache)', objectId, producerId, self.lastObjectId)
+                self.lastObjectId = None
 
             self.collectorCacheMap[objectId] = pvObject
             if objectId < self.minCachedObjectId:
