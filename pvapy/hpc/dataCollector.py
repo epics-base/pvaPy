@@ -87,7 +87,7 @@ class ProcessingThread(threading.Thread):
             self.dataCollector.clearEvent()
             while True:
                 try:
-                    cacheSize = len(self.dataCollector.collectorCacheMap)
+                    cacheSize = self.dataCollector.nObjectsCached
                     timeSinceCacheUpdate = time.time()-self.dataCollector.cacheUpdateTime
                     if not cacheSize or self.isDone:
                         # Cache empty or we are done
@@ -108,7 +108,7 @@ class ProcessingThread(threading.Thread):
                 while True:
                     nNewObjects2 = self.dataCollector.pushObjectsToCacheFromProducerQueues()
                     nNewObjects += nNewObjects2
-                    cacheSize = len(self.dataCollector.collectorCacheMap)
+                    cacheSize = self.dataCollector.nObjectsCached
                     if cacheSize >= self.dataCollector.collectorCacheSize or self.isDone:
                         self.logger.debug('%s new objects cached, cache size: %s', nNewObjects, cacheSize)
                         break
@@ -127,7 +127,7 @@ class ProcessingThread(threading.Thread):
                 nNewObjects += nPushed
 
             self.logger.debug('Pushed remaining %s objects into the cache', nNewObjects)
-        cacheSize = len(self.dataCollector.collectorCacheMap)
+        cacheSize = self.dataCollector.nObjectsCached
         self.logger.debug('Processing all remaining %s cached objects', cacheSize)
         while True:
             nObjects = self.processObjects()
@@ -160,7 +160,8 @@ class DataCollector:
             'nRejected' : pva.UINT,
             'rejectedRate' : pva.DOUBLE,
             'nMissed' : pva.UINT,
-            'missedRate' : pva.DOUBLE
+            'missedRate' : pva.DOUBLE,
+            'nCached' : pva.UINT
         },
         'processorStats' : {
             'runtime' : pva.DOUBLE,
@@ -205,6 +206,7 @@ class DataCollector:
         self.logger.debug('Client queue size is set to %s', self.monitorQueueSize)
         self.cacheLock = threading.Lock()
         self.collectorCacheMap = {}
+        self.nObjectsCached = 0
 
         # Producer channels
         self.logger.debug('Using producer id format spec: %s', idFormatSpec)
@@ -297,7 +299,14 @@ class DataCollector:
                 self.logger.debug('Object id %s from producer %s is smaller than the last processed object id %s, resetting cache)', objectId, producerId, self.lastObjectId)
                 self.lastObjectId = None
 
-            self.collectorCacheMap[objectId] = pvObject
+            # Keep lists of objects in the cache, in case
+            # producers generate objects with same IDs; the example is
+            # splitting image into tiles and processing tiles with multiple
+            # producers which retain original image ID
+            pvObjectList = self.collectorCacheMap.get(objectId, [])
+            pvObjectList.append(pvObject)
+            self.collectorCacheMap[objectId] = pvObjectList
+            self.nObjectsCached += 1
             if objectId < self.minCachedObjectId:
                 self.minCachedObjectId = objectId
             self.cacheUpdateTime = time.time()
@@ -319,7 +328,9 @@ class DataCollector:
             objectTuples = []
             while True:
                 if objectId in self.collectorCacheMap:
-                    objectTuples.append((objectId, self.collectorCacheMap[objectId]))
+                    newObjectTuples = list(map(lambda o: (objectId, o), self.collectorCacheMap.get(objectId, [])))
+                    objectTuples += newObjectTuples
+                    self.nObjectsCached -= len(newObjectTuples)
                     del self.collectorCacheMap[objectId]
                     self.lastObjectId = objectId
                     objectId += 1
@@ -330,7 +341,7 @@ class DataCollector:
             if len(self.collectorCacheMap):
                 self.minCachedObjectId = min(self.collectorCacheMap)
             self.nCollected += nCollected
-            self.logger.debug('Found %s objects ready for processing, remaining cache size is %s', nCollected, len(self.collectorCacheMap))
+            self.logger.debug('Found %s objects ready for processing, remaining cache size is %s', nCollected, self.nObjectsCached)
             self.cacheUpdateTime = time.time()
             return objectTuples
 
@@ -346,7 +357,8 @@ class DataCollector:
         collectorStats = {
             'nCollected' : self.nCollected, 
             'nRejected' : self.nRejected,
-            'nMissed' : self.nMissed
+            'nMissed' : self.nMissed,
+            'nCached' : self.nObjectsCached
         }
         collectedRate = 0
         rejectedRate = 0
