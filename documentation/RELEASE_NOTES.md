@@ -1,9 +1,21 @@
+## Release 5.2.2 (2022/03/DD)
+
+- Streaming Framework enhancements:
+  - fixed issue with data collector rejecting out of order objects
+     if its cache is empty
+  - added ability for data collector to accept objects with same IDs
+- Conda/pip package dependencies: 
+  - EPICS BASE = 7.0.7
+  - BOOST      = 1.81.0
+  - NUMPY      >= 1.22 (for python >= 3.8); >= 1.19, < 1.21 (for python < 3.8)
+
 ## Release 5.2.1 (2022/12/24)
 
 - Fixed issue with put into PvObjectQueue when timeout is given
 - Updated default value for PvTimeStamp userTag field to 0
 - Area Detector Simulator enhancements:
-  - added ability to load images from HDF5 files (either compressed or uncompressed)
+  - added ability to load images from HDF5 files (either compressed
+    or uncompressed)
 - Conda/pip package dependencies: 
   - EPICS BASE = 7.0.7
   - BOOST      = 1.81.0

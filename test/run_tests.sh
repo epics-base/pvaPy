@@ -9,4 +9,3 @@ pytest -sx $TEST_FILES
 
 wait
 echo "Tests done"
-
