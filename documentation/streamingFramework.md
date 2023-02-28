@@ -786,6 +786,97 @@ $ pvapy-ad-sim-server -cn ad:image -nx 128 -ny 128 -dt uint8 -fps 2000 -rt 60 -r
 Once the data source starts publishing images, they will be streamed through
 all the components of the system, and saved into the designated output folder.
 
+### Splitting and Stitching Images With Data Collector
+
+In this example we stitch image tiles obtained after splitting original
+image.
+
+<p align="center">
+  <img alt="Splitting/Stitching Images" src="images/StreamingFrameworkSplittingAndStitchingImages.jpg">
+</p>
+
+Just like in the [previous example](#splitting-images-into-tiles), 
+on terminal 1, start a single consumer running the
+[split image processor](../examples/splitAdImageProcessorExample.py). This 
+processor will connect to the 'pvapy:image' channel, split the original
+3840x2160 frames into four 1920x1080 tiles, and publish those on
+its output channel 'split:1:output':
+
+```sh
+$ pvapy-hpc-consumer \
+    --input-channel pvapy:image \
+    --control-channel split:*:control \
+    --status-channel split:*:status \
+    --output-channel split:*:output \
+    --processor-file /path/to/splitAdImageProcessorExample.py \
+    --processor-class SplitAdImageProcessor \
+    --processor-args='{"nx" : 1920, "ny" : 1080}' \
+    --report-period 10 \
+    --server-queue-size 100
+```
+
+On terminal 2, start four consumers processing the 1920x1080 tiles
+from 'split:1:output' stream using the
+[passthrough system user processor](../pvapy/hpc/userDataProcessor.py):
+
+```sh
+$ pvapy-hpc-consumer \
+    --input-channel split:1:output \
+    --control-channel process:*:control \
+    --status-channel process:*:status \
+    --output-channel process:*:output \
+    --processor-class pvapy.hpc.userDataProcessor.UserDataProcessor \
+    --report-period 10 \
+    --server-queue-size 100 \
+    --n-consumers 4 \
+    --distributor-updates 1
+```
+
+In the above command one can replace the passthrough system processor with 
+the data processor class of their choice.
+
+On terminal 3 start collecting data from the four producer channels
+and stitching image tiles with the same frame id into the
+processed 3840x2160 image. The data collector in the command below uses the
+[stitch image processor](../examples/stitchAdImageProcessorExample.py)
+example:
+
+```sh
+$ pvapy-hpc-collector \
+    --collector-id 1 \
+    --producer-id-list 1,2,3,4 \
+    --input-channel process:*:output \
+    --control-channel collector:*:control \
+    --status-channel collector:*:status \
+    --output-channel collector:*:output \
+    --processor-file /path/to/stitchAdImageProcessorExample.py \
+    --processor-class StitchAdImageProcessor \
+    --processor-args='{"nx" : 3840, "ny" : 2160}' 
+    --report-period 10 \
+    --server-queue-size 100 \
+    --collector-cache-size 100
+```
+
+On terminal 4 start generating 3840x2160 images on the 'pvapy:image' channel:
+
+```sh
+$ pvapy-ad-sim-server -cn pvapy:image -nx 3840 -ny 2160 -dt uint8 -fps 100 -rp 100 -rt 60
+```
+
+After the simulation server starts publishing images, one can verify
+that images have been split by inspecting tile dimensions and looking for
+additional tile-related attributes inserted by the split image processor,
+as well as verify that the stitched image is identical to the original one.
+
+```sh
+$ pvget pvapy:image # original image, 3840x2160
+$ pvget process:1:output # tile (0,0), 1920x1080
+$ pvget process:2:output # tile (0,1), 1920x1080
+$ pvget process:3:output # tile (1,0), 1920x1080
+$ pvget process:4:output # tile (1,1), 1920x1080
+$ pvget collector:1:output # stitched image, 3840x2160
+```
+
 ### Metadata Handling With Data Collector
 
 In many cases images need to be associated with with various pieces of metadata (e.g., position information)
