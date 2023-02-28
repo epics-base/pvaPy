@@ -788,7 +788,7 @@ all the components of the system, and saved into the designated output folder.
 
 ### Splitting and Stitching Images With Data Collector
 
-In this example we stitch image tiles obtained after splitting original
+In this example we stitch tiles obtained after splitting the original
 image.
 
 <p align="center">
