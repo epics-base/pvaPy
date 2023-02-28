@@ -4,6 +4,7 @@
   - fixed issue with data collector rejecting out of order objects
      if its cache is empty
   - added ability for data collector to accept objects with same IDs
+  - added split/stitch image processor examples
 - Conda/pip package dependencies: 
   - EPICS BASE = 7.0.7
   - BOOST      = 1.81.0
