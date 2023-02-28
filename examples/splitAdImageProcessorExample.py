@@ -34,35 +34,37 @@ class SplitAdImageProcessor(AdImageProcessor):
         if not self.nx and not self.ny:
             self.logger.debug('Tile dimensions have not been configured, frame id %s was not modified', frameId)
             self.updateOutputChannel(pvObject)
-        if not nz:
-            nxTiles = nx//self.nx
-            nyTiles = ny//self.ny
-            self.logger.debug('Frame id %s (%sx%s) will be reshaped into %s (%sx%s) tiles', frameId, nx, ny, nxTiles*nyTiles, self.nx, self.ny)
-            tiles = image.reshape(nyTiles, self.ny, nxTiles, self.nx)
-            tiles = tiles.swapaxes(1, 2)
-            for i in range (0,tiles.shape[0]):
-                for j in range (0,tiles.shape[1]):
-                    self.logger.debug('Generating tile %s,%s', i, j)
-                    tile = tiles[i,j]
-                    # Add tile coordinates as a extra fields.
-                    tileCoordinates = pva.PvObject({'tileIndexX' : pva.INT, 'tileIndexY' : pva.INT}, {'tileIndexX' : i, 'tileIndexY' : j})
-                    tilePvObject = AdImageUtility.generateNtNdArray2D(frameId, tile, extraFieldsPvObject=tileCoordinates)
-
-                    # Alternative approach for keeping track of tile
-                    # coordinates involves adding new attributes to the
-                    # output image, as shown below.
-                    # Note that in this case the getOutputPvObjectType() method
-                    # does not need to be implemented.
-
-                    #tilePvObject = self.generateNtNdArray2D(frameId, tile)
-                    #attrs = tilePvObject['attribute']
-                    #attrs.append(pva.NtAttribute('tileIndexX', pva.PvInt(i)))
-                    #attrs.append(pva.NtAttribute('tileIndexY', pva.PvInt(j)))
-                    #tilePvObject['attribute'] = attrs
-
-                    self.updateOutputChannel(tilePvObject)
-        else:
+            return pvObject
+        if nz:
             self.logger.error('Frame id %s contains color image, skipping it.', frameId)
+            return pvObject
+
+        nxTiles = nx//self.nx
+        nyTiles = ny//self.ny
+        self.logger.debug('Frame id %s (%sx%s) will be reshaped into %s (%sx%s) tiles', frameId, nx, ny, nxTiles*nyTiles, self.nx, self.ny)
+        tiles = image.reshape(nyTiles, self.ny, nxTiles, self.nx)
+        tiles = tiles.swapaxes(1, 2)
+        for i in range (0,tiles.shape[0]):
+            for j in range (0,tiles.shape[1]):
+                self.logger.debug('Generating tile %s,%s', i, j)
+                tile = tiles[i,j]
+                # Add tile coordinates as a extra fields.
+                tileCoordinates = pva.PvObject({'tileIndexX' : pva.INT, 'tileIndexY' : pva.INT}, {'tileIndexX' : i, 'tileIndexY' : j})
+                tilePvObject = AdImageUtility.generateNtNdArray2D(frameId, tile, extraFieldsPvObject=tileCoordinates)
+
+                # Alternative approach for keeping track of tile
+                # coordinates involves adding new attributes to the
+                # output image, as shown below.
+                # Note that in this case the getOutputPvObjectType() method
+                # does not need to be implemented.
+
+                #tilePvObject = self.generateNtNdArray2D(frameId, tile)
+                #attrs = tilePvObject['attribute']
+                #attrs.append(pva.NtAttribute('tileIndexX', pva.PvInt(i)))
+                #attrs.append(pva.NtAttribute('tileIndexY', pva.PvInt(j)))
+                #tilePvObject['attribute'] = attrs
+
+                self.updateOutputChannel(tilePvObject)
         t1 = time.time()
         self.nProcessed += 1
         self.processingTime += (t1-t0)
