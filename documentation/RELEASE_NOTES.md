@@ -1,10 +1,12 @@
 ## Release 5.2.2 (2022/03/DD)
 
 - Streaming Framework enhancements:
-  - fixed issue with data collector rejecting out of order objects
+  - fixed issue with the data collector rejecting out of order objects
      if its cache is empty
-  - added ability for data collector to accept objects with same IDs
+  - added ability for the data collector to accept objects with same IDs
   - added split/stitch image processor examples
+  - added ability for the area detector simulator to automatically
+    determine EPICS_DB_INCLUDE_PATH when providing CA metadata
 - Conda/pip package dependencies: 
   - EPICS BASE = 7.0.7
   - BOOST      = 1.81.0
