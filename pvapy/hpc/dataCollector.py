@@ -245,7 +245,10 @@ class DataCollector:
         self.logger.debug('Created data collector %s', collectorId)
 
     def getCollectorCacheSize(self, collectorCacheSize):
-        minCollectorCacheSize = self.nProducers*self.CACHE_SIZE_SCALING_FACTOR
+        if collectorCacheSize < 0:
+            minCollectorCacheSize = self.nProducers*self.CACHE_SIZE_SCALING_FACTOR
+        else:
+            minCollectorCacheSize = self.nProducers
         if collectorCacheSize > minCollectorCacheSize:
             return collectorCacheSize
         return minCollectorCacheSize
