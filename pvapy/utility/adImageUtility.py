@@ -1,10 +1,16 @@
+'''
+AD Image Utility class
+'''
+
 import time
 import numpy as np
 import pvaccess as pva
 
-# AD Image Utility class
 class AdImageUtility:
-
+    '''
+    This class contains number of utility methods for manipulating
+    Area Detector images.    
+    '''
     # Area detector color modes values. Source: https://github.com/areaDetector/ADCore/blob/master/ADApp/ADSrc/NDArray.h#L29
     COLOR_MODE_MONO = 0 # [NX, NY]
     COLOR_MODE_RGB1 = 2 # [3, NX, NY]
@@ -46,7 +52,7 @@ class AdImageUtility:
 
     @classmethod
     def reshapeNtNdArray(cls, ntNdArray):
-        """ Reshape area detector numpy array. """
+        ''' Reshape area detector numpy array. '''
         # Get color mode
         imageId = ntNdArray['uniqueId']
         colorMode = None
@@ -64,8 +70,7 @@ class AdImageUtility:
 
         if colorMode is None and nDims > 2:
             raise pva.InvalidArgument('NTNDArray does not contain ColorMode attribute.')
-        else:
-            colorMode = cls.COLOR_MODE_MONO
+        colorMode = cls.COLOR_MODE_MONO
 
         if nDims == 0:
             nx = None
@@ -75,7 +80,7 @@ class AdImageUtility:
             colorMode = None
             fieldKey = None
             return (imageId,image,nx,ny,nz,colorMode,fieldKey)
-        elif nDims == 2 and colorMode == cls.COLOR_MODE_MONO:
+        if nDims == 2 and colorMode == cls.COLOR_MODE_MONO:
             nx = dims[0]['size']
             ny = dims[1]['size']
             nz = None
@@ -126,10 +131,12 @@ class AdImageUtility:
 
     @classmethod
     def getNtNdArrayDataFieldKey(cls, image):
+        ''' Get NTNDA data field key. '''
         return cls.NTNDA_DATA_FIELD_KEY_MAP.get(image.dtype)
 
     @classmethod
     def generateNtNdArray2D(cls, imageId, imageData, nx=None, ny=None, dtype=None, compressorName=None, extraFieldsPvObject=None):
+        ''' Generate NTNDA for a mono image. '''
         if extraFieldsPvObject is None:
             ntNdArray = pva.NtNdArray()
         else:
@@ -171,10 +178,12 @@ class AdImageUtility:
             ntNdArray.set(extraFieldsPvObject)
         return ntNdArray
 
-    # Assumes new image is of the same data type as the old one
-    # and replaces image data, dimensions, etc. in the provided NtNd Array
     @classmethod
     def replaceNtNdArrayImage2D(cls, ntNdArray, imageId, image, extraFieldsPvObject=None):
+        '''
+        Assumes new image is of the same data type as the old one
+        and replaces image data, dimensions, etc. in the provided NtNd Array
+        '''
         dataFieldKey = cls.NTNDA_DATA_FIELD_KEY_MAP.get(image.dtype)
         pvaDataType = cls.PVA_DATA_TYPE_MAP.get(image.dtype)
         data = image.flatten()
@@ -198,4 +207,3 @@ class AdImageUtility:
         if extraFieldsPvObject is not None:
             ntNdArray.set(extraFieldsPvObject)
         return ntNdArray
-

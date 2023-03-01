@@ -7,6 +7,7 @@ import queue
 import argparse
 import os
 import os.path
+import ctypes.util
 import numpy as np
 # HDF5 is optional
 try:
@@ -118,7 +119,7 @@ class NumpyFileGenerator(FrameGenerator):
     def loadInputFile(self):
         try:
             if self.mmapMode:
-                self.frames = np.load(self.filePath, mmapMode='r')
+                self.frames = np.load(self.filePath, mmap_mode='r')
             else:
                 self.frames = np.load(self.filePath)
             print(f'Loaded input file {self.filePath}')
@@ -306,8 +307,10 @@ class AdSimServer:
         self.metadataPvs = self.caMetadataPvs+self.pvaMetadataPvs
         if self.caMetadataPvs:
             if not os.environ.get('EPICS_DB_INCLUDE_PATH'):
-                print(f'EPICS_DB_INCLUDE_PATH should point to EPICS BASE dbd directory for CA metadata support')   
-                self.caMetadataPvs = []
+                pvDataLib = os.path.realpath(ctypes.util.find_library('pvData'))
+                epicsLibDir = os.path.dirname(pvDataLib)
+                dbdDir = os.path.realpath(f'{epicsLibDir}/../../dbd')
+                os.environ['EPICS_DB_INCLUDE_PATH'] = dbdDir
 
         print(f'CA Metadata PVs: {self.caMetadataPvs}')
         if self.caMetadataPvs:

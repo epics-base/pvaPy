@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 
+'''
+Data collector controller module.
+'''
+
 import json
 import threading
 import time

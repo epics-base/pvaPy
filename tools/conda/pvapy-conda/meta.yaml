@@ -19,7 +19,8 @@ build:
 
 test:
   requires:
-    - nose
+    - pytest
+    - pylint
 
   source_files:
     - test
