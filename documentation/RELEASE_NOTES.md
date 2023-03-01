@@ -1,4 +1,4 @@
-## Release 5.2.2 (2022/03/DD)
+## Release 5.2.2 (2022/03/01)
 
 - Streaming Framework enhancements:
   - fixed issue with the data collector rejecting out of order objects
