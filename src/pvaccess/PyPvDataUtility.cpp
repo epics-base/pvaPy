@@ -1243,7 +1243,7 @@ pvd::PVStructurePtr getUnionPvStructurePtr(const std::string& fieldName, const p
 #if PVA_API_VERSION == 440
         pvd::Convert::getConvert()->copy(pvField, unionPvStructurePtr->getSubField(unionFieldName));
 #else
-        unionPvStructurePtr->getSubField(unionFieldName)->copy(*pvField);
+        unionPvStructurePtr->getSubField(unionFieldName)->copyUnchecked(*pvField);
 #endif // if PVA_API_VERSION == 440
     }
     else {
@@ -1306,7 +1306,7 @@ bp::list getUnionArrayFieldAsList(const std::string& fieldName, const pvd::PVStr
 #if PVA_API_VERSION == 440
             pvd::Convert::getConvert()->copy(pvField, unionPvStructurePtr->getSubField(unionFieldName));
 #else
-            unionPvStructurePtr->getSubField(unionFieldName)->copy(*pvField);
+            unionPvStructurePtr->getSubField(unionFieldName)->copyUnchecked(*pvField);
 #endif // if PVA_API_VERSION == 440
 
             structureToPyDict(unionPvStructurePtr, valueDict, useNumPyArrays);
@@ -1481,7 +1481,7 @@ void copyStructureToStructure2(const pvd::PVStructurePtr& srcPvStructurePtr, pvd
 #if PVA_API_VERSION == 440
                 pvd::Convert::getConvert()->copyUnion(pvFrom, pvTo);
 #else
-                pvTo->copy(*pvFrom);
+                pvTo->copyUnchecked(*pvFrom);
 #endif // if PVA_API_VERSION == 440
                 break;
             }
