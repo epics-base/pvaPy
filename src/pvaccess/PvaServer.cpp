@@ -200,6 +200,19 @@ void PvaServer::update(const PvObject& pvObject)
     it->second->update(pvObject);
 }
 
+void PvaServer::updateUnchecked(const PvObject& pvObject) 
+{
+    if (recordMap.size() == 0) {
+        throw InvalidRequest("Master database does not have any records.");
+    }
+    if (recordMap.size() != 1) {
+        throw InvalidRequest("Master database has multiple records.");
+    }
+
+    std::map<std::string, PyPvRecordPtr>::iterator it = recordMap.begin();
+    it->second->updateUnchecked(pvObject);
+}
+
 void PvaServer::update(const std::string& channelName, const epics::pvData::PVStructurePtr& pvStructurePtr)
 {
     std::map<std::string, PyPvRecordPtr>::iterator it = recordMap.find(channelName);
@@ -225,6 +238,15 @@ void PvaServer::update(const std::string& channelName, const PvObject& pvObject)
         throw ObjectNotFound("Master database does not have record for channel: " + channelName);
     }
     it->second->update(pvObject);
+}
+
+void PvaServer::updateUnchecked(const std::string& channelName, const PvObject& pvObject) 
+{
+    std::map<std::string, PyPvRecordPtr>::iterator it = recordMap.find(channelName);
+    if (it == recordMap.end()) {
+        throw ObjectNotFound("Master database does not have record for channel: " + channelName);
+    }
+    it->second->updateUnchecked(pvObject);
 }
 
 void PvaServer::addRecord(const std::string& channelName, const epics::pvData::PVStructurePtr& pvStructurePtr)
