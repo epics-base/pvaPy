@@ -6,6 +6,7 @@ import queue
 import pvaccess as pva
 import multiprocessing as mp
 from ..utility.loggingManager import LoggingManager
+from ..utility.statsUtility import StatsUtility
 from .dataConsumer import DataConsumer
 from .systemController import SystemController
 from .dataConsumerController import DataConsumerController
@@ -143,6 +144,27 @@ class MpDataConsumerController(SystemController):
                 self.stopScreen()
                 self.logger.error(f'No stats received from consumer {consumerId}')
         return statsDict
+
+    def getCombinedSystemStats(self, statsDict):
+        combinedQueueStats = {}
+        combinedMonitorStats = {}
+        combinedProcessorStats = {}
+        for consumerId in self.consumerIdList:
+            consumerStats = statsDict[consumerId]
+            queueStats = consumerStats['queueStats']
+            combinedQueueStats = StatsUtility.addKeyValues(queueStats, combinedQueueStats)
+            monitorStats = consumerStats['monitorStats']
+            combinedMonitorStats = StatsUtility.addKeyValues(monitorStats, combinedMonitorStats)
+            processorStats = consumerStats['processorStats']
+            combinedProcessorStats = StatsUtility.addKeyValues(processorStats, combinedProcessorStats, keys=['errorRate', 'missedRate', 'processedRate', 'nErrors', 'nMissed', 'nProcessed'])
+            minValues = StatsUtility.minKeyValues(processorStats, combinedProcessorStats, keys=['startTime', 'firstObjectId', 'firstObjectTime'])
+            maxValues = StatsUtility.maxKeyValues(processorStats, combinedProcessorStats, keys=['endTime', 'lastObjectId', 'lastObjectTime'])
+            combinedProcessorStats.update(minValues)
+            combinedProcessorStats.update(maxValues)
+        combinedProcessorStats['receivingTime'] = combinedProcessorStats['lastObjectTime']- combinedProcessorStats['firstObjectTime']
+        combinedProcessorStats['runtime'] = combinedProcessorStats['endTime']- combinedProcessorStats['startTime']
+
+        return {'monitorStats' : combinedMonitorStats, 'processorStats' : combinedProcessorStats, 'queueStats' : combinedQueueStats}
 
     def stop(self):
         for consumerId in self.consumerIdList:

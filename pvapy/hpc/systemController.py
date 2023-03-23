@@ -265,7 +265,18 @@ class SystemController(HpcController):
                 self.stopScreen()
         print(report)
 
+    def reportCombinedSystemStats(self, statsDict):
+        combinedSystemStatsDict = self.getCombinedSystemStats(statsDict)
+        if not combinedSystemStatsDict:
+            return
+        report = self.prettyPrinter.pformat(combinedSystemStatsDict)
+        print('\nCombined System Stats:\n')
+        print(report)
+
     def getStats(self):
+        return {}
+
+    def getCombinedSystemStats(self, statsDict):
         return {}
 
     def processPvUpdate(self, updateWaitTime):
@@ -351,4 +362,5 @@ class SystemController(HpcController):
         # Allow clients monitoring various channels to get last update
         time.sleep(waitTime)
         self.reportStats(statsDict)
+        self.reportCombinedSystemStats(statsDict)
         self.isRunning = False
