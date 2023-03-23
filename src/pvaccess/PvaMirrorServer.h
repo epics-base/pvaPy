@@ -24,13 +24,16 @@
 class PvaMirrorServer;
 class MirrorChannelDataProcessor;
 typedef std::tr1::shared_ptr<MirrorChannelDataProcessor> MirrorChannelDataProcessorPtr;
-class MirrorChannel;
-typedef std::tr1::shared_ptr<MirrorChannel> MirrorChannelPtr;
+class MirrorChannelMonitor;
+typedef std::tr1::shared_ptr<MirrorChannelMonitor> MirrorChannelMonitorPtr;
  
+// This class updates PVA server record and handles source channel connection
+// changes
+
 class MirrorChannelDataProcessor : public ChannelMonitorDataProcessor
 {
 public:
-    MirrorChannelDataProcessor(PvaMirrorServer* pvaMirrorServer, const std::string& mirrorChannelName);
+    MirrorChannelDataProcessor(PvaMirrorServer* pvaMirrorServer, const std::string& mirrorChannelName, unsigned int nSrcMonitors);
     virtual ~MirrorChannelDataProcessor();
 
     virtual void processMonitorData(epics::pvData::PVStructurePtr pvStructurePtr);
@@ -43,19 +46,21 @@ private:
     std::string mirrorChannelName;
     epics::pvData::Mutex mutex;
     bool recordAdded;
+    unsigned int nSrcMonitors;
+    int nUpdatesToSkip;
 };
 
  
 // The purpose of this class is to simply establish channel monitor to 
 // provide updates to the PVA server record
 
-class MirrorChannel : public ChannelMonitorDataProcessor
+class MirrorChannelMonitor : public ChannelMonitorDataProcessor
 {
 public:
 
-    MirrorChannel(const std::string& channelName, PvProvider::ProviderType providerType, unsigned int serverQueueSize, MirrorChannelDataProcessorPtr dataProcessorPtr);
-    MirrorChannel(const MirrorChannel& mirrorChannel);
-    virtual ~MirrorChannel();
+    MirrorChannelMonitor(const std::string& channelName, PvProvider::ProviderType providerType, unsigned int serverQueueSize, const std::string& fieldRequestDescriptor, MirrorChannelDataProcessorPtr dataProcessorPtr);
+    MirrorChannelMonitor(const MirrorChannelMonitor& mirrorChannelMonitor);
+    virtual ~MirrorChannelMonitor();
 
     bool isChannelConnected() const;
     std::string getChannelName() const;
@@ -86,6 +91,7 @@ private:
     std::string channelName;
     PvProvider::ProviderType providerType;
     unsigned int serverQueueSize;
+    std::string fieldRequestDescriptor;
     MirrorChannelDataProcessorPtr dataProcessorPtr;
 
     bool isConnected;
@@ -103,6 +109,7 @@ public:
 
     virtual void addMirrorRecord(const std::string& mirrorChannelName, const std::string& srcChannelName, PvProvider::ProviderType srcProviderType);
     virtual void addMirrorRecord(const std::string& mirrorChannelName, const std::string& srcChannelName, PvProvider::ProviderType srcProviderType, unsigned int srcQueueSize);
+    virtual void addMirrorRecord(const std::string& mirrorChannelName, const std::string& srcChannelName, PvProvider::ProviderType srcProviderType, unsigned int srcQueueSize, unsigned int nSrcMonitors, const std::string& srcFieldRequestDescriptor);
     virtual void removeMirrorRecord(const std::string& mirrorChannelName);
 
     virtual void removeAllMirrorRecords();
@@ -114,7 +121,7 @@ public:
 private:
 
     static PvaPyLogger logger;
-    std::map<std::string, MirrorChannelPtr> mirrorChannelMap;
+    std::multimap<std::string, MirrorChannelMonitorPtr> mirrorChannelMonitorMap;
 };
 
 #endif
