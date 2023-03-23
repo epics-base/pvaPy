@@ -10,13 +10,13 @@ __version__ = pva.__version__
 def main():
     parser = argparse.ArgumentParser(description='PvaPy Mirror Server')
     parser.add_argument('-v', '--version', action='version', version='%(prog)s {version}'.format(version=__version__))
-    parser.add_argument('-cm', '--channel-map', dest='channel_map', default=None, help='Channel map specification given as a comma-separated list of tuples of the form (<mirror_channel>,<source_channel>[,source_provider][,source_queue_size]); if specified, source provider must be either "pva" or "ca" (default: pva), and source queue size must be >= 0 (default: 0)')
+    parser.add_argument('-cm', '--channel-map', dest='channel_map', default=None, help='Channel map specification given as a comma-separated list of tuples of the form (<mirror_channel>,<source_channel>[,source_provider][,source_queue_size[,n_source_monitors,source_field_request_descriptor]]]); if specified, source provider must be either "pva" or "ca" (default: pva), and source queue size must be >= 0 (default: 0); specifying number of source monitors and source request descriptor is typically used with the data distributor plugin, which must be supported by the source PVA server (example request descriptor: "_[pydistributor=updates:1;group:mirror;trigger:uniqueId]").')
     parser.add_argument('-rt', '--runtime', type=float, dest='runtime', default=0, help='Server runtime in seconds; values <=0 indicate infinite runtime (default: infinite)')
     parser.add_argument('-rp', '--report-period', type=float, dest='report_period', default=0, help='Statistics report period for all channels in seconds; values <=0 indicate no reporting (default: 0)')
 
     args, unparsed = parser.parse_known_args()
     if len(unparsed) > 0:
-        print('Unrecognized argument(s): %s' % ' '.join(unparsed))
+        print(f'Unrecognized argument(s): {" ".join(unparsed)}')
         exit(1)
 
     if args.channel_map is None:
@@ -27,68 +27,78 @@ def main():
     # They are expected to be of the form
     # (mirror_channel, source_channel, source_provider_type, source_queue_size)
     tuples = args.channel_map.split(')')
-    map_entries = []
-    provider_type_map = {'pva' : pva.PVA, 'ca' : pva.CA}
-    channel_list = []
+    mapEntries = []
+    providerTypeMap = {'pva' : pva.PVA, 'ca' : pva.CA}
+    channelList = []
     for t in tuples:
         e = t.replace(',(', '').replace('(', '')
         # Eliminate empty strings
         if not e:
             continue
         me = e.split(',')
-        channel_list.append(me[0])
-        if len(me) > 4:
-           print('Invalid channel map entry: %s' % me)
+        channelList.append(me[0])
+        entryLength = len(me)
+        if entryLength > 6:
+           print(f'Invalid channel map entry: {e}')
            exit(1)
-        elif len(me) == 3:
+        if entryLength <= 2:
+            # Add default source provider type
+            me.append('pva')
+        if entryLength <= 3:
             # Add default queue size
             me.append('0')
-        elif len(me) == 2:
-            # Add default source provider type and queue size
-            me.append('pva')
-            me.append('0')
-        me[2] = provider_type_map.get(me[2].lower())
+        if entryLength <= 4:
+            # Add default number of monitors
+            me.append('1')
+        if entryLength <= 5:
+            # Add default request descriptor
+            me.append('')
+        me[2] = providerTypeMap.get(me[2].lower())
         if me[2] is None:
-            print('Invalid source provider type specified for entry: {}'.format(e))
+            print(f'Invalid source provider type specified for entry: {e}')
             exit(1)
         me[3] = int(me[3])
         if me[3] < 0:
-            print('Invalid source queue size specified for entry: {}'.format(e))
+            print(f'Invalid source queue size specified for entry: {e}')
             exit(1)
-        map_entries.append(me)
+        me[4] = int(me[4])
+        if me[4] < 1:
+            print(f'Invalid number of source monitors specified for entry: {e}')
+            exit(1)
+        mapEntries.append(me)
         
     server = pva.PvaMirrorServer()
     server.start()
-    start_time = time.time()
-    last_report_time = start_time
-    for (cName,sName,sProviderType,sqSize) in map_entries:
-        print('Adding mirror channel {} using source {} (provider type: {}; queue size: {})'.format(cName, sName, sProviderType, sqSize))
-        server.addMirrorRecord(cName,sName,sProviderType,sqSize)
+    startTime = time.time()
+    lastReportTime = startTime
+    for (cName,sName,sProviderType,sqSize,nsMonitors,sRequestDescriptor) in mapEntries:
+        print(f'Adding mirror channel {cName} using source {sName} (provider type: {sProviderType}; queue size: {sqSize}; number of monitors: {nsMonitors}; request descriptor: {sRequestDescriptor})')
+        server.addMirrorRecord(cName,sName,sProviderType,sqSize,nsMonitors,sRequestDescriptor)
 
-    print('Started mirror server @ %.3f' % start_time)
-    sleep_time = 1
+    print(f'Started mirror server @ {startTime:.3f}')
+    sleepTime = 1
     while True:
         try:
             now = time.time()
             if args.runtime > 0:
-                runtime = now - start_time
+                runtime = now - startTime
                 if runtime > args.runtime:
-                    print('Server is exiting after %s seconds' % runtime)
+                    print(f'Server is exiting after {runtime:.3f} seconds')
                     break
-            if args.report_period > 0 and now-last_report_time > args.report_period:
-                last_report_time = now
+            if args.report_period > 0 and now-lastReportTime > args.report_period:
+                lastReportTime = now
                 print()
-                for c in channel_list:
-                    print('Channel %s @ %.3f: %s' % (c, now, server.getMirrorRecordCounters(c)))
-            time.sleep(sleep_time)
+                for c in channelList:
+                    print(f'Channel {c} @ {now:.3f}: {server.getMirrorRecordCounters(c)}')
+            time.sleep(sleepTime)
         except KeyboardInterrupt as e:
             print('Keyboard interrupt received, exiting.')
             break
     server.stop()
     print('\nFinal Channel Statistics:')
     now = time.time()
-    for c in channel_list:
-        print('Channel %s @ %.3f: %s' % (c, now, server.getMirrorRecordCounters(c)))
+    for c in channelList:
+        print(f'Channel {c} @ {now:.3f}: {server.getMirrorRecordCounters(c)}')
     
 if __name__ == '__main__':
     main()
