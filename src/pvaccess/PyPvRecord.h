@@ -33,6 +33,7 @@ public:
     virtual bool init();
     virtual void process();
     void update(const PvObject& pvObject);
+    void updateUnchecked(const PvObject& pvObject);
     void update(const epics::pvData::PVStructurePtr& pvStructurePtr);
     void updateUnchecked(const epics::pvData::PVStructurePtr& pvStructurePtr);
     void executeCallback();
