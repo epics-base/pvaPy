@@ -111,7 +111,7 @@ class DataProcessingController:
             self.firstObjectId = objectId
             self.firstObjectTime = now
             self.lastObjectId = objectId
-        nMissed = objectId-self.lastObjectId-self.objectIdOffset
+        nMissed = (objectId-self.lastObjectId-self.objectIdOffset) // self.objectIdOffset
         if nMissed > 0:
             self.nMissed += nMissed
         self.lastObjectId = objectId
