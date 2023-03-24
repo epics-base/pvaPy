@@ -1,5 +1,9 @@
 #!/usr/bin/env python
+'''
+Data consumer command line interface.
+'''
 
+import sys
 import argparse
 import pvaccess as pva
 from ..hpc.dataConsumerController import DataConsumerController
@@ -9,7 +13,7 @@ __version__ = pva.__version__
 
 def main():
     parser = argparse.ArgumentParser(description='PvaPy HPC Consumer utility. It can be used for receiving and processing data using specified implementation of the data processor interface.')
-    parser.add_argument('-v', '--version', action='version', version='%(prog)s {version}'.format(version=__version__))
+    parser.add_argument('-v', '--version', action='version', version=f'%(prog)s {__version__}')
     parser.add_argument('-id', '--consumer-id', dest='consumer_id', type=int, default=1, help='Consumer id (default: 1). If spawning multiple consumers, this option will be interpreted as the first consumer id; for each subsequent consumer id will be increased by 1. Note that consumer id is used for naming various PVA channels, so care must be taken when multiple consumer processes are running independently of each other.')
     parser.add_argument('-nc', '--n-consumers', type=int, dest='n_consumers', default=1, help='Number of consumers to instantiate (default: 1). If > 1, multiprocessing module will be used for receiving and processing data in separate processes.')
     parser.add_argument('-cid', '--consumer-id-list', dest='consumer_id_list', default=None, help='Comma-separated list of consumer IDs (default: None). This option can also be specified as "range(<firstId>,<lastId+1>[,<idStep>)". If this option is used, values given for <consumerId> and <nConsumers> options will be ignored.')
@@ -46,8 +50,8 @@ def main():
 
     args, unparsed = parser.parse_known_args()
     if len(unparsed) > 0:
-        print('Unrecognized argument(s): {}'.format(' '.join(unparsed)))
-        exit(1)
+        print(f'Unrecognized argument(s): {" ".join(unparsed)}')
+        sys.exit(1)
 
     nConsumers = args.n_consumers
     consumerId = args.consumer_id
@@ -62,7 +66,7 @@ def main():
         ControllerClass = MpDataConsumerController
 
     controller = ControllerClass(
-        args.input_channel, 
+        args.input_channel,
         outputChannel=args.output_channel,
         statusChannel=args.status_channel,
         controlChannel=args.control_channel,
