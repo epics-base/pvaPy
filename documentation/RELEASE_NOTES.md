@@ -1,3 +1,17 @@
+## Release 5.3.0 (2022/03/DD)
+
+- Added optimized method for record updates in PvaServer class
+- Streaming Framework enhancements:
+  - improved mirror server throughput by adding ability to use multiple
+    monitors together with the data distributor plugin for source channels
+  - added report for the combined system statistics when using
+    multiple data consumers
+  - optimized consumer output channel updates
+- Conda/pip package dependencies: 
+  - EPICS BASE = 7.0.7
+  - BOOST      = 1.81.0
+  - NUMPY      >= 1.22 (for python >= 3.8); >= 1.19, < 1.21 (for python < 3.8)
+
 ## Release 5.2.2 (2022/03/01)
 
 - Streaming Framework enhancements:
