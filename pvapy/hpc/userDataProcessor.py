@@ -27,6 +27,7 @@ class UserDataProcessor:
         Constructor.
         '''
         self.logger = LoggingManager.getLogger(self.__class__.__name__)
+        self.checkedUpdate = True
 
         # The following will be set after processor gets instantiated.
         self.processorId = None
@@ -115,5 +116,9 @@ class UserDataProcessor:
         '''
         if not self.outputChannel or not self.pvaServer:
             return
-        self.pvaServer.update(self.outputChannel, pvObject)
+        if self.checkedUpdate:
+            self.checkedUpdate = False
+            self.pvaServer.update(self.outputChannel, pvObject)
+        else:
+            self.pvaServer.updateUnchecked(self.outputChannel, pvObject)
 
