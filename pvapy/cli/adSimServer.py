@@ -308,6 +308,8 @@ class AdSimServer:
         if self.caMetadataPvs:
             if not os.environ.get('EPICS_DB_INCLUDE_PATH'):
                 pvDataLib = os.path.realpath(ctypes.util.find_library('pvData'))
+                if not pvDataLib:
+                    raise Exception(f'Cannot find dbd directory, please set EPICS_DB_INCLUDE_PATH environment variable to set CA metadata PVs.')
                 epicsLibDir = os.path.dirname(pvDataLib)
                 dbdDir = os.path.realpath(f'{epicsLibDir}/../../dbd')
                 os.environ['EPICS_DB_INCLUDE_PATH'] = dbdDir
@@ -354,7 +356,7 @@ class AdSimServer:
         for mPv in self.pvaMetadataPvs:
             value = metadataValueDict.get(mPv)
             mPvObject = pva.PvObject(self.METADATA_TYPE_DICT, {'value' : value, 'timeStamp' : pva.PvTimeStamp(t)})
-            self.pvaServer.update(mPv, mPvObject)
+            self.pvaServer.updateUnchecked(mPv, mPvObject)
         return t
         
     def addFrameToCache(self, frameId, ntnda):
@@ -442,7 +444,7 @@ class AdSimServer:
                 raise
 
             # Publish frame
-            self.pvaServer.update(self.channelName, frame)
+            self.pvaServer.updateUnchecked(self.channelName, frame)
             self.lastPublishedTime = time.time()
             self.nPublishedFrames += 1
             if self.usingQueue and self.nPublishedFrames >= self.nInputFrames:
