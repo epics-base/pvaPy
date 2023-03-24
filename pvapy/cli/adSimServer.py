@@ -495,6 +495,7 @@ class AdSimServer:
 
     def stop(self):
         self.isDone = True
+        time.sleep(self.SHUTDOWN_DELAY)
         self.pvaServer.stop()
         runtime = self.lastPublishedTime - self.startTime
         deltaT = 0
