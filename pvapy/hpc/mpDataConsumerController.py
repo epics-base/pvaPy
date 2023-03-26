@@ -151,11 +151,11 @@ class MpDataConsumerController(SystemController):
         combinedProcessorStats = {}
         for consumerId in self.consumerIdList:
             consumerStats = statsDict[consumerId]
-            queueStats = consumerStats['queueStats']
+            queueStats = consumerStats.get('queueStats', {})
             combinedQueueStats = StatsUtility.addKeyValues(queueStats, combinedQueueStats)
-            monitorStats = consumerStats['monitorStats']
+            monitorStats = consumerStats.get('monitorStats', {})
             combinedMonitorStats = StatsUtility.addKeyValues(monitorStats, combinedMonitorStats)
-            processorStats = consumerStats['processorStats']
+            processorStats = consumerStats.get('processorStats', {})
             combinedProcessorStats = StatsUtility.addKeyValues(processorStats, combinedProcessorStats, keys=['errorRate', 'missedRate', 'processedRate', 'nErrors', 'nMissed', 'nProcessed'])
             minValues = StatsUtility.minKeyValues(processorStats, combinedProcessorStats, keys=['startTime', 'firstObjectId', 'firstObjectTime'])
             maxValues = StatsUtility.maxKeyValues(processorStats, combinedProcessorStats, keys=['endTime', 'lastObjectId', 'lastObjectTime'])
