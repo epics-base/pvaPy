@@ -182,7 +182,7 @@ class AdSimServer:
     # files is larger than the cache size, the server will be constantly 
     # regenerating frames.
 
-    SHUTDOWN_DELAY = 10.0
+    SHUTDOWN_DELAY = 3.0
     MIN_CACHE_SIZE = 1
     CACHE_TIMEOUT = 1.0
     DELAY_CORRECTION = 0.0001
@@ -495,6 +495,9 @@ class AdSimServer:
 
     def stop(self):
         self.isDone = True
+        if self.screen:
+            self.curses.endwin()
+            self.screen = None
         time.sleep(self.SHUTDOWN_DELAY)
         self.pvaServer.stop()
         runtime = self.lastPublishedTime - self.startTime
@@ -504,10 +507,8 @@ class AdSimServer:
             deltaT = runtime/(self.nPublishedFrames - 1)
             frameRate = 1.0/deltaT
         dataRate = FloatWithUnits(self.uncompressedImageSize*frameRate/self.BYTES_IN_MEGABYTE, 'MBps')
-        if self.screen:
-            self.curses.endwin()
-        print('\nServer runtime: {:.4f} seconds'.format(runtime))
-        print('Published frames: {:6d} @ {:.4f} fps'.format(self.nPublishedFrames, frameRate))
+        print(f'\nServer runtime: {runtime:.4f} seconds')
+        print(f'Published frames: {self.nPublishedFrames:6d} @ {frameRate:.4f} fps')
         print(f'Data rate: {dataRate}')
 
 def main():
@@ -537,7 +538,7 @@ def main():
 
     args, unparsed = parser.parse_known_args()
     if len(unparsed) > 0:
-        print('Unrecognized argument(s): %s' % ' '.join(unparsed))
+        print(f'Unrecognized argument(s): {" ".join(unparsed)}')
         exit(1)
 
     server = AdSimServer(inputDirectory=args.input_directory, inputFile=args.input_file, mmapMode=args.mmap_mode, hdfDataset=args.hdf_dataset, hdfCompressionMode=args.hdf_compression_mode, frameRate=args.frame_rate, nFrames=args.n_frames, cacheSize=args.cache_size, nx=args.n_x_pixels, ny=args.n_y_pixels, datatype=args.datatype, minimum=args.minimum, maximum=args.maximum, runtime=args.runtime, channelName=args.channel_name, notifyPv=args.notify_pv, notifyPvValue=args.notify_pv_value, metadataPv=args.metadata_pv, startDelay=args.start_delay, reportPeriod=args.report_period, disableCurses=args.disable_curses)
@@ -553,7 +554,7 @@ def main():
             if runtime > expectedRuntime or server.isDone:
                 break
     except KeyboardInterrupt as ex:
-        pass
+        server.printReport(f'Server was interrupted after {runtime:.3f} seconds')
     server.stop()
 
 if __name__ == '__main__':
