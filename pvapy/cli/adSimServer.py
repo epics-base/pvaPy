@@ -1,9 +1,13 @@
 #!/usr/bin/env python
+'''
+Area Detector Simulation Server
+'''
 
+import sys
 import time
 import random
+import tempfile
 import threading
-import queue
 import argparse
 import os
 import os.path
@@ -27,6 +31,8 @@ from ..utility.intWithUnits import IntWithUnits
 __version__ = pva.__version__
 
 class FrameGenerator:
+    ''' Base frame generator class. '''
+
     def __init__(self):
         self.frames = None
         self.nInputFrames = 0
@@ -36,7 +42,7 @@ class FrameGenerator:
         self.compressorName = None
 
     def getFrameData(self, frameId):
-        if frameId < self.nInputFrames and frameId >= 0:
+        if frameId < self.nInputFrames:
             return self.frames[frameId]
         return None
 
@@ -52,13 +58,13 @@ class FrameGenerator:
     def getCompressedFrameSize(self):
         if self.compressorName:
             return len(self.getFrameData(0))
-        else:
-            return self.getUncompressedFrameSize()
+        return self.getUncompressedFrameSize()
 
     def getCompressorName(self):
         return self.compressorName
 
 class HdfFileGenerator(FrameGenerator):
+    ''' HDF frame generator class. '''
 
     COMPRESSOR_NAME_MAP = {
         '32001' : 'blosc'
@@ -71,9 +77,9 @@ class HdfFileGenerator(FrameGenerator):
         self.dataset = None
         self.compressionMode = compressionMode
         if not h5:
-            raise Exception(f'Missing HDF support.')
+            raise Exception('Missing HDF support.')
         if not filePath:
-            raise Exception(f'Invalid input file path.')
+            raise Exception('Invalid input file path.')
         if not datasetPath:
             raise Exception(f'Missing HDF dataset specification for input file {filePath}.')
         self.loadInputFile()
@@ -84,8 +90,8 @@ class HdfFileGenerator(FrameGenerator):
             self.dataset = self.file[self.datasetPath]
             self.frames = self.dataset
             if self.compressionMode:
-                for id,params in self.dataset._filters.items():
-                    compressorName = self.COMPRESSOR_NAME_MAP.get(id)
+                for datasetId in self.dataset._filters.keys():
+                    compressorName = self.COMPRESSOR_NAME_MAP.get(datasetId)
                     if compressorName:
                         self.compressorName = compressorName
                         break
@@ -107,13 +113,14 @@ class HdfFileGenerator(FrameGenerator):
         return frameData
 
 class NumpyFileGenerator(FrameGenerator):
+    ''' NumPy file generator class. '''
 
     def __init__(self, filePath, mmapMode):
         FrameGenerator.__init__(self)
         self.filePath = filePath
         self.mmapMode = mmapMode
         if not filePath:
-            raise Exception(f'Invalid input file path.')
+            raise Exception('Invalid input file path.')
         self.loadInputFile()
 
     def loadInputFile(self):
@@ -128,6 +135,7 @@ class NumpyFileGenerator(FrameGenerator):
             raise
 
 class NumpyRandomGenerator(FrameGenerator):
+    ''' NumPy random generator class. '''
 
     def __init__(self, nf, nx, ny, datatype, minimum, maximum):
         FrameGenerator.__init__(self)
@@ -177,9 +185,10 @@ class NumpyRandomGenerator(FrameGenerator):
         print(f'Range of generated values: [{mn},{mx}]')
 
 class AdSimServer:
+    ''' AD Sim Server class. '''
 
     # Uses frame cache of a given size. If the number of input
-    # files is larger than the cache size, the server will be constantly 
+    # files is larger than the cache size, the server will be constantly
     # regenerating frames.
 
     SHUTDOWN_DELAY = 3.0
@@ -201,7 +210,7 @@ class AdSimServer:
             self.deltaT = 1.0/frameRate
             self.cacheTimeout = max(self.CACHE_TIMEOUT, self.deltaT)
         self.runtime = runtime
-        self.reportPeriod = reportPeriod 
+        self.reportPeriod = reportPeriod
         self.metadataIoc = None
         self.frameGeneratorList = []
         self.frameCacheSize = max(cacheSize, self.MIN_CACHE_SIZE)
@@ -273,6 +282,7 @@ class AdSimServer:
         self.lastPublishedTime = 0
         self.startDelay = startDelay
         self.isDone = False
+        self.curses = None
         self.screen = None
         self.screenInitialized = False
         self.disableCurses = disableCurses
@@ -284,7 +294,7 @@ class AdSimServer:
                 import curses
                 screen = curses.initscr()
                 self.curses = curses
-            except ImportError as ex:
+            except ImportError:
                 pass
         return screen
 
@@ -309,7 +319,7 @@ class AdSimServer:
             if not os.environ.get('EPICS_DB_INCLUDE_PATH'):
                 pvDataLib = ctypes.util.find_library('pvData')
                 if not pvDataLib:
-                    raise Exception(f'Cannot find dbd directory, please set EPICS_DB_INCLUDE_PATH environment variable to use CA metadata PVs.')
+                    raise Exception('Cannot find dbd directory, please set EPICS_DB_INCLUDE_PATH environment variable to use CA metadata PVs.')
                 pvDataLib = os.path.realpath(pvDataLib)
                 epicsLibDir = os.path.dirname(pvDataLib)
                 dbdDir = os.path.realpath(f'{epicsLibDir}/../../dbd')
@@ -318,15 +328,14 @@ class AdSimServer:
         print(f'CA Metadata PVs: {self.caMetadataPvs}')
         if self.caMetadataPvs:
             # Create database and start CA IOC
-            import tempfile
-            dbFile = tempfile.NamedTemporaryFile(delete=False) 
+            dbFile = tempfile.NamedTemporaryFile(delete=False)
             dbFile.write(b'record(ao, "$(NAME)") {}\n')
             dbFile.close()
 
             self.metadataIoc = pva.CaIoc()
             self.metadataIoc.loadDatabase('base.dbd', '', '')
             self.metadataIoc.registerRecordDeviceDriver()
-            for mPv in self.caMetadataPvs: 
+            for mPv in self.caMetadataPvs:
                 print(f'Creating CA metadata record: {mPv}')
                 self.metadataIoc.loadRecords(dbFile.name, f'NAME={mPv}')
             self.metadataIoc.start()
@@ -334,14 +343,14 @@ class AdSimServer:
 
         print(f'PVA Metadata PVs: {self.pvaMetadataPvs}')
         if self.pvaMetadataPvs:
-            for mPv in self.pvaMetadataPvs: 
+            for mPv in self.pvaMetadataPvs:
                 print(f'Creating PVA metadata record: {mPv}')
                 mPvObject = pva.PvObject(self.METADATA_TYPE_DICT)
                 self.pvaServer.addRecord(mPv, mPvObject, None)
 
     def getMetadataValueDict(self):
         metadataValueDict = {}
-        for mPv in self.metadataPvs: 
+        for mPv in self.metadataPvs:
             value = random.uniform(0,1)
             metadataValueDict[mPv] = value
         return metadataValueDict
@@ -359,7 +368,7 @@ class AdSimServer:
             mPvObject = pva.PvObject(self.METADATA_TYPE_DICT, {'value' : value, 'timeStamp' : pva.PvTimeStamp(t)})
             self.pvaServer.updateUnchecked(mPv, mPvObject)
         return t
-        
+
     def addFrameToCache(self, frameId, ntnda):
         if not self.usingQueue:
             # Using dictionary
@@ -371,7 +380,7 @@ class AdSimServer:
                 self.frameCache.put(ntnda, waitTime)
             except pva.QueueFull:
                 pass
-            
+
     def getFrameFromCache(self):
         if not self.usingQueue:
             # Using dictionary
@@ -386,7 +395,6 @@ class AdSimServer:
         return ntnda
 
     def frameProducer(self, extraFieldsPvObject=None):
-        startTime = time.time()
         frameId = 0
         frameData = None
         while not self.isDone:
@@ -436,7 +444,7 @@ class AdSimServer:
             try:
                 frame = self.prepareFrame(updateTime)
             except pva.QueueEmpty:
-                self.printReport(f'Server exiting after emptying queue')
+                self.printReport('Server exiting after emptying queue')
                 self.isDone = True
                 return
             except Exception:
@@ -462,7 +470,7 @@ class AdSimServer:
             else:
                 self.startTime = self.lastPublishedTime
             if self.reportPeriod > 0 and (self.nPublishedFrames % self.reportPeriod) == 0:
-                report = 'Published frame id {:6d} @ {:.3f}s (frame rate: {:.4f}fps; runtime: {:.3f}s)'.format(self.currentFrameId, self.lastPublishedTime, frameRate, runtime)
+                report = f'Published frame id {self.currentFrameId:6d} @ {self.lastPublishedTime:.3f}s (frame rate: {frameRate:.4f}fps; runtime: {runtime:.3f}s)'
                 self.printReport(report)
 
             if runtime > self.runtime:
@@ -513,7 +521,7 @@ class AdSimServer:
 
 def main():
     parser = argparse.ArgumentParser(description='PvaPy Area Detector Simulator')
-    parser.add_argument('-v', '--version', action='version', version='%(prog)s {version}'.format(version=__version__))
+    parser.add_argument('-v', '--version', action='version', version='%(prog)s {__version__}')
     parser.add_argument('-id', '--input-directory', type=str, dest='input_directory', default=None, help='Directory containing input files to be streamed; if input directory or input file are not provided, random images will be generated')
     parser.add_argument('-if', '--input-file', type=str, dest='input_file', default=None, help='Input file to be streamed; if input directory or input file are not provided, random images will be generated')
     parser.add_argument('-mm', '--mmap-mode', action='store_true', dest='mmap_mode', default=False, help='Use NumPy memory map to load the specified input file. This flag typically results in faster startup and lower memory usage for large files.')
@@ -539,7 +547,7 @@ def main():
     args, unparsed = parser.parse_known_args()
     if len(unparsed) > 0:
         print(f'Unrecognized argument(s): {" ".join(unparsed)}')
-        exit(1)
+        sys.exit(1)
 
     server = AdSimServer(inputDirectory=args.input_directory, inputFile=args.input_file, mmapMode=args.mmap_mode, hdfDataset=args.hdf_dataset, hdfCompressionMode=args.hdf_compression_mode, frameRate=args.frame_rate, nFrames=args.n_frames, cacheSize=args.cache_size, nx=args.n_x_pixels, ny=args.n_y_pixels, datatype=args.datatype, minimum=args.minimum, maximum=args.maximum, runtime=args.runtime, channelName=args.channel_name, notifyPv=args.notify_pv, notifyPvValue=args.notify_pv_value, metadataPv=args.metadata_pv, startDelay=args.start_delay, reportPeriod=args.report_period, disableCurses=args.disable_curses)
 
@@ -553,7 +561,7 @@ def main():
             runtime = now - startTime
             if runtime > expectedRuntime or server.isDone:
                 break
-    except KeyboardInterrupt as ex:
+    except KeyboardInterrupt:
         server.printReport(f'Server was interrupted after {runtime:.3f} seconds')
     server.stop()
 
