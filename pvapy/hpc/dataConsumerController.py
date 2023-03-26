@@ -5,7 +5,6 @@ import time
 import json
 import pvaccess as pva
 from ..utility.objectUtility import ObjectUtility
-from .dataProcessingController import DataProcessingController
 from .sourceChannel import SourceChannel
 from .dataConsumer import DataConsumer
 from .systemController import SystemController
