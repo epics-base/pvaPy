@@ -58,6 +58,7 @@ class SystemController(HpcController):
         self.processorArgs = processorArgs
         self.objectIdField = objectIdField
         self.objectIdOffset = objectIdOffset
+        self.nSequentialUpdates = 1
         self.fieldRequest = fieldRequest
         self.skipInitialUpdates = skipInitialUpdates
         self.reportStatsList = reportStatsList
@@ -203,6 +204,7 @@ class SystemController(HpcController):
         processorConfig['objectIdField'] = self.objectIdField
         processorConfig['skipInitialUpdates'] = self.skipInitialUpdates
         processorConfig['objectIdOffset'] = self.objectIdOffset
+        processorConfig['nSequentialUpdates'] = self.nSequentialUpdates
         processorConfig['fieldRequest'] = self.fieldRequest
         return processorConfig
 

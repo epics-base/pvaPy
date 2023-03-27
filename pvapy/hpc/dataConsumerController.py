@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 
-import threading
+'''
+Data Consumer Controller module.
+'''
+
 import time
-import json
 import pvaccess as pva
-from ..utility.objectUtility import ObjectUtility
 from .sourceChannel import SourceChannel
 from .dataConsumer import DataConsumer
 from .systemController import SystemController
@@ -13,9 +14,9 @@ class DataConsumerController(SystemController):
 
     CONTROLLER_TYPE = 'consumer'
 
-    ''' 
+    '''
     Controller class for a single data consumer.
-  
+
     **DataConsumerController(inputChannel, outputChannel=None, statusChannel=None, controlChannel=None, idFormatSpec=None, processorFile=None, processorClass=None, processorArgs=None, objectIdField='uniqueId', objectIdOffset=0, fieldRequest='', skipInitialUpdates=1, reportStatsList='all', logLevel=None, logFile=None, disableCurses=False, consumerId=1, nConsumers=1, inputProviderType='pva', serverQueueSize=0, monitorQueueSize=-1, accumulateObjects=-1, accumulationTimeout=1, distributorPluginName='pydistributor', distributorGroup=None, distributorSet=None, distributorTrigger=None, distributorUpdates=None, nDistributorSets=1, metadataChannels=None)**
 
     :Parameter: *inputChannel* (str) - Input PV channel name. The "*" character will be replaced with <consumerId> formatted using <idFormatSpec> specification.
@@ -27,7 +28,7 @@ class DataConsumerController(SystemController):
     :Parameter: *processorClass* (str) - Name of the class located in the user processor file that will be processing PV updates. Alternatively, if processor file is not given, the processor class should be specified using the "<modulePath>.<className>" notation. The class should be initialized with a dictionary and must implement the "process(self, pv)" method.
     :Parameter: *processorArgs* (str) - JSON-formatted string that can be converted into dictionary and used for initializing user processor object.
     :Parameter: *objectIdField* (str) - PV update id field used for calculating data processor statistics (default: uniqueId).
-    :Parameter: *objectIdOffset* (int) - This parameter determines by how much object id should change between the two PV updates, and is used for determining the number of missed PV updates (default: 0). This parameter should be modified only if data distributor plugin will be distributing data between multiple clients, in which case it should be set to "(<nConsumers>-1)*<nUpdates>+1" for a single client set, or to "(<nSets>-1)*<nUpdates>+1" for multiple client sets. Values <= 0 will be replaced with the appropriate value depending on the number of client sets specified. Note that this relies on using the same value for the --n-distributor-sets when multiple instances of this command are running separately. 
+    :Parameter: *objectIdOffset* (int) - This parameter determines by how much object id should change between the two PV updates, and is used for determining the number of missed PV updates (default: 0). This parameter should be modified only if data distributor plugin will be distributing data between multiple clients, in which case it should be set to "(<nConsumers>-1)*<nUpdates>+1" for a single client set, or to "(<nSets>-1)*<nUpdates>+1" for multiple client sets. Values <= 0 will be replaced with the appropriate value depending on the number of client sets specified. Note that this relies on using the same value for the --n-distributor-sets when multiple instances of this command are running separately.
     :Parameter: *fieldRequest* (str) - PV field request string (default: None). This parameter can be used to request only a subset of the data available in the input channel. The system will automatically append object id field to the specified request string. Note that this parameter is ignored when data distributor is used.
     :Parameter: *skipInitialUpdates* (int) - Number of initial PV updates that should not be processed (default: 1).
     :Parameter: *reportStatsList* (str) - Comma-separated list of statistics subsets that should be reported (default: all); possible values: monitor, queue, processor, user, all.
@@ -64,42 +65,48 @@ class DataConsumerController(SystemController):
         self.serverQueueSize = serverQueueSize
         self.monitorQueueSize = monitorQueueSize
         self.accumulateObjects = accumulateObjects
-        self.accumulationTimeout = accumulationTimeout 
+        self.accumulationTimeout = accumulationTimeout
         self.distributorPluginName = distributorPluginName
-        self.distributorGroup = distributorGroup 
+        self.distributorGroup = distributorGroup
         self.distributorSet = distributorSet
         self.distributorTrigger = distributorTrigger
         self.distributorUpdates = distributorUpdates
-        self.nDistributorSets = nDistributorSets 
+        self.nDistributorSets = nDistributorSets
         self.metadataChannels = metadataChannels
 
         self.createConsumer(consumerId)
 
-    def createDataProcessorConfig(self, consumerId):
+    def createDataProcessorConfig(self, processorId):
+        consumerId = processorId
         objectIdOffset = 1
         if self.objectIdOffset > 0:
             objectIdOffset = self.objectIdOffset
         elif self.distributorUpdates is not None:
             if self.nDistributorSets > 1:
-                self.logger.debug(f'Using oid offset appropriate for {self.nDistributorSets} distributor client sets')
+                self.logger.debug('Using oid offset appropriate for %s distributor client sets', self.nDistributorSets)
                 if self.distributorSet is None:
                     raise pva.InvalidArgument(f'Specified number of distributor sets {self.nDistributorSets} is greater than 1, but the actual distributor set name has not been set.')
                 objectIdOffset = (self.nDistributorSets-1)*int(self.distributorUpdates)+1
             else:
                 self.logger.debug('Using oid offset appropriate for a single distributor client set')
                 objectIdOffset = (self.nConsumers-1)*int(self.distributorUpdates)+1
-        self.logger.debug(f'Determined oid offset: {objectIdOffset}')
+        self.logger.debug('Determined oid offset: %s', objectIdOffset)
         self.objectIdOffset = objectIdOffset
-       
+
+        self.nSequentialUpdates = 1
+        if self.distributorUpdates is not None:
+            self.nSequentialUpdates = int(self.distributorUpdates)
+        self.logger.debug('Determined number of sequential consumer updates: %s', self.nSequentialUpdates)
+
         consumerIdString = self.formatIdString(consumerId)
         self.inputChannel = self.inputChannel.replace('*', consumerIdString)
-        self.logger.debug(f'Processor input channel name: {self.inputChannel}')
+        self.logger.debug('Processor input channel name: %s', self.inputChannel)
 
         if self.outputChannel == '_':
             self.outputChannel = f'pvapy:consumer:{consumerIdString}:output'
         if self.outputChannel:
             self.outputChannel = self.outputChannel.replace('*', consumerIdString)
-            self.logger.debug(f'Processor output channel name: {self.outputChannel}')
+            self.logger.debug('Processor output channel name: %s', self.outputChannel)
 
         # Create config dict
         return SystemController.createDataProcessorConfig(self, consumerId)
@@ -117,13 +124,13 @@ class DataConsumerController(SystemController):
     def createConsumer(self, consumerId):
         consumerIdString = self.formatIdString(consumerId)
         self.inputChannel = self.inputChannel.replace('*', consumerIdString)
-        self.logger.debug(f'Input channel name: {self.inputChannel}')
+        self.logger.debug('Input channel name: %s', self.inputChannel)
         self.usingPvObjectQueue = (self.monitorQueueSize >= 0)
 
         self.metadataChannelIdList = []
         if self.metadataChannels:
             self.metadataChannelIdList = range(1,len(self.metadataChannels.split(','))+1)
-        self.logger.debug(f'Metadata channel id list: {self.metadataChannelIdList}')
+        self.logger.debug('Metadata channel id list: %s', self.metadataChannelIdList)
 
         self.createDataProcessor(consumerId)
         self.createOutputChannels(consumerId)
@@ -152,7 +159,7 @@ class DataConsumerController(SystemController):
             statusObject['queueStats'] = statsDict.get('queueStats', {})
             statusObject['processorStats'] = statsDict.get('processorStats', {})
             userStatsPvaTypes = self.statusTypeDict.get('userStats', {})
-            if userStatsPvaTypes: 
+            if userStatsPvaTypes:
                 userStats = statsDict.get('userStats', {})
                 filteredUserStats = {}
                 for k,v in userStats.items():
@@ -160,7 +167,7 @@ class DataConsumerController(SystemController):
                         filteredUserStats[k] = v
                 statusObject['userStats'] = filteredUserStats
             for metadataChannelId in self.metadataChannelIdList:
-                producerStatsDict = self.statusTypeDict.get(f'metadataStats', {})
+                producerStatsDict = self.statusTypeDict.get('metadataStats', {})
                 producerStatsDict = producerStatsDict.get(f'metadata-{metadataChannelId}', {})
                 producerStatusObject = {'producerId' : metadataChannelId, 'channel' : producerStatsDict.get('channel', '')}
                 producerStatusObject['monitorStats'] = producerStatsDict.get('monitorStats', {})
@@ -168,11 +175,10 @@ class DataConsumerController(SystemController):
                 statusObject[f'metadataStats_{metadataChannelId}'] = producerStatusObject
             if self.statusChannel:
                 self.pvaServer.update(self.statusChannel, statusObject)
-        return statsDict 
+        return statsDict
 
     def processPvUpdate(self, updateWaitTime):
         if self.usingPvObjectQueue:
             # This should be only done for a single consumer using a queue
             return self.dataConsumer.processFromQueue(updateWaitTime)
         return False
-
