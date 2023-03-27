@@ -152,11 +152,11 @@ class MpDataConsumerController(SystemController):
         for consumerId in self.consumerIdList:
             consumerStats = statsDict[consumerId]
             queueStats = consumerStats.get('queueStats', {})
-            combinedQueueStats = StatsUtility.addKeyValues(queueStats, combinedQueueStats)
+            combinedQueueStats.update(StatsUtility.addKeyValues(queueStats, combinedQueueStats))
             monitorStats = consumerStats.get('monitorStats', {})
-            combinedMonitorStats = StatsUtility.addKeyValues(monitorStats, combinedMonitorStats)
+            combinedMonitorStats.update(StatsUtility.addKeyValues(monitorStats, combinedMonitorStats))
             processorStats = consumerStats.get('processorStats', {})
-            combinedProcessorStats = StatsUtility.addKeyValues(processorStats, combinedProcessorStats, keys=['errorRate', 'missedRate', 'processedRate', 'nErrors', 'nMissed', 'nProcessed'])
+            combinedProcessorStats.update(StatsUtility.addKeyValues(processorStats, combinedProcessorStats, keys=['errorRate', 'missedRate', 'processedRate', 'nErrors', 'nMissed', 'nProcessed']))
             minValues = StatsUtility.minKeyValues(processorStats, combinedProcessorStats, keys=['startTime', 'firstObjectId', 'firstObjectTime'])
             maxValues = StatsUtility.maxKeyValues(processorStats, combinedProcessorStats, keys=['endTime', 'lastObjectId', 'lastObjectTime'])
             combinedProcessorStats.update(minValues)
