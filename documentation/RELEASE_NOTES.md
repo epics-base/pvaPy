@@ -7,8 +7,8 @@
   - added report for the combined system statistics when using
     multiple data consumers
   - optimized consumer output channel updates
-  - fixed number of missed objects calculation when object ID offset is greater
-    than 1
+  - fixed number of missed objects calculation when object ID offset or
+    number of sequential updates is greater than 1
 - Conda/pip package dependencies: 
   - EPICS BASE = 7.0.7
   - BOOST      = 1.81.0
