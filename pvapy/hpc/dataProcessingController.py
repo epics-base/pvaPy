@@ -106,7 +106,7 @@ class DataProcessingController:
         objectId = pvObject[self.objectIdField]
         if self.lastObjectId is None:
             self.lastObjectId = objectId
-            self.lastExpectedGroupUpdateId = objectId + self.nSequentialUpdates - 1
+
             # First try to create user defined output record, and
             # if that does not succeed, create output record based
             # on input type
@@ -120,6 +120,7 @@ class DataProcessingController:
             self.firstObjectId = objectId
             self.firstObjectTime = now
             self.lastObjectId = objectId
+            self.lastExpectedGroupUpdateId = objectId + self.nSequentialUpdates - 1
 
         # Calculate number of missed objects
         nMissed = 0
@@ -135,16 +136,22 @@ class DataProcessingController:
             nOffsets = (idDiff+self.nSequentialUpdates-1) // (self.objectIdOffset+self.nSequentialUpdates-1)
             if idDiff > 1:
                 # Potential miss
+                lastExpectedCurrentGroupUpdateId = self.lastExpectedGroupUpdateId
+                nMissedInCurrentGroup = min(objectId,lastExpectedCurrentGroupUpdateId) - self.lastObjectId - 1
                 nGroupsMissed = 0
-                nMissedInCurrentGroup = min(objectId,self.lastExpectedGroupUpdateId - self.lastObjectId) - 1
                 nMissedInNewGroup = 0
+                firstExpectedNewGroupUpdateId = 0
+                lastExpectedNewGroupUpdateId = 0
                 if nOffsets > 0:
                     nGroupsMissed = nOffsets - 1
-                    nMissedInCurrentGroup = self.lastExpectedGroupUpdateId - self.lastObjectId
-                    firstExpectedNewGroupUpdateId = self.lastExpectedGroupUpdateId + nOffsets*(self.objectIdOffset-1) + nGroupsMissed*self.nSequentialUpdates + 1
+                    nMissedInCurrentGroup = lastExpectedCurrentGroupUpdateId - self.lastObjectId
+                    firstExpectedNewGroupUpdateId = lastExpectedCurrentGroupUpdateId + nOffsets*(self.objectIdOffset-1) + nGroupsMissed*self.nSequentialUpdates + 1
                     self.lastExpectedGroupUpdateId = firstExpectedNewGroupUpdateId + self.nSequentialUpdates - 1
+                    lastExpectedNewGroupUpdateId = self.lastExpectedGroupUpdateId
                     nMissedInNewGroup = objectId - firstExpectedNewGroupUpdateId
                 nMissed = nMissedInCurrentGroup + nGroupsMissed*self.nSequentialUpdates + nMissedInNewGroup
+                if nMissed > 0:
+                    self.logger.debug('Missed %s objects at id %s (nOffsets: %s, nGroupsMissed: %s, nMissedInCurrentGroup: %s, nMissedInNewGroup: %s, lastExpectedCurrentGroupUpdateId: %s, firstExpectedNewGroupUpdateId: %s, lastExpectedNewGroupUpdateId: %s', nMissed, objectId, nOffsets, nGroupsMissed, nMissedInCurrentGroup, nMissedInNewGroup, lastExpectedCurrentGroupUpdateId, firstExpectedNewGroupUpdateId, lastExpectedNewGroupUpdateId)
         else:
             # Single sequential update
             # Example:
