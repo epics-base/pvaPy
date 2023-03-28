@@ -22,7 +22,6 @@ def createImage(id, nx, ny, colorMode, extraFieldsPvObject=None):
         nda = pva.NtNdArray()
     nda['uniqueId'] = id
     dims = [pva.PvDimension(nx, 0, nx, 1, False), pva.PvDimension(ny, 0, ny, 1, False)]
-    nda['codec'] = pva.PvCodec('pvapyc', pva.PvInt(14))
     nda['dimension'] = dims
     nda['descriptor'] = 'PvaPy Simulated Image'
     nda['compressedSize'] = nx*ny
