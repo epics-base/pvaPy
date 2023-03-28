@@ -73,11 +73,15 @@ out of the box:
 images
 - [AD Image Data Decryptor](../pvapy/hpc/adImageDataDecryptor.py): decrypts
 images
-- [AD Output File Processor](../pvapy/hpc/adOutputFileProcessor.py): saves output files
+- [AD Output File Processor](../pvapy/hpc/adOutputFileProcessor.py): saves
+AD images into output files (single image per file; supports various formats)
+- [HDF5 AD Image Writer](../pvapy/hpc/hdf5AdImageWriter.py): writes multiple
+AD images into HDF5 files
 
 The encryptor and decryptor processors require python 'rsa' and 'pycryptodome'
 packages for encryption utilities, while the output file processor requires python
-'PIL' module ('pillow' package).
+'PIL' module ('pillow' package). The HDF5 image writer requires python 'h5py'
+module.
 
 A python class that derives from UserDataProcessor class and implements 
 the above interface is passed into one of the two main command line utilities:
