@@ -1,8 +1,12 @@
 #!/usr/bin/env python
 
+'''
+PVA Mirror Server.
+'''
+
+import sys
 import argparse
 import time
-import numpy as np
 import pvaccess as pva
 
 __version__ = pva.__version__
@@ -17,11 +21,11 @@ def main():
     args, unparsed = parser.parse_known_args()
     if len(unparsed) > 0:
         print(f'Unrecognized argument(s): {" ".join(unparsed)}')
-        exit(1)
+        sys.exit(1)
 
     if args.channel_map is None:
         print('Channel map is not specified.')
-        exit(1)
+        sys.exit(1)
 
     # Cleanup channel map entries
     # They are expected to be of the form
@@ -39,8 +43,8 @@ def main():
         channelList.append(me[0])
         entryLength = len(me)
         if entryLength > 6:
-           print(f'Invalid channel map entry: {e}')
-           exit(1)
+            print(f'Invalid channel map entry: {e}')
+            sys.exit(1)
         if entryLength <= 2:
             # Add default source provider type
             me.append('pva')
@@ -56,17 +60,17 @@ def main():
         me[2] = providerTypeMap.get(me[2].lower())
         if me[2] is None:
             print(f'Invalid source provider type specified for entry: {e}')
-            exit(1)
+            sys.exit(1)
         me[3] = int(me[3])
         if me[3] < 0:
             print(f'Invalid source queue size specified for entry: {e}')
-            exit(1)
+            sys.exit(1)
         me[4] = int(me[4])
         if me[4] < 1:
             print(f'Invalid number of source monitors specified for entry: {e}')
-            exit(1)
+            sys.exit(1)
         mapEntries.append(me)
-        
+
     server = pva.PvaMirrorServer()
     server.start()
     startTime = time.time()
@@ -91,7 +95,7 @@ def main():
                 for c in channelList:
                     print(f'Channel {c} @ {now:.3f}: {server.getMirrorRecordCounters(c)}')
             time.sleep(sleepTime)
-        except KeyboardInterrupt as e:
+        except KeyboardInterrupt:
             print('Keyboard interrupt received, exiting.')
             break
     server.stop()
@@ -99,6 +103,6 @@ def main():
     now = time.time()
     for c in channelList:
         print(f'Channel {c} @ {now:.3f}: {server.getMirrorRecordCounters(c)}')
-    
+
 if __name__ == '__main__':
     main()

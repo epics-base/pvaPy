@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+
 '''
 Area Detector Simulation Server
 '''
@@ -178,7 +179,7 @@ class NumpyRandomGenerator(FrameGenerator):
             if self.maximum is not None:
                 mx = float(min(dtinfo.max, self.maximum))
             self.frames = np.random.uniform(mn, mx, size=(self.nf, self.ny, self.nx))
-            if datatype == 'float32':
+            if self.datatype == 'float32':
                 self.frames = np.float32(self.frames)
 
         print(f'Generated frame shape: {self.frames[0].shape}')

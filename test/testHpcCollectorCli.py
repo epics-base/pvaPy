@@ -1,9 +1,7 @@
 '''
-   Test HPC Collector CLI.
+Test HPC Collector CLI.
 '''
 from unittest.mock import Mock
-import tempfile
-import os
 import sys
 import pylint.lint
 
