@@ -1,4 +1,4 @@
 from pvaccess import *
-__version__ = "dev"
+__version__ = "5.3.0"
 
 
