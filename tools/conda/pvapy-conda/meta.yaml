@@ -20,8 +20,11 @@ build:
 test:
   requires:
     - h5py
-    - pytest
+    - pillow
+    - pycryptodome
     - pylint
+    - pytest
+    - rsa
 
   source_files:
     - test
