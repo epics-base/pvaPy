@@ -42,7 +42,10 @@ PVACCESS_DIR=$SITE_PACKAGES_DIR/pvaccess
 PVAPY_DIR=$SITE_PACKAGES_DIR/pvapy
 for f in $PVACCESS_DIR/__init__.py $PVAPY_DIR/__init__.py; do
     cmd="cat $f | sed 's?__version__.*=.*?__version__ = \"$PVAPY_VERSION\"?' > $f.2 && mv $f.2 $f"
+    echo "Fixing version using: $cmd"
     eval $cmd
+    echo "Version in $f is set to:"
+    grep version $f
 done
 
 echo "Installing pvapy library"
