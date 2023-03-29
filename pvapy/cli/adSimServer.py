@@ -35,7 +35,7 @@ class FrameGenerator:
     ''' Base frame generator class. '''
 
     def __init__(self):
-        self.frames = None
+        self.frames = np.array([])
         self.nInputFrames = 0
         self.rows = 0
         self.cols = 0
@@ -48,7 +48,7 @@ class FrameGenerator:
         return None
 
     def getFrameInfo(self):
-        if self.frames is not None and not self.nInputFrames:
+        if len(self.frames) > 0 and not self.nInputFrames:
             self.nInputFrames, self.rows, self.cols = self.frames.shape
             self.dtype = self.frames.dtype
         return (self.nInputFrames, self.rows, self.cols, self.dtype, self.compressorName)
