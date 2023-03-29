@@ -30,11 +30,9 @@ class UserDataProcessor:
 
     # Method called at start
     def start(self):
-        pass
 
     # Configure user processor
     def configure(self, configDict):
-        pass
 
     # Process monitor update
     def process(self, pvObject):
@@ -44,11 +42,9 @@ class UserDataProcessor:
 
     # Method called at shutdown
     def stop(self):
-        pass
     
     # Reset statistics for user processor
     def resetStats(self):
-        pass
 
     # Retrieve statistics for user processor
     def getStats(self):
@@ -79,9 +75,9 @@ AD images into output files (single image per file; supports various formats)
 AD images into HDF5 files
 
 The encryptor and decryptor processors require python 'rsa' and 'pycryptodome'
-packages for encryption utilities, while the output file processor requires python
-'PIL' module ('pillow' package). The HDF5 image writer requires python 'h5py'
-module.
+packages for encryption utilities, the output file processor requires 
+'PIL' module ('pillow' package), while the HDF5 image writer requires 
+'h5py' module.
 
 A python class that derives from UserDataProcessor class and implements 
 the above interface is passed into one of the two main command line utilities:

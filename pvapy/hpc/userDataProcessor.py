@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 
-import pvaccess as pva
+'''
+User Data Processor module.
+'''
+
 from ..utility.loggingManager import LoggingManager
 
 class UserDataProcessor:
@@ -9,13 +12,13 @@ class UserDataProcessor:
     suitable for usage with the streaming framework. Interface methods
     will be called at different stages of the processing workflow.\n
     The following variables will be set after processor instance is created and before processing starts:\n
-    \t\- *logger* (logging.Logger) : logger object\n
-    \t\- *processorId* (int)       : processor id\n
-    \t\- *inputChannel* (str)      : input channel\n
-    \t\- *outputChannel* (str)     : output channel\n
-    \t\- *objectIdField* (str)     : name of the object id field\n
-    \t\- *pvaServer* (PvaServer)   : PVA Server instance for publishing output objects\n
-    \t\- *metadataQueueMap* (dict) : dictionary of available PvObject queues for metadata channels\n
+    \t\\- *logger* (logging.Logger) : logger object\n
+    \t\\- *processorId* (int)       : processor id\n
+    \t\\- *inputChannel* (str)      : input channel\n
+    \t\\- *outputChannel* (str)     : output channel\n
+    \t\\- *objectIdField* (str)     : name of the object id field\n
+    \t\\- *pvaServer* (PvaServer)   : PVA Server instance for publishing output objects\n
+    \t\\- *metadataQueueMap* (dict) : dictionary of available PvObject queues for metadata channels\n
   
     **UserDataProcessor(configDict={})**
 
@@ -41,7 +44,6 @@ class UserDataProcessor:
         '''
         Method invoked at processing startup.
         '''
-        pass
 
     def configure(self, configDict):
         ''' 
@@ -49,7 +51,6 @@ class UserDataProcessor:
 
         :Parameter: *configDict* (dict) - dictionary containing configuration parameters
         '''
-        pass
 
     def process(self, pvObject):
         ''' 
@@ -57,7 +58,7 @@ class UserDataProcessor:
 
         :Parameter: *pvObject* (PvObject) - input channel object
         '''
-        self.logger.debug(f'Processor {self.processorId} processing object {pvObject[self.objectIdField]}')
+        self.logger.debug('Processor %s processing object %s', self.processorId, pvObject[self.objectIdField])
         self.updateOutputChannel(pvObject)
         return pvObject
 
@@ -65,13 +66,11 @@ class UserDataProcessor:
         '''
         Method invoked at processing shutdown.
         '''
-        pass
-    
+
     def resetStats(self):
         ''' 
         Method invoked at user initiated application statistics reset. 
         '''
-        pass
 
     def getStats(self):
         '''
@@ -121,4 +120,3 @@ class UserDataProcessor:
             self.pvaServer.update(self.outputChannel, pvObject)
         else:
             self.pvaServer.updateUnchecked(self.outputChannel, pvObject)
-
