@@ -14,15 +14,15 @@ from ..utility.floatWithUnits import FloatWithUnits
 from ..utility.intWithUnits import IntWithUnits
 
 class Hdf5AdImageWriter(AdImageProcessor):
-    ''' 
-    Streaming framework processor class that can be used for saving Area 
+    '''
+    Streaming framework processor class that can be used for saving Area
     Detector images into HDF5 files. Configuration dictionary should provide
     the following settings:\n
-    \t- outputDirectory (str)      : defines full path to the output directory\n
-    \t- outputFileNameFormat (str) : defines format to be used for naming output files, e.g. '{outputFileId:06}.{processorId}.hdf'\n
-    \t- nImagesPerFile (int) : number of images per output file'\n
-    \t- datasetName (str) : name of the dataset under which images will be saved'\n
-  
+    \t\\- outputDirectory (str)      : defines full path to the output directory\n
+    \t\\- outputFileNameFormat (str) : defines format to be used for naming output files, e.g. '{outputFileId:06}.{processorId}.hdf'\n
+    \t\\- nImagesPerFile (int)       : number of images per output file'\n
+    \t\\- datasetName (str)          : name of the dataset under which images will be saved'\n
+
     **Hdf5AdImageWriter(configDict)**
 
     :Parameter: *configDict* (dict) - dictionary containing configuration parameters
@@ -64,15 +64,16 @@ class Hdf5AdImageWriter(AdImageProcessor):
             try:
                 self.h5File.close()
                 self.h5File = None
-            except:
+            except Exception:
                 pass
 
     def configure(self, configDict):
         '''
         Method invoked at user initiated runtime configuration changes. It
-        looks for 'outputDirectory', 'outputFileNameFormat' and
-        'nImagesPerFile' keys in the configuration dictionary and reconfigures 
-        processor behavior according to the specified values.
+        looks for 'outputDirectory', 'outputFileNameFormat',
+        'nImagesPerFile' and 'datasetName' keys in the configuration
+        dictionary and reconfigures processor behavior according
+        to the specified values.
 
         :Parameter: *configDict* (dict) - dictionary containing configuration parameters
         '''
@@ -81,7 +82,7 @@ class Hdf5AdImageWriter(AdImageProcessor):
             self.logger.debug('Reconfigured output directory: %s', outputDirectory)
             if not os.path.exists(outputDirectory):
                 self.logger.debug('Creating output directory: %s', outputDirectory)
-                os.makedirs(outputDirectory)
+                os.makedirs(outputDirectory, exist_ok=True)
             self.outputDirectory = outputDirectory
         if 'outputFileNameFormat' in configDict:
             self.outputFileNameFormat = configDict.get('outputFileNameFormat')
@@ -94,7 +95,7 @@ class Hdf5AdImageWriter(AdImageProcessor):
             self.logger.debug('Reconfigured dataset name: %s', self.datasetName)
 
     def process(self, pvObject):
-        ''' 
+        '''
         Method invoked every time input channel updates its PV record.
         It reshapes input NtNdArray object and saves image data into
         output file.
@@ -149,10 +150,10 @@ class Hdf5AdImageWriter(AdImageProcessor):
         self._closeOutputFile()
 
     def resetStats(self):
-        ''' 
-        Method invoked at user initiated application statistics reset. It resets
-        total processing time, as well as counters for the number of files and for 
-        the total number of bytes saved.
+        '''
+        Method invoked at user initiated application statistics reset.
+        It resets total processing time, as well as counters for the
+        number of files and for the total number of bytes saved.
         '''
         self.nFilesSaved = 0
         self.nBytesSaved = 0
@@ -164,7 +165,7 @@ class Hdf5AdImageWriter(AdImageProcessor):
         '''
         Method invoked periodically for generating processor statistics (number
         of files and bytes saved and corresponding processing/storage rates).
-        
+
         :Returns: Dictionary containing processor statistics parameters
         '''
         fileProcessingRate = 0
@@ -186,7 +187,7 @@ class Hdf5AdImageWriter(AdImageProcessor):
         '''
         Method invoked at processing startup. It defines processor part
         of the status PvObject published on the status PVA channel.
-        
+
         :Returns: Dictionary containing PVA types for the processor statistics parameters
         '''
         return {
