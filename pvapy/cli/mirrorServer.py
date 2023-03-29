@@ -9,7 +9,7 @@ __version__ = pva.__version__
 
 def main():
     parser = argparse.ArgumentParser(description='PvaPy Mirror Server')
-    parser.add_argument('-v', '--version', action='version', version=f'%(prog)s {version}'.format(version=__version__))
+    parser.add_argument('-v', '--version', action='version', version=f'%(prog)s {__version__}')
     parser.add_argument('-cm', '--channel-map', dest='channel_map', default=None, help='Channel map specification given as a comma-separated list of tuples of the form (<mirror_channel>,<source_channel>[,source_provider][,source_queue_size[,n_source_monitors,source_field_request_descriptor]]]); if specified, source provider must be either "pva" or "ca" (default: pva), and source queue size must be >= 0 (default: 0); specifying number of source monitors and source request descriptor is typically used with the data distributor plugin, which must be supported by the source PVA server (example request descriptor: "_[pydistributor=updates:1;group:mirror;trigger:uniqueId]").')
     parser.add_argument('-rt', '--runtime', type=float, dest='runtime', default=0, help='Server runtime in seconds; values <=0 indicate infinite runtime (default: infinite)')
     parser.add_argument('-rp', '--report-period', type=float, dest='report_period', default=0, help='Statistics report period for all channels in seconds; values <=0 indicate no reporting (default: 0)')
