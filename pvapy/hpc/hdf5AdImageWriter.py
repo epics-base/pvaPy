@@ -61,8 +61,11 @@ class Hdf5AdImageWriter(AdImageProcessor):
 
     def _closeOutputFile(self):
         if self.h5File:
-            self.h5File.close()
-            self.h5File = None
+            try:
+                self.h5File.close()
+                self.h5File = None
+            except:
+                pass
 
     def configure(self, configDict):
         '''
