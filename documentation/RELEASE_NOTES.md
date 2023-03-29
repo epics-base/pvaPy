@@ -10,6 +10,7 @@
   - fixed number of missed objects calculation when object ID offset or
     number of sequential updates is greater than 1
   - added system processor for writing AD images into HDF5 files
+  - introduced shutdown delay option for AD simulation server
 - Conda/pip package dependencies: 
   - EPICS BASE = 7.0.7
   - BOOST      = 1.81.0

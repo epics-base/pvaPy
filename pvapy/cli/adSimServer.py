@@ -191,7 +191,6 @@ class AdSimServer:
     # files is larger than the cache size, the server will be constantly
     # regenerating frames.
 
-    SHUTDOWN_DELAY = 3.0
     MIN_CACHE_SIZE = 1
     CACHE_TIMEOUT = 1.0
     DELAY_CORRECTION = 0.0001
@@ -202,7 +201,7 @@ class AdSimServer:
         'timeStamp' : pva.PvTimeStamp()
     }
 
-    def __init__(self, inputDirectory, inputFile, mmapMode, hdfDataset, hdfCompressionMode, frameRate, nFrames, cacheSize, nx, ny, datatype, minimum, maximum, runtime, channelName, notifyPv, notifyPvValue, metadataPv, startDelay, reportPeriod, disableCurses):
+    def __init__(self, inputDirectory, inputFile, mmapMode, hdfDataset, hdfCompressionMode, frameRate, nFrames, cacheSize, nx, ny, datatype, minimum, maximum, runtime, channelName, notifyPv, notifyPvValue, metadataPv, startDelay, shutdownDelay, reportPeriod, disableCurses):
         self.lock = threading.Lock()
         self.deltaT = 0
         self.cacheTimeout = self.CACHE_TIMEOUT
@@ -281,6 +280,7 @@ class AdSimServer:
         self.startTime = 0
         self.lastPublishedTime = 0
         self.startDelay = startDelay
+        self.shutdownDelay = shutdownDelay
         self.isDone = False
         self.curses = None
         self.screen = None
@@ -503,7 +503,10 @@ class AdSimServer:
 
     def stop(self):
         self.isDone = True
-        time.sleep(self.SHUTDOWN_DELAY)
+        try:
+            time.sleep(self.shutdownDelay)
+        except KeyboardInterrupt:
+            pass
         if self.screen:
             self.curses.endwin()
             self.screen = None
@@ -540,7 +543,8 @@ def main():
     parser.add_argument('-npv', '--notify-pv', type=str, dest='notify_pv', default=None, help='CA channel that should be notified on start; for the default Area Detector PVA driver PV that controls image acquisition is 13PVA1:cam1:Acquire')
     parser.add_argument('-nvl', '--notify-pv-value', type=str, dest='notify_pv_value', default='1', help='Value for the notification channel; for the Area Detector PVA driver PV this should be set to "Acquire" (default: 1)')
     parser.add_argument('-mpv', '--metadata-pv', type=str, dest='metadata_pv', default=None, help='Comma-separated list of CA channels that should be contain simulated image metadata values')
-    parser.add_argument('-sd', '--start-delay', type=float, dest='start_delay',  default=10.0, help='Server start delay in seconds (default: 10 seconds)')
+    parser.add_argument('-std', '--start-delay', type=float, dest='start_delay',  default=10.0, help='Server start delay in seconds (default: 10 seconds)')
+    parser.add_argument('-shd', '--shutdown-delay', type=float, dest='shutdown_delay', default=10.0, help='Server sthutdown delay in seconds (default: 10 seconds)')
     parser.add_argument('-rp', '--report-period', type=int, dest='report_period', default=1, help='Reporting period for publishing frames; if set to <=0 no frames will be reported as published (default: 1)')
     parser.add_argument('-dc', '--disable-curses', dest='disable_curses', default=False, action='store_true', help='Disable curses library screen handling. This is enabled by default, except when logging into standard output is turned on.')
 
@@ -549,11 +553,12 @@ def main():
         print(f'Unrecognized argument(s): {" ".join(unparsed)}')
         sys.exit(1)
 
-    server = AdSimServer(inputDirectory=args.input_directory, inputFile=args.input_file, mmapMode=args.mmap_mode, hdfDataset=args.hdf_dataset, hdfCompressionMode=args.hdf_compression_mode, frameRate=args.frame_rate, nFrames=args.n_frames, cacheSize=args.cache_size, nx=args.n_x_pixels, ny=args.n_y_pixels, datatype=args.datatype, minimum=args.minimum, maximum=args.maximum, runtime=args.runtime, channelName=args.channel_name, notifyPv=args.notify_pv, notifyPvValue=args.notify_pv_value, metadataPv=args.metadata_pv, startDelay=args.start_delay, reportPeriod=args.report_period, disableCurses=args.disable_curses)
+    server = AdSimServer(inputDirectory=args.input_directory, inputFile=args.input_file, mmapMode=args.mmap_mode, hdfDataset=args.hdf_dataset, hdfCompressionMode=args.hdf_compression_mode, frameRate=args.frame_rate, nFrames=args.n_frames, cacheSize=args.cache_size, nx=args.n_x_pixels, ny=args.n_y_pixels, datatype=args.datatype, minimum=args.minimum, maximum=args.maximum, runtime=args.runtime, channelName=args.channel_name, notifyPv=args.notify_pv, notifyPvValue=args.notify_pv_value, metadataPv=args.metadata_pv, startDelay=args.start_delay, shutdownDelay=args.shutdown_delay, reportPeriod=args.report_period, disableCurses=args.disable_curses)
 
     server.start()
     expectedRuntime = args.runtime+args.start_delay
     startTime = time.time()
+    runtime = 0
     try:
         while True:
             time.sleep(1)
@@ -562,7 +567,7 @@ def main():
             if runtime > expectedRuntime or server.isDone:
                 break
     except KeyboardInterrupt:
-        server.printReport(f'Server was interrupted after {runtime:.3f} seconds')
+        server.printReport(f'Server was interrupted after {runtime:.3f} seconds, exiting...')
     server.stop()
 
 if __name__ == '__main__':
