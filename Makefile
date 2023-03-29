@@ -9,6 +9,7 @@ PIP_DIR = tools/pip
 LOCAL_DIR = tools/local
 DIST_DIR = dist
 WHEEL_DIR = wheelhouse
+TEST_DIR = test
 
 RELEASE_LOCAL = $(CONFIGURE_DIR)/RELEASE.local
 CONFIG_SITE_LOCAL = $(CONFIGURE_DIR)/CONFIG_SITE.local
@@ -152,6 +153,9 @@ conda-clean:
 	$(MAKE) -C $(CONDA_DIR)/pvapy-conda clean || /bin/true
 	$(MAKE) -C $(CONDA_DIR)/pvapy-boost-conda clean || /bin/true
 	$(MAKE) -C $(CONDA_DIR)/epics-base-conda clean || /bin/true
+
+tests: 
+	$(MAKE) -C $(TEST_DIR)
 
 clean: src-clean doc-clean pip-clean conda-clean
 
