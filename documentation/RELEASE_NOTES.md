@@ -1,4 +1,4 @@
-## Release 5.3.0 (2022/03/DD)
+## Release 5.3.0 (2022/03/29)
 
 - Added optimized method for record updates in PvaServer class
 - Streaming Framework enhancements:
