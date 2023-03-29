@@ -19,6 +19,7 @@ build:
 
 test:
   requires:
+    - h5py
     - pytest
     - pylint
 
