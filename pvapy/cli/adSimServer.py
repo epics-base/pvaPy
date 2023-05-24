@@ -8,6 +8,9 @@ import argparse
 import os
 import os.path
 import numpy as np
+
+# TODO: make fabio optional later
+import fabio
 # HDF5 is optional
 try:
     import h5py as h5
@@ -19,9 +22,15 @@ except ImportError:
     pass
 
 import pvaccess as pva
-from ..utility.adImageUtility import AdImageUtility
-from ..utility.floatWithUnits import FloatWithUnits
-from ..utility.intWithUnits import IntWithUnits
+from pvapy.utility.adImageUtility import AdImageUtility
+from pvapy.utility.floatWithUnits import FloatWithUnits
+from pvapy.utility.intWithUnits import IntWithUnits
+# from utility.adImageUtility import AdImageUtility
+# from utility.floatWithUnits import FloatWithUnits
+# from utility.intWithUnits import IntWithUnits
+# from ..utility.adImageUtility import AdImageUtility
+# from ..utility.floatWithUnits import FloatWithUnits
+# from ..utility.intWithUnits import IntWithUnits
 
 __version__ = pva.__version__
 
@@ -47,6 +56,8 @@ class FrameGenerator:
 
     def getUncompressedFrameSize(self):
         return self.rows*self.cols*self.frames[0].itemsize
+        # return self.rows*self.cols
+
 
     def getCompressedFrameSize(self):
         if self.compressorName:
@@ -105,6 +116,42 @@ class HdfFileGenerator(FrameGenerator):
                 frameData = np.frombuffer(data[1], dtype=np.uint8)
         return frameData
 
+class FabioFileGenerator(FrameGenerator):
+
+    def __init__(self, filePath):
+        FrameGenerator.__init__(self)
+        self.filePath = filePath
+        # self.datasetPath = datasetPath
+        # self.dataset = None
+        self.nInputFrames = 0;
+        if not filePath:
+            raise Exception(f'Invalid input file path.')
+        # if not datasetPath:
+        #     raise Exception(f'Missing dataset specification for input file {filePath}.')
+        self.success = self.loadInputFile()
+
+    def loadInputFile(self):
+        try:
+            self.frames = fabio.open(self.filePath).data
+            self.frames = np.expand_dims(self.frames, 0);
+            print(f'Loaded input file {self.filePath}')
+            self.nInputFrames += 1;
+            return 1
+        except Exception as ex:
+            print(f'Cannot load input file {self.filePath}: {ex}, skipping it')
+            return None
+
+    def getFrameInfo(self):
+        if self.frames is not None and not self.nInputFrames:
+            self.rows, self.cols = self.frames.shape
+            self.dtype = self.frames.dtype
+        return (self.nInputFrames, self.rows, self.cols, self.dtype, self.compressorName)
+
+    def isLoaded(self):
+        if self.success is not None:
+            return True
+        else:
+            return False
 class NumpyFileGenerator(FrameGenerator):
 
     def __init__(self, filePath, mmapMode):
@@ -125,6 +172,10 @@ class NumpyFileGenerator(FrameGenerator):
         except Exception as ex:
             print(f'Cannot load input file {self.filePath}: {ex}')
             raise
+
+
+
+
 
 class NumpyRandomGenerator(FrameGenerator):
 
@@ -192,7 +243,7 @@ class AdSimServer:
         'timeStamp' : pva.PvTimeStamp()
     }
 
-    def __init__(self, inputDirectory, inputFile, mmapMode, hdfDataset, hdfCompressionMode, frameRate, nFrames, cacheSize, nx, ny, datatype, minimum, maximum, runtime, channelName, notifyPv, notifyPvValue, metadataPv, startDelay, reportPeriod, disableCurses):
+    def __init__(self, inputDirectory, inputFile, mmapMode, hdfDataset, hdfCompressionMode, altFormat, frameRate, nFrames, cacheSize, nx, ny, datatype, minimum, maximum, runtime, channelName, notifyPv, notifyPvValue, metadataPv, startDelay, reportPeriod, disableCurses):
         self.lock = threading.Lock()
         self.deltaT = 0
         self.cacheTimeout = self.CACHE_TIMEOUT
@@ -212,12 +263,22 @@ class AdSimServer:
         if inputFile is not None:
             inputFiles.append(inputFile)
         allowedHdfExtensions = ['h5', 'hdf', 'hdf5']
+        allowedNpExtensions = ['npy', 'npz']
+        if nFrames > 0:
+            inputFiles = inputFiles[:nFrames]
+        else:
+            inputFiles = inputFiles[:100]
         for f in inputFiles:
             ext = f.split('.')[-1]
             if ext in allowedHdfExtensions:
                 self.frameGeneratorList.append(HdfFileGenerator(f, hdfDataset, hdfCompressionMode))
+            elif ext not in allowedNpExtensions and altFormat>0:
+                fFG = FabioFileGenerator(f)
+                if fFG.isLoaded():
+                    self.frameGeneratorList.append(fFG)
             else:
                 self.frameGeneratorList.append(NumpyFileGenerator(f, mmapMode))
+
 
         if not self.frameGeneratorList:
             nf = nFrames
@@ -512,6 +573,7 @@ def main():
     parser.add_argument('-mm', '--mmap-mode', action='store_true', dest='mmap_mode', default=False, help='Use NumPy memory map to load the specified input file. This flag typically results in faster startup and lower memory usage for large files.')
     parser.add_argument('-hds', '--hdf-dataset', dest='hdf_dataset', default=None, help='HDF5 dataset path. This option must be specified if HDF5 files are used as input, but otherwise it is ignored.')
     parser.add_argument('-hcm', '--hdf-compression-mode', dest='hdf_compression_mode', default=False, action='store_true', help='Use compressed data from HDF5 file. By default, data will be uncompressed before streaming it.')
+    parser.add_argument('-aff', '--alternate-file-format', type=int, dest='alternate_file_format', default=0, help='alternate file format (not numpy and not HDF5). Must be set to >0 if files used are not NumPy or HDF5. (default: 0)')
     parser.add_argument('-fps', '--frame-rate', type=float, dest='frame_rate', default=20, help='Frames per second (default: 20 fps)')
     parser.add_argument('-nx', '--n-x-pixels', type=int, dest='n_x_pixels', default=256, help='Number of pixels in x dimension (default: 256 pixels; does not apply if input file file is given)')
     parser.add_argument('-ny', '--n-y-pixels', type=int, dest='n_y_pixels', default=256, help='Number of pixels in x dimension (default: 256 pixels; does not apply if input file is given)')
@@ -534,7 +596,7 @@ def main():
         print('Unrecognized argument(s): %s' % ' '.join(unparsed))
         exit(1)
 
-    server = AdSimServer(inputDirectory=args.input_directory, inputFile=args.input_file, mmapMode=args.mmap_mode, hdfDataset=args.hdf_dataset, hdfCompressionMode=args.hdf_compression_mode, frameRate=args.frame_rate, nFrames=args.n_frames, cacheSize=args.cache_size, nx=args.n_x_pixels, ny=args.n_y_pixels, datatype=args.datatype, minimum=args.minimum, maximum=args.maximum, runtime=args.runtime, channelName=args.channel_name, notifyPv=args.notify_pv, notifyPvValue=args.notify_pv_value, metadataPv=args.metadata_pv, startDelay=args.start_delay, reportPeriod=args.report_period, disableCurses=args.disable_curses)
+    server = AdSimServer(inputDirectory=args.input_directory, inputFile=args.input_file, mmapMode=args.mmap_mode, hdfDataset=args.hdf_dataset, hdfCompressionMode=args.hdf_compression_mode, altFormat=args.alternate_file_format, frameRate=args.frame_rate, nFrames=args.n_frames, cacheSize=args.cache_size, nx=args.n_x_pixels, ny=args.n_y_pixels, datatype=args.datatype, minimum=args.minimum, maximum=args.maximum, runtime=args.runtime, channelName=args.channel_name, notifyPv=args.notify_pv, notifyPvValue=args.notify_pv_value, metadataPv=args.metadata_pv, startDelay=args.start_delay, reportPeriod=args.report_period, disableCurses=args.disable_curses)
 
     server.start()
     expectedRuntime = args.runtime+args.start_delay+server.SHUTDOWN_DELAY
