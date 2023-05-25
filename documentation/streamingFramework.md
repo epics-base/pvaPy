@@ -30,11 +30,9 @@ class UserDataProcessor:
 
     # Method called at start
     def start(self):
-        pass
 
     # Configure user processor
     def configure(self, configDict):
-        pass
 
     # Process monitor update
     def process(self, pvObject):
@@ -44,11 +42,9 @@ class UserDataProcessor:
 
     # Method called at shutdown
     def stop(self):
-        pass
     
     # Reset statistics for user processor
     def resetStats(self):
-        pass
 
     # Retrieve statistics for user processor
     def getStats(self):
@@ -73,11 +69,15 @@ out of the box:
 images
 - [AD Image Data Decryptor](../pvapy/hpc/adImageDataDecryptor.py): decrypts
 images
-- [AD Output File Processor](../pvapy/hpc/adOutputFileProcessor.py): saves output files
+- [AD Output File Processor](../pvapy/hpc/adOutputFileProcessor.py): saves
+AD images into output files (single image per file; supports various formats)
+- [HDF5 AD Image Writer](../pvapy/hpc/hdf5AdImageWriter.py): writes multiple
+AD images into HDF5 files
 
 The encryptor and decryptor processors require python 'rsa' and 'pycryptodome'
-packages for encryption utilities, while the output file processor requires python
-'PIL' module ('pillow' package).
+packages for encryption utilities, the output file processor requires 
+'PIL' module ('pillow' package), while the HDF5 image writer requires 
+'h5py' module.
 
 A python class that derives from UserDataProcessor class and implements 
 the above interface is passed into one of the two main command line utilities:
@@ -201,7 +201,7 @@ After server starts publishing images, the consumer terminal should display proc
 processed by consumer 1 should be accessible on the 'consumer:1:output' channel, and
 images processed by consumer 2 should be accessible on the 'consumer:2:output' channel.
 
-### Multiple Consumers with Data Distribution
+### Multiple Consumers With Data Distribution
 
 This example illustrates how to spawn multiple consumers that receive images in
 alternate order.
@@ -239,7 +239,7 @@ After server starts publishing images, the consumer terminal should display proc
 output, with one consumers receiving images (1,3,5,...) and the other one receiving images
 (2,4,6,...).
 
-### Multiple Consumer Sets with Data Distribution
+### Multiple Consumer Sets With Data Distribution
 
 This example illustrates how to distribute the same set of images between 
 multiple sets of consumers.
@@ -374,7 +374,7 @@ $ pvapy-ad-sim-server -cn pvapy:image -nx 128 -ny 128 -dt uint8 -rt 60 -fps 1000
 
 After 60 second server runtime, there should be no overruns and missed frames reported by the consumer process.
 
-#### Multiple Consumers with Data Distribution
+#### Multiple Consumers With Data Distribution
 
 With data distributor plugin, each consumer gets its own server and/or
 client queue.
@@ -619,8 +619,77 @@ $ pvapy-ad-sim-server -cn pvapy:image -nx 128 -ny 128 -dt uint8 -rt 60 -fps 8000
 ```
 
 Once the simulation server starts publishing images, the consumer statistics
-should indicate that the passthrough and processing consumers are receiving frames
-at one half and one eighth of the original input stream data rate, respectively.
+should indicate that the passthrough and processing consumers are receiving 
+frames at one half and one eighth of the original input stream data rate, 
+respectively.
+
+
+### Splitting Images Into Tiles
+
+This example shows how one can split the original raw image and distribute
+resulting tiles for processing between multiple consumers. 
+
+<p align="center">
+  <img alt="Splitting Images" src="images/StreamingFrameworkSplittingImages.jpg">
+</p>
+
+On terminal 1, start a single consumer running the
+[split image processor](../examples/splitAdImageProcessorExample.py). This 
+processor will connect to the 'pvapy:image' channel, split the original
+3840x2160 frames into four 1920x1080 tiles, and publish those on
+its output channel 'split:1:output':
+
+```sh
+$ pvapy-hpc-consumer \
+    --input-channel pvapy:image \
+    --control-channel split:*:control \
+    --status-channel split:*:status \
+    --output-channel split:*:output \
+    --processor-file /path/to/splitAdImageProcessorExample.py \
+    --processor-class SplitAdImageProcessor \
+    --processor-args='{"nx" : 1920, "ny" : 1080}' \
+    --report-period 10 \
+    --server-queue-size 100
+```
+
+On terminal 2, start four consumers processing the 1920x1080 tiles
+from 'split:1:output' stream using the
+[passthrough system user processor](../pvapy/hpc/userDataProcessor.py):
+
+```sh
+$ pvapy-hpc-consumer \
+    --input-channel split:1:output \
+    --control-channel process:*:control \
+    --status-channel process:*:status \
+    --output-channel process:*:output \
+    --processor-class pvapy.hpc.userDataProcessor.UserDataProcessor \
+    --report-period 10 \
+    --server-queue-size 100 \
+    --n-consumers 4 \
+    --distributor-updates 1
+```
+
+Obviously, in order to actually process image tiles, in the above command
+one can replace the passthrough system processor with 
+the data processor class of their choice.
+
+On terminal 3 start generating 3840x2160 images on the 'pvapy:image' channel:
+
+```sh
+$ pvapy-ad-sim-server -cn pvapy:image -nx 3840 -ny 2160 -dt uint8 -fps 100 -rp 100 -rt 60
+```
+
+Once the simulation server starts publishing images, one can verify
+that images have been split by inspecting tile dimensions and looking for
+additional tile-related attributes inserted by the split image processor:
+
+```sh
+$ pvget pvapy:image # original image, 3840x2160
+$ pvget process:1:output # tile (0,0), 1920x1080
+$ pvget process:2:output # tile (0,1), 1920x1080
+$ pvget process:3:output # tile (1,0), 1920x1080
+$ pvget process:4:output # tile (1,1), 1920x1080
+```
 
 ### Data Collector
 
@@ -717,7 +786,98 @@ $ pvapy-ad-sim-server -cn ad:image -nx 128 -ny 128 -dt uint8 -fps 2000 -rt 60 -r
 Once the data source starts publishing images, they will be streamed through
 all the components of the system, and saved into the designated output folder.
 
-### Metadata Handling with Data Collector
+### Splitting and Stitching Images With Data Collector
+
+In this example we stitch tiles obtained after splitting the original
+image.
+
+<p align="center">
+  <img alt="Splitting/Stitching Images" src="images/StreamingFrameworkSplittingAndStitchingImages.jpg">
+</p>
+
+Just like in the [previous example](#splitting-images-into-tiles), 
+on terminal 1, start a single consumer running the
+[split image processor](../examples/splitAdImageProcessorExample.py). This 
+processor will connect to the 'pvapy:image' channel, split the original
+3840x2160 frames into four 1920x1080 tiles, and publish those on
+its output channel 'split:1:output':
+
+```sh
+$ pvapy-hpc-consumer \
+    --input-channel pvapy:image \
+    --control-channel split:*:control \
+    --status-channel split:*:status \
+    --output-channel split:*:output \
+    --processor-file /path/to/splitAdImageProcessorExample.py \
+    --processor-class SplitAdImageProcessor \
+    --processor-args='{"nx" : 1920, "ny" : 1080}' \
+    --report-period 10 \
+    --server-queue-size 100
+```
+
+On terminal 2, start four consumers processing the 1920x1080 tiles
+from 'split:1:output' stream using the
+[passthrough system user processor](../pvapy/hpc/userDataProcessor.py):
+
+```sh
+$ pvapy-hpc-consumer \
+    --input-channel split:1:output \
+    --control-channel process:*:control \
+    --status-channel process:*:status \
+    --output-channel process:*:output \
+    --processor-class pvapy.hpc.userDataProcessor.UserDataProcessor \
+    --report-period 10 \
+    --server-queue-size 100 \
+    --n-consumers 4 \
+    --distributor-updates 1
+```
+
+In the above command one can replace the passthrough system processor with 
+the data processor class of their choice.
+
+On terminal 3 start collecting data from the four producer channels
+and stitching image tiles with the same frame id into the
+processed 3840x2160 image. The data collector in the command below uses the
+[stitch image processor](../examples/stitchAdImageProcessorExample.py)
+example:
+
+```sh
+$ pvapy-hpc-collector \
+    --collector-id 1 \
+    --producer-id-list 1,2,3,4 \
+    --input-channel process:*:output \
+    --control-channel collector:*:control \
+    --status-channel collector:*:status \
+    --output-channel collector:*:output \
+    --processor-file /path/to/stitchAdImageProcessorExample.py \
+    --processor-class StitchAdImageProcessor \
+    --processor-args='{"nx" : 3840, "ny" : 2160}' 
+    --report-period 10 \
+    --server-queue-size 100 \
+    --collector-cache-size 100
+```
+
+On terminal 4 start generating 3840x2160 images on the 'pvapy:image' channel:
+
+```sh
+$ pvapy-ad-sim-server -cn pvapy:image -nx 3840 -ny 2160 -dt uint8 -fps 100 -rp 100 -rt 60
+```
+
+After the simulation server starts publishing images, one can verify
+that images have been split by inspecting tile dimensions and looking for
+additional tile-related attributes inserted by the split image processor,
+as well as verify that the stitched image is identical to the original one.
+
+```sh
+$ pvget pvapy:image # original image, 3840x2160
+$ pvget process:1:output # tile (0,0), 1920x1080
+$ pvget process:2:output # tile (0,1), 1920x1080
+$ pvget process:3:output # tile (1,0), 1920x1080
+$ pvget process:4:output # tile (1,1), 1920x1080
+$ pvget collector:1:output # stitched image, 3840x2160
+```
+
+### Metadata Handling With Data Collector
 
 In many cases images need to be associated with with various pieces of metadata (e.g., position information)
 before processing. The streaming framework allows one to receive PV updates from any number of metadata channels
@@ -815,7 +975,7 @@ This command will start CA IOC and generate CA metadata channels 'x', 'y', and '
 Note that it requires path to the EPICS Base dbd folder. For example, if you are using PvaPy
 conda package, this folder would be located at '/path/to/conda/envs/env-name/opt/epics/dbd'.
 
-### Metadata Handling with Data Consumers
+### Metadata Handling With Data Consumers
 
 Distributing metadata processing should allow one to handle higher frame rates. In this example
 we also use mirror server for all image and metadata channels.

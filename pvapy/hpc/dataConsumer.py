@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 
+'''
+Data consumer module.
+'''
+
 import time
 import pvaccess as pva
 from .metadataChannelFactory import MetadataChannelFactory
@@ -7,6 +11,7 @@ from ..utility.loggingManager import LoggingManager
 from ..utility.floatWithUnits import FloatWithUnits
 
 class DataConsumer:
+    ''' Data consumer class. '''
 
     PROVIDER_TYPE_MAP = { 'pva' : pva.PVA, 'ca' : pva.CA }
 
@@ -50,16 +55,16 @@ class DataConsumer:
         self.logger = LoggingManager.getLogger(f'consumer-{consumerId}')
         self.consumerId = consumerId
         providerType = self.PROVIDER_TYPE_MAP.get(providerType.lower(), pva.PVA)
-        self.logger.debug(f'Channel {inputChannel} provider type: {providerType}')
+        self.logger.debug('Channel %s provider type: %s', inputChannel, providerType)
         self.channel = pva.Channel(inputChannel, providerType)
         self.inputChannel = inputChannel
         self.serverQueueSize = serverQueueSize
-        self.logger.debug(f'Server queue size: {serverQueueSize}')
+        self.logger.debug('Server queue size: %s', serverQueueSize)
         self.distributorPluginName = distributorPluginName
-        self.distributorGroupId = distributorGroupId 
-        self.distributorSetId = distributorSetId 
+        self.distributorGroupId = distributorGroupId
+        self.distributorSetId = distributorSetId
         self.distributorTriggerFieldName = distributorTriggerFieldName
-        self.distributorUpdates = distributorUpdates 
+        self.distributorUpdates = distributorUpdates
         self.distributorUpdateMode = distributorUpdateMode
         self.objectIdField = objectIdField
         self.fieldRequest = fieldRequest
@@ -67,10 +72,10 @@ class DataConsumer:
         self.monitorQueueSize = monitorQueueSize
         if monitorQueueSize >= 0:
             self.pvObjectQueue = pva.PvObjectQueue(monitorQueueSize)
-            self.logger.debug(f'Using PvObjectQueue of size: {monitorQueueSize}')
+            self.logger.debug('Using PvObjectQueue of size: %s', monitorQueueSize)
         self.accumulateObjects = accumulateObjects
-        self.accumulationTimeout = accumulationTimeout 
-        self.logger.debug(f'Will accumulate {self.accumulateObjects} objects before processing, with accumulation timeout of {self.accumulationTimeout}')
+        self.accumulationTimeout = accumulationTimeout
+        self.logger.debug('Will accumulate %s objects before processing, with accumulation timeout of %s', self.accumulateObjects, self.accumulationTimeout)
 
         self.processingController = processingController
         self.startTime = None
@@ -87,7 +92,7 @@ class DataConsumer:
         if self.processingController and self.processingController.userDataProcessor:
             self.processingController.userDataProcessor.metadataQueueMap = self.metadataQueueMap
 
-        self.logger.debug(f'Created data consumer {consumerId}')
+        self.logger.debug('Created data consumer %s', consumerId)
 
     def getPvMonitorRequest(self):
         recordStr = ''
@@ -117,7 +122,7 @@ class DataConsumer:
             fieldRequest = self.fieldRequest.replace('field(', '').replace(')', '')
             if self.objectIdField and self.objectIdField not in fieldRequest:
                 fieldRequest = f'{self.objectIdField},{fieldRequest}'
-        
+
         request = f'{recordStr}field({fieldRequest})'
         if distributorStr:
             # Strip last ';' character
@@ -126,11 +131,11 @@ class DataConsumer:
         return request
 
     def configure(self, configDict):
-        if type(configDict) == dict:
+        if isinstance(configDict, dict):
             if 'monitorQueueSize' in configDict:
                 monitorQueueSize = int(configDict.get('monitorQueueSize'))
                 if self.pvObjectQueue is not None:
-                    self.logger.debug(f'Resetting PvObjectQueue size from {self.pvObjectQueue.maxLength} to {monitorQueueSize}')
+                    self.logger.debug('Resetting PvObjectQueue size from %s to %s', self.pvObjectQueue.maxLength, monitorQueueSize)
                     self.pvObjectQueue.maxLength = monitorQueueSize
                     self.monitorQueueSize = monitorQueueSize
         if self.processingController:
@@ -150,13 +155,13 @@ class DataConsumer:
             if len(self.pvObjectQueue) < self.accumulateObjects:
                 timeSinceLastPut = self.pvObjectQueue.getTimeSinceLastPut()
                 if self.accumulationTimeout > timeSinceLastPut:
-                    self.logger.debug(f'Accumulation timeout did not occur yet (last put was {timeSinceLastPut} seconds ago')
+                    self.logger.debug('Accumulation timeout did not occur yet (last put was %s seconds ago', timeSinceLastPut)
                     return False
         try:
             pvObject = self.pvObjectQueue.get(waitTime)
             self.process(pvObject)
             return True
-        except pva.QueueEmpty as ex:
+        except pva.QueueEmpty:
             # Ignore empty queue
             pass
         return False
@@ -170,12 +175,12 @@ class DataConsumer:
 
     def getMonitorStats(self):
         return self.channel.getMonitorCounters()
-        
+
     def getQueueStats(self):
         if self.pvObjectQueue is not None:
             return self.pvObjectQueue.getCounters()
         return {}
-        
+
     def getProcessorStats(self):
         if self.processingController:
             return self.processingController.getProcessorStats()
@@ -209,18 +214,18 @@ class DataConsumer:
 
     def getConsumerId(self):
         return self.consumerId
- 
+
     def start(self):
         self.startTime = time.time()
         request = self.getPvMonitorRequest()
-        self.logger.debug(f'Using request string {request}')
+        self.logger.debug('Using request string: %s', request)
         if self.pvObjectQueue is not None:
             self.logger.debug('Starting queue monitor')
             self.channel.qMonitor(self.pvObjectQueue, request)
         else:
             self.logger.debug('Starting process monitor')
             self.channel.monitor(self.process, request)
-        for metadataChannelId,metadataChannel in self.metadataChannelMap.items():
+        for metadataChannel in self.metadataChannelMap.values():
             metadataChannel.start()
         if self.processingController:
             self.processingController.start()
@@ -228,8 +233,7 @@ class DataConsumer:
     def stop(self):
         self.endTime = time.time()
         self.channel.stopMonitor()
-        for metadataChannelId,metadataChannel in self.metadataChannelMap.items():
+        for metadataChannel in self.metadataChannelMap.values():
             metadataChannel.stop()
         if self.processingController:
             self.processingController.stop()
-

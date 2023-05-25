@@ -12,5 +12,11 @@ class IntWithUnits(int):
     def __repr__(self):
         return f'{int(self)}{self.units}'
 
+    def __add__(self, value):
+        return IntWithUnits(int(self)+int(value), self.units)
+
+    def __sub__(self, value):
+        return IntWithUnits(int(self)-int(value), self.units)
+
     def __str__(self):
         return self.__repr__()

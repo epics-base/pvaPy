@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 
+'''
+Data collector module.
+'''
+
 import time
 import threading
 import pvaccess as pva
@@ -9,6 +13,7 @@ from ..utility.loggingManager import LoggingManager
 from ..utility.floatWithUnits import FloatWithUnits
 
 class ProducerChannel(SourceChannel):
+    ''' Collector producer channel. '''
     def __init__(self, producerId, channelName, serverQueueSize, monitorQueueSize, objectIdField, fieldRequest, dataCollector):
         loggerName = f'producer-{producerId}'
         SourceChannel.__init__(self, producerId, channelName, pva.PVA, serverQueueSize, monitorQueueSize, loggerName, dataCollector)
@@ -45,12 +50,13 @@ class ProducerChannel(SourceChannel):
                 # We can manipulate object from the queue without having to copy it
                 self.dataCollector.addObjectToCache(self.producerId, objectId, pvObject)
                 return True
-            except pva.QueueEmpty as ex:
+            except pva.QueueEmpty:
                 # Ignore empty queue
                 pass
         return False
 
 class ProcessingThread(threading.Thread):
+    ''' Collector processing thread. '''
 
     THREAD_EVENT_TIMEOUT_IN_SECONDS = 5.0
 
@@ -70,24 +76,24 @@ class ProcessingThread(threading.Thread):
                 try:
                     self.dataCollector.process(pvObject)
                 except Exception as ex:
-                    self.logger.error(f'Error processing object id {objectId}: {ex}')
-            self.logger.debug(f'Processed {nObjects} from cache')
+                    self.logger.error('Error processing object id %s: %s', objectId, ex)
+            self.logger.debug('Processed %s from cache', nObjects)
         return nObjects
 
     def run(self):
         self.isRunning = True
-        self.logger.debug(f'Starting thread: {self.name}')
+        self.logger.debug('Starting thread: %s', self.name)
         while True:
             self.dataCollector.clearEvent()
             while True:
                 try:
-                    cacheSize = len(self.dataCollector.collectorCacheMap)
-                    timeSinceCacheUpdate = time.time()-self.dataCollector.cacheUpdateTime 
+                    cacheSize = self.dataCollector.nObjectsCached
+                    timeSinceCacheUpdate = time.time()-self.dataCollector.cacheUpdateTime
                     if not cacheSize or self.isDone:
                         # Cache empty or we are done
                         break
-                    elif cacheSize < self.dataCollector.collectorCacheSize and timeSinceCacheUpdate < self.THREAD_EVENT_TIMEOUT_IN_SECONDS:
-                        # Cache is being filled 
+                    if cacheSize < self.dataCollector.collectorCacheSize and timeSinceCacheUpdate < self.THREAD_EVENT_TIMEOUT_IN_SECONDS:
+                        # Cache is being filled
                         break
                     nObjects = self.processObjects()
                 except Exception as ex:
@@ -102,15 +108,15 @@ class ProcessingThread(threading.Thread):
                 while True:
                     nNewObjects2 = self.dataCollector.pushObjectsToCacheFromProducerQueues()
                     nNewObjects += nNewObjects2
-                    cacheSize = len(self.dataCollector.collectorCacheMap)
+                    cacheSize = self.dataCollector.nObjectsCached
                     if cacheSize >= self.dataCollector.collectorCacheSize or self.isDone:
-                        self.logger.debug(f'{nNewObjects} new objects cached, cache size: {cacheSize}')
+                        self.logger.debug('%s new objects cached, cache size: %s', nNewObjects, cacheSize)
                         break
                     # If we did not get any new objects, wait on event
                     if not nNewObjects2:
                         self.dataCollector.waitOnFirstProducerQueue(self.THREAD_EVENT_TIMEOUT_IN_SECONDS)
                         break
-            else: 
+            else:
                 self.dataCollector.waitOnEvent(self.THREAD_EVENT_TIMEOUT_IN_SECONDS)
         # Finish up
         if self.dataCollector.monitorQueueSize >= 0:
@@ -119,10 +125,10 @@ class ProcessingThread(threading.Thread):
             while nPushed:
                 nPushed = self.dataCollector.pushObjectsToCacheFromProducerQueues()
                 nNewObjects += nPushed
-                
-            self.logger.debug(f'Pushed remaining {nNewObjects} objects into the cache')
-        cacheSize = len(self.dataCollector.collectorCacheMap)
-        self.logger.debug(f'Processing all remaining {cacheSize} cached objects')
+
+            self.logger.debug('Pushed remaining %s objects into the cache', nNewObjects)
+        cacheSize = self.dataCollector.nObjectsCached
+        self.logger.debug('Processing all remaining %s cached objects', cacheSize)
         while True:
             nObjects = self.processObjects()
             if not nObjects:
@@ -131,12 +137,14 @@ class ProcessingThread(threading.Thread):
         # last set of updates
         self.dataCollector.waitOnEvent(self.THREAD_EVENT_TIMEOUT_IN_SECONDS)
         self.isRunning = False
-        self.logger.debug(f'{self.name} is done')
+        self.logger.debug('%s is done', self.name)
 
     def stop(self):
         self.isDone = True
 
 class DataCollector:
+
+    ''' Data collector class. '''
 
     # Default queue sizing factor
     CACHE_SIZE_SCALING_FACTOR = 10
@@ -152,7 +160,8 @@ class DataCollector:
             'nRejected' : pva.UINT,
             'rejectedRate' : pva.DOUBLE,
             'nMissed' : pva.UINT,
-            'missedRate' : pva.DOUBLE
+            'missedRate' : pva.DOUBLE,
+            'nCached' : pva.UINT
         },
         'processorStats' : {
             'runtime' : pva.DOUBLE,
@@ -178,35 +187,36 @@ class DataCollector:
         self.event = threading.Event()
         self.collectorId = collectorId
         self.inputChannel = inputChannel
-        self.logger.debug(f'Input channel template: {inputChannel}')
-        self.objectIdField = objectIdField 
-        self.logger.debug(f'Object id field: {objectIdField}')
+        self.logger.debug('Input channel template: %s', inputChannel)
+        self.objectIdField = objectIdField
+        self.logger.debug('Object id field: %s', objectIdField)
         self.objectIdOffset = objectIdOffset
-        self.logger.debug(f'Object id offset: {objectIdOffset}')
+        self.logger.debug('Object id offset: %s', objectIdOffset)
         self.fieldRequest = fieldRequest
-        self.logger.debug(f'Field request: {fieldRequest}')
+        self.logger.debug('Field request: %s', fieldRequest)
         self.serverQueueSize = serverQueueSize
-        self.logger.debug(f'Server queue size: {serverQueueSize}')
+        self.logger.debug('Server queue size: %s', serverQueueSize)
         self.nProducers = len(producerIdList)
         self.producerIdList = producerIdList
         if not self.nProducers:
             raise pva.InvalidArgument('Producer id list cannot be empty.')
         self.collectorCacheSize = self.getCollectorCacheSize(collectorCacheSize)
-        self.logger.debug(f'Collector cache size is set to {self.collectorCacheSize}')
+        self.logger.debug('Collector cache size is set to %s', self.collectorCacheSize)
         self.monitorQueueSize = self.getClientQueueSize(monitorQueueSize)
-        self.logger.debug(f'Client queue size is set to {self.monitorQueueSize}')
+        self.logger.debug('Client queue size is set to %s', self.monitorQueueSize)
         self.cacheLock = threading.Lock()
         self.collectorCacheMap = {}
+        self.nObjectsCached = 0
 
         # Producer channels
-        self.logger.debug(f'Using producer id format spec: {idFormatSpec}')
+        self.logger.debug('Using producer id format spec: %s', idFormatSpec)
         self.producerChannelMap = {}
         for producerId in producerIdList:
             producerIdString = str(producerId)
-            if idFormatSpec: 
+            if idFormatSpec:
                 producerIdString = f'{producerId:{idFormatSpec}}'
             cName = f'{inputChannel}'.replace('*', producerIdString)
-            self.logger.debug(f'Creating channel {cName} for producer {producerId}')
+            self.logger.debug('Creating channel %s for producer %s', cName, producerId)
             self.producerChannelMap[producerId] = ProducerChannel(producerId, cName, serverQueueSize, self.monitorQueueSize, objectIdField, fieldRequest, self)
 
         # Metadata channels
@@ -232,31 +242,35 @@ class DataCollector:
         if self.processingController and hasattr(self.processingController, 'ignoreFirstObject') and self.processingController.ignoreFirstObject:
             self.nReceivedOffset = 1
 
-        self.logger.debug(f'Created data collector {collectorId}')
+        self.logger.debug('Created data collector %s', collectorId)
 
     def getCollectorCacheSize(self, collectorCacheSize):
-        minCollectorCacheSize = self.nProducers*self.CACHE_SIZE_SCALING_FACTOR 
-        if collectorCacheSize > minCollectorCacheSize: 
+        self.logger.debug('Requested collector cache size: %s', collectorCacheSize)
+        if collectorCacheSize < 0:
+            minCollectorCacheSize = self.nProducers*self.CACHE_SIZE_SCALING_FACTOR
+        else:
+            minCollectorCacheSize = self.nProducers
+        if collectorCacheSize > minCollectorCacheSize:
             return collectorCacheSize
-        return minCollectorCacheSize 
+        return minCollectorCacheSize
 
     def getClientQueueSize(self, monitorQueueSize):
         if monitorQueueSize <= 0:
             # Either client queue is not used, or it is set to infinity
             return monitorQueueSize
         # Make sure client queue size is sufficiently large
-        minClientQueueSize = self.collectorCacheSize*self.CACHE_SIZE_SCALING_FACTOR 
-        if monitorQueueSize > minClientQueueSize: 
+        minClientQueueSize = self.collectorCacheSize*self.CACHE_SIZE_SCALING_FACTOR
+        if monitorQueueSize > minClientQueueSize:
             return monitorQueueSize
-        return minClientQueueSize 
+        return minClientQueueSize
 
     def configure(self, configDict):
-        if type(configDict) == dict:
+        if isinstance(configDict, dict):
             if 'collectorCacheSize' in configDict:
                 collectorCacheSize = int(configDict.get('collectorCacheSize'))
                 self.collectorCacheSize = self.getCollectorCacheSize(collectorCacheSize)
-                self.logger.debug(f'Collector cache size is set to {self.collectorCacheSize}')
-            for producerId,producerChannel in self.producerChannelMap.items():
+                self.logger.debug('Collector cache size is set to %s', self.collectorCacheSize)
+            for producerChannel in self.producerChannelMap.values():
                 producerChannel.configure(configDict)
         if self.processingController:
             self.processingController.configure(configDict)
@@ -269,50 +283,58 @@ class DataCollector:
         producerId = self.producerIdList[0]
         producerChannel = self.producerChannelMap[producerId]
         producerChannel.waitOnQueue(waitTime)
-       
+
     def pushObjectsToCacheFromProducerQueues(self):
         nNewObjects = 0
-        for producerId,producerChannel in self.producerChannelMap.items():
+        for producerChannel in self.producerChannelMap.values():
             if producerChannel.processFromQueue():
                 nNewObjects += 1
         return nNewObjects
 
     def addObjectToCache(self, producerId, objectId, pvObject):
-        self.cacheLock.acquire()
-        try:
+        with self.cacheLock:
             if self.minCachedObjectId is None:
                 self.minCachedObjectId = objectId
             if self.lastObjectId is not None and objectId <= self.lastObjectId:
-                self.nRejected += 1
-                self.logger.debug(f'Rejecting object id {objectId} from producer {producerId} (last processed object id: {self.lastObjectId}; total number of rejected objects: {self.nRejected}')
-                return 
+                if self.collectorCacheMap:
+                    self.nRejected += 1
+                    self.logger.debug('Rejecting object id %s from producer %s (last processed object id: %s; total number of rejected objects: %s)', objectId, producerId, self.lastObjectId, self.nRejected)
+                    return
+                self.logger.debug('Object id %s from producer %s is smaller than the last processed object id %s, resetting cache)', objectId, producerId, self.lastObjectId)
+                self.lastObjectId = None
 
-            self.collectorCacheMap[objectId] = pvObject
+            # Keep lists of objects in the cache, in case
+            # producers generate objects with same IDs; the example is
+            # splitting image into tiles and processing tiles with multiple
+            # producers which retain original image ID
+            pvObjectList = self.collectorCacheMap.get(objectId, [])
+            pvObjectList.append(pvObject)
+            self.collectorCacheMap[objectId] = pvObjectList
+            self.nObjectsCached += 1
             if objectId < self.minCachedObjectId:
                 self.minCachedObjectId = objectId
             self.cacheUpdateTime = time.time()
             self.setEvent()
-        finally:
-            self.cacheLock.release()
 
     def getObjectsFromCache(self):
-        self.cacheLock.acquire()
-        try:
+        with self.cacheLock:
             # Get as many sequential objects as possible
             objectTuples = []
-            if not len(self.collectorCacheMap):
-                return objectTuples 
+            if not self.collectorCacheMap:
+                return objectTuples
             nMissed = 0
             if self.lastObjectId is not None:
                 nMissed = self.minCachedObjectId-self.lastObjectId-self.objectIdOffset
                 if nMissed > 0:
-                    self.logger.debug(f'Missed {nMissed} objects since last retrieval from cache; total number of missed objects: {self.nMissed}')
+                    self.logger.debug('Missed %s objects since last retrieval from cache; total number of missed objects: %s', nMissed, self.nMissed)
                     self.nMissed += nMissed
             objectId = self.minCachedObjectId
             objectTuples = []
             while True:
                 if objectId in self.collectorCacheMap:
-                    objectTuples.append((objectId, self.collectorCacheMap[objectId]))
+                    newObjectTuples = list(map(lambda o: (objectId, o), self.collectorCacheMap.get(objectId, [])))
+                    objectTuples += newObjectTuples
+                    self.nObjectsCached -= len(newObjectTuples)
                     del self.collectorCacheMap[objectId]
                     self.lastObjectId = objectId
                     objectId += 1
@@ -323,25 +345,24 @@ class DataCollector:
             if len(self.collectorCacheMap):
                 self.minCachedObjectId = min(self.collectorCacheMap)
             self.nCollected += nCollected
-            self.logger.debug(f'Found {nCollected} objects ready for processing, remaining cache size is {len(self.collectorCacheMap)}')
+            self.logger.debug('Found %s objects ready for processing, remaining cache size is %s', nCollected, self.nObjectsCached)
             self.cacheUpdateTime = time.time()
-            return objectTuples 
-        finally:
-            self.cacheLock.release()
+            return objectTuples
 
     def resetStats(self):
-        for producerId,producerChannel in self.producerChannelMap.items():
+        for producerChannel in self.producerChannelMap.values():
             producerChannel.resetStats()
         self.nRejected = 0
         self.nCollected = 0
         self.nMissed = 0
         self.lastObjectId = None
-       
+
     def getCollectorStats(self, receivingTime):
         collectorStats = {
             'nCollected' : self.nCollected, 
             'nRejected' : self.nRejected,
-            'nMissed' : self.nMissed
+            'nMissed' : self.nMissed,
+            'nCached' : self.nObjectsCached
         }
         collectedRate = 0
         rejectedRate = 0
@@ -381,39 +402,32 @@ class DataCollector:
     def start(self):
         self.startTime = time.time()
         self.processingThread.start()
-        for producerId,producerChannel in self.producerChannelMap.items():
+        for producerChannel in self.producerChannelMap.values():
             producerChannel.start()
-        for metadataChannelId,metadataChannel in self.metadataChannelMap.items():
+        for metadataChannel in self.metadataChannelMap.values():
             metadataChannel.start()
         if self.processingController:
             self.processingController.start()
 
     def stop(self):
         self.endTime = time.time()
-        for producerId,producerChannel in self.producerChannelMap.items():
+        for producerChannel in self.producerChannelMap.values():
             producerChannel.stop()
-        for metadataChannelId,metadataChannel in self.metadataChannelMap.items():
+        for metadataChannel in self.metadataChannelMap.values():
             metadataChannel.stop()
         self.processingThread.stop()
         self.processingThread.join(ProcessingThread.THREAD_EVENT_TIMEOUT_IN_SECONDS)
         if self.processingController:
             self.processingController.stop()
-        self.logger.debug(f'Collected objects {self.nCollected}; missed objects: {self.nMissed}; rejected objects: {self.nRejected}')
+        self.logger.debug('Collected objects %s; missed objects: %s; rejected objects: %s', self.nCollected, self.nMissed, self.nRejected)
 
     def setEvent(self):
-        self.eventLock.acquire()
-        try:
+        with self.eventLock:
             self.event.set()
-        finally:
-            self.eventLock.release()
 
     def clearEvent(self):
-        self.eventLock.acquire()
-        try:
+        with self.eventLock:
             self.event.clear()
-        finally:
-            self.eventLock.release()
 
     def waitOnEvent(self, timeout=None):
         self.event.wait(timeout)
-

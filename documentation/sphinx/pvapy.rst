@@ -26,6 +26,14 @@ AdOutputFileProcessor
     :members:
     :inherited-members:
 
+Hdf5AdImageWriter
+-----------------
+
+.. autoclass:: pvapy.hpc.hdf5AdImageWriter.Hdf5AdImageWriter()
+    :show-inheritance: 
+    :members:
+    :inherited-members:
+
 DataDecryptor
 -------------
 

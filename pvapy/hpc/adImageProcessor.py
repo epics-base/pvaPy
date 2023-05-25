@@ -39,16 +39,20 @@ class AdImageProcessor(UserDataProcessor):
         return AdImageUtility.getNtNdArrayDataFieldKey(image)
 
     @classmethod
-    def generateNtNdArray2D(cls, imageId, image, extraFieldsPvObject=None):
+    def generateNtNdArray2D(cls, imageId, image, nx=None, ny=None, dtype=None, compressorName=None, extraFieldsPvObject=None):
         '''
         Generate new NtNdArray object from NumPy array containing 2D image data.
 
         :Parameter: *imageId* (int) - Value for the 'uniqueId' field
         :Parameter: *image* (numpy.array) - Image data
+        :Parameter: *nx* (int) - X dimension (number of columns), needed only for compressed image data
+        :Parameter: *ny* (int) - Y dimension (number of rows), needed only for compressed image data
+        :Parameter: *dtype* (numpy.dtype) - Array data type, needed only for compressed image data
+        :Parameter: *compressorName* (str) - Compressor name, needed only for compressed image data
         :Parameter: *extraFieldsPvbject* (PvObject) - optional PvObject to be used for setting additional fields in the generated NtNdArray object
         :Returns: NtNdArray object
         '''
-        return AdImageUtility.generateNtNdArray2D(imageId, image, extraFieldsPvObject)
+        return AdImageUtility.generateNtNdArray2D(imageId, image, nx=nx, ny=ny, dtype=dtype, compressorName=compressorName, extraFieldsPvObject=extraFieldsPvObject)
 
     @classmethod
     def replaceNtNdArrayImage2D(cls, ntNdArray, imageId, image, extraFieldsPvObject=None):

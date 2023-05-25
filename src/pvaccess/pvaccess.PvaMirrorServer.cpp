@@ -36,7 +36,7 @@ class_<PvaMirrorServer, bases<PvaServer> >("PvaMirrorServer",
     .def("addMirrorRecord",
         static_cast<void(PvaMirrorServer::*)(const std::string&,const std::string&,PvProvider::ProviderType, unsigned int)>(&PvaMirrorServer::addMirrorRecord),
         args("mirrorChannelName", "srcChannelName", "srcProviderType", "srcQueueSize"),
-        "Adds mirror PV record to the server database.\n\n"
+        "Adds mirror PV record to the server database. This method allows users to set server queue size for the source channel.\n\n"
         ":Parameter: *mirrorChannelName* (str) - mirror channel name\n\n"
         ":Parameter: *srcChannelName* (str) - source channel name\n\n"
         ":Parameter: *srcProviderType* (PROVIDERTYPE) - provider type, either PVA (PV Access) or CA (Channel Access)\n\n"
@@ -45,6 +45,22 @@ class_<PvaMirrorServer, bases<PvaServer> >("PvaMirrorServer",
         ":Raises: *PvaException* - in case of any other errors\n\n"
         "::\n\n"
         "    pvaMirrorServer.addMirrorRecord('mirrorPair', 'pair', PVA, 10)\n\n")
+
+    .def("addMirrorRecord",
+        static_cast<void(PvaMirrorServer::*)(const std::string&,const std::string&,PvProvider::ProviderType, unsigned int, unsigned int, const std::string&)>(&PvaMirrorServer::addMirrorRecord),
+        args("mirrorChannelName", "srcChannelName", "srcProviderType", "srcQueueSize, nSrcMonitors, srcFieldRequestDescriptor"),
+        "Adds mirror PV record to the server database. This method allows users to set server queue size and to use multiple monitors for the source channel, typically in combination with the data distributor plugin.\n\n"
+        ":Parameter: *mirrorChannelName* (str) - mirror channel name\n\n"
+        ":Parameter: *srcChannelName* (str) - source channel name\n\n"
+        ":Parameter: *srcProviderType* (PROVIDERTYPE) - provider type, either PVA (PV Access) or CA (Channel Access)\n\n"
+        ":Parameter: *srcQueueSize* (int) - source queue size (should be >= 0)\n\n"
+        ":Parameter: *nSrcMonitors* (int) - number of listeners to use for the source channel; this option is typically used with the data distributor plugin, which requires appropriate setting for the field request descriptor\n\n"
+        ":Parameter: *srcFieldRequestDescriptor* (str) - field descriptor for the source channel name, typically used for turning on the data distributor plugin\n\n"
+        ":Raises: *ObjectAlreadyExists* - when database already contains record associated with a given mirror channel name\n\n"
+        ":Raises: *InvalidRequest* - in case of invalid parameter values\n\n"
+        ":Raises: *PvaException* - in case of any other errors\n\n"
+        "::\n\n"
+        "    pvaMirrorServer.addMirrorRecord('mirrorPair', 'pair', PVA, 10, 2, '_[pydistributor=updates:1]')\n\n")
 
     .def("removeMirrorRecord",
         static_cast<void(PvaMirrorServer::*)(const std::string&)>(&PvaMirrorServer::removeMirrorRecord),

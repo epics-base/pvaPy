@@ -76,7 +76,7 @@ setup(
         'numpy>=1.22; python_version >= "3.8"',
     ],
     extras_require = {
-        'image-processing':  ['pillow'],
+        'image-processing':  ['pillow','h5py'],
         'encryption':  ['pycryptodome','rsa'],
     },
     entry_points = {

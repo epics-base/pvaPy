@@ -126,6 +126,11 @@ void PyPvRecord::update(const PvObject& pvObject)
     update(pvObject.getPvStructurePtr());
 }
 
+void PyPvRecord::updateUnchecked(const PvObject& pvObject)
+{
+    updateUnchecked(pvObject.getPvStructurePtr());
+}
+
 void PyPvRecord::update(const epvd::PVStructurePtr& pvStructurePtr)
 {
     lock();

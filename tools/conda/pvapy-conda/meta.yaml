@@ -10,16 +10,22 @@ source:
 build:
   number: {{ environ.get('BUILD_NUMBER', '1') }}
   script_env:
+    - PVAPY_VERSION
     - BUILD_FLAGS
   entry_points:
     - pvapy-ad-sim-server=pvapy.cli.adSimServer:main
-    - pvapy-mirror-server=pvapy.cli.mirrorServer:main
     - pvapy-hpc-consumer=pvapy.cli.hpcConsumer:main
     - pvapy-hpc-collector=pvapy.cli.hpcCollector:main
+    - pvapy-mirror-server=pvapy.cli.mirrorServer:main
 
 test:
   requires:
-    - nose
+    - h5py
+    - pillow
+    - pycryptodome
+    - pylint
+    - pytest
+    - rsa
 
   source_files:
     - test
@@ -33,6 +39,7 @@ requirements:
     #- numpy=1.19            # python < 3.8
     - epics-base={{ environ.get('EPICS_BASE_VERSION', '0.0') }}
     - pvapy-boost={{ environ.get('BOOST_VERSION', '0.0') }}
+    - h5py
     - pillow
     - pycryptodome
     - rsa
@@ -48,6 +55,4 @@ about:
   home: https://github.com/epics-base/pvaPy
   license: EPICS Open License
   summary: Python library for EPICS PV Access 
-
-
 

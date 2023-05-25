@@ -58,6 +58,7 @@ class SystemController(HpcController):
         self.processorArgs = processorArgs
         self.objectIdField = objectIdField
         self.objectIdOffset = objectIdOffset
+        self.nSequentialUpdates = 1
         self.fieldRequest = fieldRequest
         self.skipInitialUpdates = skipInitialUpdates
         self.reportStatsList = reportStatsList
@@ -203,6 +204,7 @@ class SystemController(HpcController):
         processorConfig['objectIdField'] = self.objectIdField
         processorConfig['skipInitialUpdates'] = self.skipInitialUpdates
         processorConfig['objectIdOffset'] = self.objectIdOffset
+        processorConfig['nSequentialUpdates'] = self.nSequentialUpdates
         processorConfig['fieldRequest'] = self.fieldRequest
         return processorConfig
 
@@ -265,7 +267,18 @@ class SystemController(HpcController):
                 self.stopScreen()
         print(report)
 
+    def reportCombinedSystemStats(self, statsDict):
+        combinedSystemStatsDict = self.getCombinedSystemStats(statsDict)
+        if not combinedSystemStatsDict:
+            return
+        report = self.prettyPrinter.pformat(combinedSystemStatsDict)
+        print('\nCombined System Stats:\n')
+        print(report)
+
     def getStats(self):
+        return {}
+
+    def getCombinedSystemStats(self, statsDict):
         return {}
 
     def processPvUpdate(self, updateWaitTime):
@@ -351,4 +364,5 @@ class SystemController(HpcController):
         # Allow clients monitoring various channels to get last update
         time.sleep(waitTime)
         self.reportStats(statsDict)
+        self.reportCombinedSystemStats(statsDict)
         self.isRunning = False

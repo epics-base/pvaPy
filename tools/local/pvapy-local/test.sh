@@ -59,12 +59,4 @@ source $PVAPY_BUILD_DIR/bin/$EPICS_HOST_ARCH/pvapy_setup_full.$PYTHON_MAJOR_MINO
 
 echo "Starting test server"
 cd $PVAPY_BUILD_DIR/test/
-python testServer.py 10  &
-
-echo "Starting tests"
-nosetests -v testPvObject.py
-nosetests -v testChannelPut.py
-
-wait 
-echo "Tests done"
-
+./run_tests.sh

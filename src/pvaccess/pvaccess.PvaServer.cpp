@@ -105,6 +105,26 @@ class_<PvaServer>("PvaServer",
         "    pv = PvObject({'x' : INT, 'y' : INT}, {'x' : 3, 'y' : 5})\n\n"
         "    pvaServer.update('myChannel', pv)\n\n")
 
+    .def("updateUnchecked",
+        static_cast<void(PvaServer::*)(const PvObject&)>(&PvaServer::updateUnchecked),
+        args("pvObject"),
+        "Updates server's PV object without checking that structures match. This method is atomic, but can be used only when there is a single record in the master database, and only in those cases where the structure of the updated object is guaranteed to match the the structure of the object registered on the server's PV channel.\n\n"
+        ":Parameter: *pvObject* (PvObject) - PV object with a structure equivalent to the structure of the object registered on the server's PV channel.\n\n"
+        ":Raises: *InvalidRequest* - when there is none or more than one record in the database\n\n"
+        "::\n\n"
+        "    pv2 = PvObject({'x' : INT, 'y' : INT}, {'x' : 3, 'y' : 5})\n\n"
+        "    pvaServer.updateUnchecked(pv2)\n\n")
+
+    .def("updateUnchecked",
+        static_cast<void(PvaServer::*)(const std::string&, const PvObject&)>(&PvaServer::updateUnchecked),
+        args("channelName", "pvObject"),
+        "Updates server's PV object on a given channel without checking that structures match. This method is atomic, and should be used when there are multiple records in the master database, and only in those cases where the structure of the updated object is guaranteed to match the the structure of the object registered on the server's PV channel.\n\n"
+        ":Parameter: *pvObject* (PvObject) - PV object with a structure equivalent to the structure of the object registered on the server's PV channel.\n\n"
+        ":Raises: *ObjectNotFound* - when there is no record associated with a given channel\n\n"
+        "::\n\n"
+        "    pv = PvObject({'x' : INT, 'y' : INT}, {'x' : 3, 'y' : 5})\n\n"
+        "    pvaServer.update('myChannel', pv)\n\n")
+
 #ifndef WINDOWS
     .def("addRecord",
         static_cast<void(PvaServer::*)(const std::string&,const PvObject&,const boost::python::object&)>(&PvaServer::addRecord),

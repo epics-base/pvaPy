@@ -32,7 +32,9 @@ public:
     virtual void update(const std::string& channelName, const epics::pvData::PVStructurePtr& pvStructurePtr);
     virtual void updateUnchecked(const std::string& channelName, const epics::pvData::PVStructurePtr& pvStructurePtr);
     virtual void update(const PvObject& pvObject);
+    virtual void updateUnchecked(const PvObject& pvObject);
     virtual void update(const std::string& channelName, const PvObject& pvObject);
+    virtual void updateUnchecked(const std::string& channelName, const PvObject& pvObject);
 
     virtual void addRecord(const std::string& channelName, const epics::pvData::PVStructurePtr& pvStructurePtr);
 #ifndef WINDOWS

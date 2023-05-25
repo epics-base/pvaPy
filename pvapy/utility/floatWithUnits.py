@@ -18,5 +18,11 @@ class FloatWithUnits(float):
             return f'0.0{self.units}'
         return f'{float(self):.{self.precision}f}{self.units}'
 
+    def __add__(self, value):
+        return FloatWithUnits(float(self)+float(value), self.units, self.precision)
+
+    def __sub__(self, value):
+        return FloatWithUnits(float(self)-float(value), self.units, self.precision)
+
     def __str__(self):
         return self.__repr__()

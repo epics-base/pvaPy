@@ -1,9 +1,42 @@
+## Release 5.3.0 (2022/03/29)
+
+- Added optimized method for record updates in PvaServer class
+- Streaming Framework enhancements:
+  - improved mirror server throughput by adding ability to use multiple
+    monitors together with the data distributor plugin for source channels
+  - added report for the combined system statistics when using
+    multiple data consumers
+  - optimized consumer output channel updates
+  - fixed number of missed objects calculation when object ID offset or
+    number of sequential updates is greater than 1
+  - added system processor for writing AD images into HDF5 files
+  - introduced shutdown delay option for AD simulation server
+- Conda/pip package dependencies: 
+  - EPICS BASE = 7.0.7
+  - BOOST      = 1.81.0
+  - NUMPY      >= 1.22 (for python >= 3.8); >= 1.19, < 1.21 (for python < 3.8)
+
+## Release 5.2.2 (2022/03/01)
+
+- Streaming Framework enhancements:
+  - fixed issue with the data collector rejecting out of order objects
+     if its cache is empty
+  - added ability for the data collector to accept objects with same IDs
+  - added split/stitch image processor examples
+  - added ability for the area detector simulator to automatically
+    determine EPICS_DB_INCLUDE_PATH when providing CA metadata
+- Conda/pip package dependencies: 
+  - EPICS BASE = 7.0.7
+  - BOOST      = 1.81.0
+  - NUMPY      >= 1.22 (for python >= 3.8); >= 1.19, < 1.21 (for python < 3.8)
+
 ## Release 5.2.1 (2022/12/24)
 
 - Fixed issue with put into PvObjectQueue when timeout is given
 - Updated default value for PvTimeStamp userTag field to 0
 - Area Detector Simulator enhancements:
-  - added ability to load images from HDF5 files (either compressed or uncompressed)
+  - added ability to load images from HDF5 files (either compressed
+    or uncompressed)
 - Conda/pip package dependencies: 
   - EPICS BASE = 7.0.7
   - BOOST      = 1.81.0

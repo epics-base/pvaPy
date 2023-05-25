@@ -4,7 +4,9 @@
 
 #include <pv/clientFactory.h>
 #include "StringUtility.h"
+#include "PyUtility.h"
 #include "PvaException.h"
+#include "InvalidRequest.h"
 #include "ObjectAlreadyExists.h"
 #include "ObjectNotFound.h"
 #include "PvaMirrorServer.h"
@@ -20,11 +22,13 @@ namespace bp = boost::python;
 
 PvaPyLogger MirrorChannelDataProcessor::logger("MirrorChannelDataProcessor");
 
-MirrorChannelDataProcessor::MirrorChannelDataProcessor(PvaMirrorServer* pvaMirrorServer_, const std::string& mirrorChannelName_)
+MirrorChannelDataProcessor::MirrorChannelDataProcessor(PvaMirrorServer* pvaMirrorServer_, const std::string& mirrorChannelName_, unsigned int nSrcMonitors_)
     : pvaMirrorServer(pvaMirrorServer_)
     , mirrorChannelName(mirrorChannelName_)
     , mutex()
     , recordAdded(false)
+    , nSrcMonitors(nSrcMonitors_)
+    , nUpdatesToSkip(nSrcMonitors)
 {
 }
 
@@ -42,6 +46,12 @@ void MirrorChannelDataProcessor::processMonitorData(epvd::PVStructurePtr pvStruc
         pvaMirrorServer->addRecord(mirrorChannelName, pvStructurePtr2);
         pvaMirrorServer->disableRecordProcessing(mirrorChannelName);
         recordAdded = true;
+        nUpdatesToSkip--;
+    }
+    else if (nUpdatesToSkip > 0) {
+        // This makes sure we do not generate first update
+        // multiple times in case we have multiple monitors
+        nUpdatesToSkip--;
     }
     else {
         pvaMirrorServer->updateUnchecked(mirrorChannelName, pvStructurePtr);
@@ -66,21 +76,23 @@ void MirrorChannelDataProcessor::onChannelDisconnect()
 
         }
         recordAdded = false;
+        nUpdatesToSkip = nSrcMonitors;
     }
 }
 
-// Mirror Channel class
+// Mirror Channel Monitor class
 
-PvaPyLogger MirrorChannel::logger("MirrorChannel");
-PvaClient MirrorChannel::pvaClient;
-CaClient MirrorChannel::caClient;
-epvc::PvaClientPtr MirrorChannel::pvaClientPtr(epvc::PvaClient::get("pva ca"));
+PvaPyLogger MirrorChannelMonitor::logger("MirrorChannelMonitor");
+PvaClient MirrorChannelMonitor::pvaClient;
+CaClient MirrorChannelMonitor::caClient;
+epvc::PvaClientPtr MirrorChannelMonitor::pvaClientPtr(epvc::PvaClient::get("pva ca"));
 
-MirrorChannel::MirrorChannel(const std::string& channelName_, PvProvider::ProviderType providerType_, unsigned int serverQueueSize_, MirrorChannelDataProcessorPtr dataProcessorPtr_)
+MirrorChannelMonitor::MirrorChannelMonitor(const std::string& channelName_, PvProvider::ProviderType providerType_, unsigned int serverQueueSize_, const std::string& fieldRequestDescriptor_, MirrorChannelDataProcessorPtr dataProcessorPtr_)
     : pvaClientChannelPtr(pvaClientPtr->createChannel(channelName_,PvProvider::getProviderName(providerType_)))
     , channelName(channelName_)
     , providerType(providerType_)
     , serverQueueSize(serverQueueSize_)
+    , fieldRequestDescriptor(fieldRequestDescriptor_)
     , dataProcessorPtr(dataProcessorPtr_)
     , isConnected(false)
     , hasIssuedConnect(false)
@@ -91,11 +103,12 @@ MirrorChannel::MirrorChannel(const std::string& channelName_, PvProvider::Provid
     issueConnect();
 }
 
-MirrorChannel::MirrorChannel(const MirrorChannel& c)
+MirrorChannelMonitor::MirrorChannelMonitor(const MirrorChannelMonitor& c)
     : pvaClientChannelPtr(c.pvaClientChannelPtr)
     , channelName(c.channelName)
     , providerType(c.providerType)
     , serverQueueSize(c.serverQueueSize)
+    , fieldRequestDescriptor(c.fieldRequestDescriptor)
     , dataProcessorPtr(c.dataProcessorPtr)
     , isConnected(false)
     , hasIssuedConnect(false)
@@ -104,13 +117,13 @@ MirrorChannel::MirrorChannel(const MirrorChannel& c)
 {
 }
 
-MirrorChannel::~MirrorChannel()
+MirrorChannelMonitor::~MirrorChannelMonitor()
 {
     stopMonitor();
     pvaClientChannelPtr.reset();
 }
 
-void MirrorChannel::issueConnect()
+void MirrorChannelMonitor::issueConnect()
 {
     if (hasIssuedConnect) {
         return;
@@ -125,21 +138,21 @@ void MirrorChannel::issueConnect()
     }
 }
 
-bool MirrorChannel::isChannelConnected() const
+bool MirrorChannelMonitor::isChannelConnected() const
 {
     return isConnected;
 }
 
-std::string MirrorChannel::getChannelName() const
+std::string MirrorChannelMonitor::getChannelName() const
 {
     return channelName;
 }
 
-void MirrorChannel::processMonitorData(epvd::PVStructurePtr pvStructurePtr)
+void MirrorChannelMonitor::processMonitorData(epvd::PVStructurePtr pvStructurePtr)
 {
 }
 
-void MirrorChannel::onChannelConnect()
+void MirrorChannelMonitor::onChannelConnect()
 {
     logger.debug("Mirror channel %s connected", channelName.c_str());
     if (!monitorActive) {
@@ -148,13 +161,13 @@ void MirrorChannel::onChannelConnect()
     dataProcessorPtr->onChannelConnect();
 }
 
-void MirrorChannel::onChannelDisconnect()
+void MirrorChannelMonitor::onChannelDisconnect()
 {
     logger.debug("Mirror channel %s disconnected", channelName.c_str());
     dataProcessorPtr->onChannelDisconnect();
 }
 
-void MirrorChannel::startMonitor()
+void MirrorChannelMonitor::startMonitor()
 {
     if (monitorActive) {
         return;
@@ -163,9 +176,12 @@ void MirrorChannel::startMonitor()
         logger.debug("Starting monitor, channel connected: %d", isConnected);
         pvaClientMonitorRequesterPtr = epvc::PvaClientMonitorRequesterPtr(new ChannelMonitorRequesterImpl(channelName, dataProcessorPtr.get()));
         logger.debug("Monitor requester created");
-        std::string request = PvaConstants::AllFieldsRequest;
+        std::string request = "field(" + fieldRequestDescriptor + ")";
+        if (fieldRequestDescriptor.empty()) {
+            request = PvaConstants::AllFieldsRequest;
+        }
         if (serverQueueSize > 0) {
-            request = "record[queueSize=" + StringUtility::toString<unsigned int>(serverQueueSize) + "]" + PvaConstants::AllFieldsRequest;
+            request = "record[queueSize=" + StringUtility::toString<unsigned int>(serverQueueSize) + "]" + request;
         }
         pvaClientMonitorPtr = pvaClientChannelPtr->createMonitor(request);
         logger.debug("Monitor ptr created with request: " + request);
@@ -180,7 +196,7 @@ void MirrorChannel::startMonitor()
     }
 }
 
-void MirrorChannel::stopMonitor()
+void MirrorChannelMonitor::stopMonitor()
 {
     if (!monitorActive) {
         return;
@@ -200,7 +216,7 @@ void MirrorChannel::stopMonitor()
     monitorActive = false;
 }
 
-void MirrorChannel::resetMonitorCounters()
+void MirrorChannelMonitor::resetMonitorCounters()
 {
     if (pvaClientMonitorRequesterPtr) {
         ChannelMonitorRequesterImpl* requesterImpl = static_cast<ChannelMonitorRequesterImpl*>(pvaClientMonitorRequesterPtr.get());
@@ -208,7 +224,7 @@ void MirrorChannel::resetMonitorCounters()
     }
 }
 
-bp::dict MirrorChannel::getMonitorCounters()
+bp::dict MirrorChannelMonitor::getMonitorCounters()
 {
     bp::dict pyDict;
     if (pvaClientMonitorRequesterPtr) {
@@ -225,13 +241,13 @@ PvaPyLogger PvaMirrorServer::logger("PvaMirrorServer");
 
 PvaMirrorServer::PvaMirrorServer() 
     : PvaServer()
-    , mirrorChannelMap()
+    , mirrorChannelMonitorMap()
 {
 }
 
 PvaMirrorServer::PvaMirrorServer(const PvaMirrorServer& pvaMirrorServer)
     : PvaServer()
-    , mirrorChannelMap()
+    , mirrorChannelMonitorMap()
 {
 }
 
@@ -245,45 +261,70 @@ PvaMirrorServer::~PvaMirrorServer()
 void PvaMirrorServer::addMirrorRecord(const std::string& mirrorChannelName, const std::string& srcChannelName, PvProvider::ProviderType srcProviderType)
 {
     unsigned int srcQueueSize = 0;
-    addMirrorRecord(mirrorChannelName, srcChannelName, srcProviderType, srcQueueSize);
+    unsigned int nSrcMonitors = 1;
+    std::string srcFieldRequestDescriptor = "";
+    addMirrorRecord(mirrorChannelName, srcChannelName, srcProviderType, srcQueueSize, nSrcMonitors, srcFieldRequestDescriptor);
 }
 
 void PvaMirrorServer::addMirrorRecord(const std::string& mirrorChannelName, const std::string& srcChannelName, PvProvider::ProviderType srcProviderType, unsigned int srcQueueSize)
 {
+    unsigned int nSrcMonitors = 1;
+    std::string srcFieldRequestDescriptor = "";
+    addMirrorRecord(mirrorChannelName, srcChannelName, srcProviderType, srcQueueSize, nSrcMonitors, srcFieldRequestDescriptor);
+}
+
+void PvaMirrorServer::addMirrorRecord(const std::string& mirrorChannelName, const std::string& srcChannelName, PvProvider::ProviderType srcProviderType, unsigned int srcQueueSize, unsigned int nSrcMonitors, const std::string& srcFieldRequestDescriptor)
+{
     if (hasRecord(mirrorChannelName)) {
         throw ObjectAlreadyExists("Master database already has record for channel: " + mirrorChannelName);
     }
-    std::map<std::string, MirrorChannelPtr>::iterator it2 = mirrorChannelMap.find(mirrorChannelName);
-    if (it2 != mirrorChannelMap.end()) {
+    typedef std::multimap<std::string, MirrorChannelMonitorPtr>::iterator MI;
+    MI it = mirrorChannelMonitorMap.find(mirrorChannelName);
+    if (it != mirrorChannelMonitorMap.end()) {
         throw ObjectAlreadyExists("Master database already has mirror record for channel: " + mirrorChannelName);
     }
-    MirrorChannelDataProcessorPtr dataProcessorPtr = MirrorChannelDataProcessorPtr(new MirrorChannelDataProcessor(this, mirrorChannelName));
-    MirrorChannelPtr mirrorChannelPtr = MirrorChannelPtr(new MirrorChannel(srcChannelName, srcProviderType, srcQueueSize, dataProcessorPtr));
-    mirrorChannelMap[mirrorChannelName] = mirrorChannelPtr;
-    logger.debug("Added mirror record: " + mirrorChannelName + " (source channel: " + srcChannelName + "; source queue size: " + StringUtility::toString<unsigned int>(srcQueueSize) + ")");
+    if (nSrcMonitors < 1) {
+        throw InvalidRequest("Number of source listeners for channel " + mirrorChannelName + " cannot be less than 1");
+    }
+    MirrorChannelDataProcessorPtr dataProcessorPtr = MirrorChannelDataProcessorPtr(new MirrorChannelDataProcessor(this, mirrorChannelName, nSrcMonitors));
+    for (unsigned int i = 0; i < nSrcMonitors; i++) {
+        MirrorChannelMonitorPtr mirrorChannelMonitorPtr = MirrorChannelMonitorPtr(new MirrorChannelMonitor(srcChannelName, srcProviderType, srcQueueSize, srcFieldRequestDescriptor, dataProcessorPtr));
+        mirrorChannelMonitorMap.insert(std::make_pair(mirrorChannelName, mirrorChannelMonitorPtr));
+    }
+    logger.debug("Added mirror record: " + mirrorChannelName + " (source channel: " + srcChannelName + "; source queue size: " + StringUtility::toString<unsigned int>(srcQueueSize) + "; number of source listeners: " + StringUtility::toString<unsigned int>(nSrcMonitors) + "; source field request descriptor: " +  srcFieldRequestDescriptor + ")");
 }
 
 void PvaMirrorServer::removeMirrorRecord(const std::string& mirrorChannelName)
 {
-    std::map<std::string, MirrorChannelPtr>::iterator it = mirrorChannelMap.find(mirrorChannelName);
-    if (it == mirrorChannelMap.end()) {
+    typedef std::multimap<std::string, MirrorChannelMonitorPtr>::iterator MI;
+    MI it = mirrorChannelMonitorMap.find(mirrorChannelName);
+    if (it == mirrorChannelMonitorMap.end()) {
         throw ObjectNotFound("Master database does not have mirror record for channel: " + mirrorChannelName);
     }
-    MirrorChannelPtr mirrorChannel = it->second;
-    std::string srcChannelName = mirrorChannel->getChannelName();
+    std::string srcChannelName;
+    for (it = mirrorChannelMonitorMap.begin(); it != mirrorChannelMonitorMap.end(); ) {
+        MirrorChannelMonitorPtr mirrorChannelMonitor = it->second;
+        if (it->first == mirrorChannelName) {
+            logger.debug("Removing mirror channel listener for " + srcChannelName);
+            srcChannelName = mirrorChannelMonitor->getChannelName();
+            mirrorChannelMonitorMap.erase(it++);
+        }
+        else {
+            it++;
+        }
+    }
     logger.debug("Removing mirror channel for " + srcChannelName);
     if (hasRecord(srcChannelName)) {
         removeRecord(srcChannelName);
     }
-    mirrorChannelMap.erase(it);
     logger.debug("Removed mirror record: " + mirrorChannelName);
 }
 
 void PvaMirrorServer::removeAllMirrorRecords()
 {
     std::list<std::string> mirrorRecordNames;
-    typedef std::map<std::string, MirrorChannelPtr>::iterator MI;
-    for (MI it = mirrorChannelMap.begin(); it != mirrorChannelMap.end(); it++) {
+    typedef std::multimap<std::string, MirrorChannelMonitorPtr>::iterator MI;
+    for (MI it = mirrorChannelMonitorMap.begin(); it != mirrorChannelMonitorMap.end(); it = mirrorChannelMonitorMap.upper_bound(it->first)) {
         mirrorRecordNames.push_back(it->first);
     }
 
@@ -295,7 +336,7 @@ void PvaMirrorServer::removeAllMirrorRecords()
 
 bool PvaMirrorServer::hasMirrorRecord(const std::string& mirrorChannelName)
 {
-    if (mirrorChannelMap.find(mirrorChannelName) != mirrorChannelMap.end()) {
+    if (mirrorChannelMonitorMap.find(mirrorChannelName) != mirrorChannelMonitorMap.end()) {
         return true;
     }
     return false;
@@ -303,29 +344,49 @@ bool PvaMirrorServer::hasMirrorRecord(const std::string& mirrorChannelName)
 
 void PvaMirrorServer::resetMirrorRecordCounters(const std::string& mirrorChannelName)
 {
-    std::map<std::string, MirrorChannelPtr>::iterator it = mirrorChannelMap.find(mirrorChannelName);
-    if (it == mirrorChannelMap.end()) {
+    typedef std::multimap<std::string, MirrorChannelMonitorPtr>::iterator MI;
+    MI it = mirrorChannelMonitorMap.find(mirrorChannelName);
+    if (it == mirrorChannelMonitorMap.end()) {
         throw ObjectNotFound("Master database does not have mirror record for channel: " + mirrorChannelName);
     }
-    MirrorChannelPtr mirrorChannel = it->second;
-    mirrorChannel->resetMonitorCounters();
+    for (it = mirrorChannelMonitorMap.begin(); it != mirrorChannelMonitorMap.end(); it++) {
+        MirrorChannelMonitorPtr mirrorChannelMonitor = it->second;
+        mirrorChannelMonitor->resetMonitorCounters();
+    }
 }
 
 bp::dict PvaMirrorServer::getMirrorRecordCounters(const std::string& mirrorChannelName)
 {
-    std::map<std::string, MirrorChannelPtr>::iterator it = mirrorChannelMap.find(mirrorChannelName);
-    if (it == mirrorChannelMap.end()) {
+    int nReceived = 0;
+    int nOverruns = 0;
+    int nSrcMonitors = 0;
+    typedef std::multimap<std::string, MirrorChannelMonitorPtr>::iterator MI;
+    MI it = mirrorChannelMonitorMap.find(mirrorChannelName);
+    if (it == mirrorChannelMonitorMap.end()) {
         throw ObjectNotFound("Master database does not have mirror record for channel: " + mirrorChannelName);
     }
-    MirrorChannelPtr mirrorChannel = it->second;
-    return mirrorChannel->getMonitorCounters();
+    for (it = mirrorChannelMonitorMap.begin(); it != mirrorChannelMonitorMap.end(); it++) {
+        MirrorChannelMonitorPtr mirrorChannelMonitor = it->second;
+        bp::dict listenerDict = mirrorChannelMonitor->getMonitorCounters();
+        nReceived += PyUtility::extractKeyValueFromPyDict<int>(PvaPyConstants::NumReceivedCounterKey, listenerDict, 0);
+        nOverruns += PyUtility::extractKeyValueFromPyDict<int>(PvaPyConstants::NumOverrunsCounterKey, listenerDict, 0);
+        nSrcMonitors++;
+    }
+    // Correct for initial connections with multiple clients,
+    if (nReceived > 0) {
+        nReceived -= (nSrcMonitors-1);
+    }
+    bp::dict recordDict;
+    recordDict[PvaPyConstants::NumReceivedCounterKey] = nReceived;
+    recordDict[PvaPyConstants::NumOverrunsCounterKey] = nOverruns;
+    return recordDict;
 }
 
 bp::list PvaMirrorServer::getMirrorRecordNames()
 {
     bp::list mirrorRecordNames;
-    typedef std::map<std::string, MirrorChannelPtr>::iterator MI;
-    for (MI it = mirrorChannelMap.begin(); it != mirrorChannelMap.end(); it++) {
+    typedef std::multimap<std::string, MirrorChannelMonitorPtr>::iterator MI;
+    for (MI it = mirrorChannelMonitorMap.begin(); it != mirrorChannelMonitorMap.end(); it = mirrorChannelMonitorMap.upper_bound(it->first)) {
         mirrorRecordNames.append(it->first);
     }
     return mirrorRecordNames;
