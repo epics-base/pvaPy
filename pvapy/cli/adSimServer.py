@@ -118,7 +118,7 @@ class HdfFileGenerator(FrameGenerator):
                 frameData = np.frombuffer(data[1], dtype=np.uint8)
         return frameData
 
-class FabioFileGenerator(FrameGenerator):
+class FabIOFileGenerator(FrameGenerator):
     '''file generator (fabio based for alternate file formats) class'''
 
     def __init__(self, filePath):
@@ -266,7 +266,7 @@ class AdSimServer:
         if inputFile is not None:
             inputFiles.append(inputFile)
         allowedHdfExtensions = ['h5', 'hdf', 'hdf5']
-        allowedNpExtensions = ['npy', 'npz']
+        allowedNpExtensions = ['npy', 'npz', 'NPY']
         if nFrames > 0:
             inputFiles = inputFiles[:nFrames]
         else:
@@ -276,7 +276,7 @@ class AdSimServer:
             if ext in allowedHdfExtensions:
                 self.frameGeneratorList.append(HdfFileGenerator(f, hdfDataset, hdfCompressionMode))
             elif ext not in allowedNpExtensions and altFormat > 0:
-                fabioFG = FabioFileGenerator(f)
+                fabioFG = FabIOFileGenerator(f)
                 if fabioFG.isLoaded():
                     self.frameGeneratorList.append(fabioFG)
             else:
