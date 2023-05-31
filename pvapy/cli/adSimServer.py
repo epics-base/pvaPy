@@ -421,7 +421,7 @@ class AdSimServer:
             value = metadataValueDict.get(mPv)
             mPvObject = pva.PvObject(self.METADATA_TYPE_DICT, {'value' : value, 'timeStamp' : pva.PvTimeStamp(t)})
             # updateUnchecked also, gave error that pvaServer doesn't have attribute update unchecked. Don't know what that's about right now.
-            self.pvaServer.update(mPv, mPvObject)
+            self.pvaServer.updateUnchecked(mPv, mPvObject)
         return t
 
     def addFrameToCache(self, frameId, ntnda):
@@ -509,7 +509,7 @@ class AdSimServer:
 
             # Publish frame
             # updateUnchecked in main version I am so sorry :)
-            self.pvaServer.update(self.channelName, frame)
+            self.pvaServer.updateUnchecked(self.channelName, frame)
             self.lastPublishedTime = time.time()
             self.nPublishedFrames += 1
             if self.usingQueue and self.nPublishedFrames >= self.nInputFrames:
