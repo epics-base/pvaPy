@@ -15,7 +15,7 @@ import os.path
 import ctypes.util
 import numpy as np
 
-# TODO: make fabio optional later
+# TODO: make fabio optional
 import fabio
 # HDF5 is optional
 try:
@@ -269,8 +269,6 @@ class AdSimServer:
         allowedNpExtensions = ['npy', 'npz', 'NPY']
         if nFrames > 0:
             inputFiles = inputFiles[:nFrames]
-        else:
-            inputFiles = inputFiles[:100]
         for f in inputFiles:
             ext = f.split('.')[-1]
             if ext in allowedHdfExtensions:
@@ -280,6 +278,8 @@ class AdSimServer:
                 if fabioFG.isLoaded():
                     self.frameGeneratorList.append(fabioFG)
             else:
+                if ext not in allowedNpExtensions and altFormat <= 0:
+                    print('CAREFUL: You may want/need to set -aff (alternate-file-format)')
                 self.frameGeneratorList.append(NumpyFileGenerator(f, mmapMode))
 
         if not self.frameGeneratorList:
@@ -420,7 +420,6 @@ class AdSimServer:
         for mPv in self.pvaMetadataPvs:
             value = metadataValueDict.get(mPv)
             mPvObject = pva.PvObject(self.METADATA_TYPE_DICT, {'value' : value, 'timeStamp' : pva.PvTimeStamp(t)})
-            # updateUnchecked also, gave error that pvaServer doesn't have attribute update unchecked. Don't know what that's about right now.
             self.pvaServer.updateUnchecked(mPv, mPvObject)
         return t
 
@@ -441,7 +440,7 @@ class AdSimServer:
             # Using dictionary
             cachedFrameId = self.currentFrameId % self.nInputFrames
             if cachedFrameId not in self.frameCache:
-                # In case frames were not generated on time, just use first frame
+            # In case frames were not generated on time, just use first frame
                 cachedFrameId = 0
             ntnda = self.frameCache[cachedFrameId]
         else:
@@ -508,7 +507,6 @@ class AdSimServer:
                 raise
 
             # Publish frame
-            # updateUnchecked in main version I am so sorry :)
             self.pvaServer.updateUnchecked(self.channelName, frame)
             self.lastPublishedTime = time.time()
             self.nPublishedFrames += 1
@@ -586,7 +584,7 @@ def main():
     parser.add_argument('-mm', '--mmap-mode', action='store_true', dest='mmap_mode', default=False, help='Use NumPy memory map to load the specified input file. This flag typically results in faster startup and lower memory usage for large files.')
     parser.add_argument('-hds', '--hdf-dataset', dest='hdf_dataset', default=None, help='HDF5 dataset path. This option must be specified if HDF5 files are used as input, but otherwise it is ignored.')
     parser.add_argument('-hcm', '--hdf-compression-mode', dest='hdf_compression_mode', default=False, action='store_true', help='Use compressed data from HDF5 file. By default, data will be uncompressed before streaming it.')
-    parser.add_argument('-aff', '--alternate-file-format', type=int, dest='alternate_file_format', default=0, help='alternate file format (not numpy and not HDF5). Must be set to >0 if files used are not NumPy or HDF5. (default: 0)')
+    parser.add_argument('-aff', '--alternate-file-format', type=int, dest='alternate_file_format', default=0, help='alternate file format (not numpy or HDF5). Must be set to >0 if files used are not NumPy or HDF5. (default: 0)')
     parser.add_argument('-fps', '--frame-rate', type=float, dest='frame_rate', default=20, help='Frames per second (default: 20 fps)')
     parser.add_argument('-nx', '--n-x-pixels', type=int, dest='n_x_pixels', default=256, help='Number of pixels in x dimension (default: 256 pixels; does not apply if input file file is given)')
     parser.add_argument('-ny', '--n-y-pixels', type=int, dest='n_y_pixels', default=256, help='Number of pixels in x dimension (default: 256 pixels; does not apply if input file is given)')
