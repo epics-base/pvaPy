@@ -16,7 +16,20 @@ import ctypes.util
 import numpy as np
 
 # TODO: make fabio optional
-import fabio
+try:
+    import fabio
+except ImportError:
+    fabio = None
+    pass
+
+# TODO: pyyaml for now I suppose (make optional)
+# import yaml
+try:
+    import yaml
+except ImportError:
+    yaml = None
+    pass
+
 # HDF5 is optional
 try:
     import h5py as h5
@@ -121,17 +134,24 @@ class HdfFileGenerator(FrameGenerator):
 class FabIOFileGenerator(FrameGenerator):
     '''file generator (fabio based for alternate file formats) class'''
 
-    def __init__(self, filePath):
+    def __init__(self, filePath, config):
         FrameGenerator.__init__(self)
         self.filePath = filePath
+        self.cfg = config
         # self.datasetPath = datasetPath
         # self.dataset = None
         self.nInputFrames = 0;
+        if not fabio:
+            raise Exception('Missing fabio support.')
         if not filePath:
-            raise Exception(f'Invalid input file path.')
+            raise Exception('Invalid input file path.')
         # if not datasetPath:
         #     raise Exception(f'Missing dataset specification for input file {filePath}.')
-        self.success = self.loadInputFile()
+        if self.cfg is not None:
+            print("hello")
+            self.success = self.loadBinInputFile()
+        else:
+            self.success = self.loadInputFile()
 
     def loadInputFile(self):
         try:
@@ -144,6 +164,47 @@ class FabIOFileGenerator(FrameGenerator):
             print(f'Cannot load input file {self.filePath}: {ex}, skipping it')
             return None
 
+    def loadBinInputFile(self):
+        try:
+            image = fabio.binaryimage.BinaryImage()
+            print("check1")
+            # dt = np.dtype(self.cfg['raw_bin_file']['datatype'])
+            data_dimension = self.cfg['raw_bin_file']['height'] * self.cfg['raw_bin_file']['width'] * self.cfg['raw_bin_file']['n_images']
+            images = image.read(fname=self.filePath, dim1=data_dimension, dim2=1, offset=self.cfg['raw_bin_file']['header_offset'], bytecode=self.cfg['raw_bin_file']['datatype'])
+            print("check2")
+            self.frames = images.data
+            self.frames = np.ndarray.flatten(self.frames)
+            # print(self.frames.shape)
+            # print("check2")
+            # self.frames = np.resize(self.frames, ())
+            # self.frames = np.expand_dims(self.frames, 0);
+            print(f'Loaded input file {self.filePath}')
+            self.nInputFrames += self.cfg['raw_bin_file']['n_images'];
+            return 1
+        except Exception as ex:
+            print(f'Cannot load input file {self.filePath}: {ex}, skipping it')
+            return None
+
+    def getFrameData(self, frameId):
+        if self.cfg is not None:
+            self.getFrameData_bin(frameId)
+        else:
+            if frameId < self.nInputFrames:
+                return self.frames[frameId]
+            return None
+
+    def getFrameData_bin(self, frameId):
+        frameData = None
+        if frameId < self.nInputFrames and frameId >= 0:
+            # Read uncompressed data directly into numpy array
+            framesize = self.cfg['raw_bin_file']['height'] * self.cfg['raw_bin_file']['width']
+            offset = (self.cfg['raw_bin_file']['between_frames'] + framesize) * (frameId)
+            frameData = self.frames[offset:offset+framesize]
+            # print(frameData)
+            frameData = np.resize(frameData, (self.cfg['raw_bin_file']['height'], self.cfg['raw_bin_file']['width']))
+            # print(frameData.shape)
+        return frameData
+
     def getFrameInfo(self):
         if self.frames is not None and not self.nInputFrames:
             self.rows, self.cols = self.frames.shape
@@ -155,7 +216,6 @@ class FabIOFileGenerator(FrameGenerator):
             return True
         else:
             return False
-
 
 class NumpyFileGenerator(FrameGenerator):
     ''' NumPy file generator class. '''
@@ -246,7 +306,7 @@ class AdSimServer:
         'timeStamp' : pva.PvTimeStamp()
     }
 
-    def __init__(self, inputDirectory, inputFile, mmapMode, hdfDataset, hdfCompressionMode, altFormat, frameRate, nFrames, cacheSize, nx, ny, datatype, minimum, maximum, runtime, channelName, notifyPv, notifyPvValue, metadataPv, startDelay, shutdownDelay, reportPeriod, disableCurses):
+    def __init__(self, inputDirectory, inputFile, mmapMode, hdfDataset, hdfCompressionMode, altFormat, cfgFile, frameRate, nFrames, cacheSize, nx, ny, datatype, minimum, maximum, runtime, channelName, notifyPv, notifyPvValue, metadataPv, startDelay, shutdownDelay, reportPeriod, disableCurses):
         self.lock = threading.Lock()
         self.deltaT = 0
         self.cacheTimeout = self.CACHE_TIMEOUT
@@ -259,6 +319,7 @@ class AdSimServer:
         self.frameGeneratorList = []
         self.frameCacheSize = max(cacheSize, self.MIN_CACHE_SIZE)
         self.nFrames = nFrames
+        self.config_file = None
 
         inputFiles = []
         if inputDirectory is not None:
@@ -267,14 +328,18 @@ class AdSimServer:
             inputFiles.append(inputFile)
         allowedHdfExtensions = ['h5', 'hdf', 'hdf5']
         allowedNpExtensions = ['npy', 'npz', 'NPY']
+        if cfgFile is not None and yaml is not None:
+            self.config_file = yaml.load(open(cfgFile, 'r'), Loader=yaml.CLoader)
         if nFrames > 0:
             inputFiles = inputFiles[:nFrames]
         for f in inputFiles:
             ext = f.split('.')[-1]
             if ext in allowedHdfExtensions:
                 self.frameGeneratorList.append(HdfFileGenerator(f, hdfDataset, hdfCompressionMode))
+            # elif ext not in allowedNpExtensions and altFormat > 0 and self.config_file is not None:
+            #     binFG = BinaryFrameGenerator(f)
             elif ext not in allowedNpExtensions and altFormat > 0:
-                fabioFG = FabIOFileGenerator(f)
+                fabioFG = FabIOFileGenerator(f, self.config_file)
                 if fabioFG.isLoaded():
                     self.frameGeneratorList.append(fabioFG)
             else:
@@ -585,6 +650,7 @@ def main():
     parser.add_argument('-hds', '--hdf-dataset', dest='hdf_dataset', default=None, help='HDF5 dataset path. This option must be specified if HDF5 files are used as input, but otherwise it is ignored.')
     parser.add_argument('-hcm', '--hdf-compression-mode', dest='hdf_compression_mode', default=False, action='store_true', help='Use compressed data from HDF5 file. By default, data will be uncompressed before streaming it.')
     parser.add_argument('-aff', '--alternate-file-format', type=int, dest='alternate_file_format', default=0, help='alternate file format (not numpy or HDF5). Must be set to >0 if files used are not NumPy or HDF5. (default: 0)')
+    parser.add_argument('-cfg', '--config-file', type=str, dest='config_file', default=None, help='yaml config file for raw binary data (must include for binary data), header_offset, between_frames (space between images), width, height, n_images, datatype')
     parser.add_argument('-fps', '--frame-rate', type=float, dest='frame_rate', default=20, help='Frames per second (default: 20 fps)')
     parser.add_argument('-nx', '--n-x-pixels', type=int, dest='n_x_pixels', default=256, help='Number of pixels in x dimension (default: 256 pixels; does not apply if input file file is given)')
     parser.add_argument('-ny', '--n-y-pixels', type=int, dest='n_y_pixels', default=256, help='Number of pixels in x dimension (default: 256 pixels; does not apply if input file is given)')
@@ -608,7 +674,7 @@ def main():
         print(f'Unrecognized argument(s): {" ".join(unparsed)}')
         sys.exit(1)
 
-    server = AdSimServer(inputDirectory=args.input_directory, inputFile=args.input_file, mmapMode=args.mmap_mode, hdfDataset=args.hdf_dataset, hdfCompressionMode=args.hdf_compression_mode, altFormat=args.alternate_file_format, frameRate=args.frame_rate, nFrames=args.n_frames, cacheSize=args.cache_size, nx=args.n_x_pixels, ny=args.n_y_pixels, datatype=args.datatype, minimum=args.minimum, maximum=args.maximum, runtime=args.runtime, channelName=args.channel_name, notifyPv=args.notify_pv, notifyPvValue=args.notify_pv_value, metadataPv=args.metadata_pv, startDelay=args.start_delay, shutdownDelay=args.shutdown_delay, reportPeriod=args.report_period, disableCurses=args.disable_curses)
+    server = AdSimServer(inputDirectory=args.input_directory, inputFile=args.input_file, mmapMode=args.mmap_mode, hdfDataset=args.hdf_dataset, hdfCompressionMode=args.hdf_compression_mode, altFormat=args.alternate_file_format, cfgFile=args.config_file, frameRate=args.frame_rate, nFrames=args.n_frames, cacheSize=args.cache_size, nx=args.n_x_pixels, ny=args.n_y_pixels, datatype=args.datatype, minimum=args.minimum, maximum=args.maximum, runtime=args.runtime, channelName=args.channel_name, notifyPv=args.notify_pv, notifyPvValue=args.notify_pv_value, metadataPv=args.metadata_pv, startDelay=args.start_delay, shutdownDelay=args.shutdown_delay, reportPeriod=args.report_period, disableCurses=args.disable_curses)
 
     server.start()
     expectedRuntime = args.runtime+args.start_delay
