@@ -148,9 +148,10 @@ class FabIOFileGenerator(FrameGenerator):
         # if not datasetPath:
         #     raise Exception(f'Missing dataset specification for input file {filePath}.')
         if self.cfg is not None:
-            print("hello")
+            self.bin = True
             self.success = self.loadBinInputFile()
         else:
+            self.bin = False
             self.success = self.loadInputFile()
 
     def loadInputFile(self):
@@ -167,15 +168,12 @@ class FabIOFileGenerator(FrameGenerator):
     def loadBinInputFile(self):
         try:
             image = fabio.binaryimage.BinaryImage()
-            print("check1")
             # dt = np.dtype(self.cfg['raw_bin_file']['datatype'])
             data_dimension = self.cfg['raw_bin_file']['height'] * self.cfg['raw_bin_file']['width'] * self.cfg['raw_bin_file']['n_images']
             images = image.read(fname=self.filePath, dim1=data_dimension, dim2=1, offset=self.cfg['raw_bin_file']['header_offset'], bytecode=self.cfg['raw_bin_file']['datatype'])
-            print("check2")
             self.frames = images.data
             self.frames = np.ndarray.flatten(self.frames)
-            # print(self.frames.shape)
-            # print("check2")
+            print(self.frames.shape)
             # self.frames = np.resize(self.frames, ())
             # self.frames = np.expand_dims(self.frames, 0);
             print(f'Loaded input file {self.filePath}')
@@ -186,24 +184,21 @@ class FabIOFileGenerator(FrameGenerator):
             return None
 
     def getFrameData(self, frameId):
-        if self.cfg is not None:
-            self.getFrameData_bin(frameId)
+        frameData = None
+        if self.bin:
+            if frameId < self.nInputFrames and frameId >= 0:
+                # Read uncompressed data directly into numpy array
+                framesize = self.cfg['raw_bin_file']['height'] * self.cfg['raw_bin_file']['width']
+                offset = (self.cfg['raw_bin_file']['between_frames'] + framesize) * (frameId)
+                frameData = self.frames[offset:offset+framesize]
+                # print(frameData)
+                frameData = np.resize(frameData, (self.cfg['raw_bin_file']['height'], self.cfg['raw_bin_file']['width']))
+                # print(frameData.shape)
+                return frameData
         else:
             if frameId < self.nInputFrames:
                 return self.frames[frameId]
             return None
-
-    def getFrameData_bin(self, frameId):
-        frameData = None
-        if frameId < self.nInputFrames and frameId >= 0:
-            # Read uncompressed data directly into numpy array
-            framesize = self.cfg['raw_bin_file']['height'] * self.cfg['raw_bin_file']['width']
-            offset = (self.cfg['raw_bin_file']['between_frames'] + framesize) * (frameId)
-            frameData = self.frames[offset:offset+framesize]
-            # print(frameData)
-            frameData = np.resize(frameData, (self.cfg['raw_bin_file']['height'], self.cfg['raw_bin_file']['width']))
-            # print(frameData.shape)
-        return frameData
 
     def getFrameInfo(self):
         if self.frames is not None and not self.nInputFrames:
