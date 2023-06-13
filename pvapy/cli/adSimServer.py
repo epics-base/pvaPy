@@ -145,6 +145,7 @@ class FabIOFileGenerator(FrameGenerator):
             raise Exception('Missing fabio support.')
         if not filePath:
             raise Exception('Invalid input file path.')
+        self.fileSize = os.path.getsize(filePath)
         # if not datasetPath:
         #     raise Exception(f'Missing dataset specification for input file {filePath}.')
         if self.cfg is not None:
@@ -168,16 +169,19 @@ class FabIOFileGenerator(FrameGenerator):
     def loadBinInputFile(self):
         try:
             image = fabio.binaryimage.BinaryImage()
-            # dt = np.dtype(self.cfg['raw_bin_file']['datatype'])
-            data_dimension = self.cfg['raw_bin_file']['height'] * self.cfg['raw_bin_file']['width'] * self.cfg['raw_bin_file']['n_images']
+            # reads in file as one big data array, including breaks between frames if they exist
+            size = np.dtype(self.cfg['raw_bin_file']['datatype']).itemsize
+            # n_frames = int ((self.fileSize-self.cfg['raw_bin_file']['header_offset']+self.cfg['raw_bin_file']['between_frames']) / (self.cfg['raw_bin_file']['height'] * self.cfg['raw_bin_file']['width'] * size + self.cfg['raw_bin_file']['between_frames']))
+            n_frames = int ((self.fileSize-self.cfg['raw_bin_file']['header_offset']) / (self.cfg['raw_bin_file']['height'] * self.cfg['raw_bin_file']['width'] * size))
+            # data_dimension = self.cfg['raw_bin_file']['height'] * self.cfg['raw_bin_file']['width'] * self.cfg['raw_bin_file']['n_images']
+            data_dimension = self.cfg['raw_bin_file']['height'] * self.cfg['raw_bin_file']['width'] * n_frames
             images = image.read(fname=self.filePath, dim1=data_dimension, dim2=1, offset=self.cfg['raw_bin_file']['header_offset'], bytecode=self.cfg['raw_bin_file']['datatype'])
             self.frames = images.data
             self.frames = np.ndarray.flatten(self.frames)
-            print(self.frames.shape)
-            # self.frames = np.resize(self.frames, ())
-            # self.frames = np.expand_dims(self.frames, 0);
+            # print(self.frames.shape)
             print(f'Loaded input file {self.filePath}')
-            self.nInputFrames += self.cfg['raw_bin_file']['n_images'];
+            # self.nInputFrames += self.cfg['raw_bin_file']['n_images'];
+            self.nInputFrames += n_frames
             return 1
         except Exception as ex:
             print(f'Cannot load input file {self.filePath}: {ex}, skipping it')
@@ -185,17 +189,20 @@ class FabIOFileGenerator(FrameGenerator):
 
     def getFrameData(self, frameId):
         frameData = None
+        # for raw binary images: extracts a specific frame from large data array, using specifications in the config file.
         if self.bin:
             if frameId < self.nInputFrames and frameId >= 0:
                 # Read uncompressed data directly into numpy array
                 framesize = self.cfg['raw_bin_file']['height'] * self.cfg['raw_bin_file']['width']
-                offset = (self.cfg['raw_bin_file']['between_frames'] + framesize) * (frameId)
+                # offset = (self.cfg['raw_bin_file']['between_frames'] + framesize) * (frameId)
+                offset = framesize * frameId
                 frameData = self.frames[offset:offset+framesize]
-                # print(frameData)
                 frameData = np.resize(frameData, (self.cfg['raw_bin_file']['height'], self.cfg['raw_bin_file']['width']))
-                # print(frameData.shape)
                 return frameData
+            else:
+                return None
         else:
+            # other formats: no need for other processing
             if frameId < self.nInputFrames:
                 return self.frames[frameId]
             return None
@@ -323,10 +330,12 @@ class AdSimServer:
             inputFiles.append(inputFile)
         allowedHdfExtensions = ['h5', 'hdf', 'hdf5']
         allowedNpExtensions = ['npy', 'npz', 'NPY']
-        if cfgFile is not None and yaml is not None:
-            self.config_file = yaml.load(open(cfgFile, 'r'), Loader=yaml.CLoader)
         if nFrames > 0:
             inputFiles = inputFiles[:nFrames]
+        if cfgFile is not None and yaml is not None:
+            self.config_file = yaml.load(open(cfgFile, 'r'), Loader=yaml.CLoader)
+            if self.config_file['raw_bin_file']['ordered_files'] is not None:
+                    inputFiles = self.config_file['raw_bin_file']['ordered_files']
         for f in inputFiles:
             ext = f.split('.')[-1]
             if ext in allowedHdfExtensions:
