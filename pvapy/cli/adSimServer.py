@@ -135,6 +135,7 @@ class FabIOFileGenerator(FrameGenerator):
     '''file generator (fabio based for alternate file formats) class'''
 
     def __init__(self, filePath, config):
+        self.loading = False
         FrameGenerator.__init__(self)
         self.filePath = filePath
         self.cfg = config
@@ -175,7 +176,10 @@ class FabIOFileGenerator(FrameGenerator):
             n_frames = int ((self.fileSize-self.cfg['raw_bin_file']['header_offset']) / (self.cfg['raw_bin_file']['height'] * self.cfg['raw_bin_file']['width'] * size))
             # data_dimension = self.cfg['raw_bin_file']['height'] * self.cfg['raw_bin_file']['width'] * self.cfg['raw_bin_file']['n_images']
             data_dimension = self.cfg['raw_bin_file']['height'] * self.cfg['raw_bin_file']['width'] * n_frames
+            self.loading = True
+            self.loadingAnimation()
             images = image.read(fname=self.filePath, dim1=data_dimension, dim2=1, offset=self.cfg['raw_bin_file']['header_offset'], bytecode=self.cfg['raw_bin_file']['datatype'])
+            self.loading = False
             self.frames = images.data
             self.frames = np.ndarray.flatten(self.frames)
             # print(self.frames.shape)
@@ -212,6 +216,33 @@ class FabIOFileGenerator(FrameGenerator):
             self.rows, self.cols = self.frames.shape
             self.dtype = self.frames.dtype
         return (self.nInputFrames, self.rows, self.cols, self.dtype, self.compressorName)
+
+    def loadingAnimation(self):
+        # animation_sequence = "|/-\\"
+        bar = [
+            " [=     ]",
+            " [ =    ]",
+            " [  =   ]",
+            " [   =  ]",
+            " [    = ]",
+            " [     =]",
+            " [    = ]",
+            " [   =  ]",
+            " [  =   ]",
+            " [ =    ]",
+        ]
+        idx = 0
+        counter = 0
+        while self.loading:
+            print(bar[idx % len(bar)], end="\r")
+            idx += 1
+            counter += 1
+            time.sleep(0.1)
+            if idx == len(bar):
+                idx = 0
+            if counter == 100:
+                return
+
 
     def isLoaded(self):
         if self.success is not None:
