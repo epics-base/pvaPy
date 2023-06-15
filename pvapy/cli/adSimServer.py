@@ -15,21 +15,6 @@ import os.path
 import ctypes.util
 import numpy as np
 
-# TODO: make fabio optional
-try:
-    import fabio
-except ImportError:
-    fabio = None
-    pass
-
-# TODO: pyyaml for now I suppose (make optional)
-# import yaml
-try:
-    import yaml
-except ImportError:
-    yaml = None
-    pass
-
 # HDF5 is optional
 try:
     import h5py as h5
@@ -39,6 +24,17 @@ try:
     import hdf5plugin
 except ImportError:
     pass
+
+# fabio optional
+try:
+    import fabio
+except ImportError:
+    fabio = None
+# yaml optional
+try:
+    import yaml
+except ImportError:
+    yaml = None
 
 import pvaccess as pva
 # from ..utility.adImageUtility import AdImageUtility
@@ -135,22 +131,19 @@ class FabIOFileGenerator(FrameGenerator):
     '''file generator (fabio based for alternate file formats) class'''
 
     def __init__(self, filePath, config):
-        self.loading = False
         FrameGenerator.__init__(self)
         self.filePath = filePath
         self.cfg = config
-        # self.datasetPath = datasetPath
-        # self.dataset = None
-        self.nInputFrames = 0;
+        self.nInputFrames = 0
         if not fabio:
             raise Exception('Missing fabio support.')
         if not filePath:
             raise Exception('Invalid input file path.')
         self.fileSize = os.path.getsize(filePath)
-        # if not datasetPath:
-        #     raise Exception(f'Missing dataset specification for input file {filePath}.')
         if self.cfg is not None:
             self.bin = True
+            if yaml is None:
+                raise Exception('Missing yaml')
             self.success = self.loadBinInputFile()
         else:
             self.bin = False
@@ -170,20 +163,15 @@ class FabIOFileGenerator(FrameGenerator):
     def loadBinInputFile(self):
         try:
             image = fabio.binaryimage.BinaryImage()
-            # reads in file as one big data array, including breaks between frames if they exist
+            # reads in file as one big data array
             size = np.dtype(self.cfg['raw_bin_file']['datatype']).itemsize
-            # n_frames = int ((self.fileSize-self.cfg['raw_bin_file']['header_offset']+self.cfg['raw_bin_file']['between_frames']) / (self.cfg['raw_bin_file']['height'] * self.cfg['raw_bin_file']['width'] * size + self.cfg['raw_bin_file']['between_frames']))
-            n_frames = int ((self.fileSize-self.cfg['raw_bin_file']['header_offset']) / (self.cfg['raw_bin_file']['height'] * self.cfg['raw_bin_file']['width'] * size))
-            # data_dimension = self.cfg['raw_bin_file']['height'] * self.cfg['raw_bin_file']['width'] * self.cfg['raw_bin_file']['n_images']
+            n_frames = int((self.fileSize-self.cfg['raw_bin_file']['header_offset']) / (self.cfg['raw_bin_file']['height'] * self.cfg['raw_bin_file']['width'] * size))
             data_dimension = self.cfg['raw_bin_file']['height'] * self.cfg['raw_bin_file']['width'] * n_frames
-            self.loading = True
+            print("Loading . . . ")
             images = image.read(fname=self.filePath, dim1=data_dimension, dim2=1, offset=self.cfg['raw_bin_file']['header_offset'], bytecode=self.cfg['raw_bin_file']['datatype'])
-            self.loading = False
             self.frames = images.data
             self.frames = np.ndarray.flatten(self.frames)
-            # print(self.frames.shape)
             print(f'Loaded input file {self.filePath}')
-            # self.nInputFrames += self.cfg['raw_bin_file']['n_images'];
             self.nInputFrames += n_frames
             return 1
         except Exception as ex:
@@ -191,13 +179,10 @@ class FabIOFileGenerator(FrameGenerator):
             return None
 
     def getFrameData(self, frameId):
-        frameData = None
-        # for raw binary images: extracts a specific frame from large data array, using specifications in the config file.
+        # for raw binary file: extracts a specific frame from large data array, using specifications in the config file.
         if self.bin:
             if frameId < self.nInputFrames and frameId >= 0:
-                # Read uncompressed data directly into numpy array
                 framesize = self.cfg['raw_bin_file']['height'] * self.cfg['raw_bin_file']['width']
-                # offset = (self.cfg['raw_bin_file']['between_frames'] + framesize) * (frameId)
                 offset = framesize * frameId
                 frameData = self.frames[offset:offset+framesize]
                 frameData = np.resize(frameData, (self.cfg['raw_bin_file']['height'], self.cfg['raw_bin_file']['width']))
