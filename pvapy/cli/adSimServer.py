@@ -328,8 +328,6 @@ class AdSimServer:
             ext = f.split('.')[-1]
             if ext in allowedHdfExtensions:
                 self.frameGeneratorList.append(HdfFileGenerator(f, hdfDataset, hdfCompressionMode))
-            # elif ext not in allowedNpExtensions and altFormat > 0 and self.config_file is not None:
-            #     binFG = BinaryFrameGenerator(f)
             elif ext not in allowedNpExtensions and altFormat > 0:
                 fabioFG = FabIOFileGenerator(f, self.config_file)
                 if fabioFG.isLoaded():
@@ -657,7 +655,7 @@ def main():
     parser.add_argument('-nvl', '--notify-pv-value', type=str, dest='notify_pv_value', default='1', help='Value for the notification channel; for the Area Detector PVA driver PV this should be set to "Acquire" (default: 1)')
     parser.add_argument('-mpv', '--metadata-pv', type=str, dest='metadata_pv', default=None, help='Comma-separated list of CA channels that should be contain simulated image metadata values')
     parser.add_argument('-std', '--start-delay', type=float, dest='start_delay',  default=10.0, help='Server start delay in seconds (default: 10 seconds)')
-    parser.add_argument('-shd', '--shutdown-delay', type=float, dest='shutdown_delay', default=10.0, help='Server sthutdown delay in seconds (default: 10 seconds)')
+    parser.add_argument('-shd', '--shutdown-delay', type=float, dest='shutdown_delay', default=10.0, help='Server shutdown delay in seconds (default: 10 seconds)')
     parser.add_argument('-rp', '--report-period', type=int, dest='report_period', default=1, help='Reporting period for publishing frames; if set to <=0 no frames will be reported as published (default: 1)')
     parser.add_argument('-dc', '--disable-curses', dest='disable_curses', default=False, action='store_true', help='Disable curses library screen handling. This is enabled by default, except when logging into standard output is turned on.')
 
