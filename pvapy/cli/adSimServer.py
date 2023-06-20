@@ -14,7 +14,6 @@ import os
 import os.path
 import ctypes.util
 import numpy as np
-
 # HDF5 is optional
 try:
     import h5py as h5
@@ -164,11 +163,11 @@ class FabIOFileGenerator(FrameGenerator):
         try:
             image = fabio.binaryimage.BinaryImage()
             # reads in file as one big data array
-            size = np.dtype(self.cfg['raw_bin_file']['datatype']).itemsize
-            n_frames = int((self.fileSize-self.cfg['raw_bin_file']['header_offset']) / (self.cfg['raw_bin_file']['height'] * self.cfg['raw_bin_file']['width'] * size))
-            data_dimension = self.cfg['raw_bin_file']['height'] * self.cfg['raw_bin_file']['width'] * n_frames
+            size = np.dtype(self.cfg['file_info']['datatype']).itemsize
+            n_frames = int((self.fileSize-self.cfg['file_info']['header_offset']) / (self.cfg['file_info']['height'] * self.cfg['file_info']['width'] * size))
+            data_dimension = self.cfg['file_info']['height'] * self.cfg['file_info']['width'] * n_frames
             print("Loading . . . ")
-            images = image.read(fname=self.filePath, dim1=data_dimension, dim2=1, offset=self.cfg['raw_bin_file']['header_offset'], bytecode=self.cfg['raw_bin_file']['datatype'])
+            images = image.read(fname=self.filePath, dim1=data_dimension, dim2=1, offset=self.cfg['file_info']['header_offset'], bytecode=self.cfg['file_info']['datatype'], endian=self.cfg['file_info']['endian'])
             self.frames = images.data
             self.frames = np.ndarray.flatten(self.frames)
             print(f'Loaded input file {self.filePath}')
@@ -182,10 +181,10 @@ class FabIOFileGenerator(FrameGenerator):
         # for raw binary file: extracts a specific frame from large data array, using specifications in the config file.
         if self.bin:
             if frameId < self.nInputFrames and frameId >= 0:
-                framesize = self.cfg['raw_bin_file']['height'] * self.cfg['raw_bin_file']['width']
+                framesize = self.cfg['file_info']['height'] * self.cfg['file_info']['width']
                 offset = framesize * frameId
                 frameData = self.frames[offset:offset+framesize]
-                frameData = np.resize(frameData, (self.cfg['raw_bin_file']['height'], self.cfg['raw_bin_file']['width']))
+                frameData = np.resize(frameData, (self.cfg['file_info']['height'], self.cfg['file_info']['width']))
                 return frameData
             else:
                 return None
@@ -320,10 +319,10 @@ class AdSimServer:
         allowedNpExtensions = ['npy', 'npz', 'NPY']
         if nFrames > 0:
             inputFiles = inputFiles[:nFrames]
-        if cfgFile is not None and yaml is not None:
+        if cfgFile is not None and yaml is not None and altFormat > 0:
             self.config_file = yaml.load(open(cfgFile, 'r'), Loader=yaml.CLoader)
-            if self.config_file['raw_bin_file']['ordered_files'] is not None:
-                    inputFiles = self.config_file['raw_bin_file']['ordered_files']
+            if self.config_file['file_info']['ordered_files'] is not None:
+                    inputFiles = self.config_file['file_info']['ordered_files']
         for f in inputFiles:
             ext = f.split('.')[-1]
             if ext in allowedHdfExtensions:
