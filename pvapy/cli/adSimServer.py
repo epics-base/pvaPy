@@ -142,7 +142,7 @@ class FabIOFileGenerator(FrameGenerator):
         if self.cfg is not None:
             self.bin = True
             if yaml is None:
-                raise Exception('Missing yaml')
+                raise Exception('Please install pyyaml')
             self.success = self.loadBinInputFile()
         else:
             self.bin = False
