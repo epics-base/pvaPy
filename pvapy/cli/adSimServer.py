@@ -36,9 +36,6 @@ except ImportError:
     yaml = None
 
 import pvaccess as pva
-# from ..utility.adImageUtility import AdImageUtility
-# from ..utility.floatWithUnits import FloatWithUnits
-# from ..utility.intWithUnits import IntWithUnits
 from pvapy.utility.adImageUtility import AdImageUtility
 from pvapy.utility.floatWithUnits import FloatWithUnits
 from pvapy.utility.intWithUnits import IntWithUnits
@@ -164,14 +161,14 @@ class FabIOFileGenerator(FrameGenerator):
             image = fabio.binaryimage.BinaryImage()
             # reads in file as one big data array
             size = np.dtype(self.cfg['file_info']['datatype']).itemsize
-            n_frames = int((self.fileSize-self.cfg['file_info']['header_offset']) / (self.cfg['file_info']['height'] * self.cfg['file_info']['width'] * size))
-            data_dimension = self.cfg['file_info']['height'] * self.cfg['file_info']['width'] * n_frames
+            nFrames = int((self.fileSize-self.cfg['file_info']['header_offset']) / (self.cfg['file_info']['height'] * self.cfg['file_info']['width'] * size))
+            dataDimension = self.cfg['file_info']['height'] * self.cfg['file_info']['width'] * nFrames
             print("Loading . . . ")
-            images = image.read(fname=self.filePath, dim1=data_dimension, dim2=1, offset=self.cfg['file_info']['header_offset'], bytecode=self.cfg['file_info']['datatype'], endian=self.cfg['file_info']['endian'])
+            images = image.read(fname=self.filePath, dim1=dataDimension, dim2=1, offset=self.cfg['file_info']['header_offset'], bytecode=self.cfg['file_info']['datatype'], endian=self.cfg['file_info']['endian'])
             self.frames = images.data
             self.frames = np.ndarray.flatten(self.frames)
             print(f'Loaded input file {self.filePath}')
-            self.nInputFrames += n_frames
+            self.nInputFrames += nFrames
             return 1
         except Exception as ex:
             print(f'Cannot load input file {self.filePath}: {ex}, skipping it')
@@ -181,9 +178,9 @@ class FabIOFileGenerator(FrameGenerator):
         # for raw binary file: extracts a specific frame from large data array, using specifications in the config file.
         if self.bin:
             if frameId < self.nInputFrames and frameId >= 0:
-                framesize = self.cfg['file_info']['height'] * self.cfg['file_info']['width']
-                offset = framesize * frameId
-                frameData = self.frames[offset:offset+framesize]
+                frameSize = self.cfg['file_info']['height'] * self.cfg['file_info']['width']
+                offset = frameSize * frameId
+                frameData = self.frames[offset:offset+frameSize]
                 frameData = np.resize(frameData, (self.cfg['file_info']['height'], self.cfg['file_info']['width']))
                 return frameData
             else:
@@ -295,7 +292,7 @@ class AdSimServer:
         'timeStamp' : pva.PvTimeStamp()
     }
 
-    def __init__(self, inputDirectory, inputFile, mmapMode, hdfDataset, hdfCompressionMode, altFormat, cfgFile, frameRate, nFrames, cacheSize, nx, ny, datatype, minimum, maximum, runtime, channelName, notifyPv, notifyPvValue, metadataPv, startDelay, shutdownDelay, reportPeriod, disableCurses):
+    def __init__(self, inputDirectory, inputFile, mmapMode, hdfDataset, hdfCompressionMode, cfgFile, frameRate, nFrames, cacheSize, nx, ny, datatype, minimum, maximum, runtime, channelName, notifyPv, notifyPvValue, metadataPv, startDelay, shutdownDelay, reportPeriod, disableCurses):
         self.lock = threading.Lock()
         self.deltaT = 0
         self.cacheTimeout = self.CACHE_TIMEOUT
@@ -308,7 +305,7 @@ class AdSimServer:
         self.frameGeneratorList = []
         self.frameCacheSize = max(cacheSize, self.MIN_CACHE_SIZE)
         self.nFrames = nFrames
-        self.config_file = None
+        self.configFile = None
 
         inputFiles = []
         if inputDirectory is not None:
@@ -319,21 +316,19 @@ class AdSimServer:
         allowedNpExtensions = ['npy', 'npz', 'NPY']
         if nFrames > 0:
             inputFiles = inputFiles[:nFrames]
-        if cfgFile is not None and yaml is not None and altFormat > 0:
-            self.config_file = yaml.load(open(cfgFile, 'r'), Loader=yaml.CLoader)
-            if self.config_file['file_info']['ordered_files'] is not None:
-                    inputFiles = self.config_file['file_info']['ordered_files']
+        if cfgFile is not None and yaml is not None:
+            self.configFile = yaml.load(open(cfgFile, 'r'), Loader=yaml.CLoader)
+            if self.configFile['file_info']['ordered_files'] is not None:
+                inputFiles = self.configFile['file_info']['ordered_files']
         for f in inputFiles:
             ext = f.split('.')[-1]
             if ext in allowedHdfExtensions:
                 self.frameGeneratorList.append(HdfFileGenerator(f, hdfDataset, hdfCompressionMode))
-            elif ext not in allowedNpExtensions and altFormat > 0:
-                fabioFG = FabIOFileGenerator(f, self.config_file)
+            elif ext not in allowedNpExtensions:
+                fabioFG = FabIOFileGenerator(f, self.configFile)
                 if fabioFG.isLoaded():
                     self.frameGeneratorList.append(fabioFG)
             else:
-                if ext not in allowedNpExtensions and altFormat <= 0:
-                    print('CAREFUL: You may want/need to set -aff (alternate-file-format)')
                 self.frameGeneratorList.append(NumpyFileGenerator(f, mmapMode))
 
         if not self.frameGeneratorList:
@@ -638,7 +633,6 @@ def main():
     parser.add_argument('-mm', '--mmap-mode', action='store_true', dest='mmap_mode', default=False, help='Use NumPy memory map to load the specified input file. This flag typically results in faster startup and lower memory usage for large files.')
     parser.add_argument('-hds', '--hdf-dataset', dest='hdf_dataset', default=None, help='HDF5 dataset path. This option must be specified if HDF5 files are used as input, but otherwise it is ignored.')
     parser.add_argument('-hcm', '--hdf-compression-mode', dest='hdf_compression_mode', default=False, action='store_true', help='Use compressed data from HDF5 file. By default, data will be uncompressed before streaming it.')
-    parser.add_argument('-aff', '--alternate-file-format', type=int, dest='alternate_file_format', default=0, help='alternate file format (not numpy or HDF5). Must be set to >0 if files used are not NumPy or HDF5. (default: 0)')
     parser.add_argument('-cfg', '--config-file', type=str, dest='config_file', default=None, help='yaml config file for raw binary data (must include for binary data), header_offset, between_frames (space between images), width, height, n_images, datatype')
     parser.add_argument('-fps', '--frame-rate', type=float, dest='frame_rate', default=20, help='Frames per second (default: 20 fps)')
     parser.add_argument('-nx', '--n-x-pixels', type=int, dest='n_x_pixels', default=256, help='Number of pixels in x dimension (default: 256 pixels; does not apply if input file file is given)')
@@ -663,7 +657,7 @@ def main():
         print(f'Unrecognized argument(s): {" ".join(unparsed)}')
         sys.exit(1)
 
-    server = AdSimServer(inputDirectory=args.input_directory, inputFile=args.input_file, mmapMode=args.mmap_mode, hdfDataset=args.hdf_dataset, hdfCompressionMode=args.hdf_compression_mode, altFormat=args.alternate_file_format, cfgFile=args.config_file, frameRate=args.frame_rate, nFrames=args.n_frames, cacheSize=args.cache_size, nx=args.n_x_pixels, ny=args.n_y_pixels, datatype=args.datatype, minimum=args.minimum, maximum=args.maximum, runtime=args.runtime, channelName=args.channel_name, notifyPv=args.notify_pv, notifyPvValue=args.notify_pv_value, metadataPv=args.metadata_pv, startDelay=args.start_delay, shutdownDelay=args.shutdown_delay, reportPeriod=args.report_period, disableCurses=args.disable_curses)
+    server = AdSimServer(inputDirectory=args.input_directory, inputFile=args.input_file, mmapMode=args.mmap_mode, hdfDataset=args.hdf_dataset, hdfCompressionMode=args.hdf_compression_mode, cfgFile=args.config_file, frameRate=args.frame_rate, nFrames=args.n_frames, cacheSize=args.cache_size, nx=args.n_x_pixels, ny=args.n_y_pixels, datatype=args.datatype, minimum=args.minimum, maximum=args.maximum, runtime=args.runtime, channelName=args.channel_name, notifyPv=args.notify_pv, notifyPvValue=args.notify_pv_value, metadataPv=args.metadata_pv, startDelay=args.start_delay, shutdownDelay=args.shutdown_delay, reportPeriod=args.report_period, disableCurses=args.disable_curses)
 
     server.start()
     expectedRuntime = args.runtime+args.start_delay
