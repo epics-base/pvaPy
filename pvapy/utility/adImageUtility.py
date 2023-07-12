@@ -17,7 +17,7 @@ class AdImageUtility:
     COLOR_MODE_RGB2 = 3 # [NX, 3, NY]
     COLOR_MODE_RGB3 = 4 # [NX, NY, 3]
 
-    COLOR_MODES = {
+    COLOR_MODE_MAP = {
         COLOR_MODE_MONO : "MONO",
         COLOR_MODE_RGB1 : "RGB1",
         COLOR_MODE_RGB2 : "RGB2",
@@ -81,18 +81,22 @@ class AdImageUtility:
             fieldKey = None
             return (imageId,image,nx,ny,nz,colorMode,fieldKey)
         if nDims == 2 and colorMode == cls.COLOR_MODE_MONO:
+            # [NX, NY]
             nx = dims[0]['size']
             ny = dims[1]['size']
             nz = None
         elif nDims == 3 and colorMode == cls.COLOR_MODE_RGB1:
+            # [3, NX, NY]
             nx = dims[1]['size']
             ny = dims[2]['size']
             nz = dims[0]['size']
         elif nDims == 3 and colorMode == cls.COLOR_MODE_RGB2:
+            # [NX, 3, NY]
             nx = dims[0]['size']
             ny = dims[2]['size']
             nz = dims[1]['size']
         elif nDims == 3 and colorMode == cls.COLOR_MODE_RGB3:
+            # [NX, NY, 3]
             nx = dims[0]['size']
             ny = dims[1]['size']
             nz = dims[2]['size']
@@ -110,22 +114,26 @@ class AdImageUtility:
         image = ntNdArray['value'][0][fieldKey]
 
         if colorMode == cls.COLOR_MODE_MONO:
+            # [NX, NY]
             image = np.reshape(image, (ny, nx))
 
         elif colorMode == cls.COLOR_MODE_RGB1:
+            # [3, NX, NY]
             image = np.reshape(image, (ny, nx, nz))
 
         elif colorMode == cls.COLOR_MODE_RGB2:
+            # [NX, 3, NY]
             image = np.reshape(image, (ny, nz, nx))
             image = np.swapaxes(image, 2, 1)
 
         elif colorMode == cls.COLOR_MODE_RGB3:
+            # [NX, NY, 3]
             image = np.reshape(image, (nz, ny, nx))
             image = np.swapaxes(image, 0, 2)
             image = np.swapaxes(image, 0, 1)
 
         else:
-            raise pva.InvalidArgument('Unsupported color mode: {colorMode}')
+            raise pva.InvalidArgument(f'Unsupported color mode: {colorMode}')
 
         return (imageId,image,nx,ny,nz,colorMode,fieldKey)
 
@@ -204,6 +212,99 @@ class AdImageUtility:
 
         u = pva.PvObject({dataFieldKey : [pvaDataType]}, {dataFieldKey : data})
         ntNdArray.setUnion(u)
+        if extraFieldsPvObject is not None:
+            ntNdArray.set(extraFieldsPvObject)
+        return ntNdArray
+
+    @classmethod
+    def getImageDimensions(cls, nx, ny, colorMode=COLOR_MODE_MONO):
+        ''' Generate dimensions. '''
+        nz = 3
+        if colorMode == cls.COLOR_MODE_MONO:
+            # [NX, NY]
+            dims = [pva.PvDimension(nx, 0, nx, 1, False), \
+                    pva.PvDimension(ny, 0, ny, 1, False)]
+        elif colorMode == cls.COLOR_MODE_RGB1:
+            # [3, NX, NY]
+            dims = [pva.PvDimension(nz, 0, nz, 1, False), \
+                    pva.PvDimension(nx, 0, nx, 1, False), \
+                    pva.PvDimension(ny, 0, ny, 1, False)]
+
+        elif colorMode == cls.COLOR_MODE_RGB2:
+            # [NX, 3, NY]
+            dims = [pva.PvDimension(nx, 0, nx, 1, False), \
+                    pva.PvDimension(nz, 0, nz, 1, False), \
+                    pva.PvDimension(ny, 0, ny, 1, False)]
+
+        elif colorMode == cls.COLOR_MODE_RGB3:
+            # [NX, NY, 3]
+            dims = [pva.PvDimension(nx, 0, nx, 1, False), \
+                    pva.PvDimension(ny, 0, ny, 1, False), \
+                    pva.PvDimension(nz, 0, nz, 1, False)]
+        else:
+            raise pva.InvalidArgument(f'Unsupported color mode: {colorMode}')
+        return dims
+
+    @classmethod
+    def generateNtNdArray(cls, imageId, imageData, nx=None, ny=None, colorMode=COLOR_MODE_MONO, dtype=None, compressorName=None, extraFieldsPvObject=None):
+        ''' Generate NTNDA. '''
+        if colorMode not in cls.COLOR_MODE_MAP.keys():
+            raise pva.InvalidArgument(f'Unsupported color mode: {colorMode}')
+
+        if extraFieldsPvObject is None:
+            ntNdArray = pva.NtNdArray()
+        else:
+            ntNdArray = pva.NtNdArray(extraFieldsPvObject.getStructureDict())
+
+        dataFieldKey = cls.NTNDA_DATA_FIELD_KEY_MAP.get(imageData.dtype)
+        if not compressorName:
+            pvaDataType = cls.PVA_DATA_TYPE_MAP.get(imageData.dtype)
+            nz = 1
+            if colorMode == cls.COLOR_MODE_MONO:
+                # Reverse of: image = np.reshape(image, (ny, nx))
+                ny, nx = imageData.shape
+            elif colorMode == cls.COLOR_MODE_RGB1:
+                # Reverse of: image = np.reshape(image, (ny, nx, nz))
+                ny, nx, nz = imageData.shape
+
+            elif colorMode == cls.COLOR_MODE_RGB2:
+                # Reverse of: image = np.reshape(image, (ny, nz, nx))
+                #             image = np.swapaxes(image, 2, 1)
+                imageData = np.swapaxes(imageData, 2, 1) # (ny,nx,nz)=>(ny,nz,nx)
+                ny, nz, nx = imageData.shape
+
+            elif colorMode == cls.COLOR_MODE_RGB3:
+                # Reverse of: image = np.reshape(image, (nz, ny, nx))
+                #             image = np.swapaxes(image, 0, 2)
+                #             image = np.swapaxes(image, 0, 1)
+                imageData = np.swapaxes(imageData, 0, 1) # (ny,nx,nz)=>(nx,ny,nz)
+                imageData = np.swapaxes(imageData, 0, 2) # (nx,ny,nz)=>(nz,ny,nx)
+                nz, ny, nx = imageData.shape
+
+            size = nx*ny*nz*imageData.itemsize
+            cSize = size
+        else:
+            nz = 3
+            dtype = np.dtype(dtype)
+            pvaDataType = cls.PVA_DATA_TYPE_MAP.get(dtype)
+            codec = pva.PvCodec(compressorName, pva.PvInt(int(pvaDataType)))
+            size = nz*nx*ny*dtype.itemsize
+            cSize = len(data)
+            ntNdArray['codec'] = codec
+        dims = cls.getImageDimensions(nx, ny, colorMode)
+        data = imageData.flatten()
+        ts = pva.PvTimeStamp(time.time())
+        attrs = [pva.NtAttribute('ColorMode', pva.PvInt(colorMode))]
+
+        ntNdArray['uniqueId'] = int(imageId)
+        ntNdArray['dimension'] = dims
+        ntNdArray['compressedSize'] = cSize
+        ntNdArray['uncompressedSize'] = size
+        ntNdArray['timeStamp'] = ts
+        ntNdArray['dataTimeStamp'] = ts
+        ntNdArray['descriptor'] = 'Image generated by PvaPy'
+        ntNdArray['value'] = {dataFieldKey : data}
+        ntNdArray['attribute'] = attrs
         if extraFieldsPvObject is not None:
             ntNdArray.set(extraFieldsPvObject)
         return ntNdArray
