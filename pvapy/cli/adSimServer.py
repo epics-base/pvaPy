@@ -187,13 +187,11 @@ class FabIOFileGenerator(FrameGenerator):
                 frameData = self.frames[offset:offset+frameSize]
                 frameData = np.resize(frameData, (self.cfg['file_info']['height'], self.cfg['file_info']['width']))
                 return frameData
-            else:
-                return None
-        else:
-            # other formats: no need for other processing
-            if frameId < self.nInputFrames:
-                return self.frames[frameId]
             return None
+        # other formats: no need for other processing
+        if frameId < self.nInputFrames:
+            return self.frames[frameId]
+        return None
 
     def getFrameInfo(self):
         if self.frames is not None and not self.nInputFrames:
@@ -204,8 +202,7 @@ class FabIOFileGenerator(FrameGenerator):
     def isLoaded(self):
         if self.success is not None:
             return True
-        else:
-            return False
+        return False
 
 class NumpyFileGenerator(FrameGenerator):
     ''' NumPy file generator class. '''
@@ -244,7 +241,7 @@ class NumpyRandomGenerator(FrameGenerator):
         self.generateFrames()
 
     def generateFrames(self):
-        if self.colorMode not in AdImageUtility.COLOR_MODE_MAP.keys():
+        if self.colorMode not in AdImageUtility.COLOR_MODE_MAP:
             raise Exception(f'Invalid color mode: {self.colorMode}. Available modes: {list(AdImageUtility.COLOR_MODE_MAP.keys())}')
 
         print(f'Generating random frames using color mode: {AdImageUtility.COLOR_MODE_MAP[self.colorMode]}')

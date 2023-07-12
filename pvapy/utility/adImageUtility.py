@@ -248,7 +248,7 @@ class AdImageUtility:
     @classmethod
     def generateNtNdArray(cls, imageId, imageData, nx=None, ny=None, colorMode=COLOR_MODE_MONO, dtype=None, compressorName=None, extraFieldsPvObject=None):
         ''' Generate NTNDA. '''
-        if colorMode not in cls.COLOR_MODE_MAP.keys():
+        if colorMode not in cls.COLOR_MODE_MAP:
             raise pva.InvalidArgument(f'Unsupported color mode: {colorMode}')
 
         if extraFieldsPvObject is None:
