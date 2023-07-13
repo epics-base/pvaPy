@@ -289,7 +289,7 @@ class AdImageUtility:
             pvaDataType = cls.PVA_DATA_TYPE_MAP.get(dtype)
             codec = pva.PvCodec(compressorName, pva.PvInt(int(pvaDataType)))
             size = nz*nx*ny*dtype.itemsize
-            cSize = len(data)
+            cSize = len(imageData)
             ntNdArray['codec'] = codec
         dims = cls.getImageDimensions(nx, ny, colorMode)
         data = imageData.flatten()
