@@ -131,6 +131,8 @@ class FabIOFileGenerator(FrameGenerator):
         self.filePath = filePath
         self.cfg = config
         self.nInputFrames = 0
+        self.rows = 0
+        self.cols = 0
         if not fabio:
             raise Exception('Missing fabio support.')
         if not filePath:
@@ -169,6 +171,8 @@ class FabIOFileGenerator(FrameGenerator):
             self.frames = np.ndarray.flatten(self.frames)
             print(f'Loaded input file {self.filePath}')
             self.nInputFrames += nFrames
+            self.rows = self.cfg['file_info']['height']
+            self.cols = self.cfg['file_info']['width']
             return 1
         except Exception as ex:
             print(f'Cannot load input file {self.filePath}: {ex}, skipping it')
@@ -192,8 +196,10 @@ class FabIOFileGenerator(FrameGenerator):
             return None
 
     def getFrameInfo(self):
-        if self.frames is not None and not self.nInputFrames:
-            self.rows, self.cols = self.frames.shape
+        if self.frames is not None and not self.bin:
+            frames, self.rows, self.cols = self.frames.shape
+            self.dtype = self.frames.dtype
+        elif self.frames is not None and self.bin:
             self.dtype = self.frames.dtype
         return (self.nInputFrames, self.rows, self.cols, self.dtype, self.compressorName)
 
@@ -316,6 +322,7 @@ class AdSimServer:
         allowedNpExtensions = ['npy', 'npz', 'NPY']
         if nFrames > 0:
             inputFiles = inputFiles[:nFrames]
+        inputFiles = sorted(inputFiles)
         if cfgFile is not None and yaml is not None:
             self.configFile = yaml.load(open(cfgFile, 'r'), Loader=yaml.CLoader)
             if self.configFile['file_info']['ordered_files'] is not None:
