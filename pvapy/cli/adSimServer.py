@@ -51,6 +51,7 @@ class FrameGenerator:
         self.cols = 0
         self.dtype = None
         self.compressorName = None
+        self.colorMode = 0
 
     def getFrameData(self, frameId):
         if frameId < self.nInputFrames:
@@ -59,9 +60,12 @@ class FrameGenerator:
 
     def getFrameInfo(self):
         if len(self.frames) > 0 and not self.nInputFrames:
-            self.nInputFrames, self.rows, self.cols = self.frames.shape
+            if not self.colorMode:
+                self.nInputFrames, self.rows, self.cols = self.frames.shape
+            else:
+                self.nInputFrames, self.rows, self.cols, _ = self.frames.shape
             self.dtype = self.frames.dtype
-        return (self.nInputFrames, self.rows, self.cols, self.dtype, self.compressorName)
+        return (self.nInputFrames, self.rows, self.cols, self.colorMode, self.dtype, self.compressorName)
 
     def getUncompressedFrameSize(self):
         return self.rows*self.cols*self.frames[0].itemsize
@@ -187,13 +191,11 @@ class FabIOFileGenerator(FrameGenerator):
                 frameData = self.frames[offset:offset+frameSize]
                 frameData = np.resize(frameData, (self.cfg['file_info']['height'], self.cfg['file_info']['width']))
                 return frameData
-            else:
-                return None
-        else:
-            # other formats: no need for other processing
-            if frameId < self.nInputFrames:
-                return self.frames[frameId]
             return None
+        # other formats: no need for other processing
+        if frameId < self.nInputFrames:
+            return self.frames[frameId]
+        return None
 
     def getFrameInfo(self):
         if self.frames is not None and not self.bin:
@@ -201,13 +203,12 @@ class FabIOFileGenerator(FrameGenerator):
             self.dtype = self.frames.dtype
         elif self.frames is not None and self.bin:
             self.dtype = self.frames.dtype
-        return (self.nInputFrames, self.rows, self.cols, self.dtype, self.compressorName)
+        return (self.nInputFrames, self.rows, self.cols, self.colorMode, self.dtype, self.compressorName)
 
     def isLoaded(self):
         if self.success is not None:
             return True
-        else:
-            return False
+        return False
 
 class NumpyFileGenerator(FrameGenerator):
     ''' NumPy file generator class. '''
@@ -234,18 +235,22 @@ class NumpyFileGenerator(FrameGenerator):
 class NumpyRandomGenerator(FrameGenerator):
     ''' NumPy random generator class. '''
 
-    def __init__(self, nf, nx, ny, datatype, minimum, maximum):
+    def __init__(self, nf, nx, ny, colorMode, datatype, minimum, maximum):
         FrameGenerator.__init__(self)
         self.nf = nf
         self.nx = nx
         self.ny = ny
+        self.colorMode = colorMode
         self.datatype = datatype
         self.minimum = minimum
         self.maximum = maximum
         self.generateFrames()
 
     def generateFrames(self):
-        print('Generating random frames')
+        if self.colorMode not in AdImageUtility.COLOR_MODE_MAP:
+            raise Exception(f'Invalid color mode: {self.colorMode}. Available modes: {list(AdImageUtility.COLOR_MODE_MAP.keys())}')
+
+        print(f'Generating random frames using color mode: {AdImageUtility.COLOR_MODE_MAP[self.colorMode]}')
 
         # Example frame:
         # frame = np.array([[0,0,0,0,0,0,0,0,0,0],
@@ -255,6 +260,11 @@ class NumpyRandomGenerator(FrameGenerator):
         #                  [0,0,0,1,2,3,2,0,0,0],
         #                  [0,0,0,0,0,0,0,0,0,0]], dtype=np.uint16)
 
+  
+        frameArraySize = (self.nf, self.ny, self.nx)
+        if self.colorMode != AdImageUtility.COLOR_MODE_MONO:
+            frameArraySize = (self.nf, self.ny, self.nx, 3)
+            
         dt = np.dtype(self.datatype)
         if not self.datatype.startswith('float'):
             dtinfo = np.iinfo(dt)
@@ -264,7 +274,7 @@ class NumpyRandomGenerator(FrameGenerator):
             mx = dtinfo.max
             if self.maximum is not None:
                 mx = int(min(dtinfo.max, self.maximum))
-            self.frames = np.random.randint(mn, mx, size=(self.nf, self.ny, self.nx), dtype=dt)
+            self.frames = np.random.randint(mn, mx, size=frameArraySize, dtype=dt)
         else:
             # Use float32 for min/max, to prevent overflow errors
             dtinfo = np.finfo(np.float32)
@@ -274,7 +284,7 @@ class NumpyRandomGenerator(FrameGenerator):
             mx = dtinfo.max
             if self.maximum is not None:
                 mx = float(min(dtinfo.max, self.maximum))
-            self.frames = np.random.uniform(mn, mx, size=(self.nf, self.ny, self.nx))
+            self.frames = np.random.uniform(mn, mx, size=frameArraySize)
             if self.datatype == 'float32':
                 self.frames = np.float32(self.frames)
 
@@ -298,7 +308,7 @@ class AdSimServer:
         'timeStamp' : pva.PvTimeStamp()
     }
 
-    def __init__(self, inputDirectory, inputFile, mmapMode, hdfDataset, hdfCompressionMode, cfgFile, frameRate, nFrames, cacheSize, nx, ny, datatype, minimum, maximum, runtime, channelName, notifyPv, notifyPvValue, metadataPv, startDelay, shutdownDelay, reportPeriod, disableCurses):
+    def __init__(self, inputDirectory, inputFile, mmapMode, hdfDataset, hdfCompressionMode, cfgFile, frameRate, nFrames, cacheSize, nx, ny, colorMode, datatype, minimum, maximum, runtime, channelName, notifyPv, notifyPvValue, metadataPv, startDelay, shutdownDelay, reportPeriod, disableCurses):
         self.lock = threading.Lock()
         self.deltaT = 0
         self.cacheTimeout = self.CACHE_TIMEOUT
@@ -312,6 +322,7 @@ class AdSimServer:
         self.frameCacheSize = max(cacheSize, self.MIN_CACHE_SIZE)
         self.nFrames = nFrames
         self.configFile = None
+        self.colorMode = colorMode
 
         inputFiles = []
         if inputDirectory is not None:
@@ -342,11 +353,11 @@ class AdSimServer:
             nf = nFrames
             if nf <= 0:
                 nf = self.frameCacheSize
-            self.frameGeneratorList.append(NumpyRandomGenerator(nf, nx, ny, datatype, minimum, maximum))
+            self.frameGeneratorList.append(NumpyRandomGenerator(nf, nx, ny, colorMode, datatype, minimum, maximum))
 
         self.nInputFrames = 0
         for fg in self.frameGeneratorList:
-            nInputFrames, self.rows, self.cols, self.dtype, self.compressorName = fg.getFrameInfo()
+            nInputFrames, self.rows, self.cols, colorMode, self.dtype, self.compressorName = fg.getFrameInfo()
             self.nInputFrames += nInputFrames
         if self.nFrames > 0:
             self.nInputFrames = min(self.nFrames, self.nInputFrames)
@@ -509,14 +520,17 @@ class AdSimServer:
         frameData = None
         while not self.isDone:
             for fg in self.frameGeneratorList:
-                nInputFrames, ny, nx, dtype, compressorName = fg.getFrameInfo()
+                nInputFrames, ny, nx, colorMode, dtype, compressorName = fg.getFrameInfo()
                 for fgFrameId in range(0,nInputFrames):
                     if self.isDone or (self.nInputFrames > 0 and frameId >= self.nInputFrames):
                         break
                     frameData = fg.getFrameData(fgFrameId)
                     if frameData is None:
                         break
-                    ntnda = AdImageUtility.generateNtNdArray2D(frameId, frameData, nx, ny, dtype, compressorName, extraFieldsPvObject)
+                    if self.colorMode == AdImageUtility.COLOR_MODE_MONO:
+                        ntnda = AdImageUtility.generateNtNdArray2D(frameId, frameData, nx, ny, dtype, compressorName, extraFieldsPvObject)
+                    else:
+                        ntnda = AdImageUtility.generateNtNdArray(frameId, frameData, nx, ny, self.colorMode, dtype, compressorName, extraFieldsPvObject)
                     self.addFrameToCache(frameId, ntnda)
                     frameId += 1
             if self.isDone or not self.usingQueue or frameData is None or (self.nInputFrames > 0 and frameId >= self.nInputFrames):
@@ -644,6 +658,7 @@ def main():
     parser.add_argument('-fps', '--frame-rate', type=float, dest='frame_rate', default=20, help='Frames per second (default: 20 fps)')
     parser.add_argument('-nx', '--n-x-pixels', type=int, dest='n_x_pixels', default=256, help='Number of pixels in x dimension (default: 256 pixels; does not apply if input file file is given)')
     parser.add_argument('-ny', '--n-y-pixels', type=int, dest='n_y_pixels', default=256, help='Number of pixels in x dimension (default: 256 pixels; does not apply if input file is given)')
+    parser.add_argument('-cm', '--color-mode', type=int, dest='color_mode', default=0, help='Color mode (default: 0 (mono); this option does not apply if input file is given). Available modes are: 0 (mono), 2 (RGB1, [3, NX, NY]), 3 (RGB2, [NX, 3, NY]), and 4 (RGB3, [NX, NY, 3]).')
     parser.add_argument('-dt', '--datatype', type=str, dest='datatype', default='uint8', help='Generated datatype. Possible options are int8, uint8, int16, uint16, int32, uint32, float32, float64 (default: uint8; does not apply if input file is given)')
     parser.add_argument('-mn', '--minimum', type=float, dest='minimum', default=None, help='Minimum generated value (does not apply if input file is given)')
     parser.add_argument('-mx', '--maximum', type=float, dest='maximum', default=None, help='Maximum generated value (does not apply if input file is given)')
@@ -664,22 +679,27 @@ def main():
         print(f'Unrecognized argument(s): {" ".join(unparsed)}')
         sys.exit(1)
 
-    server = AdSimServer(inputDirectory=args.input_directory, inputFile=args.input_file, mmapMode=args.mmap_mode, hdfDataset=args.hdf_dataset, hdfCompressionMode=args.hdf_compression_mode, cfgFile=args.config_file, frameRate=args.frame_rate, nFrames=args.n_frames, cacheSize=args.cache_size, nx=args.n_x_pixels, ny=args.n_y_pixels, datatype=args.datatype, minimum=args.minimum, maximum=args.maximum, runtime=args.runtime, channelName=args.channel_name, notifyPv=args.notify_pv, notifyPvValue=args.notify_pv_value, metadataPv=args.metadata_pv, startDelay=args.start_delay, shutdownDelay=args.shutdown_delay, reportPeriod=args.report_period, disableCurses=args.disable_curses)
-
-    server.start()
-    expectedRuntime = args.runtime+args.start_delay
-    startTime = time.time()
-    runtime = 0
+    server = None
     try:
-        while True:
-            time.sleep(1)
-            now = time.time()
-            runtime = now - startTime
-            if runtime > expectedRuntime or server.isDone:
-                break
-    except KeyboardInterrupt:
-        server.printReport(f'Server was interrupted after {runtime:.3f} seconds, exiting...')
-    server.stop()
+        server = AdSimServer(inputDirectory=args.input_directory, inputFile=args.input_file, mmapMode=args.mmap_mode, hdfDataset=args.hdf_dataset, hdfCompressionMode=args.hdf_compression_mode, cfgFile=args.config_file, frameRate=args.frame_rate, nFrames=args.n_frames, cacheSize=args.cache_size, nx=args.n_x_pixels, ny=args.n_y_pixels, colorMode=args.color_mode, datatype=args.datatype, minimum=args.minimum, maximum=args.maximum, runtime=args.runtime, channelName=args.channel_name, notifyPv=args.notify_pv, notifyPvValue=args.notify_pv_value, metadataPv=args.metadata_pv, startDelay=args.start_delay, shutdownDelay=args.shutdown_delay, reportPeriod=args.report_period, disableCurses=args.disable_curses)
+
+        server.start()
+        expectedRuntime = args.runtime+args.start_delay
+        startTime = time.time()
+        runtime = 0
+        try:
+            while True:
+                time.sleep(1)
+                now = time.time()
+                runtime = now - startTime
+                if runtime > expectedRuntime or server.isDone:
+                    break
+        except KeyboardInterrupt:
+            server.printReport(f'Server was interrupted after {runtime:.3f} seconds, exiting...')
+    except Exception as ex:
+        print(f'{str(ex)}')
+    if server is not None:
+        server.stop()
 
 if __name__ == '__main__':
     main()
