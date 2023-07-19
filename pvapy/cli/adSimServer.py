@@ -137,6 +137,7 @@ class FabIOFileGenerator(FrameGenerator):
         self.nInputFrames = 0
         self.rows = 0
         self.cols = 0
+        self.file = None
         if not fabio:
             raise Exception('Missing fabio support.')
         if not filePath:
@@ -153,10 +154,18 @@ class FabIOFileGenerator(FrameGenerator):
 
     def loadInputFile(self):
         try:
-            self.frames = fabio.open(self.filePath).data
-            self.frames = np.expand_dims(self.frames, 0);
+            self.file = fabio.open(self.filePath)
+            self.frames = self.file.data
+            if self.frames is not None:
+                self.frames = np.expand_dims(self.frames, 0)
+            if self.frames is None:
+                print("What is going on")
             print(f'Loaded input file {self.filePath}')
-            self.nInputFrames += 1;
+            self.nInputFrames += self.file._nframes
+            # self.frames = fabio.open(self.filePath).data
+            # self.frames = np.expand_dims(self.frames, 0);
+            # print(f'Loaded input file {self.filePath}')
+            # self.nInputFrames += 1;
             return 1
         except Exception as ex:
             print(f'Cannot load input file {self.filePath}: {ex}, skipping it')
@@ -192,15 +201,22 @@ class FabIOFileGenerator(FrameGenerator):
                 frameData = np.resize(frameData, (self.cfg['file_info']['height'], self.cfg['file_info']['width']))
                 return frameData
             return None
-        # other formats: no need for other processing
-        if frameId < self.nInputFrames:
-            return self.frames[frameId]
+        # other formats: one frame, just return data. Multiple frames, get selected frame.
+        if self.nInputFrames == 1:
+            return self.file.data
+        elif frameId < self.nInputFrames and frameId >= 0:
+            return self.file.getframe(frameId).data
+        # if frameId < self.nInputFrames:
+        #     return self.frames[frameId]
         return None
 
     def getFrameInfo(self):
-        if self.frames is not None and not self.bin:
-            frames, self.rows, self.cols = self.frames.shape
-            self.dtype = self.frames.dtype
+        if self.file is not None and self.frames is not None and not self.bin:
+            self.dtype = self.file.dtype
+            frames, self.cols, self.rows = self.frames.shape
+        # if self.frames is not None and not self.bin:
+        #     frames, self.rows, self.cols = self.frames.shape
+        #     self.dtype = self.frames.dtype
         elif self.frames is not None and self.bin:
             self.dtype = self.frames.dtype
         return (self.nInputFrames, self.rows, self.cols, self.colorMode, self.dtype, self.compressorName)
@@ -356,10 +372,14 @@ class AdSimServer:
             self.frameGeneratorList.append(NumpyRandomGenerator(nf, nx, ny, colorMode, datatype, minimum, maximum))
 
         self.nInputFrames = 0
+        multipleFrameImages = False
         for fg in self.frameGeneratorList:
             nInputFrames, self.rows, self.cols, colorMode, self.dtype, self.compressorName = fg.getFrameInfo()
+            if nInputFrames > 1:
+                multipleFrameImages = True
             self.nInputFrames += nInputFrames
-        if self.nFrames > 0:
+        if self.nFrames > 0 and not multipleFrameImages:
+        # if self.nFrames > 0:
             self.nInputFrames = min(self.nFrames, self.nInputFrames)
 
         fg = self.frameGeneratorList[0]
@@ -662,7 +682,7 @@ def main():
     parser.add_argument('-dt', '--datatype', type=str, dest='datatype', default='uint8', help='Generated datatype. Possible options are int8, uint8, int16, uint16, int32, uint32, float32, float64 (default: uint8; does not apply if input file is given)')
     parser.add_argument('-mn', '--minimum', type=float, dest='minimum', default=None, help='Minimum generated value (does not apply if input file is given)')
     parser.add_argument('-mx', '--maximum', type=float, dest='maximum', default=None, help='Maximum generated value (does not apply if input file is given)')
-    parser.add_argument('-nf', '--n-frames', type=int, dest='n_frames', default=0, help='Number of different frames to generate from the input sources; if set to <= 0, the server will use all images found in input files, or it will generate enough images to fill up the image cache if no input files were specified. If the requested number of input frames is greater than the cache size, the server will stop publishing after exhausting generated frames; otherwise, the generated frames will be constantly recycled and republished.')
+    parser.add_argument('-nf', '--n-frames', type=int, dest='n_frames', default=0, help='Number of different frames to generate from the input sources; if set to <= 0, the server will use all images found in input files, or it will generate enough images to fill up the image cache if no input files were specified. If the requested number of input frames is greater than the cache size, the server will stop publishing after exhausting generated frames; otherwise, the generated frames will be constantly recycled and republished. When loading files with multiple frames, nf can determine number of files loaded.')
     parser.add_argument('-cs', '--cache-size', type=int, dest='cache_size', default=1000, help='Number of different frames to cache (default: 1000); if the cache size is smaller than the number of input frames, the new frames will be constantly regenerated as cached ones are published; otherwise, cached frames will be published over and over again as long as the server is running.')
     parser.add_argument('-rt', '--runtime', type=float, dest='runtime', default=300, help='Server runtime in seconds (default: 300 seconds)')
     parser.add_argument('-cn', '--channel-name', type=str, dest='channel_name', default='pvapy:image', help='Server PVA channel name (default: pvapy:image)')
