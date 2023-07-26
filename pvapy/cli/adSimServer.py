@@ -158,14 +158,8 @@ class FabIOFileGenerator(FrameGenerator):
             self.frames = self.file.data
             if self.frames is not None:
                 self.frames = np.expand_dims(self.frames, 0)
-            if self.frames is None:
-                print("What is going on")
             print(f'Loaded input file {self.filePath}')
-            self.nInputFrames += self.file._nframes
-            # self.frames = fabio.open(self.filePath).data
-            # self.frames = np.expand_dims(self.frames, 0);
-            # print(f'Loaded input file {self.filePath}')
-            # self.nInputFrames += 1;
+            self.nInputFrames += self.file.nframes
             return 1
         except Exception as ex:
             print(f'Cannot load input file {self.filePath}: {ex}, skipping it')
@@ -206,17 +200,12 @@ class FabIOFileGenerator(FrameGenerator):
             return self.file.data
         elif frameId < self.nInputFrames and frameId >= 0:
             return self.file.getframe(frameId).data
-        # if frameId < self.nInputFrames:
-        #     return self.frames[frameId]
         return None
 
     def getFrameInfo(self):
         if self.file is not None and self.frames is not None and not self.bin:
             self.dtype = self.file.dtype
             frames, self.cols, self.rows = self.frames.shape
-        # if self.frames is not None and not self.bin:
-        #     frames, self.rows, self.cols = self.frames.shape
-        #     self.dtype = self.frames.dtype
         elif self.frames is not None and self.bin:
             self.dtype = self.frames.dtype
         return (self.nInputFrames, self.rows, self.cols, self.colorMode, self.dtype, self.compressorName)
@@ -379,7 +368,6 @@ class AdSimServer:
                 multipleFrameImages = True
             self.nInputFrames += nInputFrames
         if self.nFrames > 0 and not multipleFrameImages:
-        # if self.nFrames > 0:
             self.nInputFrames = min(self.nFrames, self.nInputFrames)
 
         fg = self.frameGeneratorList[0]
