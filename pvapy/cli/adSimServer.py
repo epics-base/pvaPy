@@ -265,11 +265,11 @@ class NumpyRandomGenerator(FrameGenerator):
         #                  [0,0,0,1,2,3,2,0,0,0],
         #                  [0,0,0,0,0,0,0,0,0,0]], dtype=np.uint16)
 
-  
+
         frameArraySize = (self.nf, self.ny, self.nx)
         if self.colorMode != AdImageUtility.COLOR_MODE_MONO:
             frameArraySize = (self.nf, self.ny, self.nx, 3)
-            
+
         dt = np.dtype(self.datatype)
         if not self.datatype.startswith('float'):
             dtinfo = np.iinfo(dt)
@@ -515,7 +515,7 @@ class AdSimServer:
             # Using dictionary
             cachedFrameId = self.currentFrameId % self.nInputFrames
             if cachedFrameId not in self.frameCache:
-            # In case frames were not generated on time, just use first frame
+                # In case frames were not generated on time, just use first frame
                 cachedFrameId = 0
             ntnda = self.frameCache[cachedFrameId]
         else:
