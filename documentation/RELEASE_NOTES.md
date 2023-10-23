@@ -1,3 +1,13 @@
+## Release 5.3.1 (2022/10/23)
+
+- AD simulation server updates:
+  - Added fabio support
+  - Added support for generating RGB images 
+- Conda/pip package dependencies: 
+  - EPICS BASE = 7.0.7
+  - BOOST      = 1.81.0
+  - NUMPY      >= 1.22 (for python >= 3.8); >= 1.19, < 1.21 (for python < 3.8)
+
 ## Release 5.3.0 (2022/03/29)
 
 - Added optimized method for record updates in PvaServer class
