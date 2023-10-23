@@ -1,4 +1,4 @@
-## Release 5.3.1 (2022/07/14)
+## Release 5.3.1 (2022/10/23)
 
 - AD simulation server updates:
   - Added fabio support
