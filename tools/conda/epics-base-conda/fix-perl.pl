@@ -38,7 +38,9 @@ if ($ccflags =~ m(--sysroot=) ||
 #
 sed("$archdir/CORE/config.h",
     sub { s[^#define\s+I_XLOCALE\s+/][/*$& ]; });
-
+sed("$archdir/CORE/config.h",
+    sub { s[^#define\s+HAS_NEWLOCALE\s+/][/*$& ]; })
+    if $Config{archname} eq 'darwin-thread-multi-2level';
 
 sub sed {
     my ($filename, $edsub) = @_;
