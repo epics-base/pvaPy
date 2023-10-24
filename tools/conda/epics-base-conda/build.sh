@@ -29,6 +29,7 @@ make install
 
 echo "Copying startup files"
 rsync -arvlP startup $CONDA_EPICS_DIR/
+rsync -arvlP $RECIPE_DIR/fix-perl.pl $CONDA_EPICS_DIR/startup
 
 echo "Creating executable symlinks"
 TOP_DIR=..
