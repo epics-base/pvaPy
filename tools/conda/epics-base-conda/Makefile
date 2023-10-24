@@ -12,7 +12,6 @@ CONDA_ENV_FLAGS += -y
 default: package
 
 configure:
-	#eval "cat meta.yaml.template | sed 's?BUILD_NUMBER?${BUILD_NUMBER}?g' | sed 's?EPICS_BASE_VERSION?${EPICS_BASE_VERSION}?g' > meta.yaml"
 
 build: configure
 	$(CONDA_BUILD_FLAGS) conda build .
