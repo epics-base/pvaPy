@@ -1,3 +1,8 @@
+## Release 5.3.2 (2023/MM/DD)
+
+- AD simulation server updates:
+  - Added support for LZ4 and BSLZ4 codecs
+
 ## Release 5.3.1 (2022/10/23)
 
 - AD simulation server updates:
