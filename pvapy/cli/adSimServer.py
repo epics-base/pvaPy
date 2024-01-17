@@ -82,7 +82,9 @@ class HdfFileGenerator(FrameGenerator):
     ''' HDF frame generator class. '''
 
     COMPRESSOR_NAME_MAP = {
-        '32001' : 'blosc'
+        '32001' : 'blosc',
+        '32004' : 'lz4',
+        '32008' : 'bslz4'
     }
 
     def __init__(self, filePath, datasetPath, compressionMode=False):
