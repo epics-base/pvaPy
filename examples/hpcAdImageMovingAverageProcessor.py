@@ -6,7 +6,6 @@ from pvapy.hpc.adImageProcessor import AdImageProcessor
 from pvapy.utility.floatWithUnits import FloatWithUnits
 
 # Example processor for producing moving averages for AD images
-# Rotates images by swapping x and y axes
 class HpcAdImageMovingAverageProcessor(AdImageProcessor):
 
     DEFAULT_N_IMAGES = 10
