@@ -5,7 +5,22 @@ python testServer.py 30 &
 
 echo "Starting tests"
 TEST_FILES=`grep pvaccess test*.py | cut -f1 -d':' | sort -u | grep -v testUtility | grep -v testServer.py`
-pytest -sx $TEST_FILES
+EXIT_STATUS=0
+FAILED_TEST=""
+for T in $TEST_FILES; do
+    echo "Running test: $T"
+    pytest -sx $T
+    if [ $? -ne 0 ]; then
+        EXIT_STATUS=1
+        FAILED_TESTS="$FAILED_TESTS $T"
+    fi
+done
 
 wait
-echo "Tests done"
+echo "Tests done, exit status: $EXIT_STATUS"
+if [ $EXIT_STATUS -eq 0 ]; then
+    echo "All tests passed"
+else
+    echo "Failed tests: $FAILED_TESTS"
+fi
+exit $EXIT_STATUS

@@ -92,7 +92,9 @@ PVACCESS_LIB_DIR=lib/python/$PYTHON_MAJOR_MINOR_VERSION/$EPICS_HOST_ARCH
 
 echo "Using BUILD_FLAGS: $BUILD_FLAGS"
 cd $PVAPY_BUILD_DIR
+echo "Running configure: make configure $PVAPY_FLAGS"
 make configure $PVAPY_FLAGS || exit 1
+echo "Running build: make $BUILD_FLAGS"
 make $BUILD_FLAGS || exit 1
 
 echo "Building pvapy docs"
@@ -106,4 +108,3 @@ mkdir -p $LOCAL_PVAPY_LIB_DIR
 rsync -arv $PVACCESS_LIB_DIR/pvaccess.so $LOCAL_PVAPY_LIB_DIR/
 mkdir -p $LOCAL_PY_LIB_DIR
 rsync -arv $PVACCESS_LIB_DIR/pvaccess.so $LOCAL_PY_LIB_DIR/
-
