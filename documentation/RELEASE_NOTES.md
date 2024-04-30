@@ -1,5 +1,7 @@
 ## Release 5.3.2 (2023/MM/DD)
 
+- Added method for PvaServer record updates via python dictionary, which
+  allows updating a subset of record fields that changed
 - AD simulation server updates:
   - Added support for LZ4 and BSLZ4 codecs
 

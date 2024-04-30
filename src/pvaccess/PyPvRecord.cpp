@@ -6,6 +6,7 @@
 #include "PyPvRecord.h"
 #include "PyUtility.h"
 #include "PyGilManager.h"
+#include "PyPvDataUtility.h"
 
 namespace bp = boost::python;
 namespace epvd = epics::pvData;
@@ -119,6 +120,23 @@ void PyPvRecord::executeCallback()
 
     // Release GIL.
     PyGilManager::gilStateRelease();
+}
+
+void PyPvRecord::update(const bp::dict& pyDict)
+{
+    lock();
+    try {
+        beginGroupPut();
+        epvd::PVStructurePtr pvStructurePtr = getPVStructure();
+        PyPvDataUtility::pyDictToStructure(pyDict, pvStructurePtr);
+        endGroupPut();
+    }
+    catch(...) {
+        endGroupPut();
+        unlock();
+        throw;
+    }
+    unlock();
 }
 
 void PyPvRecord::update(const PvObject& pvObject)

@@ -2,6 +2,7 @@
 // found in the file LICENSE that is included with the distribution
 
 #include "boost/python/class.hpp"
+#include "boost/python/dict.hpp"
 #include "boost/python/overloads.hpp"
 
 #include "PvaServer.h"
@@ -86,6 +87,15 @@ class_<PvaServer>("PvaServer",
         "    pvaServer.stop()\n\n")
 
     .def("update",
+        static_cast<void(PvaServer::*)(const boost::python::dict&)>(&PvaServer::update),
+        args("pyDict"),
+        "Updates server's PV object. This method is atomic, but can be used only when there is a single record in the master database.\n\n"
+        ":Parameter: *pyDict* (dict) - python dictionary containing updated field values.\n\n"
+        ":Raises: *InvalidRequest* - when there is none or more than one record in the database\n\n"
+        "::\n\n"
+        "    pvaServer.update({'y' : 5})\n\n")
+
+    .def("update",
         static_cast<void(PvaServer::*)(const PvObject&)>(&PvaServer::update),
         args("pvObject"),
         "Updates server's PV object. This method is atomic, but can be used only when there is a single record in the master database.\n\n"
@@ -96,9 +106,20 @@ class_<PvaServer>("PvaServer",
         "    pvaServer.update(pv2)\n\n")
 
     .def("update",
+        static_cast<void(PvaServer::*)(const std::string&, const boost::python::dict&)>(&PvaServer::update),
+        args("channelName", "pyDict"),
+        "Updates server's PV object on a given channel. This method is atomic, and should be used when there are multiple records in the master database.\n\n"
+        ":Parameter: *channelName* (str) - channel name.\n\n"
+        ":Parameter: *pyDict* (dict) - python dictionary containing updated field values.\n\n"
+        ":Raises: *ObjectNotFound* - when there is no record associated with a given channel\n\n"
+        "::\n\n"
+        "    pvaServer.update('myChannel', {'x' : 3, 'y' : 5})\n\n")
+
+    .def("update",
         static_cast<void(PvaServer::*)(const std::string&, const PvObject&)>(&PvaServer::update),
         args("channelName", "pvObject"),
         "Updates server's PV object on a given channel. This method is atomic, and should be used when there are multiple records in the master database.\n\n"
+        ":Parameter: *channelName* (str) - channel name.\n\n"
         ":Parameter: *pvObject* (PvObject) - PV object with a structure equivalent to the structure of the object registered on the server's PV channel.\n\n"
         ":Raises: *ObjectNotFound* - when there is no record associated with a given channel\n\n"
         "::\n\n"

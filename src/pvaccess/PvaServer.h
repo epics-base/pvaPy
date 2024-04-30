@@ -7,6 +7,7 @@
 #include <string>
 #include <map>
 #include <boost/python/list.hpp>
+#include <boost/python/dict.hpp>
 #include <pv/pvData.h>
 #include <pv/pvAccess.h>
 #include <pv/serverContext.h>
@@ -31,8 +32,10 @@ public:
 #endif // if PVA_API_VERSION >= 483
     virtual void update(const std::string& channelName, const epics::pvData::PVStructurePtr& pvStructurePtr);
     virtual void updateUnchecked(const std::string& channelName, const epics::pvData::PVStructurePtr& pvStructurePtr);
+    virtual void update(const boost::python::dict& pyDict);
     virtual void update(const PvObject& pvObject);
     virtual void updateUnchecked(const PvObject& pvObject);
+    virtual void update(const std::string& channelName, const boost::python::dict& pyDict);
     virtual void update(const std::string& channelName, const PvObject& pvObject);
     virtual void updateUnchecked(const std::string& channelName, const PvObject& pvObject);
 

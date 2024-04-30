@@ -7,6 +7,7 @@
 #include <string>
 
 #include "boost/python/object.hpp"
+#include "boost/python/dict.hpp"
 
 #include "pv/pvData.h"
 #include "pv/pvDatabase.h"
@@ -32,6 +33,7 @@ public:
     virtual ~PyPvRecord(); 
     virtual bool init();
     virtual void process();
+    void update(const boost::python::dict& pyDict);
     void update(const PvObject& pvObject);
     void updateUnchecked(const PvObject& pvObject);
     void update(const epics::pvData::PVStructurePtr& pvStructurePtr);

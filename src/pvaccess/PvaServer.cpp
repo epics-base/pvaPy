@@ -15,6 +15,7 @@
 #include "PyGilManager.h"
 #include "PyUtility.h"
 
+namespace bp = boost::python;
 namespace epvd = epics::pvData;
 namespace epvdb = epics::pvDatabase;
 
@@ -187,32 +188,6 @@ void PvaServer::initRecord(const std::string& channelName, const PvObject& pvObj
 
 #endif // if PVA_API_VERSION >= 483
 
-void PvaServer::update(const PvObject& pvObject) 
-{
-    if (recordMap.size() == 0) {
-        throw InvalidRequest("Master database does not have any records.");
-    }
-    if (recordMap.size() != 1) {
-        throw InvalidRequest("Master database has multiple records.");
-    }
-
-    std::map<std::string, PyPvRecordPtr>::iterator it = recordMap.begin();
-    it->second->update(pvObject);
-}
-
-void PvaServer::updateUnchecked(const PvObject& pvObject) 
-{
-    if (recordMap.size() == 0) {
-        throw InvalidRequest("Master database does not have any records.");
-    }
-    if (recordMap.size() != 1) {
-        throw InvalidRequest("Master database has multiple records.");
-    }
-
-    std::map<std::string, PyPvRecordPtr>::iterator it = recordMap.begin();
-    it->second->updateUnchecked(pvObject);
-}
-
 void PvaServer::update(const std::string& channelName, const epics::pvData::PVStructurePtr& pvStructurePtr)
 {
     std::map<std::string, PyPvRecordPtr>::iterator it = recordMap.find(channelName);
@@ -229,6 +204,54 @@ void PvaServer::updateUnchecked(const std::string& channelName, const epics::pvD
         throw ObjectNotFound("Master database does not have record for channel: " + channelName);
     }
     it->second->updateUnchecked(pvStructurePtr);
+}
+
+void PvaServer::update(const bp::dict& pyDict)
+{
+    if (recordMap.size() == 0) {
+        throw InvalidRequest("Master database does not have any records.");
+    }
+    if (recordMap.size() != 1) {
+        throw InvalidRequest("Master database has multiple records.");
+    }
+
+    std::map<std::string, PyPvRecordPtr>::iterator it = recordMap.begin();
+    it->second->update(pyDict);
+}
+
+void PvaServer::update(const PvObject& pvObject)
+{
+    if (recordMap.size() == 0) {
+        throw InvalidRequest("Master database does not have any records.");
+    }
+    if (recordMap.size() != 1) {
+        throw InvalidRequest("Master database has multiple records.");
+    }
+
+    std::map<std::string, PyPvRecordPtr>::iterator it = recordMap.begin();
+    it->second->update(pvObject);
+}
+
+void PvaServer::updateUnchecked(const PvObject& pvObject)
+{
+    if (recordMap.size() == 0) {
+        throw InvalidRequest("Master database does not have any records.");
+    }
+    if (recordMap.size() != 1) {
+        throw InvalidRequest("Master database has multiple records.");
+    }
+
+    std::map<std::string, PyPvRecordPtr>::iterator it = recordMap.begin();
+    it->second->updateUnchecked(pvObject);
+}
+
+void PvaServer::update(const std::string& channelName, const bp::dict& pyDict)
+{
+    std::map<std::string, PyPvRecordPtr>::iterator it = recordMap.find(channelName);
+    if (it == recordMap.end()) {
+        throw ObjectNotFound("Master database does not have record for channel: " + channelName);
+    }
+    it->second->update(pyDict);
 }
 
 void PvaServer::update(const std::string& channelName, const PvObject& pvObject) 
