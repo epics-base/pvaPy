@@ -11,7 +11,6 @@
   files)
 - Conda/pip package dependencies: 
   - EPICS BASE = 7.0.8.0.1.pvapy (base 7.0.8 + pvAccessCPP PR #192 + pvDatabaseCPP PR #82) 
-  
   - BOOST      = 1.81.0
   - NUMPY      >= 1.26 (for python >= 3.12); >= 1.22 (for python >= 3.8); >= 1.19, < 1.21 (for python < 3.8)
 
