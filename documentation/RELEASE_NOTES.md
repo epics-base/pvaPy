@@ -1,9 +1,14 @@
-## Release 5.3.2 (2023/MM/DD)
+## Release 5.4.0 (2024/MM/DD)
 
 - Added method for PvaServer record updates via python dictionary, which
   allows updating a subset of record fields that changed
-- AD simulation server updates:
-  - Added support for LZ4 and BSLZ4 codecs
+- Added support for Blosc, LZ4 and BSLZ4 codecs in AD simulation server,
+  as well as for AdImageUtility.reshapeNtNdArray() method; for
+  decompressng payload using AdImageUtility, one can set
+  PVAPY_COMPRESSED_PAYLOAD_START and PVAPY_COMPRESSED_PAYLOAD_END
+  environment variables in case where payload contains extra headers
+  (e.g., when streaming Blosc or BSLZ4 compressed images from HDF5
+  files)
 
 ## Release 5.3.1 (2022/10/23)
 
