@@ -11,12 +11,14 @@ build:
 requirements:
   build:
     - python
-    - numpy=1.22            # python >= 3.8
+    - numpy=1.26            # python >= 3.12
+    #- numpy=1.22           # python >= 3.8
     #- numpy=1.19           # python < 3.8
 
   run:
     - python
-    - numpy>=1.22           # python >= 3.8
+    - numpy>=1.22           # python >= 3.12
+    #- numpy>=1.22          # python >= 3.8
     #- numpy>=1.19,<1.21    # python < 3.8
 
 about:
@@ -24,5 +26,3 @@ about:
   license: Boost Software License
   license_file: LICENSE_1_0.txt
   summary: Boost python libraries needed by PvaPy 
-
-

@@ -7,9 +7,11 @@ echo "Starting test server"
 python testServer.py 30 &
 
 echo "Starting tests"
-TEST_FILES=`ls -c1 test*.py | grep -v testUtility | grep -v testServer.py`
+#TEST_FILES=`ls -c1 test*.py | grep -v testUtility | grep -v testServer.py`
+TEST_FILES=`grep pvaccess test*.py | cut -f1 -d':' | sort -u | grep -v testUtility | grep -v testServer.py`
+
 EXIT_STATUS=0
-FAILED_TEST=""
+FAILED_TESTS=""
 for T in $TEST_FILES; do
     echo "Running test: $T"
     pytest -sx $T
@@ -27,4 +29,3 @@ else
     echo "Failed tests: $FAILED_TESTS"
 fi
 exit $EXIT_STATUS
-

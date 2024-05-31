@@ -39,12 +39,7 @@ requirements:
     - python
     - sphinx
     - sphinx_rtd_theme
-    #
-    # Supported NumPy versions differ for different python versions
-    #
-    - numpy=1.26              # python >= 3.12
-    #- numpy=1.22             # python >= 3.8, < 3.12
-    #- numpy=1.19             # python < 3.8
+    - numpy=1.19             # python < 3.8
     - epics-base={{ environ.get('EPICS_BASE_VERSION', '0.0') }}
     - pvapy-boost={{ environ.get('BOOST_VERSION', '0.0') }}
     #
@@ -64,12 +59,7 @@ requirements:
 
   run:
     - python
-    #
-    # Supported NumPy versions differ for different python versions
-    #
-    - numpy>=1.26             # python >= 3.12
-    #- numpy>=1.22            # python >= 3.8, < 3.12
-    #- numpy>=1.19,<1.21      # python < 3.8
+    - numpy>=1.19,<1.21      # python < 3.8
     - epics-base={{ environ.get('EPICS_BASE_VERSION', '0.0') }}
     - pvapy-boost={{ environ.get('BOOST_VERSION', '0.0') }}
 

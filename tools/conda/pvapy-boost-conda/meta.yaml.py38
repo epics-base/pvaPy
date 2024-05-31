@@ -11,7 +11,7 @@ build:
 requirements:
   build:
     - python
-    - numpy>=1.22
+    - numpy=1.22
 
   run:
     - python
@@ -22,5 +22,3 @@ about:
   license: Boost Software License
   license_file: LICENSE_1_0.txt
   summary: Boost python libraries needed by PvaPy 
-
-

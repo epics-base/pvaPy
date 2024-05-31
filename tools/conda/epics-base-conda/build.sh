@@ -15,10 +15,10 @@ echo "Building epics"
 echo "INSTALL_LOCATION=$CONDA_EPICS_DIR" > configure/CONFIG_SITE.local
 
 CONFIG_FILE=configure/os/CONFIG_SITE.Common.linux-x86_64
-eval "cat $CONFIG_FILE | grep -v GNU_DIR | sed 's?COMMANDLINE_LIBRARY.*?COMMANDLINE_LIBRARY=EPICS?' > $CONFIG_FILE.2 && mv $CONFIG_FILE.2 $CONFIG_FILE"
+eval "cat $CONFIG_FILE | grep -v GNU_DIR | sed 's?#COMMANDLINE_LIBRARY.*=.*EPICS?COMMANDLINE_LIBRARY = EPICS?' > $CONFIG_FILE.2 && mv $CONFIG_FILE.2 $CONFIG_FILE"
 
 CONFIG_FILE=configure/os/CONFIG_SITE.Common.linux-x86
-eval "cat $CONFIG_FILE | grep -v GNU_DIR | sed 's?COMMANDLINE_LIBRARY.*?COMMANDLINE_LIBRARY=EPICS?' > $CONFIG_FILE.2 && mv $CONFIG_FILE.2 $CONFIG_FILE"
+eval "cat $CONFIG_FILE | grep -v GNU_DIR | sed 's?#COMMANDLINE_LIBRARY.*=.*EPICS?COMMANDLINE_LIBRARY = EPICS?' > $CONFIG_FILE.2 && mv $CONFIG_FILE.2 $CONFIG_FILE"
 
 #MAKEFILE=modules/ca/src/perl/Makefile
 #cat $MAKEFILE | sed "s/ccflags/ccflags \| sed 's?--sysroot=*.*sysroot??'/" > $MAKEFILE.2 && mv $MAKEFILE.2 $MAKEFILE
