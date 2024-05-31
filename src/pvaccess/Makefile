@@ -107,6 +107,7 @@ pvaccess_SRCS += ChannelPutRequesterImpl.cpp
 pvaccess_SRCS += ChannelRequesterImpl.cpp
 #pvaccess_SRCS += ChannelRpcServiceImpl.cpp
 pvaccess_SRCS += ChannelTimeout.cpp
+pvaccess_SRCS += ConfigurationError.cpp
 pvaccess_SRCS += FieldNotFound.cpp
 pvaccess_SRCS += GetFieldRequesterImpl.cpp
 pvaccess_SRCS += InvalidArgument.cpp
