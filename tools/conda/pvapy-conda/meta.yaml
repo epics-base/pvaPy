@@ -27,6 +27,7 @@ test:
     # are not required for conda build tests
     #
     #- h5py
+    #- hdf5plugin
     #- pycryptodome
     #- pillow
     #- rsa
@@ -52,6 +53,7 @@ requirements:
     # examples and data processor classes
     #
     #- h5py
+    #- hdf5plugin
     #- pillow
     #- pycryptodome
     #- rsa
