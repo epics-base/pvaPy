@@ -3,8 +3,24 @@ AD Image Utility class
 '''
 
 import time
+import os
 import numpy as np
 import pvaccess as pva
+
+# We attempt to import modules needed for compressed images
+# and ignore errors if they are not there.
+try:
+    import blosc
+except ImportError:
+    pass
+try:
+    import lz4.block
+except ImportError:
+    pass
+try:
+    import bitshuffle
+except ImportError:
+    pass
 
 class AdImageUtility:
     '''
@@ -22,6 +38,19 @@ class AdImageUtility:
         COLOR_MODE_RGB1 : "RGB1",
         COLOR_MODE_RGB2 : "RGB2",
         COLOR_MODE_RGB3 : "RGB3",
+    }
+
+    NUMPY_DATA_TYPE_MAP = {
+        pva.UBYTE   : np.dtype('uint8'),
+        pva.BYTE    : np.dtype('int8'),
+        pva.USHORT  : np.dtype('uint16'),
+        pva.SHORT   : np.dtype('int16'),
+        pva.UINT    : np.dtype('uint32'),
+        pva.INT     : np.dtype('int32'),
+        pva.ULONG   : np.dtype('uint64'),
+        pva.LONG    : np.dtype('int64'),
+        pva.FLOAT   : np.dtype('float32'),
+        pva.DOUBLE  : np.dtype('float64')
     }
 
     NTNDA_DATA_FIELD_KEY_MAP = {
@@ -49,6 +78,86 @@ class AdImageUtility:
         np.dtype('float32') : pva.FLOAT,
         np.dtype('float64') : pva.DOUBLE
     }
+
+    # Compressed payload parameters for AD codecs will
+    # be determined from environment variables on the first
+    # decompression attempt
+
+    # For some HDF5 files that use LZ4 codec one may have to set
+    # PVAPY_COMPRESSED_PAYLOAD_START=16
+
+    # For some HDF5 files that use BSLZ4 codec one may have to set
+    # PVAPY_COMPRESSED_PAYLOAD_START=12
+
+    COMPRESSED_PAYLOAD_START = None
+    COMPRESSED_PAYLOAD_END = None
+
+    # Bitshuffle block size
+    BSLZ4_BLOCK_SIZE = 0
+
+    @classmethod
+    def getCompressedPayload(cls, inputArray):
+        if cls.COMPRESSED_PAYLOAD_START is None:
+            cls.COMPRESSED_PAYLOAD_START = int(os.environ.get('PVAPY_COMPRESSED_PAYLOAD_START', 0))
+            cls.COMPRESSED_PAYLOAD_END = int(os.environ.get('PVAPY_COMPRESSED_PAYLOAD_END', 0))
+        if cls.COMPRESSED_PAYLOAD_END != 0:
+            payload = inputArray[cls.COMPRESSED_PAYLOAD_START:cls.COMPRESSED_PAYLOAD_END]
+        else:
+            payload = inputArray[cls.COMPRESSED_PAYLOAD_START:]
+        return payload
+
+    @classmethod
+    def getDecompressor(cls, codecName):
+        utilityMap = {
+            'blosc' : cls.bloscDecompress,
+            'bslz4' : cls.bslz4Decompress,
+            'lz4' : cls.lz4Decompress
+        }
+        decompressor = utilityMap.get(codecName)
+        if not decompressor:
+            raise pva.InvalidArgument(f'Unsupported compression: {codecName}')
+        return decompressor
+
+    @classmethod
+    def bloscDecompress(cls, inputArray, inputType, uncompressedSize):
+        try:
+            oadt = cls.NUMPY_DATA_TYPE_MAP.get(inputType)
+            oasz = uncompressedSize // oadt.itemsize
+            payload = cls.getCompressedPayload(inputArray)
+            outputArray = np.empty(oasz, dtype=oadt)
+            nBytesWritten = blosc.decompress_ptr(bytearray(payload), outputArray.__array_interface__['data'][0])
+        except NameError as ex:
+            raise pva.ConfigurationError(f'Required module for bloscDecompress is missing: {ex}')
+        except Exception as ex:
+            raise
+        return outputArray
+
+    @classmethod
+    def lz4Decompress(cls, inputArray, inputType, uncompressedSize):
+        try:
+            oadt = cls.NUMPY_DATA_TYPE_MAP.get(inputType)
+            payload = cls.getCompressedPayload(inputArray)
+            outputBytes = lz4.block.decompress(bytearray(payload), uncompressed_size=uncompressedSize)
+            outputArray = np.frombuffer(outputBytes, dtype=oadt)
+        except NameError as ex:
+            raise pva.ConfigurationError(f'Required module for lz4Decompress is missing: {ex}')
+        except Exception as ex:
+            raise
+        return outputArray
+
+    @classmethod
+    def bslz4Decompress(cls, inputArray, inputType, uncompressedSize):
+        try:
+            oadt = cls.NUMPY_DATA_TYPE_MAP.get(inputType)
+            oasz = uncompressedSize // oadt.itemsize
+            oash = (oasz,)
+            payload = cls.getCompressedPayload(inputArray)
+            outputArray = bitshuffle.decompress_lz4(payload, oash, oadt, cls.BSLZ4_BLOCK_SIZE)
+        except NameError as ex:
+            raise pva.ConfigurationError(f'Required module for bslz4Decompress is missing: {ex}')
+        except Exception as ex:
+            raise
+        return outputArray
 
     @classmethod
     def reshapeNtNdArray(cls, ntNdArray):
@@ -113,6 +222,15 @@ class AdImageUtility:
         ###image = next(iter(ntNdArray['value'][0].values()))
         image = ntNdArray['value'][0][fieldKey]
 
+        # Decompress image if needed
+        codecName = ntNdArray['codec']['name']
+        if codecName:
+            uncompressedSize = ntNdArray['uncompressedSize']
+            uncompressedType = ntNdArray['codec.parameters'][0]['value']
+            decompress = cls.getDecompressor(codecName)
+            image = decompress(image, uncompressedType, uncompressedSize)
+
+        # Reshape image
         if colorMode == cls.COLOR_MODE_MONO:
             # [NX, NY]
             image = np.reshape(image, (ny, nx))
