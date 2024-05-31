@@ -77,8 +77,12 @@ setup(
         'numpy>=1.26; python_version >= "3.12"',
     ],
     extras_require = {
-        'image-processing':  ['pillow','h5py'],
-        'encryption':  ['pycryptodome','rsa'],
+        'image-processing'  :  ['pillow','h5py','hdf5plugin'],
+        'encryption'        :  ['pycryptodome','rsa'],
+        'blosc-compression' :  ['blosc'],
+        'lz4-compression'   :  ['lz4'],
+        'bslz4-compression' :  ['bitshuffle'],
+        'all'               :  ['pillow','h5py','hdf5plugin','pycryptodome','rsa','blosc','lz4','bitshuffle'],
     },
     entry_points = {
         'console_scripts': [
