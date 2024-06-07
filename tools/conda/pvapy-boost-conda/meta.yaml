@@ -17,7 +17,7 @@ requirements:
 
   run:
     - python
-    - numpy>=1.22           # python >= 3.12
+    - numpy>=1.26           # python >= 3.12
     #- numpy>=1.22          # python >= 3.8
     #- numpy>=1.19,<1.21    # python < 3.8
 
