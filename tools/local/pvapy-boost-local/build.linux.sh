@@ -76,8 +76,15 @@ cmd="cat project-config.jam | sed 's?using python.*?$PYTHON_CONFIG?' > project-c
 echo $cmd
 eval $cmd || exit 1
 
-echo "Building boost python"
-./b2 || exit 1
+# Determine if C++11 is needed (anything higher than 1.81.0)
+BOOST_VERSION_NUMBER=`cat boost/version.hpp  | grep BOOST_VERSION | grep \#define | grep -v HPP | awk '{print $NF}'`
+if [ $BOOST_VERSION_NUMBER -gt 108100 -o ! -z "$PVAPY_USE_CPP11" ] ; then
+    echo "Building boost python, using C++11"
+    ./b2 cxxflags="-std=c++11" || exit 1
+else
+    echo "Building boost python"
+    ./b2 || exit 1
+fi
 ./b2 install || exit 1
 
 echo "Creating library symlinks"
