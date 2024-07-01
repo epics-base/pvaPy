@@ -27,7 +27,7 @@
 #   and this notice are preserved. This file is offered as-is, without any
 #   warranty.
 
-#serial 6
+#serial 7
 
 DEFAULT_PVA_VERSION=4.0.3
 
@@ -290,7 +290,12 @@ AC_DEFUN([AX_EPICS4],
     AC_SUBST(PVDATACPP_DIR, $pvdatacpp_dir)
     AC_SUBST(PVACCESSCPP_DIR, $pvaccesscpp_dir)
 
+    # Use C++11 if boost requires it
     export CPPFLAGS="$PVA_CPPFLAGS $EPICS_CPPFLAGS"
+    if test "$BOOST_REQUIRES_CPP11" != "0" ; then
+        export CPPFLAGS="$CPPFLAGS -std=c++11"
+        AC_MSG_NOTICE([Adding -std=c++11 flag])
+    fi
     export LDFLAGS="$PVA_LDFLAGS $EPICS_LDFLAGS"
     export LIBS="$PVA_LIBS"
     AC_MSG_CHECKING(EPICS4 PVA RPC API version)
