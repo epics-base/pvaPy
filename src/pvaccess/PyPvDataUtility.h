@@ -379,10 +379,10 @@ void booleanArrayToPyList(const epics::pvData::PVScalarArrayPtr& pvScalarArrayPt
 template<typename PvArrayType, typename CppType>
 void scalarArrayToPyList(const epics::pvData::PVScalarArrayPtr& pvScalarArrayPtr, boost::python::list& pyList) 
 {
-    int nDataElements = pvScalarArrayPtr->getLength();
+    unsigned long long nDataElements = pvScalarArrayPtr->getLength();
     typename PvArrayType::const_svector data;
     pvScalarArrayPtr->PVScalarArray::template getAs<CppType>(data);
-    for (int i = 0; i < nDataElements; ++i) {
+    for (unsigned long long i = 0; i < nDataElements; ++i) {
         pyList.append(data[i]);
     }
 }
@@ -391,7 +391,7 @@ void scalarArrayToPyList(const epics::pvData::PVScalarArrayPtr& pvScalarArrayPtr
 template<typename PvArrayType, typename CppType>
 void copyScalarArrayToScalarArray(const epics::pvData::PVScalarArrayPtr& srcPvScalarArrayPtr, epics::pvData::PVScalarArrayPtr& destPvScalarArrayPtr)
 {
-    int nDataElements = srcPvScalarArrayPtr->getLength();
+    unsigned long long nDataElements = srcPvScalarArrayPtr->getLength();
     typename PvArrayType::const_svector data;
     srcPvScalarArrayPtr->PVScalarArray::template getAs<CppType>(data);
 
@@ -403,7 +403,7 @@ void copyScalarArrayToScalarArray(const epics::pvData::PVScalarArrayPtr& srcPvSc
 template<typename PvArrayType, typename CppType>
 numpy_::ndarray getScalarArrayAsNumPyArray(const epics::pvData::PVScalarArrayPtr& pvScalarArrayPtr)
 {
-    int nDataElements = pvScalarArrayPtr->getLength();
+    unsigned long long nDataElements = pvScalarArrayPtr->getLength();
     typename PvArrayType::const_svector data;
     pvScalarArrayPtr->PVScalarArray::template getAs<CppType>(data);
     const CppType* arrayData = data.data();
@@ -417,7 +417,17 @@ numpy_::ndarray getScalarArrayAsNumPyArray(const epics::pvData::PVScalarArrayPtr
 template<typename CppType, typename NumPyType>
 void setScalarArrayFieldFromNumPyArrayImpl(const numpy_::ndarray& ndArray, const std::string& fieldName, epics::pvData::PVStructurePtr& pvStructurePtr)
 {
-    int nDataElements = ndArray.shape(0);
+    int nDimensions = ndArray.get_nd();
+    unsigned long long nDataElements = 1;
+    if (nDimensions) {
+        for(int i = 0; i < nDimensions; i++) {
+            nDataElements *= ndArray.shape(i);
+        }
+    }
+    else {
+        nDataElements = 0;
+    }
+
     numpy_::dtype dtype = ndArray.get_dtype();
     numpy_::dtype expectedDtype = numpy_::dtype::get_builtin<NumPyType>();
  
