@@ -90,9 +90,9 @@ echo $cmd
 eval $cmd || exit 1
 
 # Determine if C++11 is needed (anything higher than 1.81.0)
-BOOST_VERSION_NUMBER=`cat boost/version.hpp  | grep BOOST_VERSION | grep
-\#define | grep -v HPP | awk '{print $NF}'`
-if [ $BOOST_VERSION_NUMBER -gt 108100 -o ! -z "$PVAPY_USE_CPP11" ] ; then
+BOOST_VERSION_NUMBER=`cat boost/version.hpp  | grep BOOST_VERSION | grep \#define | grep -v HPP | awk '{print $NF}'`
+PVAPY_USE_CPP11=${PVAPY_USE_CPP11:-0}
+if [ $BOOST_VERSION_NUMBER -gt 108100 -o $PVAPY_USE_CPP11 -gt 0 ] ; then
     echo "Building boost python, using C++11"
     #./b2 -std=c++11 --with-python python-debugging=off threading=multi variant=release address-model=64 || exit 1
     ./b2 cxxflags="-std=c++11" || exit 1

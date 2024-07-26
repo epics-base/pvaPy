@@ -11,14 +11,19 @@ echo "Fixing Conda's Perl installation"
 perl $RECIPE_DIR/fix-perl.pl
 
 echo "Building epics"
+PVAPY_USE_CPP11=${PVAPY_USE_CPP11:-0}
+echo "Using C++11: $PVAPY_USE_CPP11"
+
 #eval "cat configure/CONFIG_SITE | sed 's?#INSTALL_LOCATION=.*?INSTALL_LOCATION=$CONDA_EPICS_DIR?' > configure/CONFIG_SITE.2 && mv configure/CONFIG_SITE.2 configure/CONFIG_SITE" 
 echo "INSTALL_LOCATION=$CONDA_EPICS_DIR" > configure/CONFIG_SITE.local
 
-CONFIG_FILE=configure/os/CONFIG_SITE.Common.linux-x86_64
-eval "cat $CONFIG_FILE | grep -v GNU_DIR | sed 's?#COMMANDLINE_LIBRARY.*=.*EPICS?COMMANDLINE_LIBRARY = EPICS?' > $CONFIG_FILE.2 && mv $CONFIG_FILE.2 $CONFIG_FILE"
-
-CONFIG_FILE=configure/os/CONFIG_SITE.Common.linux-x86
-eval "cat $CONFIG_FILE | grep -v GNU_DIR | sed 's?#COMMANDLINE_LIBRARY.*=.*EPICS?COMMANDLINE_LIBRARY = EPICS?' > $CONFIG_FILE.2 && mv $CONFIG_FILE.2 $CONFIG_FILE"
+for arch in linux-x86 linux-x86_64 darwin-x86 darwin-aarch64 ; do
+    CONFIG_FILE=configure/os/CONFIG_SITE.Common.$arch
+    eval "cat $CONFIG_FILE | grep -v GNU_DIR | sed 's?#COMMANDLINE_LIBRARY.*=.*EPICS?COMMANDLINE_LIBRARY = EPICS?' > $CONFIG_FILE.2 && mv $CONFIG_FILE.2 $CONFIG_FILE"
+    if [ $PVAPY_USE_CPP11 -gt 0 ]; then
+        echo "OP_SYS_CXXFLAGS += -std=c++11" >> $CONFIG_FILE
+    fi
+done
 
 #MAKEFILE=modules/ca/src/perl/Makefile
 #cat $MAKEFILE | sed "s/ccflags/ccflags \| sed 's?--sysroot=*.*sysroot??'/" > $MAKEFILE.2 && mv $MAKEFILE.2 $MAKEFILE

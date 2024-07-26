@@ -259,10 +259,13 @@ if test "x$want_boost" = "xyes"; then
         AC_LANG_POP([C++])
     fi
 
+    if test -z "$PVAPY_USE_CPP11"; then
+        PVAPY_USE_CPP11=0
+    fi
     BOOST_VERSION=`cat $BOOST_DIR/include/boost/version.hpp  | grep BOOST_VERSION | grep \#define | grep -v HPP | awk '{print $NF}'`
     # For anything higher than 1.81.0 we need c++11
     BOOST_REQUIRES_CPP11=0
-    if test $BOOST_VERSION -gt 108100 ; then
+    if test $BOOST_VERSION -gt 108100 -o $PVAPY_USE_CPP11 -gt 0 ; then
         BOOST_CPPFLAGS="-std=c++11 $BOOST_CPPFLAGS"
         BOOST_REQUIRES_CPP11=1
     fi
