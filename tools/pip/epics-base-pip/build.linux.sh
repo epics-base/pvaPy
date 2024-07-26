@@ -39,8 +39,8 @@ PVAPY_USE_CPP11=${PVAPY_USE_CPP11:-0}
 CONFIG_FILE=configure/CONFIG_SITE
 eval "cat $CONFIG_FILE | sed 's?#INSTALL_LOCATION=.*?INSTALL_LOCATION=$EPICS_BASE_DIR?' > $CONFIG_FILE.2 && mv $CONFIG_FILE.2 $CONFIG_FILE"
 
-for arch in 'x86' 'x86_64'; do
-    CONFIG_FILE=configure/os/CONFIG_SITE.Common.linux-$arch
+for arch in 'linux-x86' 'linux-x86_64' 'linux-aarch64'; do
+    CONFIG_FILE=configure/os/CONFIG_SITE.Common.$arch
     eval "cat $CONFIG_FILE | grep -v GNU_DIR | sed 's?COMMANDLINE_LIBRARY.*?COMMANDLINE_LIBRARY=EPICS?' > $CONFIG_FILE.2 && mv $CONFIG_FILE.2 $CONFIG_FILE"
     if [ $PVAPY_USE_CPP11 -gt 0 ]; then
         echo "OP_SYS_CXXFLAGS += -std=c++11" >> $CONFIG_FILE
