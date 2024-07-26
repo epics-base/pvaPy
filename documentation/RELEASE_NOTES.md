@@ -1,3 +1,14 @@
+## Release 5.4.1 (2024/07/25)
+
+- Fixed issue with MultiChannel class initialization
+- Fixed issue with numpy arrays larger than 2GB
+- Added support for C++11 build
+- Updated fabio support in AD simulation server
+- Conda/pip package dependencies: 
+  - EPICS BASE = 7.0.8.1.1.pvapy (base 7.0.8.1 + pvAccessCPP PR #192 + pvDatabaseCPP PR #82) 
+  - BOOST      = 1.85.0
+  - NUMPY      >= 1.26, < 2.0 (for python >= 3.12); >= 1.22, < 2.0 (for python >= 3.8); >= 1.19, < 1.21 (for python < 3.8)
+
 ## Release 5.4.0 (2024/05/31)
 
 - Added method for PvaServer record updates via python dictionary, which
