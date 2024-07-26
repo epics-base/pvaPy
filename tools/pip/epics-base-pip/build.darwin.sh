@@ -33,8 +33,20 @@ tar zxf $EPICS_BASE_TAR_FILE
 # Build
 cd base-${EPICS_BASE_VERSION}
 EPICS_HOST_ARCH=`./startup/EpicsHostArch`
+PVAPY_USE_CPP11=${PVAPY_USE_CPP11:-0}
+
 eval "cat configure/CONFIG_SITE | sed 's?#INSTALL_LOCATION=.*?INSTALL_LOCATION=$EPICS_BASE_DIR?' > configure/CONFIG_SITE.2 && mv configure/CONFIG_SITE.2 configure/CONFIG_SITE"
+
+for arch in 'darwin-x86' 'darwin-aarch64'; do
+    CONFIG_FILE=configure/os/CONFIG_SITE.Common.$arch
+    if [ $PVAPY_USE_CPP11 -gt 0 ]; then
+        echo "OP_SYS_CXXFLAGS += -std=c++11" >> $CONFIG_FILE
+    fi
+done
+
 echo "Using BUILD_FLAGS: $BUILD_FLAGS"
+echo "Using C++11: $PVAPY_USE_CPP11"
+
 make $BUILD_FLAGS
 make install 
 

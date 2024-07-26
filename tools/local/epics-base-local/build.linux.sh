@@ -35,6 +35,11 @@ echo "Using BUILD_FLAGS: $BUILD_FLAGS"
 cd base-*${EPICS_BASE_VERSION}
 EPICS_HOST_ARCH=`./startup/EpicsHostArch`
 echo "INSTALL_LOCATION=$LOCAL_EPICS_DIR" > configure/CONFIG_SITE.local
+PVAPY_USE_CPP11=${PVAPY_USE_CPP11:-0}
+if [ $PVAPY_USE_CPP11 -gt 0 ]; then
+    echo "OP_SYS_CXXFLAGS += -std=c++11" >> configure/os/CONFIG_SITE.Common.linux-x86_64
+fi
+echo "Using C++11: $PVAPY_USE_CPP11"
 
 make $BUILD_FLAGS
 make install 

@@ -34,6 +34,8 @@ MultiChannel::MultiChannel(const bp::list& channelNames, PvProvider::ProviderTyp
     , monitorThreadRunning(false)
     , monitorActive(false)
 {
+    PvObject::initializeBoostNumPy();
+    PyGilManager::evalInitThreads();
     nChannels = bp::len(channelNames);
     epvd::shared_vector<std::string> names(nChannels);
     for (unsigned int i = 0; i < nChannels; i++) {

@@ -139,6 +139,7 @@ class FabIOFileGenerator(FrameGenerator):
         self.nInputFrames = 0
         self.rows = 0
         self.cols = 0
+        self.file = None
         if not fabio:
             raise Exception('Missing fabio support.')
         if not filePath:
@@ -155,10 +156,12 @@ class FabIOFileGenerator(FrameGenerator):
 
     def loadInputFile(self):
         try:
-            self.frames = fabio.open(self.filePath).data
-            self.frames = np.expand_dims(self.frames, 0);
+            self.file = fabio.open(self.filePath)
+            self.frames = self.file.data
+            if self.frames is not None:
+                self.frames = np.expand_dims(self.frames, 0)
             print(f'Loaded input file {self.filePath}')
-            self.nInputFrames += 1;
+            self.nInputFrames += self.file.nframes
             return 1
         except Exception as ex:
             print(f'Cannot load input file {self.filePath}: {ex}, skipping it')
@@ -194,15 +197,17 @@ class FabIOFileGenerator(FrameGenerator):
                 frameData = np.resize(frameData, (self.cfg['file_info']['height'], self.cfg['file_info']['width']))
                 return frameData
             return None
-        # other formats: no need for other processing
-        if frameId < self.nInputFrames:
-            return self.frames[frameId]
+        # other formats: one frame, just return data. Multiple frames, get selected frame.
+        if self.nInputFrames == 1:
+            return self.file.data
+        elif frameId < self.nInputFrames and frameId >= 0:
+            return self.file.getframe(frameId).data
         return None
 
     def getFrameInfo(self):
-        if self.frames is not None and not self.bin:
-            frames, self.rows, self.cols = self.frames.shape
-            self.dtype = self.frames.dtype
+        if self.file is not None and self.frames is not None and not self.bin:
+            self.dtype = self.file.dtype
+            frames, self.cols, self.rows = self.frames.shape
         elif self.frames is not None and self.bin:
             self.dtype = self.frames.dtype
         return (self.nInputFrames, self.rows, self.cols, self.colorMode, self.dtype, self.compressorName)
@@ -262,11 +267,11 @@ class NumpyRandomGenerator(FrameGenerator):
         #                  [0,0,0,1,2,3,2,0,0,0],
         #                  [0,0,0,0,0,0,0,0,0,0]], dtype=np.uint16)
 
-  
+
         frameArraySize = (self.nf, self.ny, self.nx)
         if self.colorMode != AdImageUtility.COLOR_MODE_MONO:
             frameArraySize = (self.nf, self.ny, self.nx, 3)
-            
+
         dt = np.dtype(self.datatype)
         if not self.datatype.startswith('float'):
             dtinfo = np.iinfo(dt)
@@ -358,10 +363,13 @@ class AdSimServer:
             self.frameGeneratorList.append(NumpyRandomGenerator(nf, nx, ny, colorMode, datatype, minimum, maximum))
 
         self.nInputFrames = 0
+        multipleFrameImages = False
         for fg in self.frameGeneratorList:
             nInputFrames, self.rows, self.cols, colorMode, self.dtype, self.compressorName = fg.getFrameInfo()
+            if nInputFrames > 1:
+                multipleFrameImages = True
             self.nInputFrames += nInputFrames
-        if self.nFrames > 0:
+        if self.nFrames > 0 and not multipleFrameImages:
             self.nInputFrames = min(self.nFrames, self.nInputFrames)
 
         fg = self.frameGeneratorList[0]
@@ -509,7 +517,7 @@ class AdSimServer:
             # Using dictionary
             cachedFrameId = self.currentFrameId % self.nInputFrames
             if cachedFrameId not in self.frameCache:
-            # In case frames were not generated on time, just use first frame
+                # In case frames were not generated on time, just use first frame
                 cachedFrameId = 0
             ntnda = self.frameCache[cachedFrameId]
         else:
