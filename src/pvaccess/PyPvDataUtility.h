@@ -5,7 +5,6 @@
 #define PY_PV_DATA_UTILITY_H
 
 #include <string>
-#include "pv/pvData.h"
 #include "boost/python/str.hpp"
 #include "boost/python/extract.hpp"
 #include "boost/python/object.hpp"
@@ -13,6 +12,7 @@
 #include "boost/python/dict.hpp"
 #include "boost/python/tuple.hpp"
 #include "boost/shared_ptr.hpp"
+#include "pv/pvData.h"
 
 #include "pvapy.environment.h"
 

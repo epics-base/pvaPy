@@ -38,8 +38,16 @@ CONFIG_FILE=configure/CONFIG_SITE
 eval "cat $CONFIG_FILE | sed 's?#INSTALL_LOCATION=.*?INSTALL_LOCATION=$EPICS_BASE_DIR?' > $CONFIG_FILE.2 && mv $CONFIG_FILE.2 $CONFIG_FILE"
 CONFIG_FILE=configure/os/CONFIG_SITE.Common.linux-x86_64
 eval "cat $CONFIG_FILE | grep -v GNU_DIR | sed 's?COMMANDLINE_LIBRARY.*?COMMANDLINE_LIBRARY=EPICS?' > $CONFIG_FILE.2 && mv $CONFIG_FILE.2 $CONFIG_FILE"
+if [ ! -z $PVAPY_USE_CPP11 ]; then
+    echo "OP_SYS_CXXFLAGS += -std=c++11" >> $CONFIG_FILE
+fi 
+
 CONFIG_FILE=configure/os/CONFIG_SITE.Common.linux-x86
 eval "cat $CONFIG_FILE | grep -v GNU_DIR | sed 's?COMMANDLINE_LIBRARY.*?COMMANDLINE_LIBRARY=EPICS?' > $CONFIG_FILE.2 && mv $CONFIG_FILE.2 $CONFIG_FILE"
+if [ ! -z $PVAPY_USE_CPP11 ]; then
+    echo "OP_SYS_CXXFLAGS += -std=c++11" >> $CONFIG_FILE
+fi 
+
 echo "Using BUILD_FLAGS: $BUILD_FLAGS"
 make $BUILD_FLAGS
 make install 

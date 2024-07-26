@@ -17,7 +17,7 @@ public:
     POINTER_DEFINITIONS(RpcServiceImpl);
     RpcServiceImpl(const boost::python::object& pyService);
     virtual ~RpcServiceImpl();
-    epics::pvData::PVStructurePtr request(const epics::pvData::PVStructurePtr& args);
+    virtual epics::pvData::PVStructurePtr request(const epics::pvData::PVStructurePtr& args);
 private:
     static PvaPyLogger logger;
     boost::python::object pyService;
