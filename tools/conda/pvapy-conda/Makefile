@@ -1,5 +1,5 @@
 
-TOP = ..
+TOP = ../../..
 BUILD_CONF = $(TOP)/configure/BUILD.conf
 include $(BUILD_CONF)
 
