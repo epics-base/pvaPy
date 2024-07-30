@@ -10,8 +10,9 @@ source:
 build:
   number: {{ environ.get('BUILD_NUMBER', '1') }}
   script_env:
-    - PVAPY_VERSION
     - BUILD_FLAGS
+    - PVAPY_USE_CPP11
+    - PVAPY_VERSION
   entry_points:
     - pvapy-ad-sim-server=pvapy.cli.adSimServer:main
     - pvapy-hpc-consumer=pvapy.cli.hpcConsumer:main

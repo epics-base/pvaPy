@@ -7,6 +7,9 @@ source:
 
 build:
   number: {{ environ.get('BUILD_NUMBER', '1') }}
+  script_env:
+    - PVAPY_USE_CPP11
+
 
 requirements:
   build:
@@ -15,7 +18,7 @@ requirements:
 
   run:
     - python
-    - numpy>=1.26
+    - numpy>=1.26,<2.0
 
 about:
   home: http://www.boost.org

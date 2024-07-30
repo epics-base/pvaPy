@@ -11,6 +11,8 @@ PYTHON=python
 if [ "$PYTHON_MAJOR_VERSION" = "3" ]; then
     PYTHON=python3
 fi
+PVAPY_USE_CPP11=${PVAPY_USE_CPP11:-0}
+echo "Using C++11: $PVAPY_USE_CPP11"
 
 ./bootstrap.sh --with-libraries=python --prefix=$CONDA_BOOST_DIR --with-python-root=$PREFIX --with-python=$PREFIX/bin/$PYTHON || exit 1
 
@@ -22,6 +24,10 @@ echo $cmd
 eval $cmd || exit 1
 
 echo "Building boost python"
-./b2 || exit 1
+if [ $PVAPY_USE_CPP11 -gt 0 ]; then
+    ./b2 cxxflags="-std=c++11" || exit 1
+else
+    ./b2 || exit 1
+fi
 ./b2 install || exit 1
 

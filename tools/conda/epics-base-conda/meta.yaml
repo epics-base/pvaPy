@@ -9,6 +9,7 @@ build:
   number: {{ environ.get('BUILD_NUMBER', '1') }}
   script_env:
     - BUILD_FLAGS
+    - PVAPY_USE_CPP11
 
 requirements:
   build:
