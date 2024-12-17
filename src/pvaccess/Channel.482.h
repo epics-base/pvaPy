@@ -27,6 +27,10 @@
 #include "PvaPyLogger.h"
 #include "PvaConstants.h"
 
+#ifndef Py_REFCNT
+#define Py_REFCNT(o)  (((PyObject*)(o))->ob_refcnt)
+#endif
+
 class Channel : public ChannelMonitorDataProcessor
 {
 public:
@@ -278,10 +282,10 @@ private:
         // In some cases it seems like boost python object reference counts
         // go below the minimum before destructor is called
         ~AsyncRequest() {
-            if (pyCallback.ptr()->ob_refcnt <= 1) {
+            if (Py_REFCNT(pyCallback.ptr()) <= 1) {
                 boost::python::incref(pyCallback.ptr());
             }
-            if (pyErrorCallback.ptr()->ob_refcnt <= 1) {
+            if (Py_REFCNT(pyErrorCallback.ptr()) <= 1) {
                 boost::python::incref(pyErrorCallback.ptr());
             }
         }
