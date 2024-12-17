@@ -828,11 +828,6 @@ void Channel::subscribe(const std::string& subscriberName, const bp::object& pyS
         }
     }
     logger.trace("Subscribed " + subscriberName + " to monitor channel " + getName() + ".");
-
-    //bp::incref(pySubscriber.ptr());
-    //PyObject* pyObject = pySubscriber.ptr();
-    //int refCount = pyObject->ob_refcnt;
-    //bp::decref(pySubscriber.ptr());
 }
 
 void Channel::unsubscribe(const std::string& subscriberName)
