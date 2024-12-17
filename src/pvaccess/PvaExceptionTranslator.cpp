@@ -2,6 +2,7 @@
 // found in the file LICENSE that is included with the distribution
 
 #include "boost/python.hpp"
+#include "boost/python/exception_translator.hpp"
 #include "PvaExceptionTranslator.h"
 
 std::map<std::string,PyObject*> PvaExceptionTranslator::exceptionClassMap;
