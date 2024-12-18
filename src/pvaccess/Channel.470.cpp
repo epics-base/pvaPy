@@ -616,11 +616,6 @@ void Channel::subscribe(const std::string& subscriberName, const boost::python::
         }
     }
     logger.trace("Subscribed " + subscriberName + " to monitor channel " + getName() + ".");
-
-    //boost::python::incref(pySubscriber.ptr());
-    //PyObject* pyObject = pySubscriber.ptr();
-    //int refCount = pyObject->ob_refcnt;
-    //boost::python::decref(pySubscriber.ptr());
 }
 
 void Channel::unsubscribe(const std::string& subscriberName)
