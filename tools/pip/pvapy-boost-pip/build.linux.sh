@@ -65,12 +65,14 @@ else
 fi
 export PATH=$PYTHON_DIR/bin:$PATH
 export LD_LIBRARY_PATH=$PYTHON_DIR/lib:$LD_LIBRARY_PATH:$BOOST_DIR/lib/$BOOST_HOST_ARCH
+echo "Using PYTHON_DIR=$PYTHON_DIR"
 
 BOOST_FLAGS="--with-libraries=python --prefix=$BOOST_DIR --libdir=$BOOST_DIR/lib/$BOOST_HOST_ARCH"
 BOOST_FLAGS="$BOOST_FLAGS --with-python-root=$PYTHON_DIR"
 BOOST_FLAGS="$BOOST_FLAGS --with-python=$PYTHON_BIN"
 PYTHON_MAJOR_MINOR_VERSION=`$PYTHON_BIN --version 2>&1 | cut -f2 -d ' ' | cut -f1,2 -d '.'`
-PYTHON_INCLUDE_DIR=$PYTHON_DIR/include/python${PYTHON_MAJOR_MINOR_VERSION}m 
+PYTHON_INCLUDE_DIR=`ls -c1 $PYTHON_DIR/include/ | grep ${PYTHON_MAJOR_MINOR_VERSION}`
+PYTHON_INCLUDE_DIR=$PYTHON_DIR/include/${PYTHON_INCLUDE_DIR}
 if [ ! -d $PYTHON_INCLUDE_DIR ]; then
     PYTHON_INCLUDE_DIR=$PYTHON_DIR/include/python${PYTHON_MAJOR_MINOR_VERSION}
     if [ ! -d $PYTHON_INCLUDE_DIR ]; then
@@ -78,6 +80,8 @@ if [ ! -d $PYTHON_INCLUDE_DIR ]; then
         exit 1
     fi
 fi
+PYTHON_ABI_TAG=`$PYTHON_BIN -c "from packaging.tags import sys_tags; tag = next(sys_tags()); print(tag.abi)"`
+PYTHON_INTERPRETER_TAG=`$PYTHON_BIN -c "from packaging.tags import sys_tags; tag = next(sys_tags()); print(tag.interpreter)"`
 
 echo "Executing: ./bootstrap.sh $BOOST_FLAGS"
 ./bootstrap.sh $BOOST_FLAGS || exit 1 
@@ -112,5 +116,5 @@ for f in `find . -type f -name '*.so*'`; do
 done
 
 # Save build so we can reuse it
-BOOST_SAVE_DIR=$BUILD_SAVE_DIR/pvapy-boost-${BOOST_VERSION}-py${PYTHON_MAJOR_MINOR_VERSION}
+BOOST_SAVE_DIR=$BUILD_SAVE_DIR/pvapy-boost-${BOOST_VERSION}-${PYTHON_INTERPRETER_TAG}-${PYTHON_ABI_TAG}
 rsync -arlP --exclude 'cmake' $BOOST_DIR/ $BOOST_SAVE_DIR/

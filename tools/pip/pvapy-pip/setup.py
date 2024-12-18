@@ -73,8 +73,9 @@ setup(
     },
     install_requires=[
         'numpy>=1.19,<1.21; python_version < "3.8"',
-        'numpy>=1.22,<2.0; python_version >= "3.8" and python_version < "3.12"',
-        'numpy>=1.26,<2.0; python_version >= "3.12"',
+        'numpy>=1.22,<2.0; python_version >= "3.8" and python_version < "3.9"',
+        'numpy>=2.0; python_version >= "3.9" and python_version < "3.13"',
+        'numpy>=2.1; python_version >= "3.13"'
     ],
     extras_require = {
         'image-processing'  :  ['pillow','h5py','hdf5plugin'],

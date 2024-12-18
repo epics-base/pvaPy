@@ -1,14 +1,12 @@
-blosc
-h5py
-hdf5plugin
-lz4
-bitshuffle
 numpy==1.19; python_version < '3.8'
-numpy==1.22; python_version >= '3.8' and python_version < '3.12'
-numpy==1.26; python_version >= '3.12'
-pillow
-pycryptodome
+numpy==1.22; python_version >= '3.8' and python_version < '3.9'
+numpy==2.0; python_version >= '3.9' and python_version < '3.13'
+numpy==2.1; python_version >= '3.13'
 pylint
 pytest
-rsa
-
+setuptools
+sphinx
+sphinx_rtd_theme
+wheel
+auditwheel
+twine

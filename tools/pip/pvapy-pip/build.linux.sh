@@ -13,11 +13,6 @@ if [ ! -f $BUILD_CONF ]; then
 fi
 . $BUILD_CONF
 
-#DEFAULT_PYTHON_VERSION="2"
-#if [ -z "$PYTHON_VERSION" ]; then
-#    PYTHON_VERSION=$DEFAULT_PYTHON_VERSION
-#fi
-
 PYTHON_BIN=`which python$PYTHON_VERSION 2> /dev/null`
 if [ -z "$PYTHON_BIN" ]; then
     PYTHON_BIN=`which python 2> /dev/null`
@@ -37,6 +32,8 @@ else
 fi
 PYTHON_MAJOR_MINOR_VERSION=`$PYTHON_BIN --version 2>&1 | cut -f2 -d ' ' | cut -f1,2 -d '.'`
 PYTHON_MAJOR_VERSION=`echo $PYTHON_MAJOR_MINOR_VERSION | cut -f1 -d '.'`
+PYTHON_ABI_TAG=`$PYTHON_BIN -c "from packaging.tags import sys_tags; tag = next(sys_tags()); print(tag.abi)"`
+PYTHON_INTERPRETER_TAG=`$PYTHON_BIN -c "from packaging.tags import sys_tags; tag = next(sys_tags()); print(tag.interpreter)"`
 
 BUILD_DIR=$TOP_DIR/build
 BUILD_SAVE_DIR=$TOP_DIR/../build
@@ -47,7 +44,7 @@ PVACCESS_LIB_DIR=$PVACCESS_DIR/lib
 PVAPY_BUILD_DIR=$BUILD_DIR/pvaPy-$PVAPY_VERSION
 EPICS_BASE_DIR=$BUILD_SAVE_DIR/epics-base-${EPICS_BASE_VERSION}
 EPICS_HOST_ARCH=`$EPICS_BASE_DIR/startup/EpicsHostArch`
-BOOST_DIR=$BUILD_SAVE_DIR/pvapy-boost-${BOOST_VERSION}-py${PYTHON_MAJOR_MINOR_VERSION}
+BOOST_DIR=$BUILD_SAVE_DIR/pvapy-boost-${BOOST_VERSION}-${PYTHON_INTERPRETER_TAG}-${PYTHON_ABI_TAG}
 
 BOOST_HOST_ARCH=`uname | tr [A-Z] [a-z]`-`uname -m`
 PVACCESS_LIB=pvaccess.so

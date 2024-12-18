@@ -1,0 +1,7 @@
+blosc
+h5py
+hdf5plugin
+lz4
+bitshuffle
+pycryptodome
+rsa
