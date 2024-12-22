@@ -4,9 +4,9 @@ import pvaccess as pva
 from .sourceChannel import SourceChannel
 
 class CaMetadataChannel(SourceChannel):
-    def __init__(self, channelId, channelName, serverQueueSize, monitorQueueSize, parentObject):
+    def __init__(self, channelId, channelName, serverQueueSize, receiverQueueSize, parentObject):
         loggerName = f'caMetadata-{channelId}'
-        SourceChannel.__init__(self, channelId, channelName, pva.CA, serverQueueSize, monitorQueueSize, loggerName, parentObject)
+        SourceChannel.__init__(self, channelId, channelName, pva.CA, serverQueueSize, receiverQueueSize, loggerName, parentObject)
 
     def getPvMonitorRequest(self):
         recordStr = ''

@@ -10,7 +10,7 @@ class SourceChannel(pva.Channel):
     STATUS_TYPE_DICT = {
         'producerId' : pva.UINT,
         'channel' : pva.STRING,
-        'monitorStats' : {
+        'receiverStats' : {
             'nReceived' : pva.UINT,
             'receivedRate' : pva.DOUBLE,
             'nOverruns' : pva.UINT,
@@ -24,7 +24,7 @@ class SourceChannel(pva.Channel):
         },
     }
 
-    def __init__(self, channelId, channelName, channelProtocol, serverQueueSize, monitorQueueSize, loggerName, parentObject):
+    def __init__(self, channelId, channelName, channelProtocol, serverQueueSize, receiverQueueSize, loggerName, parentObject):
         if not loggerName:
             loggerName = self.__class__.__name__
         self.logger = LoggingManager.getLogger(loggerName)
@@ -32,22 +32,22 @@ class SourceChannel(pva.Channel):
         self.parentObject = parentObject
         self.channelId = channelId
         self.serverQueueSize = serverQueueSize
-        self.monitorQueueSize = monitorQueueSize
+        self.receiverQueueSize = receiverQueueSize
         self.pvObjectQueue = None
-        if monitorQueueSize >= 0:
-            self.logger.debug(f'Source channel {self.channelName} using monitor queue size {monitorQueueSize}')
-            self.pvObjectQueue = pva.PvObjectQueue(monitorQueueSize)
+        if receiverQueueSize >= 0:
+            self.logger.debug('Source channel %s using receiver queue size %s', self.channelName, receiverQueueSize)
+            self.pvObjectQueue = pva.PvObjectQueue(receiverQueueSize)
         pva.Channel.__init__(self, channelName, channelProtocol)
-        self.logger.debug(f'Created source channel {self.channelName}, protocol {channelProtocol}')
+        self.logger.debug('Created source channel %s, protocol %s', self.channelName, channelProtocol)
 
     def configure(self, configDict):
         if type(configDict) == dict:
-            if 'monitorQueueSize' in configDict and self.pvObjectQueue is not None:
-                monitorQueueSize = int(configDict.get('monitorQueueSize'))
-                if monitorQueueSize >= 0:
-                    self.monitorQueueSize = monitorQueueSize
-                    self.pvObjectQueue.maxLength = monitorQueueSize
-                    self.logger.debug(f'Source channel client queue size is set to {monitorQueueSize}')
+            if 'receiverQueueSize' in configDict and self.pvObjectQueue is not None:
+                receiverQueueSize = int(configDict.get('receiverQueueSize'))
+                if receiverQueueSize >= 0:
+                    self.receiverQueueSize = receiverQueueSize
+                    self.pvObjectQueue.maxLength = receiverQueueSize
+                    self.logger.debug('Source channel receiver queue size is set to %s', receiverQueueSize)
 
     def getPvMonitorRequest(self):
         recordStr = ''
@@ -70,18 +70,18 @@ class SourceChannel(pva.Channel):
         return {}
 
     def getStats(self, receivingTime, nReceivedOffset=0):
-        monitorStats = self.getMonitorStats()
+        receiverStats = self.getMonitorStats()
         queueStats = self.getQueueStats()
         receivedRate = 0
         overrunRate = 0
-        nOverruns = monitorStats.get('nOverruns', 0)
-        nReceived = monitorStats.get('nReceived', 0)-nReceivedOffset
+        nOverruns = receiverStats.get('nOverruns', 0)
+        nReceived = receiverStats.get('nReceived', 0)-nReceivedOffset
         if receivingTime > 0 and nReceived >= 0:
             receivedRate = nReceived/receivingTime
             overrunRate = nOverruns/receivingTime
-        monitorStats['receivedRate'] = FloatWithUnits(receivedRate, 'Hz')
-        monitorStats['overrunRate'] = FloatWithUnits(overrunRate, 'Hz')
-        return {'channel' : self.channelName, 'monitorStats' : monitorStats, 'queueStats' : queueStats}
+        receiverStats['receivedRate'] = FloatWithUnits(receivedRate, 'Hz')
+        receiverStats['overrunRate'] = FloatWithUnits(overrunRate, 'Hz')
+        return {'channel' : self.channelName, 'receiverStats' : receiverStats, 'queueStats' : queueStats}
 
     def process(self, pvObject):
         pass
@@ -98,28 +98,28 @@ class SourceChannel(pva.Channel):
     def start(self):
         self.startTime = time.time()
         request = self.getPvMonitorRequest()
-        self.logger.debug(f'Source channel {self.channelName} using request string {request}')
+        self.logger.debug('Source channel %s using request string %s', self.channelName, request)
         if self.pvObjectQueue is not None:
             self.logger.debug('Starting queue monitor')
             self.qMonitor(self.pvObjectQueue, request)
         else:
-            self.logger.debug('Starting process monitor')
+            self.logger.debug('Starting processing monitor')
             self.monitor(self.process, request)
 
     def stop(self):
         self.endTime = time.time()
         self.stopMonitor()
-        self.logger.debug(f'Source channel {self.channelName} stopped monitor')
+        self.logger.debug('Source channel %s stopped monitor', self.channelName)
 
 class PvaMetadataChannel(SourceChannel):
-    def __init__(self, channelId, channelName, serverQueueSize, monitorQueueSize, parentObject):
+    def __init__(self, channelId, channelName, serverQueueSize, receiverQueueSize, parentObject):
         loggerName = f'pvaMetadata-{channelId}'
-        SourceChannel.__init__(self, channelId, channelName, pva.PVA, serverQueueSize, monitorQueueSize, loggerName, parentObject)
+        SourceChannel.__init__(self, channelId, channelName, pva.PVA, serverQueueSize, receiverQueueSize, loggerName, parentObject)
 
 class CaMetadataChannel(SourceChannel):
-    def __init__(self, channelId, channelName, serverQueueSize, monitorQueueSize, parentObject):
+    def __init__(self, channelId, channelName, serverQueueSize, receiverQueueSize, parentObject):
         loggerName = f'caMetadata-{channelId}'
-        SourceChannel.__init__(self, channelId, channelName, pva.CA, serverQueueSize, monitorQueueSize, loggerName, parentObject)
+        SourceChannel.__init__(self, channelId, channelName, pva.CA, serverQueueSize, receiverQueueSize, loggerName, parentObject)
 
     def getPvMonitorRequest(self):
         recordStr = ''
@@ -129,9 +129,9 @@ class CaMetadataChannel(SourceChannel):
         return request
 
 class ProducerChannel(SourceChannel):
-    def __init__(self, channelId, channelName, serverQueueSize, monitorQueueSize, objectIdField, fieldRequest, parentObject):
+    def __init__(self, channelId, channelName, serverQueueSize, receiverQueueSize, objectIdField, fieldRequest, parentObject):
         loggerName = f'producer-{channelId}'
-        SourceChannel.__init__(self, channelId, channelName, pva.PVA, serverQueueSize, monitorQueueSize, loggerName, parentObject)
+        SourceChannel.__init__(self, channelId, channelName, pva.PVA, serverQueueSize, receiverQueueSize, loggerName, parentObject)
         self.objectIdField = objectIdField
         self.fieldRequest = fieldRequest
 
