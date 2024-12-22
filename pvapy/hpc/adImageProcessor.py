@@ -67,3 +67,17 @@ class AdImageProcessor(UserDataProcessor):
         :Returns: NtNdArray object
         '''
         return AdImageUtility.replaceNtNdArrayImage2D(ntNdArray, imageId, image, extraFieldsPvObject)
+
+    def getInputPvObjectType(self):
+        '''
+        Method invoked at processing startup that defines PVA structure for
+        the input PvObject. This method is called only if the local PVA
+        server is used for hosting input channel which remote clients
+        will be updating ("pvas" input mode).
+
+        There is no need to override this method for the "pva" (monitor)
+        or "rpcs" (RPC server) input modes.
+
+        :Returns: PvObject with the structure required for the input PVA channel
+        '''
+        return pva.NtNdArray()
