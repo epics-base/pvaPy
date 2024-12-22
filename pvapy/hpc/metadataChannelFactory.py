@@ -12,14 +12,14 @@ class MetadataChannelFactory:
     logger = LoggingManager.getLogger('MetadataChannelFactory')
 
     @classmethod
-    def createMetadataChannels(cls, metadataChannels, serverQueueSize, monitorQueueSize, parentObject):
+    def createMetadataChannels(cls, metadataChannels, serverQueueSize, receiverQueueSize, parentObject):
         metadataChannelMap = {}
         metadataQueueMap = {}
         if not metadataChannels:
             return (metadataChannelMap,metadataQueueMap)
 
-        metadataMonitorQueueSize = cls.getMonitorQueueSize(monitorQueueSize)
-        cls.logger.debug(f'Metadata client queue size is set to {metadataMonitorQueueSize}')
+        metadataReceiverQueueSize = cls.getReceiverQueueSize(receiverQueueSize)
+        cls.logger.debug('Metadata client queue size is set to %s', metadataReceiverQueueSize)
         metadataChannelList = metadataChannels.split(',')
         metadataChannelId = 0
         for metadataChannel in metadataChannelList:
@@ -28,22 +28,21 @@ class MetadataChannelFactory:
             metadataChannelId += 1
             if metadataChannel.startswith('pva://'):
                 cName = metadataChannel.replace('pva://', '')
-                cls.logger.debug(f'Creating PVA metadata channel {cName} with id {metadataChannelId}')
-                c = PvaMetadataChannel(metadataChannelId, cName, serverQueueSize, metadataMonitorQueueSize, parentObject)
+                cls.logger.debug('Creating PVA metadata channel %s with id %s', cName, metadataChannelId)
+                c = PvaMetadataChannel(metadataChannelId, cName, serverQueueSize, metadataReceiverQueueSize, parentObject)
                 metadataChannelMap[metadataChannelId] = c
                 metadataQueueMap[cName] = c.pvObjectQueue
             else:
                 # Assume CA metadata channel 
                 cName = metadataChannel.replace('ca://', '')
-                cls.logger.debug(f'Creating CA metadata channel {cName} with id {metadataChannelId}')
-                c = CaMetadataChannel(metadataChannelId, cName, serverQueueSize, metadataMonitorQueueSize, parentObject)
+                cls.logger.debug('Creating CA metadata channel %s with id %s', cName, metadataChannelId)
+                c = CaMetadataChannel(metadataChannelId, cName, serverQueueSize, metadataReceiverQueueSize, parentObject)
                 metadataChannelMap[metadataChannelId] = c
                 metadataQueueMap[cName] = c.pvObjectQueue
         return (metadataChannelMap,metadataQueueMap)
 
     @classmethod
-    def getMonitorQueueSize(cls, monitorQueueSize):
-        if monitorQueueSize < 0:
+    def getReceiverQueueSize(cls, receiverQueueSize):
+        if receiverQueueSize < 0:
             return cls.DEFAULT_METADATA_QUEUE_SIZE 
-        return monitorQueueSize 
-
+        return receiverQueueSize
