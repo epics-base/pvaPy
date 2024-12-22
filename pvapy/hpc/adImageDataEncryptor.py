@@ -23,7 +23,7 @@ class AdImageDataEncryptor(DataEncryptor):
         Method invoked every time input channel updates its PV record. It encrypts
         input object and publishes result on the output channel
 
-        :Parameter: *pvObject* (PvObject) - channel monitor update object
+        :Parameter: *pvObject* (PvObject) - channel update object
         '''
         # Convert to NtNdArray so that we have proper structure IDs after pickling.
         return DataEncryptor.process(self, pva.NtNdArray(pvObject))

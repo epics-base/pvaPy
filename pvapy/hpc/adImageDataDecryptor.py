@@ -23,7 +23,7 @@ class AdImageDataDecryptor(DataDecryptor):
         Method invoked every time input channel updates its PV record. It encrypts
         input object and publishes result on the output channel
 
-        :Parameter: *pvObject* (PvObject) - channel monitor update object
+        :Parameter: *pvObject* (PvObject) - channel update object
         '''
         return DataDecryptor.process(self, pva.NtNdArray(pvObject))
 

@@ -100,7 +100,7 @@ class Hdf5AdImageWriter(AdImageProcessor):
         It reshapes input NtNdArray object and saves image data into
         output file.
 
-        :Parameter: *pvObject* (NtNdArray) - channel monitor update object
+        :Parameter: *pvObject* (NtNdArray) - channel update object
         '''
         t0 = time.time()
         (frameId,imageData,nx,ny,nz,_,_) = self.reshapeNtNdArray(pvObject)
