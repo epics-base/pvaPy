@@ -6,6 +6,7 @@ import time
 import pvaccess as pva
 from ..utility.loggingManager import LoggingManager
 from ..utility.objectUtility import ObjectUtility
+from ..utility.operationMode import OperationMode
 from ..utility.pvapyPrettyPrinter import PvaPyPrettyPrinter
 from .sourceChannel import SourceChannel
 from .dataProcessingController import DataProcessingController
@@ -22,6 +23,28 @@ class SystemController(HpcController):
         'args' : pva.STRING,
         'statusMessage' : pva.STRING
     }
+
+    ALL_STATS_TYPES = [
+        'receiver',
+        'publisher',
+        'queue',
+        'metadata',
+        'processor',
+        'user'
+    ]
+
+    ALLOWED_INPUT_MODES = [
+        OperationMode.PVA,
+        OperationMode.PVAS,
+        OperationMode.RPCS,
+        OperationMode.CA
+    ]
+
+    ALLOWED_OUTPUT_MODES = [
+        OperationMode.PVAS,
+        OperationMode.PVA,
+        OperationMode.RPC
+    ]
 
     @classmethod
     def getControllerIdField(cls):
@@ -44,12 +67,20 @@ class SystemController(HpcController):
             idList = eval(idList)
         return list(idList)
 
-    def __init__(self, inputChannel, outputChannel=None, statusChannel=None, controlChannel=None, processorFile=None, processorClass=None, processorArgs=None, idFormatSpec=None, objectIdField='uniqueId', objectIdOffset=0, fieldRequest='', skipInitialUpdates=1, reportStatsList='all', logLevel=None, logFile=None, disableCurses=False):
+    def __init__(self, inputChannel, inputMode='pva', outputChannel=None, outputMode='pvas', statusChannel=None, controlChannel=None, processorFile=None, processorClass=None, processorArgs=None, idFormatSpec=None, objectIdField='uniqueId', objectIdOffset=0, fieldRequest='', skipInitialUpdates=1, reportStatsList='all', logLevel=None, logFile=None, disableCurses=False):
         HpcController.__init__(self, logLevel=logLevel, logFile=logFile)
         self.lock = threading.Lock()
         self.screen = None
         self.inputChannel = inputChannel
+        self.inputMode = OperationMode.fromString(inputMode)
+        if self.inputMode not in self.ALLOWED_INPUT_MODES:
+            raise pva.InvalidArgument(f'Invalid input mode specified: {inputMode}.')
+        self.logger.debug('Using input channel %s, input mode %s', inputChannel, inputMode)
         self.outputChannel = outputChannel
+        self.outputMode = OperationMode.fromString(outputMode)
+        if self.outputMode not in self.ALLOWED_OUTPUT_MODES:
+            raise pva.InvalidArgument(f'Invalid output mode specified: {outputMode}.')
+        self.logger.debug('Using output channel %s, output mode %s', outputChannel, outputMode)
         self.statusChannel = statusChannel
         self.controlChannel = controlChannel
         self.idFormatSpec = idFormatSpec
@@ -69,8 +100,10 @@ class SystemController(HpcController):
         self.isRunning = False
         self.statsObjectId = 0
         self.statsEnabled = {}
-        for statsType in ['monitor','queue','processor','user']:
-            self.statsEnabled[f'{statsType}Stats'] = 'all' in reportStatsList or statsType in reportStatsList
+        self.allStatsEnabled = 'all' in reportStatsList
+        if not self.allStatsEnabled:
+            for statsType in self.ALL_STATS_TYPES:
+                self.statsEnabled[f'{statsType}Stats'] = statsType in reportStatsList
         self.prettyPrinter = PvaPyPrettyPrinter()
         self.hpcObject = None
         self.hpcObjectId = None
@@ -85,7 +118,7 @@ class SystemController(HpcController):
                 screen = curses.initscr()
                 self.curses = curses
             except ImportError as ex:
-                self.logger.warning(f'Disabling curses library: {ex}')
+                self.logger.warning('Disabling curses library: %s', str(ex))
         return screen
 
     def formatIdString(self, idValue):
@@ -101,12 +134,12 @@ class SystemController(HpcController):
             self.controlPvObject.set({'statusMessage' : statusMessage, 'objectTime' : t, 'objectTimestamp' : pva.PvTimeStamp(t)})
             return
         command = pv['command']
-        self.logger.debug(f'Got command: {command}')
+        self.logger.debug('Got command: %s', command)
         if command == self.RESET_STATS_COMMAND:
-            self.logger.info(f'Control channel: resetting {self.CONTROLLER_TYPE} statistics')
+            self.logger.info('Control channel: resetting %s statistics', self.CONTROLLER_TYPE)
             cTimer = threading.Timer(self.COMMAND_EXEC_DELAY, self.controlResetStats)
         elif command == self.GET_STATS_COMMAND:
-            self.logger.info(f'Control channel: getting {self.CONTROLLER_TYPE} statistics')
+            self.logger.info('Control channel: getting %s statistics', self.CONTROLLER_TYPE)
             cTimer = threading.Timer(self.COMMAND_EXEC_DELAY, self.controlGetStats)
         elif command == self.CONFIGURE_COMMAND:
             args = ''
@@ -114,10 +147,10 @@ class SystemController(HpcController):
                 self.logger.debug('Empty keyword arguments string for the configure request')
             else:
                 args = pv['args']
-            self.logger.info(f'Control channel: configuring {self.CONTROLLER_TYPE} with args: {args}')
+            self.logger.info('Control channel: configuring %s with args: %s', self.CONTROLLER_TYPE, args)
             cTimer = threading.Timer(self.COMMAND_EXEC_DELAY, self.controlConfigure, args=[args])
         elif command == self.STOP_COMMAND:
-            self.logger.info(f'Control channel: stopping {self.CONTROLLER_TYPE}')
+            self.logger.info('Control channel: stopping %s', self.CONTROLLER_TYPE)
             cTimer = threading.Timer(self.COMMAND_EXEC_DELAY, self.controlStop)
         else: 
             statusMessage = f'Ignoring invalid request (unrecognized command specified): {pv}'
@@ -129,12 +162,12 @@ class SystemController(HpcController):
         cTimer.start()
 
     def controlConfigure(self, configDict):
-        self.logger.debug(f'Configuring {self.CONTROLLER_TYPE} {self.hpcObjectId} with: {configDict}')
+        self.logger.debug('Configuring %s %s with: %s', self.CONTROLLER_TYPE, self.hpcObjectId, configDict)
         try:
             configDict = json.loads(configDict)
-            self.logger.debug(f'Converted configuration args string from JSON: {configDict}')
+            self.logger.debug('Converted configuration args string from JSON: %s', configDict)
         except Exception as ex:
-            self.logger.debug(f'Cannot convert string {configDict} from JSON: {ex}')
+            self.logger.debug('Cannot convert string %s from JSON: %s', configDict, str(ex))
         try:
             self.hpcObject.configure(configDict)
             statusMessage = 'Configuration successful'
@@ -146,19 +179,19 @@ class SystemController(HpcController):
         self.controlPvObject['statusMessage'] = statusMessage
 
     def controlResetStats(self):
-        self.logger.debug(f'Resetting stats for {self.CONTROLLER_TYPE} {self.hpcObjectId}')
+        self.logger.debug('Resetting stats for %s %s', self.CONTROLLER_TYPE, self.hpcObjectId)
         self.hpcObject.resetStats()
         statusMessage = 'Stats reset successful'
         self.controlPvObject['statusMessage'] = statusMessage
 
     def controlGetStats(self):
-        self.logger.debug(f'Getting stats for {self.CONTROLLER_TYPE} {self.hpcObjectId}')
+        self.logger.debug('Getting stats for %s %s', self.CONTROLLER_TYPE, self.hpcObjectId)
         self.reportStats()
         statusMessage = 'Stats update successful'
         self.controlPvObject['statusMessage'] = statusMessage
 
     def controlStop(self):
-        self.logger.debug(f'Stopping {self.CONTROLLER_TYPE} {self.hpcObjectId}')
+        self.logger.debug('Stopping %s %s', self.CONTROLLER_TYPE, self.hpcObjectId)
         self.shouldBeStopped = True
         statusMessage = 'Stop flag set'
         self.controlPvObject['statusMessage'] = statusMessage
@@ -166,33 +199,31 @@ class SystemController(HpcController):
     def getStatusTypeDict(self):
         return {}
 
-    def createOutputChannels(self, hpcObjectId):
-        self.pvaServer = None
+    def createStatusAndControlChannels(self, hpcObjectId):
+        self.pvaServer = pva.PvaServer()
         hpcObjectIdString = self.formatIdString(hpcObjectId)
-        if self.statusChannel or self.controlChannel or self.outputChannel:
-            self.pvaServer = pva.PvaServer()
         if self.statusChannel == '_':
             self.statusChannel = f'pvapy:{self.CONTROLLER_TYPE}:{hpcObjectIdString}:status'
         if self.statusChannel:
             self.statusChannel = self.statusChannel.replace('*', hpcObjectIdString)
-            self.logger.debug(f'Status channel name: {self.statusChannel}')
+            self.logger.debug('Status channel name: %s', self.statusChannel)
         self.statusTypeDict = self.getStatusTypeDict()
         if self.statusChannel:
             statusPvObject = pva.PvObject(self.statusTypeDict, {f'{self.getControllerIdField()}' : hpcObjectId})
             self.pvaServer.addRecord(self.statusChannel, statusPvObject, None)
-            self.logger.debug(f'Created {self.CONTROLLER_TYPE} status channel: {self.statusChannel}')
+            self.logger.debug('Created %s status channel: %s', self.CONTROLLER_TYPE, self.statusChannel)
 
         if self.controlChannel == '_':
             self.controlChannel = f'pvapy:{self.CONTROLLER_TYPE}:{hpcObjectIdString}:control'
         if self.controlChannel:
             self.controlChannel = self.controlChannel.replace('*', hpcObjectIdString)
-            self.logger.debug(f'Control channel name: {self.controlChannel}')
+            self.logger.debug('Control channel name: %s', self.controlChannel)
         if self.controlChannel:
             # Keep reference to the control object so we can
             # update it
             self.controlPvObject = pva.PvObject(self.getControlTypeDict(), {f'{self.getControllerIdField()}' : hpcObjectId})
             self.pvaServer.addRecord(self.controlChannel, self.controlPvObject, self.controlCallback)
-            self.logger.debug(f'Created {self.CONTROLLER_TYPE} control channel: {self.controlChannel}')
+            self.logger.debug('Created %s control channel: %s', self.CONTROLLER_TYPE, self.controlChannel)
 
     def createDataProcessorConfig(self, processorId):
         processorConfig = {}
@@ -200,7 +231,9 @@ class SystemController(HpcController):
             processorConfig = json.loads(self.processorArgs)
         processorConfig['processorId'] = processorId
         processorConfig['inputChannel'] = self.inputChannel
+        processorConfig['inputMode'] = self.inputMode
         processorConfig['outputChannel'] = self.outputChannel
+        processorConfig['outputMode'] = self.outputMode
         processorConfig['objectIdField'] = self.objectIdField
         processorConfig['skipInitialUpdates'] = self.skipInitialUpdates
         processorConfig['objectIdOffset'] = self.objectIdOffset
@@ -210,7 +243,7 @@ class SystemController(HpcController):
 
     def createDataProcessor(self, processorId):
         self.processorConfig = self.createDataProcessorConfig(processorId)
-        self.logger.debug(f'Using processor configuration: {self.processorConfig}')
+        self.logger.debug('Using processor configuration: %s', self.processorConfig)
         userDataProcessor = None
         if self.processorFile and self.processorClass:
             userDataProcessor = ObjectUtility.createObjectInstanceFromFile(self.processorFile, 'userDataProcessorModule', self.processorClass, self.processorConfig)
@@ -218,7 +251,7 @@ class SystemController(HpcController):
             userDataProcessor = ObjectUtility.createObjectInstanceFromClassPath(self.processorClass, self.processorConfig)
 
         if userDataProcessor is not None:
-            self.logger.debug(f'Created data processor {processorId}: {userDataProcessor}')
+            self.logger.debug('Created data processor %s: %s', processorId, userDataProcessor)
             userDataProcessor.processorId = processorId
             userDataProcessor.objectIdField = self.processorConfig['objectIdField']
         self.processingController = DataProcessingController(self.processorConfig, userDataProcessor)
@@ -231,18 +264,18 @@ class SystemController(HpcController):
         self.lock.acquire()
         try:
             if not self.isStopped:
-                self.logger.warn(f'Controller for hpc {self.CONTROLLER_TYPE} {self.hpcObjectId} is already started')
+                self.logger.warning('Controller for hpc %s %s is already started', self.CONTROLLER_TYPE, self.hpcObjectId)
                 return
             self.isStopped = False
             self.shouldBeStopped = False
-            self.logger.debug(f'Controller for hpc {self.CONTROLLER_TYPE} {self.hpcObjectId} is starting')
+            self.logger.debug('Controller for hpc %s %s is starting', self.CONTROLLER_TYPE, self.hpcObjectId)
 
             try: 
-                self.logger.info(f'Starting hpc {self.CONTROLLER_TYPE} {self.hpcObjectId}')
+                self.logger.info('Starting hpc %s %s', self.CONTROLLER_TYPE, self.hpcObjectId)
                 self.hpcObject.start()
-                self.logger.info(f'Started hpc {self.CONTROLLER_TYPE} {self.hpcObjectId}')
+                self.logger.info('Started hpc %s %s', self.CONTROLLER_TYPE, self.hpcObjectId)
             except Exception as ex:
-                self.logger.warn(f'Could not start hpc {self.CONTROLLER_TYPE} {self.hpcObjectId}: {ex}')
+                self.logger.warning('Could not start hpc %s %s: %s', self.CONTROLLER_TYPE, self.hpcObjectId, str(ex))
                 raise
 
             if self.pvaServer:
@@ -250,10 +283,18 @@ class SystemController(HpcController):
         finally:
             self.lock.release()
 
+    def filterStats(self, statsDict):
+        if not self.allStatsEnabled:
+            for statsType in self.ALL_STATS_TYPES:
+                statsKey = f'{statsType}Stats'
+                if statsKey in statsDict and not self.statsEnabled.get(statsKey):
+                    del statsDict[statsKey]
+
     def reportStats(self, statsDict=None):
         if not statsDict:
             statsDict = self.getStats()
         statsDict[f'{self.getControllerIdField()}'] = self.hpcObjectId
+        self.filterStats(statsDict)
         report = self.prettyPrinter.pformat(statsDict)
 
         if self.screen:
@@ -293,18 +334,18 @@ class SystemController(HpcController):
         self.lock.acquire()
         try:
             if self.isStopped:
-                self.logger.warn(f'Controller for hpc {self.CONTROLLER_TYPE} {self.hpcObjectId} is already stopped')
+                self.logger.warning('Controller for hpc %s %s is already stopped', self.CONTROLLER_TYPE, self.hpcObjectId)
                 return
             if self.isRunning:
                 # Stop running thread
                 self.shouldBeStopped = True
             self.isStopped = True
-            self.logger.debug(f'Controller for hpc {self.CONTROLLER_TYPE} {self.hpcObjectId} is stopping')
+            self.logger.debug('Controller for hpc %s %s is stopping', self.CONTROLLER_TYPE, self.hpcObjectId)
             try: 
-                self.logger.info(f'Stopping hpc {self.CONTROLLER_TYPE} {self.hpcObjectId}')
+                self.logger.info('Stopping hpc %s %s', self.CONTROLLER_TYPE, self.hpcObjectId)
                 self.hpcObject.stop()
             except Exception as ex:
-                self.logger.warn(f'Could not stop hpc {self.CONTROLLER_TYPE} {self.hpcObjectId}')
+                self.logger.warning('Could not stop hpc %s %s: %s', self.CONTROLLER_TYPE, self.hpcObjectId, str(ex))
             statsDict = self.hpcObject.getStats()
             self.stopScreen()
             return statsDict
@@ -315,7 +356,7 @@ class SystemController(HpcController):
         self.lock.acquire()
         try:
             if self.isRunning:
-                self.logger.warn(f'Controller for {self.CONTROLLER_TYPE} {self.hpcObjectId} is already running')
+                self.logger.warning('Controller for %s %s is already running', self.CONTROLLER_TYPE, self.hpcObjectId)
                 return
             self.isRunning = True
             self.shouldBeStopped = False
@@ -355,7 +396,7 @@ class SystemController(HpcController):
                             time.sleep(delay)
                 except Exception as ex:
                     self.stopScreen()
-                    self.logger.error(f'Processing error: {ex}')
+                    self.logger.error('Processing error: %s', str(ex))
 
             except KeyboardInterrupt as ex:
                 break

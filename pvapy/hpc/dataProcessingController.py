@@ -5,8 +5,13 @@ Data processing controller module.
 
 import time
 import pvaccess as pva
+from .pvasDataPublisher import PvasDataPublisher
+from .pvaDataPublisher import PvaDataPublisher
+from .rpcDataPublisher import RpcDataPublisher
 from ..utility.loggingManager import LoggingManager
 from ..utility.floatWithUnits import FloatWithUnits
+from ..utility.operationMode import OperationMode
+
 
 class DataProcessingController:
     ''' Data processor controller class. '''
@@ -32,10 +37,12 @@ class DataProcessingController:
         self.nSequentialUpdates = int(configDict.get('nSequentialUpdates', 1))
         # Output channel is used for publishing processed objects
         self.inputChannel = configDict.get('inputChannel', '')
+        self.inputMode = configDict.get('inputMode')
         self.outputChannel = configDict.get('outputChannel', '')
         if self.outputChannel == '_':
             self.outputChannel = f'{self.inputChannel}:processor-{self.processorId}'
-        self.outputRecordAdded = False
+        self.outputMode = configDict.get('outputMode')
+        self.dataPublisher = None
         self.pvaServerStarted = False
         self.pvaServer = None
 
@@ -45,22 +52,28 @@ class DataProcessingController:
     def setPvaServer(self, pvaServer):
         self.pvaServer = pvaServer
 
-    def addUserDefinedOutputRecord(self, pvObject):
-        # Create output channel if user processing class defines it
-        # Input pvObject will come from the first channel update
-        if self.userDataProcessor:
+    def createDataPublisher(self, pvObject):
+        if not self.outputChannel or self.dataPublisher:
+            return
+        self.logger.debug('Creating data publisher, output mode %s', self.outputMode)
+        if self.outputMode == OperationMode.PVAS:
             outputPvObject = self.userDataProcessor.getOutputPvObjectType(pvObject)
             if outputPvObject:
-                self.logger.debug('User data processor defined output channel as: %s', outputPvObject.getStructureDict())
-                self.addOutputRecordIfItDoesNotExist(outputPvObject)
+                self.dataPublisher = PvasDataPublisher(outputChannel=self.outputChannel, pvaServer=self.pvaServer, outputPvObject=outputPvObject)
             else:
-                self.logger.debug('User data processor did not define output channel')
-
-    def addOutputRecordIfItDoesNotExist(self, pvObject):
-        if self.outputChannel and self.pvaServer and not self.outputRecordAdded:
-            self.outputRecordAdded = True
-            self.pvaServer.addRecord(self.outputChannel, pvObject.copy(), None)
-            self.logger.debug('Added output channel %s', self.outputChannel)
+                self.logger.debug('User data processor did not define output channel structure')
+        elif self.outputMode == OperationMode.PVA:
+            self.dataPublisher = PvaDataPublisher(outputChannel=self.outputChannel)
+        elif self.outputMode == OperationMode.RPC:
+            self.dataPublisher = RpcDataPublisher(outputChannel=self.outputChannel)
+        else:
+            raise pva.InvalidState(f'Unsupported output mode: {self.outputMode}')
+        if self.userDataProcessor:
+            self.userDataProcessor.dataPublisher = self.dataPublisher
+        if self.dataPublisher:
+            # Data publisher is created when the first input object
+            # is received, so it must be started here
+            self.dataPublisher.start()
 
     def start(self):
         if self.outputChannel and not self.pvaServer:
@@ -72,6 +85,7 @@ class DataProcessingController:
         # Call user interface method for startup
         if self.userDataProcessor:
             self.userDataProcessor.pvaServer = self.pvaServer
+            self.userDataProcessor.dataPublisher = self.dataPublisher
             self.userDataProcessor.outputChannel = self.outputChannel
             self.userDataProcessor.inputChannel = self.inputChannel
             self.userDataProcessor.start()
@@ -79,12 +93,14 @@ class DataProcessingController:
     def stop(self):
         now = time.time()
         self.endTime = now
-        self.processorStats = self.updateStats(now)
+        self.updateStats(now)
         if self.pvaServerStarted:
             self.pvaServer.stop()
         # Call user interface method for shutdown
         if self.userDataProcessor:
             self.userDataProcessor.stop()
+        if self.dataPublisher:
+            self.dataPublisher.stop()
 
     def configure(self, configDict):
         if isinstance(configDict, dict):
@@ -110,8 +126,7 @@ class DataProcessingController:
             # First try to create user defined output record, and
             # if that does not succeed, create output record based
             # on input type
-            self.addUserDefinedOutputRecord(pvObject)
-            self.addOutputRecordIfItDoesNotExist(pvObject)
+            self.createDataPublisher(pvObject)
         if self.skipInitialUpdates > 0:
             self.skipInitialUpdates -= 1
             self.logger.debug('Skipping initial update, %s remain to be skipped', self.skipInitialUpdates)
@@ -190,6 +205,7 @@ class DataProcessingController:
         self.lastObjectTime = 0
         self.endTime = 0
         self.processorStats = {}
+        self.publisherStats = {}
         self.statsNeedsUpdate = True
         # Call user interface method for resetting stats
         if self.userDataProcessor:
@@ -207,15 +223,28 @@ class DataProcessingController:
             return self.userDataProcessor.getStatsPvaTypes()
         return {}
 
+    def getUserInputPvObjectType(self):
+        # Call user interface for retrieving input pv object
+        if self.userDataProcessor:
+            return self.userDataProcessor.getInputPvObjectType()
+        return None
+
+    def getPublisherStats(self):
+        if self.statsNeedsUpdate:
+            self.updateStats()
+        return self.publisherStats
+
     def getProcessorStats(self):
         if self.statsNeedsUpdate:
-            self.processorStats = self.updateStats()
+            self.updateStats()
         else:
             runtime = time.time()-self.startTime
             self.processorStats['runtime'] = FloatWithUnits(runtime, 's')
         return self.processorStats
 
     def updateStats(self, t=0):
+        if not self.statsNeedsUpdate:
+            return
         self.statsNeedsUpdate = False
         if not t:
             t = time.time()
@@ -244,9 +273,16 @@ class DataProcessingController:
             'nErrors' : self.nErrors,
             'errorRate' : FloatWithUnits(errorRate, 'Hz')
         }
-        return processorStats
-
-    def updateOutputChannel(self, pvObject):
-        if not self.outputChannel:
-            return
-        self.pvaServer.update(self.outputChannel, pvObject)
+        self.processorStats = processorStats
+        if self.dataPublisher:
+            publisherStats = self.dataPublisher.getStats()
+            nPublished = publisherStats.get('nPublished', 0)
+            nErrors = publisherStats.get('nErrors', 0)
+            publishedRate = 0
+            errorRate = 0
+            if receivingTime > 0:
+                publishedRate = nPublished/receivingTime
+                errorRate = nErrors/receivingTime
+            publisherStats['publishedRate'] = FloatWithUnits(publishedRate, 'Hz')
+            publisherStats['errorRate'] = FloatWithUnits(errorRate, 'Hz')
+            self.publisherStats = publisherStats

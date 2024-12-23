@@ -14,9 +14,9 @@ from ..utility.floatWithUnits import FloatWithUnits
 
 class ProducerChannel(SourceChannel):
     ''' Collector producer channel. '''
-    def __init__(self, producerId, channelName, serverQueueSize, monitorQueueSize, objectIdField, fieldRequest, dataCollector):
+    def __init__(self, producerId, channelName, serverQueueSize, receiverQueueSize, objectIdField, fieldRequest, dataCollector):
         loggerName = f'producer-{producerId}'
-        SourceChannel.__init__(self, producerId, channelName, pva.PVA, serverQueueSize, monitorQueueSize, loggerName, dataCollector)
+        SourceChannel.__init__(self, producerId, channelName, pva.PVA, serverQueueSize, receiverQueueSize, loggerName, dataCollector)
         self.producerId = producerId
         self.objectIdField = objectIdField
         self.fieldRequest = fieldRequest
@@ -37,7 +37,7 @@ class ProducerChannel(SourceChannel):
         return request
 
     def process(self, pvObject):
-        # We need to copy object coming directly from PVA monitor before we cache it
+        # We need to copy object coming directly from the receiver before we cache it
         objectId = pvObject[self.objectIdField]
         self.dataCollector.addObjectToCache(self.producerId, objectId, pvObject.copy())
 
@@ -102,7 +102,7 @@ class ProcessingThread(threading.Thread):
             if self.isDone:
                 self.logger.debug('Exit flag is set')
                 break
-            if self.dataCollector.monitorQueueSize >= 0:
+            if self.dataCollector.receiverQueueSize >= 0:
                 # We are using client queues, need to push data into the cache
                 nNewObjects = 0
                 while True:
@@ -119,7 +119,7 @@ class ProcessingThread(threading.Thread):
             else:
                 self.dataCollector.waitOnEvent(self.THREAD_EVENT_TIMEOUT_IN_SECONDS)
         # Finish up
-        if self.dataCollector.monitorQueueSize >= 0:
+        if self.dataCollector.receiverQueueSize >= 0:
             nNewObjects = 0
             nPushed = 1
             while nPushed:
@@ -181,7 +181,7 @@ class DataCollector:
         }
     }
 
-    def __init__(self, collectorId, inputChannel, producerIdList=[1], idFormatSpec=None, objectIdField='uniqueId', objectIdOffset=1, fieldRequest='', serverQueueSize=0, monitorQueueSize=-1, collectorCacheSize=-1, metadataChannels=None, processingController=None):
+    def __init__(self, collectorId, inputChannel, producerIdList=[1], idFormatSpec=None, objectIdField='uniqueId', objectIdOffset=1, fieldRequest='', serverQueueSize=0, receiverQueueSize=-1, collectorCacheSize=-1, metadataChannels=None, processingController=None):
         self.logger = LoggingManager.getLogger(f'collector-{collectorId}')
         self.eventLock = threading.Lock()
         self.event = threading.Event()
@@ -202,8 +202,8 @@ class DataCollector:
             raise pva.InvalidArgument('Producer id list cannot be empty.')
         self.collectorCacheSize = self.getCollectorCacheSize(collectorCacheSize)
         self.logger.debug('Collector cache size is set to %s', self.collectorCacheSize)
-        self.monitorQueueSize = self.getClientQueueSize(monitorQueueSize)
-        self.logger.debug('Client queue size is set to %s', self.monitorQueueSize)
+        self.receiverQueueSize = self.getReceiverQueueSize(receiverQueueSize)
+        self.logger.debug('Receiver queue size is set to %s', self.receiverQueueSize)
         self.cacheLock = threading.Lock()
         self.collectorCacheMap = {}
         self.nObjectsCached = 0
@@ -217,10 +217,10 @@ class DataCollector:
                 producerIdString = f'{producerId:{idFormatSpec}}'
             cName = f'{inputChannel}'.replace('*', producerIdString)
             self.logger.debug('Creating channel %s for producer %s', cName, producerId)
-            self.producerChannelMap[producerId] = ProducerChannel(producerId, cName, serverQueueSize, self.monitorQueueSize, objectIdField, fieldRequest, self)
+            self.producerChannelMap[producerId] = ProducerChannel(producerId, cName, serverQueueSize, self.receiverQueueSize, objectIdField, fieldRequest, self)
 
         # Metadata channels
-        self.metadataChannelMap, self.metadataQueueMap = MetadataChannelFactory.createMetadataChannels(metadataChannels, serverQueueSize, monitorQueueSize, self)
+        self.metadataChannelMap, self.metadataQueueMap = MetadataChannelFactory.createMetadataChannels(metadataChannels, serverQueueSize, receiverQueueSize, self)
 
         self.processingController = processingController
         if self.processingController.userDataProcessor:
@@ -254,15 +254,15 @@ class DataCollector:
             return collectorCacheSize
         return minCollectorCacheSize
 
-    def getClientQueueSize(self, monitorQueueSize):
-        if monitorQueueSize <= 0:
+    def getReceiverQueueSize(self, receiverQueueSize):
+        if receiverQueueSize <= 0:
             # Either client queue is not used, or it is set to infinity
-            return monitorQueueSize
+            return receiverQueueSize
         # Make sure client queue size is sufficiently large
-        minClientQueueSize = self.collectorCacheSize*self.CACHE_SIZE_SCALING_FACTOR
-        if monitorQueueSize > minClientQueueSize:
-            return monitorQueueSize
-        return minClientQueueSize
+        minReceiverQueueSize = self.collectorCacheSize*self.CACHE_SIZE_SCALING_FACTOR
+        if receiverQueueSize > minReceiverQueueSize:
+            return receiverQueueSize
+        return minReceiverQueueSize
 
     def configure(self, configDict):
         if isinstance(configDict, dict):

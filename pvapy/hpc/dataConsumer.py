@@ -6,9 +6,13 @@ Data consumer module.
 
 import time
 import pvaccess as pva
+from .monitorDataReceiver import MonitorDataReceiver
+from .pvasDataReceiver import PvasDataReceiver
+from .rpcsDataReceiver import RpcsDataReceiver
 from .metadataChannelFactory import MetadataChannelFactory
 from ..utility.loggingManager import LoggingManager
 from ..utility.floatWithUnits import FloatWithUnits
+from ..utility.operationMode import OperationMode
 
 class DataConsumer:
     ''' Data consumer class. '''
@@ -21,11 +25,21 @@ class DataConsumer:
         'objectId' : pva.UINT,
         'objectTime' : pva.DOUBLE,
         'objectTimestamp' : pva.PvTimeStamp(),
-        'monitorStats' : {
+        'receiverStats' : {
             'nReceived' : pva.UINT,
             'receivedRate' : pva.DOUBLE,
+            'nRejected' : pva.UINT,
+            'rejectedRate' : pva.DOUBLE,
+            'nErrors' : pva.UINT,
+            'errorRate' : pva.DOUBLE,
             'nOverruns' : pva.UINT,
             'overrunRate' : pva.DOUBLE
+        },
+        'publisherStats' : {
+            'nPublished' : pva.UINT,
+            'publishedRate' : pva.DOUBLE,
+            'nErrors' : pva.UINT,
+            'errorRate' : pva.DOUBLE
         },
         'queueStats' : {
             'nReceived' : pva.UINT,
@@ -51,13 +65,11 @@ class DataConsumer:
         }
     }
 
-    def __init__(self, consumerId, inputChannel, providerType=pva.PVA, objectIdField='uniqueId', fieldRequest='', serverQueueSize=-1, monitorQueueSize=-1, accumulateObjects=-1, accumulationTimeout=-1, distributorPluginName='pydistributor', distributorGroupId=None, distributorSetId=None, distributorTriggerFieldName=None, distributorUpdates=None, distributorUpdateMode=None, metadataChannels=None, processingController=None):
+    def __init__(self, consumerId, inputChannel, inputMode=OperationMode.PVA, objectIdField='uniqueId', fieldRequest='', serverQueueSize=-1, receiverQueueSize=-1, accumulateObjects=-1, accumulationTimeout=-1, distributorPluginName='pydistributor', distributorGroupId=None, distributorSetId=None, distributorTriggerFieldName=None, distributorUpdates=None, distributorUpdateMode=None, metadataChannels=None, processingController=None):
         self.logger = LoggingManager.getLogger(f'consumer-{consumerId}')
         self.consumerId = consumerId
-        providerType = self.PROVIDER_TYPE_MAP.get(providerType.lower(), pva.PVA)
-        self.logger.debug('Channel %s provider type: %s', inputChannel, providerType)
-        self.channel = pva.Channel(inputChannel, providerType)
         self.inputChannel = inputChannel
+        self.inputMode = inputMode
         self.serverQueueSize = serverQueueSize
         self.logger.debug('Server queue size: %s', serverQueueSize)
         self.distributorPluginName = distributorPluginName
@@ -69,10 +81,10 @@ class DataConsumer:
         self.objectIdField = objectIdField
         self.fieldRequest = fieldRequest
         self.pvObjectQueue = None
-        self.monitorQueueSize = monitorQueueSize
-        if monitorQueueSize >= 0:
-            self.pvObjectQueue = pva.PvObjectQueue(monitorQueueSize)
-            self.logger.debug('Using PvObjectQueue of size: %s', monitorQueueSize)
+        self.receiverQueueSize = receiverQueueSize
+        if receiverQueueSize >= 0:
+            self.pvObjectQueue = pva.PvObjectQueue(receiverQueueSize)
+            self.logger.debug('Using PvObjectQueue of size: %s', receiverQueueSize)
         self.accumulateObjects = accumulateObjects
         self.accumulationTimeout = accumulationTimeout
         self.logger.debug('Will accumulate %s objects before processing, with accumulation timeout of %s', self.accumulateObjects, self.accumulationTimeout)
@@ -87,12 +99,35 @@ class DataConsumer:
             self.nReceivedOffset = 1
 
         # Metadata channels
-        self.metadataChannelMap, self.metadataQueueMap = MetadataChannelFactory.createMetadataChannels(metadataChannels, serverQueueSize, monitorQueueSize, self)
+        self.metadataChannelMap, self.metadataQueueMap = MetadataChannelFactory.createMetadataChannels(metadataChannels, serverQueueSize, receiverQueueSize, self)
 
         if self.processingController and self.processingController.userDataProcessor:
             self.processingController.userDataProcessor.metadataQueueMap = self.metadataQueueMap
 
+        self.dataReceiver = self.createDataReceiver()
         self.logger.debug('Created data consumer %s', consumerId)
+
+    def createDataReceiver(self):
+        self.logger.debug('Creating data source, input mode %s', self.inputMode)
+        if self.inputMode == OperationMode.PVA:
+            providerType = pva.PVA
+            return MonitorDataReceiver(inputChannel=self.inputChannel, processingFunction=self.process, pvObjectQueue=self.pvObjectQueue, pvRequest=self.getPvMonitorRequest(), providerType=providerType)
+        elif self.inputMode == OperationMode.CA:
+            providerType = pva.CA
+            return MonitorDataReceiver(inputChannel=self.inputChannel, processingFunction=self.process, pvObjectQueue=self.pvObjectQueue, pvRequest=self.getPvMonitorRequest(), providerType=providerType)
+        elif self.inputMode == OperationMode.PVAS:
+            inputPvObject = self.processingController.getUserInputPvObjectType()
+            if not inputPvObject:
+                raise pva.InvalidState('User input PvObject type is not defined.')
+            pvaServer = self.processingController.pvaServer
+            pvObjectQueue=self.pvObjectQueue
+            return PvasDataReceiver(inputChannel=self.inputChannel, processingFunction=self.process, pvaServer=pvaServer, inputPvObject=inputPvObject, pvObjectQueue=pvObjectQueue)
+        elif self.inputMode == OperationMode.RPCS:
+            pvaServer = self.processingController.pvaServer
+            pvObjectQueue=self.pvObjectQueue
+            return RpcsDataReceiver(inputChannel=self.inputChannel, processingFunction=self.process, pvaServer=pvaServer, pvObjectQueue=pvObjectQueue)
+        else:
+            raise pva.InvalidState(f'Unsupported input mode: {self.inputMode}')
 
     def getPvMonitorRequest(self):
         recordStr = ''
@@ -132,12 +167,12 @@ class DataConsumer:
 
     def configure(self, configDict):
         if isinstance(configDict, dict):
-            if 'monitorQueueSize' in configDict:
-                monitorQueueSize = int(configDict.get('monitorQueueSize'))
+            if 'receiverQueueSize' in configDict:
+                receiverQueueSize = int(configDict.get('receiverQueueSize'))
                 if self.pvObjectQueue is not None:
-                    self.logger.debug('Resetting PvObjectQueue size from %s to %s', self.pvObjectQueue.maxLength, monitorQueueSize)
-                    self.pvObjectQueue.maxLength = monitorQueueSize
-                    self.monitorQueueSize = monitorQueueSize
+                    self.logger.debug('Resetting PvObjectQueue size from %s to %s', self.pvObjectQueue.maxLength, receiverQueueSize)
+                    self.pvObjectQueue.maxLength = receiverQueueSize
+                    self.receiverQueueSize = receiverQueueSize
         if self.processingController:
             self.processingController.configure(configDict)
 
@@ -167,14 +202,39 @@ class DataConsumer:
         return False
 
     def resetStats(self):
-        self.channel.resetMonitorCounters()
+        self.dataReceiver.resetStats()
         if self.pvObjectQueue is not None:
             self.pvObjectQueue.resetCounters()
         if self.processingController:
             self.processingController.resetStats()
 
-    def getMonitorStats(self):
-        return self.channel.getMonitorCounters()
+    def getDataReceiverStats(self, receivingTime):
+        receiverStats = self.dataReceiver.getStats()
+        nReceived = receiverStats.get('nReceived', 0)-self.nReceivedOffset
+        nRejected = receiverStats.get('nRejected', 0)
+        nErrors = receiverStats.get('nErrors', 0)
+        nOverruns = receiverStats.get('nOverruns', 0)
+        receivedRate = 0
+        rejectedRate = 0
+        errorRate = 0
+        overrunRate = 0
+        if receivingTime > 0:
+            if nReceived > 0:
+                receivedRate = nReceived/receivingTime
+            if nRejected > 0:
+                rejectedRate = nRejected/receivingTime
+            if nErrors > 0:
+                errorRate = nErrors/receivingTime
+            if nOverruns > 0:
+                overrunRate = nOverruns/receivingTime
+        receiverStats['receivedRate'] = FloatWithUnits(receivedRate, 'Hz')
+        receiverStats['rejectedRate'] = FloatWithUnits(rejectedRate, 'Hz')
+        receiverStats['errorRate'] = FloatWithUnits(errorRate, 'Hz')
+        receiverStats['overrunRate'] = FloatWithUnits(overrunRate, 'Hz')
+        return receiverStats
+
+    def getDataPublisherStats(self):
+        return self.processingController.getPublisherStats()
 
     def getQueueStats(self):
         if self.pvObjectQueue is not None:
@@ -192,39 +252,24 @@ class DataConsumer:
         return {}
 
     def getStats(self):
-        monitorStats = self.getMonitorStats()
-        queueStats = self.getQueueStats()
-        nOverruns = monitorStats.get('nOverruns', 0)
         processorStats = self.getProcessorStats()
-        userStats = self.getUserStats()
-        receivedRate = 0
-        overrunRate = 0
         receivingTime = processorStats.get('receivingTime', 0)
-        nReceived = monitorStats.get('nReceived', 0)-self.nReceivedOffset
-        if receivingTime > 0 and nReceived >= 0:
-            receivedRate = nReceived/receivingTime
-            overrunRate = nOverruns/receivingTime
-        monitorStats['receivedRate'] = FloatWithUnits(receivedRate, 'Hz')
-        monitorStats['overrunRate'] = FloatWithUnits(overrunRate, 'Hz')
+        receiverStats = self.getDataReceiverStats(receivingTime)
+        publisherStats = self.getDataPublisherStats()
+        queueStats = self.getQueueStats()
+        userStats = self.getUserStats()
         metadataStats = {}
         for metadataChannelId,metadataChannel in self.metadataChannelMap.items():
             metadataStats[f'metadata-{metadataChannelId}'] = metadataChannel.getStats(receivingTime)
 
-        return {'inputChannel' : self.inputChannel, 'monitorStats' : monitorStats, 'queueStats' : queueStats, 'metadataStats' : metadataStats, 'processorStats' : processorStats, 'userStats' : userStats}
+        return {'inputChannel' : self.inputChannel, 'receiverStats' : receiverStats, 'publisherStats' : publisherStats, 'queueStats' : queueStats, 'metadataStats' : metadataStats, 'processorStats' : processorStats, 'userStats' : userStats}
 
     def getConsumerId(self):
         return self.consumerId
 
     def start(self):
         self.startTime = time.time()
-        request = self.getPvMonitorRequest()
-        self.logger.debug('Using request string: %s', request)
-        if self.pvObjectQueue is not None:
-            self.logger.debug('Starting queue monitor')
-            self.channel.qMonitor(self.pvObjectQueue, request)
-        else:
-            self.logger.debug('Starting process monitor')
-            self.channel.monitor(self.process, request)
+        self.dataReceiver.start()
         for metadataChannel in self.metadataChannelMap.values():
             metadataChannel.start()
         if self.processingController:
@@ -232,7 +277,7 @@ class DataConsumer:
 
     def stop(self):
         self.endTime = time.time()
-        self.channel.stopMonitor()
+        self.dataReceiver.stop()
         for metadataChannel in self.metadataChannelMap.values():
             metadataChannel.stop()
         if self.processingController:
