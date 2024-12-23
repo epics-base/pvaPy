@@ -22,6 +22,7 @@ class UserDataProcessor:
         ...
         # The following will be set after processor gets instantiated.
         self.processorId = None
+        self.dataPublisher = None
         self.pvaServer = None
         self.inputChannel = None
         self.outputChannel = None
@@ -31,10 +32,10 @@ class UserDataProcessor:
     # Method called at start
     def start(self):
 
-    # Configure user processor
+    # Configure user processor at runtime
     def configure(self, configDict):
 
-    # Process monitor update
+    # Process channel update
     def process(self, pvObject):
         ...
         self.updateOutputChannel(pvObject)
@@ -54,11 +55,17 @@ class UserDataProcessor:
     def getStatsPvaTypes(self):
         return {}
 
+    # Define input PvObject
+    # This method does needs to be implemented if the local
+    # PVA server is used for hosting input channel.
+    def getInputPvObjectType(self):
+        return None
+
     # Define output PvObject
     # This method does not need to be implemented if output
     # object has the same structure as the input object
     def getOutputPvObjectType(self, pvObject):
-        return None
+        return pvObject
 ```
 
 A working example of a simple processor that rotates Area Detector images
@@ -315,10 +322,11 @@ there are two options that can be used for protecting application against lost f
 provides protection against the "overrun" problem, where the server replaces channel
 record before the client has a chance to retrieve it. Note that server queue sizes
 are configurable, and that they increase the server (IOC) memory footprint.
-- Client (monitor) queue: PvaPy channel monitor can copy incoming objects into a
-'PvObjectQueue' rather than process them immediately on monitor updates. This
-provides protection against unpredictable processing times, but it will also increase 
-consumer process memory footprint. 
+- Receiver queue: data receiver can copy incoming objects into a
+'PvObjectQueue' rather than process them immediately on updates. This
+provides protection against unpredictable processing times, but it will
+also increase consumer process memory footprint.
+
 
 <p align="center">
   <img alt="Single Consumer with High Frame Rate" src="images/StreamingFrameworkSingleConsumerDataLossProtection.jpg">
@@ -385,7 +393,7 @@ client queue.
 
 We first demonstrate what happens if we use application that cannot keep up
 with the data source. For this we agan use the sample AD image processor,
-and request both server and client (monitor) queues. On terminal 1 run
+and request both server and receiver queues. On terminal 1 run
 the following command:
 
 ```sh
@@ -398,7 +406,7 @@ pvapy-hpc-consumer \
     --processor-class HpcAdImageProcessor \
     --report-period 10 \
     --server-queue-size 100 \
-    --monitor-queue-size 1000
+    --receiver-queue-size 1000
 ```
 
 On terminal 2, generate images at a frame rate sufficiently high to overwhelm
@@ -427,7 +435,7 @@ pvapy-hpc-consumer \
     --processor-class HpcAdImageProcessor \
     --report-period 10 \
     --server-queue-size 100 \
-    --monitor-queue-size 1000 \
+    --receiver-queue-size 1000 \
     --n-consumers 2 \
     --distributor-updates 1
 ```
@@ -457,7 +465,7 @@ pvapy-hpc-consumer \
     --processor-class HpcAdImageProcessor \
     --report-period 10 \
     --server-queue-size 100 \
-    --monitor-queue-size 1000 \
+    --receiver-queue-size 1000 \
     --n-consumers 4 \
     --distributor-updates 1
 ```
@@ -495,7 +503,7 @@ $ pvapy-hpc-consumer \
     --processor-class HpcAdImageProcessor \
     --report-period 10 \
     --server-queue-size 100 \
-    --monitor-queue-size 1000 \
+    --receiver-queue-size 1000 \
     --n-consumers 4 \
     --distributor-updates 8
 ```
@@ -518,7 +526,7 @@ $ pvapy-hpc-consumer \
     --n-consumers 4 \
     --report-period 10 \
     --server-queue-size 1000 \
-    --monitor-queue-size 10000
+    --receiver-queue-size 10000
 ```
 
 The input for this set of consumers is the output of the previous set. We 
@@ -719,7 +727,7 @@ $ pvapy-hpc-consumer \
     --processor-class HpcAdImageProcessor \
     --report-period 10 \
     --server-queue-size 100 \
-    --monitor-queue-size 1000 \
+    --receiver-queue-size 1000 \
     --n-consumers 4 \
     --distributor-updates 8
 ```
@@ -738,12 +746,12 @@ $ pvapy-hpc-collector \
     --report-period 10 \
     --server-queue-size 1000 \
     --collector-cache-size 10000 \
-    --monitor-queue-size 2000
+    --receiver-queue-size 2000
 ```
 
 Here, we specified producer IDs, which will be used to construct input channel
 names by replacing the '*' character in the string given in the
-'--input-channel' option. In addition to server and client (monitor)
+'--input-channel' option. In addition to server and receiver
 queues, we also specified size for the collector cache used for sorting
 incoming objects. The collector will publish images sorted by the 'uniqueId'
 on its output channel 'collector:<collector id>:output'.
@@ -766,7 +774,7 @@ $ pvapy-hpc-consumer \
     --n-consumers 4 \
     --report-period 10 \
     --server-queue-size 1000 \
-    --monitor-queue-size 10000 \
+    --receiver-queue-size 10000 \
     --distributor-updates 1
 ```
 
@@ -926,7 +934,7 @@ $ pvapy-hpc-collector \
     --report-period 10 \
     --server-queue-size 100 \
     --collector-cache-size 100 \
-    --monitor-queue-size 1000 \
+    --receiver-queue-size 1000 \
     --metadata-channels pva://x,pva://y,pva://z
 ```
 
@@ -1000,7 +1008,7 @@ $ pvapy-hpc-consumer \
     --report-period 10 \
     --server-queue-size 2000 \
     --accumulate-objects 10 \
-    --monitor-queue-size 0 \
+    --receiver-queue-size 0 \
     --distributor-updates 1 \
     --metadata-channels pva://pvapy:x,pva://pvapy:y,pva://pvapy:z
 ```
