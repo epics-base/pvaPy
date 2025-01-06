@@ -1,3 +1,18 @@
+## Release 5.5.0 (2025/01/06)
+
+- Streaming Framework enhancements:
+  - Added support for different modes of receiving (PVA monitor, PVA server,
+    RPC server) and publishing data (PVA server, PVA client, RPC client)
+    in the data consumer; possible output -> input mode combinations are
+        * PVA server -> PVA monitor
+        * PVA client -> PVA server
+        * RPC client -> RPC server
+- Updated build for numpy 2.0 and python 3.13
+- Conda/pip package dependencies:
+  - EPICS BASE = 7.0.8.1.1.pvapy (base 7.0.8.1 + pvAccessCPP PR #192 + pvDatabaseCPP PRs #82,83)
+  - BOOST      = 1.87.0
+  - NUMPY      >= 2.1 (python >= 3.13); >= 2.0 (python >= 3.9, < 3.13); >= 1.22, < 2.0 (python >= 3.8, < 3.9); >= 1.19, < 1.21 (python < 3.8)
+
 ## Release 5.4.1 (2024/07/25)
 
 - Fixed issue with MultiChannel class initialization
@@ -6,9 +21,9 @@
 - Added support for OSX ARM platform
 - Updated fabio support in AD simulation server
 - Conda/pip package dependencies: 
-  - EPICS BASE = 7.0.8.1.1.pvapy (base 7.0.8.1 + pvAccessCPP PR #192 + pvDatabaseCPP PRs #82,83), 
+  - EPICS BASE = 7.0.8.1.1.pvapy (base 7.0.8.1 + pvAccessCPP PR #192 + pvDatabaseCPP PRs #82,83)
   - BOOST      = 1.85.0
-  - NUMPY      >= 1.26, < 2.0 (for python >= 3.12); >= 1.22, < 2.0 (for python >= 3.8); >= 1.19, < 1.21 (for python < 3.8)
+  - NUMPY      >= 1.26, < 2.0 (python >= 3.12); >= 1.22, < 2.0 (python >= 3.8); >= 1.19, < 1.21 (python < 3.8)
 
 ## Release 5.4.0 (2024/05/31)
 
@@ -16,7 +31,7 @@
   allows updating a subset of record fields that changed
 - Added support for Blosc, LZ4 and BSLZ4 codecs in AD simulation server,
   as well as for AdImageUtility.reshapeNtNdArray() method; for
-  decompressng payload using AdImageUtility, one can set
+  decompressing payload using AdImageUtility, one can set
   PVAPY_COMPRESSED_PAYLOAD_START and PVAPY_COMPRESSED_PAYLOAD_END
   environment variables in case where payload contains extra headers
   (e.g., when streaming Blosc or BSLZ4 compressed images from HDF5
@@ -24,7 +39,7 @@
 - Conda/pip package dependencies: 
   - EPICS BASE = 7.0.8.0.1.pvapy (base 7.0.8 + pvAccessCPP PR #192 + pvDatabaseCPP PR #82) 
   - BOOST      = 1.81.0
-  - NUMPY      >= 1.26 (for python >= 3.12); >= 1.22 (for python >= 3.8); >= 1.19, < 1.21 (for python < 3.8)
+  - NUMPY      >= 1.26 (python >= 3.12); >= 1.22 (python >= 3.8); >= 1.19, < 1.21 (python < 3.8)
 
 ## Release 5.3.1 (2022/10/23)
 
@@ -34,7 +49,7 @@
 - Conda/pip package dependencies: 
   - EPICS BASE = 7.0.7
   - BOOST      = 1.81.0
-  - NUMPY      >= 1.22 (for python >= 3.8); >= 1.19, < 1.21 (for python < 3.8)
+  - NUMPY      >= 1.22 (python >= 3.8); >= 1.19, < 1.21 (python < 3.8)
 
 ## Release 5.3.0 (2022/03/29)
 
@@ -52,7 +67,7 @@
 - Conda/pip package dependencies: 
   - EPICS BASE = 7.0.7
   - BOOST      = 1.81.0
-  - NUMPY      >= 1.22 (for python >= 3.8); >= 1.19, < 1.21 (for python < 3.8)
+  - NUMPY      >= 1.22 (python >= 3.8); >= 1.19, < 1.21 (python < 3.8)
 
 ## Release 5.2.2 (2022/03/01)
 
@@ -66,7 +81,7 @@
 - Conda/pip package dependencies: 
   - EPICS BASE = 7.0.7
   - BOOST      = 1.81.0
-  - NUMPY      >= 1.22 (for python >= 3.8); >= 1.19, < 1.21 (for python < 3.8)
+  - NUMPY      >= 1.22 (python >= 3.8); >= 1.19, < 1.21 (python < 3.8)
 
 ## Release 5.2.1 (2022/12/24)
 
@@ -78,7 +93,7 @@
 - Conda/pip package dependencies: 
   - EPICS BASE = 7.0.7
   - BOOST      = 1.81.0
-  - NUMPY      >= 1.22 (for python >= 3.8); >= 1.19, < 1.21 (for python < 3.8)
+  - NUMPY      >= 1.22 (python >= 3.8); >= 1.19, < 1.21 (python < 3.8)
 
 ## Release 5.2.0 (2022/11/04)
 
@@ -92,7 +107,7 @@
 - Conda/pip package dependencies: 
   - EPICS BASE = 7.0.7
   - BOOST      = 1.78.0
-  - NUMPY      >= 1.22 (for python >= 3.8); >= 1.19, < 1.21 (for python < 3.8)
+  - NUMPY      >= 1.22 (python >= 3.8); >= 1.19, < 1.21 (python < 3.8)
 
 ## Release 5.1.2 (2022/10/22)
 
@@ -100,7 +115,7 @@
 - Conda/pip package dependencies: 
   - EPICS BASE = 7.0.7
   - BOOST      = 1.78.0
-  - NUMPY      >= 1.22 (for python >= 3.8); >= 1.19, < 1.21 (for python < 3.8)
+  - NUMPY      >= 1.22 (python >= 3.8); >= 1.19, < 1.21 (python < 3.8)
 
 ## Release 5.1.1 (2022/10/19)
 
@@ -108,7 +123,7 @@
 - Conda/pip package dependencies: 
   - EPICS BASE = 7.0.7
   - BOOST      = 1.78.0
-  - NUMPY      >= 1.22 (for python >= 3.8); >= 1.19, < 1.21 (for python < 3.8)
+  - NUMPY      >= 1.22 (python >= 3.8); >= 1.19, < 1.21 (python < 3.8)
 
 ## Release 5.1.0 (2022/10/14)
 
@@ -127,7 +142,7 @@
 - Conda/pip package dependencies: 
   - EPICS BASE = 7.0.7
   - BOOST      = 1.78.0
-  - NUMPY      >= 1.22 (for python >= 3.8); < 1.21 (for python < 3.8)
+  - NUMPY      >= 1.22 (python >= 3.8); < 1.21 (python < 3.8)
 
 ## Release 5.0.0 (2022/08/11)
 
@@ -163,7 +178,7 @@
 - conda/pip package dependencies: 
   - EPICS BASE = 7.0.6.1.C2.3
   - BOOST      = 1.78.0
-  - NUMPY      >= 1.22 (for python >= 3.8); < 1.21 (for python < 3.8)
+  - NUMPY      >= 1.22 (python >= 3.8); < 1.21 (python < 3.8)
 
 ## Release 4.2.0 (2022/06/07)
 
