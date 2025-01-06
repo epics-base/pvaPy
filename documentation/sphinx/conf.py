@@ -144,7 +144,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'EPICS PvaPy'
-copyright = u'2014-2022, EPICS'
+copyright = u'2014-2025, EPICS'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
