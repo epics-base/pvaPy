@@ -1241,8 +1241,8 @@ Test Results:
 
 | Consumers | Frames/<br>second  | Frames/second/<br>consumer | Frames/<br>minute | Data rate/<br>consumer | Total data rate |
 | ---:      | ---:           | ---:                       | ---:          | ---:                   | ---:            |
-|        1  |     10000      |    10000                   |   600000      |      2.62 GBps         |    2.62 GBps    |
-|        4  |     26000      |     6500                   |  1560000      |      1.31 GBps         |    5.24 GBps    |
+|        1  |     11700      |    11700                   |   702000      |      3.07 GBps         |    3.07 GBps    |
+|        4  |     26000      |     6500                   |  1560000      |      1.70 GBps         |    6.81 GBps    |
 
 ### Metadata Handling Tests
 
