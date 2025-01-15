@@ -1119,13 +1119,8 @@ $ pvget proc:1:output # processed image
 
 ## Performance Testing
 
-All tests described in this section have been performed with PvaPy version 
-5.1.0 (Python 3.9 conda package) on a 64-bit linux machine with 96 logical cores (Intel Xeon 
-Gold 6342 CPU with hyperthreading enabled) running at 3.5 GHz, and 
-with 2TB of RAM. Note that image server and all consumers were running on the
-same machine, and hence were using the loopback device. If these tests were performed using multiple
-machines, results would vary significantly depending on the network connection between the machines, network
-configuration, etc.
+All tests described in this section have been performed on a single machine using the loopback device. With everything else being the same, the same tests performed on multiple machines would be affected by the network bandwidth and
+configuration.
 
 ### Throughput Tests
 
@@ -1163,14 +1158,16 @@ $ pvapy-ad-sim-server \
     -nx FRAME_SIZE -ny FRAME_SIZE -fps FRAME_RATE -rp FRAME_RATE
 ```
 
-The above command was able to reliably generate images at stable rates 
-of up to 20 KHz. Going beyond that number, the resulting output frame rate varied 
-more than 1-2 Hz, and was not deemed to be stable enough for testing.
-
 A given test was deemed successful if no frames were 
 missed during the 60 second server runtime. Results for the maximum
 simulated detector rate that image consumers were able to sustain 
-without missing any frames are shown below:
+without missing any frames are shown below.
+
+#### 10/2022
+
+PvaPy Version: 5.1.0 
+Python Version: 3.9
+Test Machine: 64-bit linux, 96 logical cores @ 3.5 GHz (Intel Xeon Gold 6342 CPU with hyperthreading enabled), 2 TB RAM. 
 
 * Image size: 4096 x 4096 (uint8, 16.78 MB); Server queue size: 100
 
@@ -1214,6 +1211,26 @@ without missing any frames are shown below:
 | ---:      | ---:           | ---:                       | ---:          | ---:                   | ---:            |
 |        1  |     10000      |    10000                   |   600000      |      2.62 GBps         |    2.62 GBps    |
 |        4  |     20000      |     5000                   |  1200000      |      1.31 GBps         |    5.24 GBps    |
+
+#### 01/2025
+
+PvaPy Version: 5.5.0 
+Python Version: 3.13
+Test Machine: 64-bit linux, 96 logical cores @ 3.5 GHz (Intel Xeon Gold 6342 CPU with hyperthreading enabled), 2 TB RAM. 
+
+* Image size: 4096 x 4096 (uint8, 16.78 MB); Server queue size: 100
+
+| Consumers | Frames/<br>second  | Frames/second/<br>consumer | Frames/<br>minute | Data rate/<br>consumer | Total data rate |
+| ---:      | ---:           | ---:                       | ---:          | ---:                   | ---:            |
+|        1  |      220       |     220                    |    13200      | 3.69 GBps              |    3.69 GBps    |
+|       10  |     1300       |     130                    |    78000      | 2.18 GBps              |   21.81 GBps    |
+
+* Image size: 512 x 512 (uint8, 0.26 MB); Server queue size: 1000
+
+| Consumers | Frames/<br>second  | Frames/second/<br>consumer | Frames/<br>minute | Data rate/<br>consumer | Total data rate |
+| ---:      | ---:           | ---:                       | ---:          | ---:                   | ---:            |
+|        1  |     11800      |    11800                   |   708000      |      3.09 GBps         |    3.09 GBps    |
+|        4  |     26000      |     6500                   |  1560000      |      1.70 GBps         |    6.81 GBps    |
 
 ### Metadata Handling Tests
 
@@ -1265,7 +1282,13 @@ A given test was deemed successful if no frames and metadata updates were
 missed during the 60 second server runtime, and if all images were associated
 with metadata without any errors. Results for the maximum
 simulated detector rate that image consumers were able to sustain 
-and process are shown below:
+and process are shown below.
+
+#### 10/2022
+
+PvaPy Version: 5.1.0 
+Python Version: 3.9
+Test Machine: 64-bit linux, 96 logical cores @ 3.5 GHz (Intel Xeon Gold 6342 CPU with hyperthreading enabled), 2 TB RAM. 
 
 * Image size: 4096 x 4096 (uint8, 16.78 MB); Server queue size: 400
 
