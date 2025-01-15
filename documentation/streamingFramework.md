@@ -1158,6 +1158,10 @@ $ pvapy-ad-sim-server \
     -nx FRAME_SIZE -ny FRAME_SIZE -fps FRAME_RATE -rp FRAME_RATE
 ```
 
+The above command was able to reliably generate images at stable rates 
+of up to 20 KHz. Going beyond that number, the resulting output frame rate varied 
+more than 1-2 Hz, and was not deemed to be stable enough for testing.
+
 A given test was deemed successful if no frames were 
 missed during the 60 second server runtime. Results for the maximum
 simulated detector rate that image consumers were able to sustain 
@@ -1165,9 +1169,13 @@ without missing any frames are shown below.
 
 #### 10/2022
 
-PvaPy Version: 5.1.0 
-Python Version: 3.9
-Test Machine: 64-bit linux, 96 logical cores @ 3.5 GHz (Intel Xeon Gold 6342 CPU with hyperthreading enabled), 2 TB RAM. 
+Test Environment:
+
+* PvaPy Version: 5.1.0 
+* Python Version: 3.9
+* Test Machine: 64-bit linux, 96 logical cores @ 3.5 GHz (Intel Xeon Gold 6342 CPU with hyperthreading enabled), 2 TB RAM. 
+
+Test Results:
 
 * Image size: 4096 x 4096 (uint8, 16.78 MB); Server queue size: 100
 
@@ -1214,9 +1222,13 @@ Test Machine: 64-bit linux, 96 logical cores @ 3.5 GHz (Intel Xeon Gold 6342 CPU
 
 #### 01/2025
 
-PvaPy Version: 5.5.0 
-Python Version: 3.13
-Test Machine: 64-bit linux, 96 logical cores @ 3.5 GHz (Intel Xeon Gold 6342 CPU with hyperthreading enabled), 2 TB RAM. 
+Test Environment:
+
+* PvaPy Version: 5.5.0 
+* Python Version: 3.13
+* Test Machine: 64-bit linux, 96 logical cores @ 3.5 GHz (Intel Xeon Gold 6342 CPU with hyperthreading enabled), 2 TB RAM. 
+
+Test Results:
 
 * Image size: 4096 x 4096 (uint8, 16.78 MB); Server queue size: 100
 
@@ -1229,8 +1241,8 @@ Test Machine: 64-bit linux, 96 logical cores @ 3.5 GHz (Intel Xeon Gold 6342 CPU
 
 | Consumers | Frames/<br>second  | Frames/second/<br>consumer | Frames/<br>minute | Data rate/<br>consumer | Total data rate |
 | ---:      | ---:           | ---:                       | ---:          | ---:                   | ---:            |
-|        1  |     11800      |    11800                   |   708000      |      3.09 GBps         |    3.09 GBps    |
-|        4  |     26000      |     6500                   |  1560000      |      1.70 GBps         |    6.81 GBps    |
+|        1  |     10000      |    10000                   |   600000      |      2.62 GBps         |    2.62 GBps    |
+|        4  |     26000      |     6500                   |  1560000      |      1.31 GBps         |    5.24 GBps    |
 
 ### Metadata Handling Tests
 
@@ -1286,9 +1298,13 @@ and process are shown below.
 
 #### 10/2022
 
-PvaPy Version: 5.1.0 
-Python Version: 3.9
-Test Machine: 64-bit linux, 96 logical cores @ 3.5 GHz (Intel Xeon Gold 6342 CPU with hyperthreading enabled), 2 TB RAM. 
+Test Environment:
+
+* PvaPy Version: 5.1.0 
+* Python Version: 3.9
+* Test Machine: 64-bit linux, 96 logical cores @ 3.5 GHz (Intel Xeon Gold 6342 CPU with hyperthreading enabled), 2 TB RAM. 
+
+Test Results:
 
 * Image size: 4096 x 4096 (uint8, 16.78 MB); Server queue size: 400
 
