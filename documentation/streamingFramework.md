@@ -1117,6 +1117,82 @@ $ pvget dec:1:output # decrypted (raw) data
 $ pvget proc:1:output # processed image
 ```
 
+## Input/Output Modes and Firewalls
+
+By default, consumers receive input data by establishing PVA monitor
+on the input channel, and they publish their output via their PVA server
+instance. However, in some cases it may be advantageous to publish 
+processing output by directly updating channels hosted by external
+PVA or RPC servers. For example, if data is produced at site A that
+allows incoming TCP connections, and it is
+processed at site B which only allows outgoing connections, on site B we might
+use PVA monitors to receive input and either PVA or RPC clients to
+publish processing output back to servers listening on site A.
+
+The framework offers the following combinations of PRODUCER (OUTPUT) => CONSUMER (INPUT) modes:
+* PVAS (server) => PVA (monitor)
+* PVA (client) => PVAS (server)
+* RPC (client) => RPCS (server)
+The above modes are specified via the '--input-mode' and '--output-mode'
+arguments for the pvapy-hpc-consumer command, with 'pva' being the
+default input mode and 'pvas' the default output mode.
+
+In addition to above input and output modes, one can also use the following environment variables:
+* EPICS_PVA_BROADCAST_PORT: for controlling UDP-based channel search on the client side
+* EPICS_PVA_NAME_SERVERS: for enabling TCP-based channel search on the client side
+* EPICS_PVAS_SERVER_PORT: for controlling server TCP port
+
+As one example, consider the situation where data is produced at
+*hostA* (port 10001), processed at *hostB* and sent back to *hostA* (port 30001), e.g., for saving, viewing, etc.
+
+On terminal 1 (*hostA*), we can use the following command to produce
+simulated data on port 10001, and also make sure the default UDP broadcast
+port is not used:
+
+```sh
+EPICS_PVAS_SERVER_PORT=10001 EPICS_PVA_BROADCAST_PORT=10000 pvapy-ad-sim-server -nx IMAGE_SIZE -ny IMAGE_SIZE -dt uint8 -cn pvapy:image -rt 60 -fps FRAME_RATE -rp FRAME_RATE
+```
+
+On terminal 2 (*hostB*), we can use the following command to get data
+from port 10001 on *hostA* and to publish data back to port 30001 on *hostA*:
+
+```sh
+$ EPICS_PVA_NAME_SERVERS="hostA:10001 hostA:30001" EPICS_PVA_BROADCAST_PORT=20000 pvapy-hpc-consumer \
+    --input-channel pvapy:image \
+    --control-channel stage1:*:control \
+    --status-channel stage1:*:status \
+    --output-channel stage1:*:output \
+    --processor-class pvapy.hpc.adImageProcessor.AdImageProcessor \
+    --report-period 10 \
+    --server-queue-size QUEUE_SIZE \
+    --consumer-id 1 \
+    **--output-mode pva**
+```
+
+On terminal 3 (*hostA*), we can use the following command to receive
+data processed on *hostB*:
+
+```sh
+$ EPICS_PVAS_SERVER_PORT=30001 EPICS_PVA_BROADCAST_PORT=30000 pvapy-hpc-consumer \
+    --input-channel stage1:*:output \
+    --control-channel stage2:*:control \
+    --status-channel stage2:*:status \
+    --output-channel stage:*:output \
+    --processor-class pvapy.hpc.adImageProcessor.AdImageProcessor \
+    --report-period 10 \
+    --skip-initial-updates 0 \
+    --consumer-id 1 \
+    **--input-mode pvas**
+```
+
+In the above, instead of the [*pvapy.hpc.adImageProcessor.AdImageProcessor*](../pvapy/hpc/adImageProcessor.py), a base (passthrough) processor for Area Detector images, one could have, for example, used 
+[AD Output File Processor](../pvapy/hpc/adOutputFileProcessor.py)
+or [HDF5 AD Image Writer](../pvapy/hpc/hdf5AdImageWriter.py) for saving
+processed images.
+
+Note that client-based output modes will be less performant than the
+default PVAS (server) output mode.
+
 ## Performance Testing
 
 All tests described in this section have been performed on a single machine using the loopback device. With everything else being the same, the same tests performed on multiple machines would be affected by the network bandwidth and
@@ -1158,24 +1234,23 @@ $ pvapy-ad-sim-server \
     -nx FRAME_SIZE -ny FRAME_SIZE -fps FRAME_RATE -rp FRAME_RATE
 ```
 
-The above command was able to reliably generate images at stable rates 
-of up to 20 KHz. Going beyond that number, the resulting output frame rate varied 
-more than 1-2 Hz, and was not deemed to be stable enough for testing.
+The above command was able to reliably generate images at stable rates
+for all test use cases shown below.
 
 A given test was deemed successful if no frames were 
 missed during the 60 second server runtime. Results for the maximum
 simulated detector rate that image consumers were able to sustain 
 without missing any frames are shown below.
 
-#### 10/2022
+#### Test Date: 10/2022
 
-Test Environment:
+Environment:
 
 * PvaPy Version: 5.1.0 
 * Python Version: 3.9
-* Test Machine: 64-bit linux, 96 logical cores @ 3.5 GHz (Intel Xeon Gold 6342 CPU with hyperthreading enabled), 2 TB RAM. 
+* Test Machine: 64-bit linux, 96 logical cores @ 3.5 GHz (Intel Xeon Gold 6342 CPU with hyperthreading enabled), 2 TB RAM
 
-Test Results:
+Results:
 
 * Image size: 4096 x 4096 (uint8, 16.78 MB); Server queue size: 100
 
@@ -1220,15 +1295,15 @@ Test Results:
 |        1  |     10000      |    10000                   |   600000      |      2.62 GBps         |    2.62 GBps    |
 |        4  |     20000      |     5000                   |  1200000      |      1.31 GBps         |    5.24 GBps    |
 
-#### 01/2025
+#### Test Date: 01/2025
 
-Test Environment:
+Environment:
 
 * PvaPy Version: 5.5.0 
 * Python Version: 3.13
-* Test Machine: 64-bit linux, 96 logical cores @ 3.5 GHz (Intel Xeon Gold 6342 CPU with hyperthreading enabled), 2 TB RAM. 
+* Test Machine: 64-bit linux, 96 logical cores @ 3.5 GHz (Intel Xeon Gold 6342 CPU with hyperthreading enabled), 2 TB RAM
 
-Test Results:
+Results:
 
 * Image size: 4096 x 4096 (uint8, 16.78 MB); Server queue size: 100
 
@@ -1296,16 +1371,15 @@ with metadata without any errors. Results for the maximum
 simulated detector rate that image consumers were able to sustain 
 and process are shown below.
 
-#### 10/2022
+#### Test Date: 10/2022
 
-Test Environment:
+Environment:
 
 * PvaPy Version: 5.1.0 
 * Python Version: 3.9
-* Test Machine: 64-bit linux, 96 logical cores @ 3.5 GHz (Intel Xeon Gold 6342 CPU with hyperthreading enabled), 2 TB RAM. 
+* Test Machine: 64-bit linux, 96 logical cores @ 3.5 GHz (Intel Xeon Gold 6342 CPU with hyperthreading enabled), 2 TB RAM
 
 Test Results:
-
 * Image size: 4096 x 4096 (uint8, 16.78 MB); Server queue size: 400
 
 | Consumers | Frames/<br>second  | Frames/second/<br>consumer | Frames/<br>minute | Metadata/<br>second | Metadata/<br>minute | Data rate/<br>consumer | Total data rate |
