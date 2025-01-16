@@ -1136,6 +1136,8 @@ The framework offers the following combinations of PRODUCER (OUTPUT) => CONSUMER
 The above modes are specified via the '--input-mode' and '--output-mode'
 arguments for the pvapy-hpc-consumer command, with 'pva' being the
 default input mode and 'pvas' the default output mode.
+Keep in mind that the client-based output modes will be less performant than the
+default server-based mode.
 
 In addition to above input and output modes, one can also use the following environment variables:
 * EPICS_PVA_BROADCAST_PORT: for controlling UDP-based channel search on the client side
@@ -1150,11 +1152,13 @@ simulated data on port 10001, and also make sure the default UDP broadcast
 port is not used:
 
 ```sh
-EPICS_PVAS_SERVER_PORT=10001 EPICS_PVA_BROADCAST_PORT=10000 pvapy-ad-sim-server -nx IMAGE_SIZE -ny IMAGE_SIZE -dt uint8 -cn pvapy:image -rt 60 -fps FRAME_RATE -rp FRAME_RATE
+EPICS_PVAS_SERVER_PORT=10001 EPICS_PVA_BROADCAST_PORT=10000 pvapy-ad-sim-server \
+    -cn pvapy:image -nx IMAGE_SIZE -ny IMAGE_SIZE -dt uint8 -rt 60 \
+    -fps FRAME_RATE -rp FRAME_RATE
 ```
 
 On terminal 2 (*hostB*), we can use the following command to get data
-from port 10001 on *hostA* and to publish data back to port 30001 on *hostA*:
+from port 10001 on *hostA* and to publish data back to port 30001 on *hostA* using PVA client:
 
 ```sh
 $ EPICS_PVA_NAME_SERVERS="hostA:10001 hostA:30001" EPICS_PVA_BROADCAST_PORT=20000 pvapy-hpc-consumer \
@@ -1166,11 +1170,11 @@ $ EPICS_PVA_NAME_SERVERS="hostA:10001 hostA:30001" EPICS_PVA_BROADCAST_PORT=2000
     --report-period 10 \
     --server-queue-size QUEUE_SIZE \
     --consumer-id 1 \
-    **--output-mode pva**
+    --output-mode pva
 ```
 
 On terminal 3 (*hostA*), we can use the following command to receive
-data processed on *hostB*:
+data using PVA server running on port 30001:
 
 ```sh
 $ EPICS_PVAS_SERVER_PORT=30001 EPICS_PVA_BROADCAST_PORT=30000 pvapy-hpc-consumer \
@@ -1182,16 +1186,13 @@ $ EPICS_PVAS_SERVER_PORT=30001 EPICS_PVA_BROADCAST_PORT=30000 pvapy-hpc-consumer
     --report-period 10 \
     --skip-initial-updates 0 \
     --consumer-id 1 \
-    **--input-mode pvas**
+    --input-mode pvas
 ```
 
-In the above, instead of the [*pvapy.hpc.adImageProcessor.AdImageProcessor*](../pvapy/hpc/adImageProcessor.py), a base (passthrough) processor for Area Detector images, one could have, for example, used 
+In the above, instead of the [*pvapy.hpc.adImageProcessor.AdImageProcessor*](../pvapy/hpc/adImageProcessor.py) (a base (passthrough) processor for Area Detector images), one could have, for example, used 
 [AD Output File Processor](../pvapy/hpc/adOutputFileProcessor.py)
 or [HDF5 AD Image Writer](../pvapy/hpc/hdf5AdImageWriter.py) for saving
 processed images.
-
-Note that client-based output modes will be less performant than the
-default PVAS (server) output mode.
 
 ## Performance Testing
 
