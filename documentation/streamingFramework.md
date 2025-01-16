@@ -1152,7 +1152,7 @@ simulated data on port 10001, and also make sure the default UDP broadcast
 port is not used:
 
 ```sh
-EPICS_PVAS_SERVER_PORT=10001 EPICS_PVA_BROADCAST_PORT=10000 pvapy-ad-sim-server \
+$ EPICS_PVAS_SERVER_PORT=10001 EPICS_PVA_BROADCAST_PORT=10000 pvapy-ad-sim-server \
     -cn pvapy:image -nx IMAGE_SIZE -ny IMAGE_SIZE -dt uint8 -rt 60 \
     -fps FRAME_RATE -rp FRAME_RATE
 ```
@@ -1189,7 +1189,7 @@ $ EPICS_PVAS_SERVER_PORT=30001 EPICS_PVA_BROADCAST_PORT=30000 pvapy-hpc-consumer
     --input-mode pvas
 ```
 
-In the above, instead of the [*pvapy.hpc.adImageProcessor.AdImageProcessor*](../pvapy/hpc/adImageProcessor.py) (a base (passthrough) processor for Area Detector images), one could have, for example, used 
+In the above, instead of the [*pvapy.hpc.adImageProcessor.AdImageProcessor*](../pvapy/hpc/adImageProcessor.py) (base/passthrough processor for Area Detector images), one could have, for example, used 
 [AD Output File Processor](../pvapy/hpc/adOutputFileProcessor.py)
 or [HDF5 AD Image Writer](../pvapy/hpc/hdf5AdImageWriter.py) for saving
 processed images.
