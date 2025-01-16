@@ -1133,6 +1133,7 @@ The framework offers the following combinations of PRODUCER (OUTPUT) => CONSUMER
 * PVAS (server) => PVA (monitor)
 * PVA (client) => PVAS (server)
 * RPC (client) => RPCS (server)
+
 The above modes are specified via the '--input-mode' and '--output-mode'
 arguments for the pvapy-hpc-consumer command, with 'pva' being the
 default input mode and 'pvas' the default output mode.
