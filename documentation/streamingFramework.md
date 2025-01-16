@@ -1140,13 +1140,13 @@ default input mode and 'pvas' the default output mode.
 Keep in mind that the client-based output modes will be less performant than the
 default server-based mode.
 
-In addition to above input and output modes, one can also use the following environment variables:
+In addition to above input and output modes, one can also use the following environment variables for controlling client and server behavior:
 * EPICS_PVA_BROADCAST_PORT: for controlling UDP-based channel search on the client side
 * EPICS_PVA_NAME_SERVERS: for enabling TCP-based channel search on the client side
 * EPICS_PVAS_SERVER_PORT: for controlling server TCP port
 
 As one example, consider the situation where data is produced at
-*hostA* (port 10001), processed at *hostB* and sent back to *hostA* (port 30001), e.g., for saving, viewing, etc.
+*hostA* (port 10001), processed at *hostB* and sent back to *hostA* (port 30001) for saving, viewing, etc.
 
 On terminal 1 (*hostA*), we can use the following command to produce
 simulated data on port 10001, and also make sure the default UDP broadcast
