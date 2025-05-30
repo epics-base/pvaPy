@@ -24,7 +24,6 @@ from ..utility.loggingManager import LoggingManager
 class EjfatDataPublisher(DataPublisher, EjfatSystemBase):
     ''' EJFAT data publisher class. '''
 
-    DEFAULT_VALIDATE_SERVER = 0
     DEFAULT_DATA_ID = 0
     DEFAULT_EVENT_SOURCE_ID = 1
 

@@ -26,7 +26,6 @@ class EjfatDataReceiver(DataReceiver, EjfatSystemBase, threading.Thread):
 
     DEFAULT_PORT = 35328 # EJFAT
     DEFAULT_N_RECEIVING_THREADS = 1
-    DEFAULT_VALIDATE_SERVER = 0
     DEFAULT_WEIGHT = 1.0
     DEFAULT_SOURCE_COUNT = 1
     DEFAULT_MIN_FACTOR = 1.0
