@@ -33,7 +33,7 @@ class RpcDataReceiver(DataReceiver, threading.Thread):
             if self.pvObjectQueue is not None:
                 try:
                     self.pvObjectQueue.put(pv)
-                except pva.QueueFull:           
+                except pva.QueueFull:
                     status = self.STATUS_ERROR
                     errorMessage = 'Input PV object queue is full.'
                     status['errorMessage'] = errorMessage
@@ -41,7 +41,7 @@ class RpcDataReceiver(DataReceiver, threading.Thread):
                     self.nRejected += 1
             else:
                 self.processingFunction(pv)
-        except Exception as ex:           
+        except Exception as ex:
             self.nErrors += 1
             errorMessage = f'Error processing input PV object: {ex}'
             status['errorMessage'] = errorMessage
