@@ -38,10 +38,12 @@ class DataProcessingController:
         # Output channel is used for publishing processed objects
         self.inputChannel = configDict.get('inputChannel', '')
         self.inputMode = configDict.get('inputMode')
+        self.inputArgs = configDict.get('inputArgs')
         self.outputChannel = configDict.get('outputChannel', '')
         if self.outputChannel == '_':
             self.outputChannel = f'{self.inputChannel}:processor-{self.processorId}'
         self.outputMode = configDict.get('outputMode')
+        self.outputArgs = configDict.get('outputArgs')
         self.dataPublisher = None
         self.pvaServerStarted = False
         self.pvaServer = None
@@ -55,7 +57,7 @@ class DataProcessingController:
     def createDataPublisher(self, pvObject):
         if not self.outputChannel or self.dataPublisher:
             return
-        self.logger.debug('Creating data publisher, output mode %s', self.outputMode)
+        self.logger.debug('Creating data publisher, output mode %s, output args: %s', self.outputMode, self.outputArgs)
         if self.outputMode == OperationMode.PVAS:
             outputPvObject = self.userDataProcessor.getOutputPvObjectType(pvObject)
             if outputPvObject:

@@ -76,7 +76,7 @@ class AdImageProcessor(UserDataProcessor):
         will be updating ("pvas" input mode).
 
         There is no need to override this method for the "pva" (monitor)
-        or "rpcs" (RPC server) input modes.
+        or "rpc" (RPC server) input modes.
 
         :Returns: PvObject with the structure required for the input PVA channel
         '''

@@ -7,25 +7,25 @@ class OperationMode(Enum):
     '''
     This class enumerates possible operation modes.
     '''
-    PVA = 0  # PVA client (monitor)
-    PVAS = 1 # PVA server
-    RPC = 2  # RPC client
-    RPCS = 3 # RPC server
-    CA = 4   # CA client (monitor)
+    PVA = 0    # PVA client/monitor
+    PVAS = 1   # PVA server
+    RPC = 2    # RPC client/server
+    CA = 3     # CA monitor
+    EJFAT = 4  # EJFAT client/server (or sender/receiver)
 
     @classmethod
-    def fromString(cls, input):
+    def fromString(cls, s):
         try:
-            if isinstance(input, str):
+            if isinstance(s, str):
                 try:
-                    value = int(input)
+                    value = int(s)
                     return OperationMode(value)
                 except ValueError:
-                    value = input.upper()
+                    value = s.upper()
                 return OperationMode[value]
-            elif isinstance(input, OperationMode):
-                return input
+            elif isinstance(s, OperationMode):
+                return s
             else:
-                return OperationMode(input)
+                return OperationMode(s)
         except Exception as ex:
-            raise pva.InvalidArgument(f'Invalid value for operation mode: {input}')
+            raise pva.InvalidArgument(f'Invalid value for operation mode: {s}')

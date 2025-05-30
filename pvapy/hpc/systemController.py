@@ -36,7 +36,7 @@ class SystemController(HpcController):
     ALLOWED_INPUT_MODES = [
         OperationMode.PVA,
         OperationMode.PVAS,
-        OperationMode.RPCS,
+        OperationMode.RPC,
         OperationMode.CA
     ]
 
@@ -67,7 +67,7 @@ class SystemController(HpcController):
             idList = eval(idList)
         return list(idList)
 
-    def __init__(self, inputChannel, inputMode='pva', outputChannel=None, outputMode='pvas', statusChannel=None, controlChannel=None, processorFile=None, processorClass=None, processorArgs=None, idFormatSpec=None, objectIdField='uniqueId', objectIdOffset=0, fieldRequest='', skipInitialUpdates=1, reportStatsList='all', logLevel=None, logFile=None, disableCurses=False):
+    def __init__(self, inputChannel, inputMode='pva', inputArgs=None, outputChannel=None, outputMode='pvas', outputArgs=None, statusChannel=None, controlChannel=None, processorFile=None, processorClass=None, processorArgs=None, idFormatSpec=None, objectIdField='uniqueId', objectIdOffset=0, fieldRequest='', skipInitialUpdates=1, reportStatsList='all', logLevel=None, logFile=None, disableCurses=False):
         HpcController.__init__(self, logLevel=logLevel, logFile=logFile)
         self.lock = threading.Lock()
         self.screen = None
@@ -75,12 +75,14 @@ class SystemController(HpcController):
         self.inputMode = OperationMode.fromString(inputMode)
         if self.inputMode not in self.ALLOWED_INPUT_MODES:
             raise pva.InvalidArgument(f'Invalid input mode specified: {inputMode}.')
-        self.logger.debug('Using input channel %s, input mode %s', inputChannel, inputMode)
+        self.inputArgs = inputArgs
+        self.logger.debug('Using input channel %s, input mode %s, input args: %s', inputChannel, inputMode, inputArgs)
         self.outputChannel = outputChannel
         self.outputMode = OperationMode.fromString(outputMode)
+        self.outputArgs = outputArgs
         if self.outputMode not in self.ALLOWED_OUTPUT_MODES:
             raise pva.InvalidArgument(f'Invalid output mode specified: {outputMode}.')
-        self.logger.debug('Using output channel %s, output mode %s', outputChannel, outputMode)
+        self.logger.debug('Using output channel %s, output mode %s, output args: %s', outputChannel, outputMode, outputArgs)
         self.statusChannel = statusChannel
         self.controlChannel = controlChannel
         self.idFormatSpec = idFormatSpec
@@ -232,8 +234,10 @@ class SystemController(HpcController):
         processorConfig['processorId'] = processorId
         processorConfig['inputChannel'] = self.inputChannel
         processorConfig['inputMode'] = self.inputMode
+        processorConfig['inputArgs'] = self.inputArgs
         processorConfig['outputChannel'] = self.outputChannel
         processorConfig['outputMode'] = self.outputMode
+        processorConfig['outputArgs'] = self.outputArgs
         processorConfig['objectIdField'] = self.objectIdField
         processorConfig['skipInitialUpdates'] = self.skipInitialUpdates
         processorConfig['objectIdOffset'] = self.objectIdOffset

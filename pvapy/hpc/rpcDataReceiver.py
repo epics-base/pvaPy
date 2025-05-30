@@ -1,15 +1,15 @@
 #!/usr/bin/env python
 
 '''
-RPCS data receiver module.
+RPC data receiver module.
 '''
 
 import threading
 import pvaccess as pva
 from .dataReceiver import DataReceiver
 
-class RpcsDataReceiver(DataReceiver, threading.Thread):
-    ''' RPCS data receiver class. '''
+class RpcDataReceiver(DataReceiver, threading.Thread):
+    ''' RPC data receiver class. '''
 
     STATUS_OK = pva.PvObject({'status': pva.INT}, {'status' : 0})
     STATUS_ERROR = pva.PvObject({'status': pva.INT, 'errorMessage' : pva.STRING}, {'status' : -1})
@@ -24,7 +24,7 @@ class RpcsDataReceiver(DataReceiver, threading.Thread):
             self.logger.debug('Using PvObjectQueue of size %s', self.pvObjectQueue.maxLength)
         else:
             self.logger.debug('Not using PvObjectQueue')
-        self.logger.debug('Created RPCS data receiver for input channel %s', inputChannel)
+        self.logger.debug('Created RPC data receiver for input channel %s', inputChannel)
 
     def process(self, pv):
         status = self.STATUS_OK

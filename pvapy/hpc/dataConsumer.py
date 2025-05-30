@@ -8,7 +8,7 @@ import time
 import pvaccess as pva
 from .monitorDataReceiver import MonitorDataReceiver
 from .pvasDataReceiver import PvasDataReceiver
-from .rpcsDataReceiver import RpcsDataReceiver
+from .rpcDataReceiver import RpcDataReceiver
 from .metadataChannelFactory import MetadataChannelFactory
 from ..utility.loggingManager import LoggingManager
 from ..utility.floatWithUnits import FloatWithUnits
@@ -65,11 +65,12 @@ class DataConsumer:
         }
     }
 
-    def __init__(self, consumerId, inputChannel, inputMode=OperationMode.PVA, objectIdField='uniqueId', fieldRequest='', serverQueueSize=-1, receiverQueueSize=-1, accumulateObjects=-1, accumulationTimeout=-1, distributorPluginName='pydistributor', distributorGroupId=None, distributorSetId=None, distributorTriggerFieldName=None, distributorUpdates=None, distributorUpdateMode=None, metadataChannels=None, processingController=None):
+    def __init__(self, consumerId, inputChannel, inputMode=OperationMode.PVA, inputArgs=None, objectIdField='uniqueId', fieldRequest='', serverQueueSize=-1, receiverQueueSize=-1, accumulateObjects=-1, accumulationTimeout=-1, distributorPluginName='pydistributor', distributorGroupId=None, distributorSetId=None, distributorTriggerFieldName=None, distributorUpdates=None, distributorUpdateMode=None, metadataChannels=None, processingController=None):
         self.logger = LoggingManager.getLogger(f'consumer-{consumerId}')
         self.consumerId = consumerId
         self.inputChannel = inputChannel
         self.inputMode = inputMode
+        self.inputArgs = inputArgs
         self.serverQueueSize = serverQueueSize
         self.logger.debug('Server queue size: %s', serverQueueSize)
         self.distributorPluginName = distributorPluginName
@@ -122,10 +123,10 @@ class DataConsumer:
             pvaServer = self.processingController.pvaServer
             pvObjectQueue=self.pvObjectQueue
             return PvasDataReceiver(inputChannel=self.inputChannel, processingFunction=self.process, pvaServer=pvaServer, inputPvObject=inputPvObject, pvObjectQueue=pvObjectQueue)
-        elif self.inputMode == OperationMode.RPCS:
+        elif self.inputMode == OperationMode.RPC:
             pvaServer = self.processingController.pvaServer
             pvObjectQueue=self.pvObjectQueue
-            return RpcsDataReceiver(inputChannel=self.inputChannel, processingFunction=self.process, pvaServer=pvaServer, pvObjectQueue=pvObjectQueue)
+            return RpcDataReceiver(inputChannel=self.inputChannel, processingFunction=self.process, pvaServer=pvaServer, pvObjectQueue=pvObjectQueue)
         else:
             raise pva.InvalidState(f'Unsupported input mode: {self.inputMode}')
 

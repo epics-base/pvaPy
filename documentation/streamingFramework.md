@@ -1132,7 +1132,7 @@ publish processing output back to servers listening on site A.
 The framework offers the following combinations of PRODUCER (OUTPUT) => CONSUMER (INPUT) modes:
 * PVAS (server) => PVA (monitor)
 * PVA (client) => PVAS (server)
-* RPC (client) => RPCS (server)
+* RPC (client) => RPC (server)
 
 The above modes are specified via the '--input-mode' and '--output-mode'
 arguments for the pvapy-hpc-consumer command, with 'pva' being the
