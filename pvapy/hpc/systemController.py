@@ -37,13 +37,15 @@ class SystemController(HpcController):
         OperationMode.PVA,
         OperationMode.PVAS,
         OperationMode.RPC,
-        OperationMode.CA
+        OperationMode.CA,
+        OperationMode.EJFAT
     ]
 
     ALLOWED_OUTPUT_MODES = [
         OperationMode.PVAS,
         OperationMode.PVA,
-        OperationMode.RPC
+        OperationMode.RPC,
+        OperationMode.EJFAT
     ]
 
     @classmethod

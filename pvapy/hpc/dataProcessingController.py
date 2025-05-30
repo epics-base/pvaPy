@@ -8,6 +8,7 @@ import pvaccess as pva
 from .pvasDataPublisher import PvasDataPublisher
 from .pvaDataPublisher import PvaDataPublisher
 from .rpcDataPublisher import RpcDataPublisher
+from .ejfatDataPublisher import EjfatDataPublisher
 from ..utility.loggingManager import LoggingManager
 from ..utility.floatWithUnits import FloatWithUnits
 from ..utility.operationMode import OperationMode
@@ -68,6 +69,11 @@ class DataProcessingController:
             self.dataPublisher = PvaDataPublisher(outputChannel=self.outputChannel)
         elif self.outputMode == OperationMode.RPC:
             self.dataPublisher = RpcDataPublisher(outputChannel=self.outputChannel)
+        elif self.outputMode == OperationMode.EJFAT:
+            configDict = {}
+            if self.outputArgs:
+                configDict = json.loads(self.outputArgs)
+            return EjfatDataPublisher(outputChannel=self.outputChannel, configDict=configDict)
         else:
             raise pva.InvalidState(f'Unsupported output mode: {self.outputMode}')
         if self.userDataProcessor:

@@ -9,6 +9,7 @@ import pvaccess as pva
 from .monitorDataReceiver import MonitorDataReceiver
 from .pvasDataReceiver import PvasDataReceiver
 from .rpcDataReceiver import RpcDataReceiver
+from .ejfatDataReceiver import EjfatDataReceiver
 from .metadataChannelFactory import MetadataChannelFactory
 from ..utility.loggingManager import LoggingManager
 from ..utility.floatWithUnits import FloatWithUnits
@@ -127,6 +128,12 @@ class DataConsumer:
             pvaServer = self.processingController.pvaServer
             pvObjectQueue=self.pvObjectQueue
             return RpcDataReceiver(inputChannel=self.inputChannel, processingFunction=self.process, pvaServer=pvaServer, pvObjectQueue=pvObjectQueue)
+        elif self.inputMode == OperationMode.EJFAT:
+            configDict = {}
+            if self.inputArgs:
+                configDict = json.loads(self.inputArgs)
+            pvObjectQueue=self.pvObjectQueue
+            return EjfatDataReceiver(inputChannel=self.inputChannel, processingFunction=self.process, configDict=configDict, pvObjectQueue=pvObjectQueue)
         else:
             raise pva.InvalidState(f'Unsupported input mode: {self.inputMode}')
 

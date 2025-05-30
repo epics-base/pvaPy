@@ -75,8 +75,8 @@ class AdImageProcessor(UserDataProcessor):
         server is used for hosting input channel which remote clients
         will be updating ("pvas" input mode).
 
-        There is no need to override this method for the "pva" (monitor)
-        or "rpc" (RPC server) input modes.
+        There is no need to override this method for the "pva" (monitor),
+        "rpc" (RPC server), or "ejfat" input modes.
 
         :Returns: PvObject with the structure required for the input PVA channel
         '''
