@@ -1,0 +1,70 @@
+#!/usr/bin/env python
+
+'''
+EJFAT system base, contains functionality shared between higher level
+EJFAT classes.
+'''
+
+import sys
+import socket
+import pvaccess as pva
+
+# Exception will be thrown in case this class is actually used and E2SAR
+# module is not available
+try:
+    import e2sar_py
+except:
+    pass
+
+from ..utility.loggingManager import LoggingManager
+
+class EjfatSystemBase:
+    ''' EJFAT system base class. '''
+
+    EJFAT_KEY = 'ejfat'
+    URI_KEY = 'uri'
+    HOSTNAME_KEY = 'hostname'
+    PORT_KEY = 'port'
+    IP_ADDRESS_KEY = 'ipAddress'
+    N_RECEIVING_THREADS_KEY = 'nReceivingThreads'
+    VALIDATE_SERVER_KEY = 'validateServer'
+    WEIGHT_KEY = 'weight'
+    SOURCE_COUNT_KEY = 'sourceCount'
+    MIN_FACTOR_KEY = 'minFactor'
+    MAX_FACTOR_KEY = 'maxFactor'
+    DATA_ID_KEY = 'dataId'
+    EVENT_SOURCE_ID_KEY = 'eventSourceId'
+
+    def __init__(self, uri, configDict={}):
+        if not 'e2sar_py' in sys.modules:
+            raise pva.ConfigurationError(f'The e2sar_py module was not imported')
+        self.logger = LoggingManager.getLogger(self.__class__.__name__)
+        self.logger.debug('Initializing EJFAT uri from %s', uri)
+        self.uri = uri
+        if not self.uri.startswith(self.EJFAT_KEY):
+            self.logger.debug('Provided uri does not start with %s, looking for uri in the configuration dictionary', self.EJFAT_KEY)
+            if self.URI_KEY in configDict:
+                self.uri = configDict.get(self.URI_KEY)
+        if not self.uri.startswith(self.EJFAT_KEY):
+            raise pva.ConfigurationError(f'URI string should start with "{self.EJFAT_KEY}"')
+        try:
+            self.ejfatUri = e2sar_py.EjfatURI(uri=self.uri, tt=e2sar_py.EjfatURI.TokenType.instance)
+            self.logger.debug('Data plane address: %s', self.ejfatUri.get_data_addr_v4().value()[0])
+            self.logger.debug('Instance token: %s', self.ejfatUri.get_instance_token().value())
+        except Exception as ex:
+            raise pva.ConfigurationError(f'Cannot create EJFAT URI from {self.uriString}: {ex}')
+        self.logger.debug('Initialized EJFAT uri')
+
+        self.hostname = configDict.get(self.HOSTNAME_KEY) or socket.gethostname()
+        self.logger.debug('Using hostname: %s', self.hostname)
+        self.ipAddress = configDict.get(self.IP_ADDRESS_KEY) or socket.gethostbyname(self.hostname)
+        self.logger.debug('Using ip address: %s', self.ipAddress)
+
+        self.validateServer = bool(configDict.get(self.VALIDATE_SERVER_KEY, self.DEFAULT_VALIDATE_SERVER))
+        self.logger.debug('Validate control plane server: %s', self.validateServer)
+        try:
+            self.logger.debug('Initializing LB manager')
+            self.lbManager = e2sar_py.ControlPlane.LBManager(self.ejfatUri, self.validateServer)
+        except Exception as ex:
+            raise pva.ConfigurationError(f'Cannot initialize EJFAT LB manager: {ex}')
+        self.logger.debug('Initialized LB manager')
