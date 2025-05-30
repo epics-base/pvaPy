@@ -15,7 +15,7 @@ class LoggingManager:
 
     Usage example:
     ::\n\n
-    \tLoggingManager.setLogLevel('WARN')
+    \tLoggingManager.setLogLevel('WARNING')
     \tlogger = LoggingManager.getLogger('myLogger')
     \tlogger.debug('My first log message')
     \n\n
