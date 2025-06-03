@@ -35,6 +35,8 @@ class EjfatSystemBase:
     DATA_ID_KEY = 'dataId'
     EVENT_SOURCE_ID_KEY = 'eventSourceId'
 
+    DEFAULT_VALIDATE_SERVER = 0
+
     def __init__(self, uri, configDict={}):
         if not 'e2sar_py' in sys.modules:
             raise pva.ConfigurationError(f'The e2sar_py module was not imported')
