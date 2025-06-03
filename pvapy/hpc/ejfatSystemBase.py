@@ -34,6 +34,7 @@ class EjfatSystemBase:
     MAX_FACTOR_KEY = 'maxFactor'
     DATA_ID_KEY = 'dataId'
     EVENT_SOURCE_ID_KEY = 'eventSourceId'
+    STATE_UPDATE_PERIOD_KEY = 'stateUpdatePeriod'
 
     DEFAULT_VALIDATE_SERVER = 0
 

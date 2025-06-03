@@ -5,6 +5,7 @@ EJFAT data receiver (server) module.
 '''
 
 import threading
+import time
 import socket
 import pickle
 import pvaccess as pva
@@ -34,7 +35,7 @@ class EjfatDataReceiver(DataReceiver, EjfatSystemBase, threading.Thread):
     # It looks like workers must send state every 100ms, or else
     # they will be automatically deregistered
     # This does seem a bit aggressive
-    THREAD_EVENT_TIMEOUT_IN_SECONDS = 0.1
+    DEFAULT_STATE_UPDATE_PERIOD_IN_SECONDS = 0.1
 
     # Valid Reassembler attributes: 'Kd', 'Ki', 'Kp', 'epoch_ms', 'eventTimeout_ms', 'getFromINI', 'max_factor', 'min_factor', 'period_ms', 'portRange', 'rcvSocketBufSize', 'setPoint', 'useCP', 'useHostAddress', 'validateCert', 'weight', 'withLBHeader'
 
@@ -63,6 +64,8 @@ class EjfatDataReceiver(DataReceiver, EjfatSystemBase, threading.Thread):
         self.logger.debug('Min. factor: %s', self.minFactor)
         self.maxFactor = float(configDict.get(self.MAX_FACTOR_KEY, self.DEFAULT_MAX_FACTOR))
         self.logger.debug('Max. factor: %s', self.maxFactor)
+        self.stateUpdatePeriod = float(configDict.get(self.STATE_UPDATE_PERIOD_KEY, self.DEFAULT_STATE_UPDATE_PERIOD_IN_SECONDS))
+        self.logger.debug('State update period: %s [s]', self.stateUpdatePeriod)
 
         try:
             self.logger.debug('Creating reassembler')
@@ -107,20 +110,26 @@ class EjfatDataReceiver(DataReceiver, EjfatSystemBase, threading.Thread):
             fillPercent = 0
             controlSignal = 0
             isReady = True
+            lastStateUpdateTime = 0
             while True:
                 if self.isDone:
                     self.logger.debug('Exiting event loop')
                     break
-                self.lbManager.send_state(fillPercent, controlSignal, isReady)
                 nBytes = 0
                 while True:
+                    now = time.time()
+                    if now - lastStateUpdateTime > self.stateUpdatePeriod:
+                        self.lbManager.send_state(fillPercent, controlSignal, isReady)
+                        lastStateUpdateTime = now
                     nBytes, buffer, eventNumber, dataId = self.reassembler.getEventBytes()
                     if nBytes > 0:
                         self.logger.debug('Received %s bytes, data id %s, event number %s', nBytes, dataId, eventNumber)
                         self.process(buffer)
                     else:
                         break
-                self.event.wait(self.THREAD_EVENT_TIMEOUT_IN_SECONDS)
+                waitTime = self.stateUpdatePeriod - (now - lastStateUpdateTime)
+                if waitTime > 0:
+                    self.event.wait(waitTime)
         except Exception as ex:
             self.logger.error('Caught unexpected error: %s', ex)
         self.logger.debug('EJFAT server for input channel %s is done', self.inputChannel)
