@@ -46,11 +46,16 @@ class EjfatDataPublisher(DataPublisher, EjfatSystemBase):
 
             self.logger.debug('Creating segmenter')
             self.segmenter = e2sar_py.DataPlane.Segmenter(self.ejfatUri, self.dataId, self.eventSourceId, sflags)
-            self.logger.debug('Starting segmenter')
-            self.segmenter.OpenAndStart()
         except Exception as ex:
             raise pva.ConfigurationError(f'Cannot initialize EJFAT data publisher: {ex}')
         self.logger.debug('Created EJFAT data publisher')
+
+    def start(self):
+        try:
+            self.logger.debug('Starting segmenter')
+            self.segmenter.OpenAndStart()
+        except Exception as ex:
+            raise pva.ConfigurationError(f'Cannot start EJFAT data publisher: {ex}')
 
     def updateOutputChannel(self, pvObject):
         try:
