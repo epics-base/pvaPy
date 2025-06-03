@@ -4,6 +4,7 @@ Data processing controller module.
 '''
 
 import time
+import json
 import pvaccess as pva
 from .pvasDataPublisher import PvasDataPublisher
 from .pvaDataPublisher import PvaDataPublisher
