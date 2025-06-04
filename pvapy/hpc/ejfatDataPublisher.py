@@ -41,8 +41,11 @@ class EjfatDataPublisher(DataPublisher, EjfatSystemBase):
         self.eventSourceId = int(configDict.get(self.EVENT_SOURCE_ID_KEY, self.DEFAULT_EVENT_SOURCE_ID))
         self.logger.debug('Event source id: %s', self.eventSourceId)
         try:
-            self.logger.debug('Adding sender with hostname %s, IP address %s', self.hostname, self.ipAddress)
-            self.lbManager.add_senders([self.ipAddress])
+            if self.useCp:
+                self.logger.debug('Adding sender with hostname %s, IP address %s', self.hostname, self.ipAddress)
+                self.lbManager.add_senders([self.ipAddress])
+            else:
+                self.logger.debug('Control plane is not used, not adding sender')
 
             self.logger.debug('Creating segmenter')
             self.segmenter = e2sar_py.DataPlane.Segmenter(self.ejfatUri, self.dataId, self.eventSourceId, sflags)
@@ -60,7 +63,9 @@ class EjfatDataPublisher(DataPublisher, EjfatSystemBase):
     def updateOutputChannel(self, pvObject):
         try:
             buffer = pickle.dumps(pvObject)
-            self.segmenter.addToSendQueue(buffer, len(buffer))
+            bLen = len(buffer)
+            self.logger.debug('Buffering object of size %s', bLen)
+            self.segmenter.addToSendQueue(buffer, bLen)
             self.nPublished += 1
         except Exception as ex:
             self.nErrors += 1

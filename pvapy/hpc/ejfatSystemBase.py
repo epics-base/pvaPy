@@ -35,7 +35,9 @@ class EjfatSystemBase:
     DATA_ID_KEY = 'dataId'
     EVENT_SOURCE_ID_KEY = 'eventSourceId'
     STATE_UPDATE_PERIOD_KEY = 'stateUpdatePeriod'
+    USE_CP_KEY = 'useCP'
 
+    DEFAULT_USE_CP = 1
     DEFAULT_VALIDATE_SERVER = 0
 
     def __init__(self, uri, configDict={}):
@@ -63,11 +65,17 @@ class EjfatSystemBase:
         self.ipAddress = configDict.get(self.IP_ADDRESS_KEY) or socket.gethostbyname(self.hostname)
         self.logger.debug('Using ip address: %s', self.ipAddress)
 
+        self.useCp = bool(configDict.get(self.USE_CP_KEY, self.DEFAULT_USE_CP))
+        self.logger.debug('Use control plane: %s', self.useCp)
         self.validateServer = bool(configDict.get(self.VALIDATE_SERVER_KEY, self.DEFAULT_VALIDATE_SERVER))
         self.logger.debug('Validate control plane server: %s', self.validateServer)
-        try:
-            self.logger.debug('Initializing LB manager')
-            self.lbManager = e2sar_py.ControlPlane.LBManager(self.ejfatUri, self.validateServer)
-        except Exception as ex:
-            raise pva.ConfigurationError(f'Cannot initialize EJFAT LB manager: {ex}')
-        self.logger.debug('Initialized LB manager')
+        self.lbManager = None
+        if self.useCp:
+            try:
+                self.logger.debug('Initializing LB manager')
+                self.lbManager = e2sar_py.ControlPlane.LBManager(self.ejfatUri, self.validateServer)
+                self.logger.debug('Initialized LB manager')
+            except Exception as ex:
+                raise pva.ConfigurationError(f'Cannot initialize EJFAT LB manager: {ex}')
+        else:
+            self.logger.debug('Control plane is not used, LB manager is not initialized')

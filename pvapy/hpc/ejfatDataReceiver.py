@@ -46,7 +46,7 @@ class EjfatDataReceiver(DataReceiver, EjfatSystemBase, threading.Thread):
         self.event = threading.Event()
         self.isDone = False
 
-        self.logger.debug('Initializing reassembler flags')
+        self.logger.debug('Initializing reassembler flags using configuration: %s', configDict)
         rflags = e2sar_py.DataPlane.Reassembler.ReassemblerFlags()
         rflags.portRange = 0
         ConfigUtility.configureObject(rflags, configDict, setOnlyExistingKeys=True)
@@ -101,8 +101,11 @@ class EjfatDataReceiver(DataReceiver, EjfatSystemBase, threading.Thread):
     def run(self):
         self.logger.debug('Starting EJFAT receiver for input channel %s', self.inputChannel)
         try:
-            self.logger.debug('Registering worker with hostname %s, IP address %s, port %s', self.hostname, self.ipAddress, self.port)
-            self.lbManager.register_worker(self.hostname, (e2sar_py.IPAddress.from_string(self.ipAddress), self.port), self.weight, self.sourceCount, self.minFactor, self.maxFactor)
+            if self.useCp:
+                self.logger.debug('Registering worker with hostname %s, IP address %s, port %s', self.hostname, self.ipAddress, self.port)
+                self.lbManager.register_worker(self.hostname, (e2sar_py.IPAddress.from_string(self.ipAddress), self.port), self.weight, self.sourceCount, self.minFactor, self.maxFactor)
+            else:
+                self.logger.debug('Skipping worker registration')
             self.logger.debug('Starting reassembler')
             self.reassembler.OpenAndStart()
             self.logger.debug('Entering event loop')
@@ -118,7 +121,7 @@ class EjfatDataReceiver(DataReceiver, EjfatSystemBase, threading.Thread):
                 nBytes = 0
                 while True:
                     now = time.time()
-                    if now - lastStateUpdateTime > self.stateUpdatePeriod:
+                    if self.useCp and now - lastStateUpdateTime > self.stateUpdatePeriod:
                         self.lbManager.send_state(fillPercent, controlSignal, isReady)
                         lastStateUpdateTime = now
                     nBytes, buffer, eventNumber, dataId = self.reassembler.getEventBytes()
@@ -127,7 +130,9 @@ class EjfatDataReceiver(DataReceiver, EjfatSystemBase, threading.Thread):
                         self.process(buffer)
                     else:
                         break
-                waitTime = self.stateUpdatePeriod - (now - lastStateUpdateTime)
+                waitTime = self.stateUpdatePeriod
+                if self.useCp:
+                    waitTime = self.stateUpdatePeriod - (now - lastStateUpdateTime)
                 if waitTime > 0:
                     self.event.wait(waitTime)
         except Exception as ex:
