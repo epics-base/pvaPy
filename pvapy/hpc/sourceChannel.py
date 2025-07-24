@@ -13,6 +13,8 @@ class SourceChannel(pva.Channel):
         'receiverStats' : {
             'nReceived' : pva.UINT,
             'receivedRate' : pva.DOUBLE,
+            'nRejected' : pva.UINT,
+            'rejectedRate' : pva.DOUBLE,
             'nOverruns' : pva.UINT,
             'overrunRate' : pva.DOUBLE
         },
@@ -41,7 +43,7 @@ class SourceChannel(pva.Channel):
         self.logger.debug('Created source channel %s, protocol %s', self.channelName, channelProtocol)
 
     def configure(self, configDict):
-        if type(configDict) == dict:
+        if type(configDict) is dict:
             if 'receiverQueueSize' in configDict and self.pvObjectQueue is not None:
                 receiverQueueSize = int(configDict.get('receiverQueueSize'))
                 if receiverQueueSize >= 0:
@@ -163,7 +165,7 @@ class ProducerChannel(SourceChannel):
                 # We can manipulate object from the queue without having to copy it
                 self.parentObject.addObjectToCache(self.channelId, objectId, pvObject)
                 return True
-            except pva.QueueEmpty as ex:
+            except pva.QueueEmpty:
                 # Ignore empty queue
                 pass
         return False
