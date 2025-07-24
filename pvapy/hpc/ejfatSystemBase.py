@@ -7,13 +7,14 @@ EJFAT classes.
 
 import sys
 import socket
+import threading
 import pvaccess as pva
 
 # Exception will be thrown in case this class is actually used and E2SAR
 # module is not available
 try:
     import e2sar_py
-except:
+except ImportError:
     pass
 
 from ..utility.loggingManager import LoggingManager
@@ -36,13 +37,16 @@ class EjfatSystemBase:
     EVENT_SOURCE_ID_KEY = 'eventSourceId'
     STATE_UPDATE_PERIOD_KEY = 'stateUpdatePeriod'
     USE_CP_KEY = 'useCP'
+    BUFFER_CACHE_SIZE_KEY = 'bufferCacheSize'
+    PROCESSING_DELAY_KEY = 'processingDelay'
 
     DEFAULT_USE_CP = 1
     DEFAULT_VALIDATE_SERVER = 0
+    DEFAULT_BUFFER_CACHE_SIZE = 1000
 
     def __init__(self, uri, configDict={}):
-        if not 'e2sar_py' in sys.modules:
-            raise pva.ConfigurationError(f'The e2sar_py module was not imported')
+        if 'e2sar_py' not in sys.modules:
+            raise pva.ConfigurationError('The e2sar_py module was not imported')
         self.logger = LoggingManager.getLogger(self.__class__.__name__)
         self.logger.debug('Initializing EJFAT uri from %s', uri)
         self.uri = uri
@@ -69,6 +73,14 @@ class EjfatSystemBase:
         self.logger.debug('Use control plane: %s', self.useCp)
         self.validateServer = bool(configDict.get(self.VALIDATE_SERVER_KEY, self.DEFAULT_VALIDATE_SERVER))
         self.logger.debug('Validate control plane server: %s', self.validateServer)
+
+        self.bufferCacheSize = int(configDict.get(self.BUFFER_CACHE_SIZE_KEY, self.DEFAULT_BUFFER_CACHE_SIZE))
+        if self.bufferCacheSize < 1:
+            self.bufferCacheSize = 1
+        self.logger.debug('Using send buffer cache size: %s', self.bufferCacheSize)
+        self.bufferCache = {}
+        self.bufferCacheLock = threading.Lock()
+
         self.lbManager = None
         if self.useCp:
             try:
@@ -79,3 +91,7 @@ class EjfatSystemBase:
                 raise pva.ConfigurationError(f'Cannot initialize EJFAT LB manager: {ex}')
         else:
             self.logger.debug('Control plane is not used, LB manager is not initialized')
+
+        self.nPickled = 0
+        self.totalPickleTime = 0
+        self.averagePickleTime = 0
