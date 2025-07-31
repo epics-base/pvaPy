@@ -133,6 +133,7 @@ class DataConsumer:
             configDict = {}
             if self.inputArgs:
                 configDict = json.loads(self.inputArgs)
+            configDict['processorId'] = self.consumerId
             pvObjectQueue=self.pvObjectQueue
             return EjfatDataReceiver(inputChannel=self.inputChannel, processingFunction=self.process, configDict=configDict, pvObjectQueue=pvObjectQueue)
         else:

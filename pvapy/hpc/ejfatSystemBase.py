@@ -39,10 +39,15 @@ class EjfatSystemBase:
     USE_CP_KEY = 'useCP'
     BUFFER_CACHE_SIZE_KEY = 'bufferCacheSize'
     PROCESSING_DELAY_KEY = 'processingDelay'
+    PROCESSOR_ID_KEY = 'processorId'
+    ADD_PROCESSOR_ID_TO_PORT_KEY = 'addProcessorIdToPort'
 
+    DEFAULT_PORT = 10000 # default UDP data port
     DEFAULT_USE_CP = 1
     DEFAULT_VALIDATE_SERVER = 0
     DEFAULT_BUFFER_CACHE_SIZE = 1000
+    DEFAULT_PROCESSOR_ID = 0
+    DEFAULT_ADD_PROCESSOR_ID_TO_PORT = 0
 
     def __init__(self, uri, configDict={}):
         if 'e2sar_py' not in sys.modules:
@@ -56,9 +61,27 @@ class EjfatSystemBase:
                 self.uri = configDict.get(self.URI_KEY)
         if not self.uri.startswith(self.EJFAT_KEY):
             raise pva.ConfigurationError(f'URI string should start with "{self.EJFAT_KEY}"')
+        self.processorId = int(configDict.get(self.PROCESSOR_ID_KEY, self.DEFAULT_PROCESSOR_ID))
+        self.logger.debug('Processor id: %s', self.processorId)
+        self.addProcessorIdToPort = int(configDict.get(self.ADD_PROCESSOR_ID_TO_PORT_KEY, self.DEFAULT_ADD_PROCESSOR_ID_TO_PORT))
+        self.logger.debug('Add processor id to port: %s', self.addProcessorIdToPort)
+        self.port = int(configDict.get(self.PORT_KEY, self.DEFAULT_PORT))
+        self.logger.debug('Specified port number: %s', self.port)
+        if self.addProcessorIdToPort:
+            self.port += self.processorId
+            self.logger.debug('Port number after adding processor id: %s', self.port)
         try:
             self.ejfatUri = e2sar_py.EjfatURI(uri=self.uri, tt=e2sar_py.EjfatURI.TokenType.instance)
-            self.logger.debug('Data plane address: %s', self.ejfatUri.get_data_addr_v4().value()[0])
+            if self.addProcessorIdToPort:
+                # Modify assigned port; EjfatURI.set_data_addr_v4() does
+                # not seem to work, so replace port in the URI string and
+                # reinitialize EjfatURI instance
+                originalPort = self.ejfatUri.get_data_addr_v4().value()[1]
+                modifiedPort = originalPort + self.processorId
+                self.uri = self.uri.replace(f'{originalPort}', f'{modifiedPort}')
+                self.logger.debug('Reassigned original URI port %s to %s', originalPort, modifiedPort)
+                self.ejfatUri = e2sar_py.EjfatURI(uri=self.uri, tt=e2sar_py.EjfatURI.TokenType.instance)
+            self.logger.debug('Data plane address: %s:%s', self.ejfatUri.get_data_addr_v4().value()[0], self.ejfatUri.get_data_addr_v4().value()[1])
             self.logger.debug('Instance token: %s', self.ejfatUri.get_instance_token().value())
         except Exception as ex:
             raise pva.ConfigurationError(f'Cannot create EJFAT URI from {self.uriString}: {ex}')

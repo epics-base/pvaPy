@@ -24,7 +24,6 @@ from ..utility.configUtility import ConfigUtility
 class EjfatDataReceiver(DataReceiver, EjfatSystemBase, threading.Thread):
     ''' EJFAT data receiver (server) class. '''
 
-    DEFAULT_PORT = 35328 # EJFAT
     DEFAULT_N_RECEIVING_THREADS = 1
     DEFAULT_WEIGHT = 1.0
     DEFAULT_SOURCE_COUNT = 1
@@ -53,9 +52,6 @@ class EjfatDataReceiver(DataReceiver, EjfatSystemBase, threading.Thread):
         rflags = e2sar_py.DataPlane.Reassembler.ReassemblerFlags()
         rflags.portRange = 0
         ConfigUtility.configureObject(rflags, configDict, setOnlyExistingKeys=True)
-
-        self.port = int(configDict.get(self.PORT_KEY, self.DEFAULT_PORT))
-        self.logger.debug('Using port number: %s', self.port)
 
         self.nReceivingThreads = int(configDict.get(self.N_RECEIVING_THREADS_KEY, self.DEFAULT_N_RECEIVING_THREADS))
         self.logger.debug('Number of receiving threads: %s', self.nReceivingThreads)

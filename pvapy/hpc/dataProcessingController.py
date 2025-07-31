@@ -74,6 +74,7 @@ class DataProcessingController:
             configDict = {}
             if self.outputArgs:
                 configDict = json.loads(self.outputArgs)
+            configDict['processorId'] = self.processorId
             self.dataPublisher = EjfatDataPublisher(outputChannel=self.outputChannel, configDict=configDict)
         else:
             raise pva.InvalidState(f'Unsupported output mode: {self.outputMode}')
