@@ -1133,14 +1133,43 @@ The framework offers the following combinations of PRODUCER (OUTPUT) => CONSUMER
 * PVAS (server) => PVA (monitor)
 * PVA (client) => PVAS (server)
 * RPC (client) => RPC (server)
+* EJFAT (publisher) => EJFAT (receiver)
 
 The above modes are specified via the '--input-mode' and '--output-mode'
 arguments for the pvapy-hpc-consumer command, with 'pva' being the
-default input mode and 'pvas' the default output mode.
-Keep in mind that the client-based output modes will be less performant than the
+default input mode and 'pvas' the default output mode. Keep in mind that
+the client-based output modes will be less performant than the
 default server-based mode.
 
-In addition to above input and output modes, one can also use the following environment variables for controlling client and server behavior:
+The ESnet JLab FPGA Accelerated Transport (EJFAT) mode
+requires [E2SAR library](https://github.com/JeffersonLab/E2SAR)
+to be installed. This mode can be configured by using
+the '--input-args' and '--output-args' configuration dictionary similar
+to how the user data processor is configured. Some of the most important
+configuration parameters are the following:
+* port: starting UDP port (publisher, receiver)
+* addProcessorIdToPort: add processor (consumer) id to the starting port
+  number (publisher, receiver); this flag should be set to 1 when 
+  multiple consumers are spawned
+* bufferCacheSize: number of message buffers that can be cached
+  (publisher, receiver); for the data publisher, if buffer cache size is <=
+  1, synchronous publishing mode will be enabled (i.e., PvObject will be
+  published as soon as it is serialized, rather than it being added to
+  the E2SAR send queue); for the data receiver, this buffer is used to
+  hold received PvObjects that are waiting to be deserialized)
+* nReceivingThreads: number of receiving threads (receiver)
+* useCP: use control plane (publisher, receiver); this flag must be set
+  to 0 when EJFAT load balancer is not used (e.g., for direct
+  publisher/receiver connections)
+* withLBHeader: with load balancer header (receiver); this flag must be
+  set to 1 when EJFAT load balancer is not used (e.g., for direct
+  publisher/receiver connections)
+* rcvSocketBufSize: receive socket buffer size (receiver)
+* sndSocketBufSize: send socket buffer size (publisher)
+* numSendSockets: number of send sockets (publisher)
+* mtu: maximum transmission unit in bytes (publisher)
+
+For the EPICS-based input and output modes, one can use the following environment variables for controlling client and server behavior:
 * EPICS_PVA_BROADCAST_PORT: for controlling UDP-based channel search on the client side
 * EPICS_PVA_NAME_SERVERS: for enabling TCP-based channel search on the client side
 * EPICS_PVAS_SERVER_PORT: for controlling server TCP port
