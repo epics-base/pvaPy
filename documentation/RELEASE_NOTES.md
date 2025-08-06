@@ -1,3 +1,12 @@
+## Release 5.6.0 (2025/08/08)
+
+- Streaming Framework enhancements:
+  - Added support for EJFAT input/output mode
+- Conda/pip package dependencies:
+  - EPICS BASE = 7.0.8.1.1.pvapy (base 7.0.8.1 + pvAccessCPP PR #192 + pvDatabaseCPP PRs #82,83)
+  - BOOST      = 1.87.0
+  - NUMPY      >= 2.1 (python >= 3.13); >= 2.0 (python >= 3.9, < 3.13); >= 1.22, < 2.0 (python >= 3.8, < 3.9); >= 1.19, < 1.21 (python < 3.8)
+
 ## Release 5.5.0 (2025/01/06)
 
 - Streaming Framework enhancements:
