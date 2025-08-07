@@ -4,6 +4,8 @@ package:
 
 source:
   url: https://epics.anl.gov/download/base/base-{{ environ.get('EPICS_BASE_VERSION', '0.0') }}.tar.gz
+  #url: file:///mnt/PVAPY/BUILD/linux-x86_64/base-{{ environ.get('EPICS_BASE_VERSION', '0.0') }}.tar.gz
+
 
 build:
   number: {{ environ.get('BUILD_NUMBER', '1') }}
