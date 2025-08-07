@@ -14,15 +14,15 @@ build:
 requirements:
   build:
     - python
-    #- numpy=2.1            # python >= 3.13
-    - numpy=2.0            # python >= 3.9
+    - numpy=2.1            # python >= 3.13
+    #- numpy=2.0            # python >= 3.9
     #- numpy=1.22           # python >= 3.8
     #- numpy=1.19           # python < 3.8
 
   run:
     - python
-    #- numpy>=2.1           # python >= 3.13
-    - numpy>=2.0           # python >= 3.9
+    - numpy>=2.1           # python >= 3.13
+    #- numpy>=2.0           # python >= 3.9
     #- numpy>=1.22,<2.0     # python >= 3.8
     #- numpy>=1.19,<1.21    # python < 3.8
 

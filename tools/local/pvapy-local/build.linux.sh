@@ -108,3 +108,4 @@ mkdir -p $LOCAL_PVAPY_LIB_DIR
 rsync -arv $PVACCESS_LIB_DIR/pvaccess.so $LOCAL_PVAPY_LIB_DIR/
 mkdir -p $LOCAL_PY_LIB_DIR
 rsync -arv $PVACCESS_LIB_DIR/pvaccess.so $LOCAL_PY_LIB_DIR/
+rsync -arvlP pvapy --exclude '__pycache__' --exclude '*.pyc' $LOCAL_PVAPY_DIR/

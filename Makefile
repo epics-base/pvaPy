@@ -10,6 +10,7 @@ LOCAL_DIR = tools/local
 DIST_DIR = dist
 WHEEL_DIR = wheelhouse
 TEST_DIR = test
+PYTHON_VERSION ?= 3
 
 RELEASE_LOCAL = $(CONFIGURE_DIR)/RELEASE.local
 CONFIG_SITE_LOCAL = $(CONFIGURE_DIR)/CONFIG_SITE.local
@@ -52,7 +53,7 @@ else
 
   configure: $(AC_DIR)/configure
 	@$(RM) $(RELEASE_LOCAL) $(CONFIG_SITE_LOCAL)
-	$(AC_DIR)/configure --with-top=$(TOP)
+	 PYTHON_VERSION=$(PYTHON_VERSION) $(AC_DIR)/configure --with-top=$(TOP)
 
   $(AC_DIR)/configure: $(AC_DIR)/configure.ac $(wildcard $(AC_DIR)/m4/*.m4)
 	autoreconf --install $(AC_DIR)
