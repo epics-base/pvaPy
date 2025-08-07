@@ -1,5 +1,8 @@
 ## Release 5.6.0 (2025/08/08)
 
+- Added support for BOOST_INCLUDE_DIR and BOOST_LIB_DIR environment variables
+  during configuration stage in order to cover the case where
+  boost libraries and header files are in different directories
 - Streaming Framework enhancements:
   - Added support for EJFAT input/output mode
 - Conda/pip package dependencies:
