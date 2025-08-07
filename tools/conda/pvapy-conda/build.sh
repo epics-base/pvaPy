@@ -34,10 +34,12 @@ eval $cmd
 make doc
 mkdir -p $CONDA_PVAPY_DOC_DIR
 rsync -arvlP documentation/sphinx/_build/html $CONDA_PVAPY_DOC_DIR/
+find pvapy -name '__pycache__' -exec rm -rf {} \; || /bin/true
+find pvapy -name '*.pyc' -exec rm -f {} \; || /bin/true
 
 echo "Updating python module files"
 SITE_PACKAGES_DIR=$PREFIX/lib/python$PYTHON_MAJOR_MINOR_VERSION/site-packages
-rsync -arvlP pvaccess pvapy $SITE_PACKAGES_DIR
+rsync -arvlP pvapy tools/build/pvaccess $SITE_PACKAGES_DIR/
 PVACCESS_DIR=$SITE_PACKAGES_DIR/pvaccess
 PVAPY_DIR=$SITE_PACKAGES_DIR/pvapy
 for f in $PVACCESS_DIR/__init__.py $PVAPY_DIR/__init__.py; do
