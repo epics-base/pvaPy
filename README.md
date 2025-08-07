@@ -107,7 +107,7 @@ For manual configuration: Read the comments in both the `configure/RELEASE` and
 For automatic configuration: In the top level directory run
 
 ```sh
-  $ make configure EPICS_BASE=/epics/base/path [EPICS4_DIR=/epics/v4/path] [BOOST_NUMPY_DIR=/boost.numpy/path] [BOOST_ROOT=/boost/path] [PYTHON_VERSION=3]
+  $ make configure EPICS_BASE=/epics/base/path [EPICS4_DIR=/epics/v4/path] [BOOST_NUMPY_DIR=/boost.numpy/path] [BOOST_ROOT=/boost/path] [BOOST_INCLUDE_DIR=/boost/include/path] [BOOST_LIB_DIR=/boot/lib/path] [PYTHON_VERSION=2]
 ```
 
 Note that you can only use the automatic configuration if the v4 modules have
@@ -120,11 +120,12 @@ the EPICS Base directory.
 
 The optional `BOOST_NUMPY_DIR` argument enables NumPy array support for older
 Boost versions, as v1.63.0 and later releases already include NumPy libraries.
-The optional `BOOST_ROOT` argument is typically used for custom Boost 
-installation directory. In case you are using custom python installation that 
+The optional `BOOST_ROOT`, `BOOST_INCLUDE_DIR` and `BOOST_LIB_DIR` arguments
+are typically used for custom Boost
+installation directories. In case you are using custom python installation that
 uses shared object libraries, you may need to set PATH and LD_LIBRARY_PATH 
 environment variables before running the above `make configure` command.
-Also, note that building with python 3.x requires PYTHON_VERSION=3 argument.
+Also, note that building with python 2.x requires PYTHON_VERSION=2 argument.
 
 The `make configure` command will check for your Boost/Python libraries, and
 create suitable `configure/RELEASE.local` and `configure/CONFIG_SITE.local` 
