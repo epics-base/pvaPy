@@ -103,7 +103,7 @@ mkdir -p $PVACCESS_DOC_DIR
 rsync -arvl README.md $PVACCESS_DOC_DIR/
 
 echo "Copying module files"
-rsync -arvl --exclude '*.so' pvapy pvaccess $TOP_DIR/
+rsync -arvl --exclude '*.so' --exclude '__pycache__' --exclude '*.pyc' pvapy tools/build/pvaccess $TOP_DIR/
 
 echo "Updating python module init files"
 for f in $PVACCESS_DIR/__init__.py $PVAPY_DIR/__init__.py; do
