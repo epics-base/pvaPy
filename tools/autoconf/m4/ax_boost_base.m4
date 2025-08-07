@@ -39,6 +39,8 @@
 #     - define BOOST_CPPFLAGS
 #     - define BOOST_LDFLAGS
 #     - define BOOST_REQUIRES_CPP11
+#     - allow separation of boost include and lib directories via $BOOST_INCLUDE_DIR
+#       and $BOOST_LIB_DIR environment variables
 #
 
 #serial 22
@@ -79,6 +81,19 @@ if test "x$ac_boost_path" = "x"; then
     AC_MSG_NOTICE([BOOST_ROOT is defined as $BOOST_ROOT])
 fi
 
+# use $BOOST_LIB_DIR to initialize ac_boost_lib_path
+if test "x$ac_boost_lib_path" = "x"; then
+    ac_boost_lib_path=$BOOST_LIB_DIR
+    AC_MSG_NOTICE([BOOST_LIB_DIR is defined as $BOOST_LIB_DIR])
+fi
+
+# use $BOOST_INCLUDE_DIR to initialize ac_boost_include_path
+ac_boost_include_path=""
+if test "x$ac_boost_include_path" = "x"; then
+    ac_boost_include_path=$BOOST_INCLUDE_DIR
+    AC_MSG_NOTICE([BOOST_INCLUDE_DIR is defined as $BOOST_INCLUDE_DIR])
+fi
+
 if test "x$want_boost" = "xyes"; then
     boost_lib_version_req=ifelse([$1], ,1.20.0,$1)
     boost_lib_version_req_shorten=`expr $boost_lib_version_req : '\([[0-9]]*\.[[0-9]]*\)'`
@@ -112,15 +127,15 @@ if test "x$want_boost" = "xyes"; then
     if test "$ac_boost_path" != ""; then
         BOOST_DIR=$ac_boost_path
         BOOST_CPPFLAGS="-I$ac_boost_path/include"
-        BOOST_LIB_DIR=""
+        BOOST_LIB_PATH=""
         for ac_boost_path_tmp in $libsubdirs; do
             if test -d "$ac_boost_path"/"$ac_boost_path_tmp" ; then
                 if ls "$ac_boost_path"/"$ac_boost_path_tmp/libboost_"* >/dev/null 2>&1 ; then 
-                    BOOST_LIB_DIR="$ac_boost_path/$ac_boost_path_tmp"
+                    BOOST_LIB_PATH="$ac_boost_path/$ac_boost_path_tmp"
                     BOOST_LDFLAGS="-L$ac_boost_path/$ac_boost_path_tmp"
                 fi
             fi
-            if ! test -z "$BOOST_LIB_DIR"; then
+            if ! test -z "$BOOST_LIB_PATH"; then
                 break;
             fi
         done
@@ -139,9 +154,15 @@ if test "x$want_boost" = "xyes"; then
     fi
 
     dnl overwrite ld flags if we have required special directory with
-    dnl --with-boost-libdir parameter
+    dnl --with-boost-libdir parameter or via $BOOST_LIB_DIR
     if test "$ac_boost_lib_path" != ""; then
        BOOST_LDFLAGS="-L$ac_boost_lib_path"
+    fi
+
+    dnl overwrite cpp flags if we have required special directory via
+    dnl $BOOST_INCLUDE_DIR
+    if test "$ac_boost_include_path" != ""; then
+       BOOST_CPPFLAGS="-I$ac_boost_include_path"
     fi
 
     CPPFLAGS_SAVED="$CPPFLAGS"
@@ -288,6 +309,7 @@ if test "x$want_boost" = "xyes"; then
         AC_MSG_NOTICE([Using boost version $BOOST_VERSION])
         AC_MSG_NOTICE([Using BOOST_DIR: $BOOST_DIR])
         AC_MSG_NOTICE([Using BOOST_LIB_DIR: $BOOST_LIB_DIR])
+        AC_MSG_NOTICE([Using BOOST_INCLUDE_DIR: $BOOST_INCLUDE_DIR])
         AC_MSG_NOTICE([Using BOOST_CPPFLAGS: $BOOST_CPPFLAGS])
         AC_MSG_NOTICE([Using BOOST_LDFLAGS: $BOOST_LDFLAGS])
         AC_MSG_NOTICE([Using BOOST_REQUIRES_CPP11: $BOOST_REQUIRES_CPP11])
