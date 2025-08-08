@@ -264,7 +264,7 @@ Results:
 
 | Consumers | Frames/<br>second  | Frames/second/<br>consumer | Frames/<br>minute | Data rate/<br>consumer | Total data rate |
 | ---:      | ---:           | ---:                       | ---:          | ---:                   | ---:            |
-| Span <td colspan=7>PVAS => PVA,PVAS => PVA,PVAS</td>|
+| <td colspan=6>PVAS => PVA,PVAS => PVA,PVAS</td>|
 |        1  |      170       |     170                    |    10200      | 2.85 GBps              |    2.85 GBps    |
 |       8  |      720        |      90                    |    43200      | 1.51 GBps              |   12.08 GBps    |
 
