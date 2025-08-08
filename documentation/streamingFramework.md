@@ -1350,6 +1350,30 @@ Results:
 |        1  |     11700      |    11700                   |   702000      |      3.07 GBps         |    3.07 GBps    |
 |        4  |     26000      |     6500                   |  1560000      |      1.70 GBps         |    6.81 GBps    |
 
+#### Test Date: 08/2025
+
+Environment:
+
+* PvaPy Version: 5.6.0
+* Python Version: 3.11
+* Test Machine: 64-bit linux, 96 logical cores @ 2.8 GHz (Intel Xeon Gold 6342 CPU with hyperthreading enabled), 2 TB RAM
+
+Results:
+
+* Image size: 4096 x 4096 (uint8, 16.78 MB); Server queue size: 100
+
+| Consumers | Frames/<br>second  | Frames/second/<br>consumer | Frames/<br>minute | Data rate/<br>consumer | Total data rate |
+| ---:      | ---:           | ---:                       | ---:          | ---:                   | ---:            |
+|        1  |      170       |     170                    |    10200      | 2.85 GBps              |    2.85 GBps    |
+|       8  |      720        |      90                    |    43200      | 1.51 GBps              |   12.08 GBps    |
+
+* Image size: 512 x 512 (uint8, 0.26 MB); Server queue size: 1000
+
+| Consumers | Frames/<br>second  | Frames/second/<br>consumer | Frames/<br>minute | Data rate/<br>consumer | Total data rate |
+| ---:      | ---:           | ---:                       | ---:          | ---:                   | ---:            |
+|        1  |      7600      |     7600                   |   456000      |      1.99 GBps         |    1.99 GBps    |
+|        4  |     23200      |     5800                   |  1392000      |      1.52 GBps         |    6.08 GBps    |
+
 ### Metadata Handling Tests
 
 In order to asses how much data can be pushed through the system in combination with metadata we
