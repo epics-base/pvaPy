@@ -260,19 +260,71 @@ Environment:
 
 Results:
 
-* Image size: 4096 x 4096 (uint8, 16.78 MB); Server queue size: 100
+##### Image size: 4096 x 4096 (uint8, 16.78 MB); Server queue size: 100
 
 PVAS => PVA,PVAS => PVA,PVAS
 
 | Consumers | Frames/<br>second  | Frames/second/<br>consumer | Frames/<br>minute | Data rate/<br>consumer | Total data rate |
 | ---:      | ---:           | ---:                       | ---:          | ---:                   | ---:            |
 |        1  |      170       |     170                    |    10200      | 2.85 GBps              |    2.85 GBps    |
-|       8  |      720        |      90                    |    43200      | 1.51 GBps              |   12.08 GBps    |
+|        4  |      520       |     130                    |    31200      | 2.18 GBps              |    8.72 GBps    |
+|        8  |      720       |      90                    |    43200      | 1.51 GBps              |   12.08 GBps    |
 
-* Image size: 512 x 512 (uint8, 0.26 MB); Server queue size: 1000
+PVAS => PVA,RPC  => RPC,PVAS
+
+| Consumers | Frames/<br>second  | Frames/second/<br>consumer | Frames/<br>minute | Data rate/<br>consumer | Total data rate |
+| ---:      | ---:           | ---:                       | ---:          | ---:                   | ---:            |
+|        1  |      150       |     150                    |     9000      | 2.52 GBps              |    2.52 GBps    |
+|        4  |      440       |     110                    |    26400      | 1.85 GBps              |    7.38 GBps    |
+|        8  |      720       |      90                    |    43200      | 1.51 GBps              |   12.08 GBps    |
+
+
+PVAS => PVA,PVA  => PVAS,PVAS
+
+| Consumers | Frames/<br>second  | Frames/second/<br>consumer | Frames/<br>minute | Data rate/<br>consumer | Total data rate |
+| ---:      | ---:           | ---:                       | ---:          | ---:                   | ---:            |
+|        1  |       80       |      80                    |     4800      | 1.34 GBps              |    1.34 GBps    |
+|        4  |      280       |      70                    |    16800      | 1.17 GBps              |    4.70 GBps    |
+|        8  |      400       |      50                    |    24000      | 0.84 GBps              |    6.71 GBps    |
+
+PVAS => PVA,EJFAT  => EJFAT,PVAS
+
+| Consumers | Frames/<br>second  | Frames/second/<br>consumer | Frames/<br>minute | Data rate/<br>consumer | Total data rate |
+| ---:      | ---:           | ---:                       | ---:          | ---:                   | ---:            |
+|        1  |       50       |      50                    |     3000      | 0.84 GBps              |    0.84 GBps    |
+|        4  |      160       |      40                    |     9600      | 0.67 GBps              |    2.68 GBps    |
+|        8  |      240       |      30                    |    14400      | 0.50 GBps              |    4.03 GBps    |
+
+##### Image size: 512 x 512 (uint8, 0.26 MB); Server queue size: 1000
+
+PVAS => PVA,PVAS => PVA,PVAS
 
 | Consumers | Frames/<br>second  | Frames/second/<br>consumer | Frames/<br>minute | Data rate/<br>consumer | Total data rate |
 | ---:      | ---:           | ---:                       | ---:          | ---:                   | ---:            |
 |        1  |      7600      |     7600                   |   456000      |      1.99 GBps         |    1.99 GBps    |
 |        4  |     23200      |     5800                   |  1392000      |      1.52 GBps         |    6.08 GBps    |
+
+PVAS => PVA,RPC => RPC,PVAS
+
+| Consumers | Frames/<br>second  | Frames/second/<br>consumer | Frames/<br>minute | Data rate/<br>consumer | Total data rate |
+| ---:      | ---:           | ---:                       | ---:          | ---:                   | ---:            |
+|        1  |      4000      |     4000                   |   240000      |      1.05 GBps         |    1.05 GBps    |
+|        4  |     14800   |        3700                   |   888000      |      0.97 GBps         |    3.88 GBps    |
+|        8  |     17600   |        2200                   |  1056000      |      0.58 GBps         |    4.61 GBps    |
+
+PVAS => PVA,PVA => PVAS,PVA
+
+| Consumers | Frames/<br>second  | Frames/second/<br>consumer | Frames/<br>minute | Data rate/<br>consumer | Total data rate |
+| ---:      | ---:           | ---:                       | ---:          | ---:                   | ---:            |
+|        1  |      2200      |     2200                   |   132000      |      0.58 GBps         |    0.58 GBps    |
+|        4  |      7200      |     1800                   |   432000      |      0.47 GBps         |    1.89 GBps    |
+|        8  |     14400      |     1800                   |   864000      |      0.47 GBps         |    3.77 GBps    |
+
+PVAS => PVA,EJFAT => EJFAT,PVAS
+
+| Consumers | Frames/<br>second  | Frames/second/<br>consumer | Frames/<br>minute | Data rate/<br>consumer | Total data rate |
+| ---:      | ---:           | ---:                       | ---:          | ---:                   | ---:            |
+|        1  |      2500      |     2500                   |   150000      |      0.66 GBps         |    0.66 GBps    |
+|        4  |      7200      |     1800                   |   432000      |      0.47 GBps         |    1.89 GBps    |
+|        8  |     14400      |     1800                   |   864000      |      0.47 GBps         |    3.77 GBps    |
 
