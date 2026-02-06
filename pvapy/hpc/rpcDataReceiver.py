@@ -49,12 +49,20 @@ class RpcDataReceiver(DataReceiver, threading.Thread):
         return status
 
     def run(self):
+        if self.isRunning():
+            return
         self.logger.debug('Starting RPC server for input channel %s', self.inputChannel)
         self.rpcServer.start()
         self.logger.debug('RPC server for input channel %s is done', self.inputChannel)
 
     def start(self):
+        if not DataReceiver.start(self):
+            return False
         threading.Thread.start(self)
+        return True
 
     def stop(self):
+        if not DataReceiver.stop(self):
+            return False
         self.rpcServer.stop()
+        return True
