@@ -12,8 +12,10 @@ import threading
 import argparse
 import os
 import os.path
+import pathlib
 import ctypes.util
 import numpy as np
+
 # HDF5 is optional
 try:
     import h5py as h5
@@ -29,11 +31,18 @@ try:
     import fabio
 except ImportError:
     fabio = None
+
 # yaml optional
 try:
     import yaml
 except ImportError:
     yaml = None
+
+# psutil optional
+try:
+    import psutil
+except ImportError:
+    psutil = None
 
 import pvaccess as pva
 from pvapy.utility.adImageUtility import AdImageUtility
@@ -52,6 +61,9 @@ class FrameGenerator:
         self.dtype = None
         self.compressorName = None
         self.colorMode = 0
+
+    def getName(self):
+        return self.__class__.__name__
 
     def getFrameData(self, frameId):
         if frameId < self.nInputFrames:
@@ -78,6 +90,12 @@ class FrameGenerator:
     def getCompressorName(self):
         return self.compressorName
 
+    def loadInputData(self):
+        pass
+
+    def unloadInputData(self):
+        pass
+
 class HdfFileGenerator(FrameGenerator):
     ''' HDF frame generator class. '''
 
@@ -91,6 +109,7 @@ class HdfFileGenerator(FrameGenerator):
         FrameGenerator.__init__(self)
         self.filePath = filePath
         self.datasetPath = datasetPath
+        self.file = None
         self.dataset = None
         self.compressionMode = compressionMode
         if not h5:
@@ -99,10 +118,15 @@ class HdfFileGenerator(FrameGenerator):
             raise Exception('Invalid input file path.')
         if not datasetPath:
             raise Exception(f'Missing HDF dataset specification for input file {filePath}.')
-        self.loadInputFile()
+        print(f'Using input file {self.filePath}, dataset {datasetPath}')
+
+    def getName(self):
+        return f'{self.__class__.__name__}({self.filePath})'
 
     def loadInputFile(self):
         try:
+            if self.file:
+                return
             self.file = h5.File(self.filePath, 'r')
             self.dataset = self.file[self.datasetPath]
             self.frames = self.dataset
@@ -112,10 +136,17 @@ class HdfFileGenerator(FrameGenerator):
                     if compressorName:
                         self.compressorName = compressorName
                         break
-            print(f'Loaded input file {self.filePath} (compressor: {self.compressorName})')
         except Exception as ex:
             print(f'Cannot load input file {self.filePath}: {ex}')
             raise
+
+    def unloadInputFile(self):
+        if self.file:
+            self.file.close()
+            del self.file
+        self.file = None
+        self.dataset = None
+        self.frames = np.array([])
 
     def getFrameData(self, frameId):
         frameData = None
@@ -128,6 +159,12 @@ class HdfFileGenerator(FrameGenerator):
                 data = self.dataset.id.read_direct_chunk((frameId,0,0))
                 frameData = np.frombuffer(data[1], dtype=np.uint8)
         return frameData
+
+    def loadInputData(self):
+        self.loadInputFile()
+
+    def unloadInputData(self):
+        self.unloadInputFile()
 
 class FabIOFileGenerator(FrameGenerator):
     '''file generator (fabio based for alternate file formats) class'''
@@ -174,7 +211,7 @@ class FabIOFileGenerator(FrameGenerator):
             size = np.dtype(self.cfg['file_info']['datatype']).itemsize
             nFrames = int((self.fileSize-self.cfg['file_info']['header_offset']) / (self.cfg['file_info']['height'] * self.cfg['file_info']['width'] * size))
             dataDimension = self.cfg['file_info']['height'] * self.cfg['file_info']['width'] * nFrames
-            print("Loading . . . ")
+            print('Loading...')
             images = image.read(fname=self.filePath, dim1=dataDimension, dim2=1, offset=self.cfg['file_info']['header_offset'], bytecode=self.cfg['file_info']['datatype'], endian=self.cfg['file_info']['endian'])
             self.frames = images.data
             self.frames = np.ndarray.flatten(self.frames)
@@ -315,7 +352,7 @@ class AdSimServer:
         'timeStamp' : pva.PvTimeStamp()
     }
 
-    def __init__(self, inputDirectory, inputFile, mmapMode, hdfDataset, hdfCompressionMode, cfgFile, frameRate, nFrames, cacheSize, nx, ny, colorMode, datatype, minimum, maximum, runtime, channelName, notifyPv, notifyPvValue, metadataPv, startDelay, shutdownDelay, reportPeriod, disableCurses):
+    def __init__(self, inputDirectory, fileNamePattern, inputFile, mmapMode, hdfDataset, hdfCompressionMode, cfgFile, frameRate, nFrames, cacheSize, nx, ny, colorMode, datatype, minimum, maximum, runtime, channelName, notifyPv, notifyPvValue, metadataPv, scanPv, maxScans, scanDelay, startDelay, shutdownDelay, reportPeriod, disableCurses):
         self.lock = threading.Lock()
         self.deltaT = 0
         self.cacheTimeout = self.CACHE_TIMEOUT
@@ -324,16 +361,22 @@ class AdSimServer:
             self.cacheTimeout = max(self.CACHE_TIMEOUT, self.deltaT)
         self.runtime = runtime
         self.reportPeriod = reportPeriod
-        self.metadataIoc = None
+        self.ioc = None
         self.frameGeneratorList = []
         self.frameCacheSize = max(cacheSize, self.MIN_CACHE_SIZE)
         self.nFrames = nFrames
         self.configFile = None
         self.colorMode = colorMode
+        self.process = None
+        if psutil:
+            self.process = psutil.Process(os.getpid())
 
         inputFiles = []
         if inputDirectory is not None:
-            inputFiles = [os.path.join(inputDirectory, f) for f in os.listdir(inputDirectory) if os.path.isfile(os.path.join(inputDirectory, f))]
+            dirPath = pathlib.Path(inputDirectory)
+            print(f'Looking for files in {inputDirectory} with the file name pattern {fileNamePattern}')
+            inputFiles = [str(f) for f in dirPath.rglob(fileNamePattern) if f.is_file()]
+            print(f'Found {len(inputFiles)} input files')
         if inputFile is not None:
             inputFiles.append(inputFile)
         allowedHdfExtensions = ['h5', 'hdf', 'hdf5']
@@ -364,24 +407,31 @@ class AdSimServer:
 
         self.nInputFrames = 0
         multipleFrameImages = False
-        for fg in self.frameGeneratorList:
+        for i,fg in enumerate(self.frameGeneratorList):
+            print(f'Getting frame info for generator {i} ({fg.getName()})')
+            fg.loadInputData()
             nInputFrames, self.rows, self.cols, colorMode, self.dtype, self.compressorName = fg.getFrameInfo()
             if nInputFrames > 1:
                 multipleFrameImages = True
             self.nInputFrames += nInputFrames
+            fg.unloadInputData()
+            self.printMemoryUsage()
         if self.nFrames > 0 and not multipleFrameImages:
             self.nInputFrames = min(self.nFrames, self.nInputFrames)
 
         fg = self.frameGeneratorList[0]
+        fg.loadInputData()
         self.frameRate = frameRate
         self.uncompressedImageSize = IntWithUnits(fg.getUncompressedFrameSize(), 'B')
         self.compressedImageSize = IntWithUnits(fg.getCompressedFrameSize(), 'B')
         self.compressedDataRate = FloatWithUnits(self.compressedImageSize*self.frameRate/self.BYTES_IN_MEGABYTE, 'MBps')
         self.uncompressedDataRate = FloatWithUnits(self.uncompressedImageSize*self.frameRate/self.BYTES_IN_MEGABYTE, 'MBps')
 
+        self.frameGeneratorMap = {}
+
         self.channelName = channelName
         self.pvaServer = pva.PvaServer()
-        self.setupMetadataPvs(metadataPv)
+        self.setupMetadataPvs(metadataPv, scanPv)
         self.pvaServer.addRecord(self.channelName, pva.NtNdArray(), None)
 
         if notifyPv and notifyPvValue:
@@ -409,7 +459,11 @@ class AdSimServer:
         self.currentFrameId = 0
         self.nPublishedFrames = 0
         self.startTime = 0
+        self.scanStartTime = 0
+        self.nPublishedScanFrames = 0
         self.lastPublishedTime = 0
+        self.scanDelay = scanDelay
+        self.maxScans = maxScans
         self.startDelay = startDelay
         self.shutdownDelay = shutdownDelay
         self.isDone = False
@@ -417,6 +471,13 @@ class AdSimServer:
         self.screen = None
         self.screenInitialized = False
         self.disableCurses = disableCurses
+
+    def printMemoryUsage(self):
+        if not self.process:
+            return
+        memB = self.process.memory_info().rss
+        memMB = memB / self.BYTES_IN_MEGABYTE
+        print(f'Current memory usage: {memMB} MB')
 
     def setupCurses(self):
         screen = None
@@ -429,48 +490,68 @@ class AdSimServer:
                 pass
         return screen
 
-    def setupMetadataPvs(self, metadataPv):
+    def startCaIoc(self):
+        if self.ioc:
+            return
+        if not os.environ.get('EPICS_DB_INCLUDE_PATH'):
+            pvDataLib = ctypes.util.find_library('pvData')
+            if not pvDataLib:
+                raise Exception('Cannot find dbd directory, please set EPICS_DB_INCLUDE_PATH environment variable to use CA metadata PVs.')
+            pvDataLib = os.path.realpath(pvDataLib)
+            epicsLibDir = os.path.dirname(pvDataLib)
+            dbdDir = os.path.realpath(f'{epicsLibDir}/../../dbd')
+            os.environ['EPICS_DB_INCLUDE_PATH'] = dbdDir
+        print('Starting CA IOC')
+        self.ioc = pva.CaIoc()
+        self.ioc.loadDatabase('base.dbd', '', '')
+        self.ioc.registerRecordDeviceDriver()
+
+    def setupMetadataPvs(self, metadataPv, scanPv):
         self.caMetadataPvs = []
         self.pvaMetadataPvs = []
         self.metadataPvs = []
-        if not metadataPv:
+        self.scanPv = scanPv
+        if not metadataPv and not scanPv:
             return
-        mPvs = metadataPv.split(',')
-        for mPv in mPvs:
-            if not mPv:
-                continue
+        if metadataPv:
+            mPvs = metadataPv.split(',')
+            for mPv in mPvs:
+                if not mPv:
+                    continue
 
-            # Assume CA is the default protocol
-            if mPv.startswith('pva://'):
-                self.pvaMetadataPvs.append(mPv.replace('pva://', ''))
-            else:
-                self.caMetadataPvs.append(mPv.replace('ca://', ''))
-        self.metadataPvs = self.caMetadataPvs+self.pvaMetadataPvs
-        if self.caMetadataPvs:
-            if not os.environ.get('EPICS_DB_INCLUDE_PATH'):
-                pvDataLib = ctypes.util.find_library('pvData')
-                if not pvDataLib:
-                    raise Exception('Cannot find dbd directory, please set EPICS_DB_INCLUDE_PATH environment variable to use CA metadata PVs.')
-                pvDataLib = os.path.realpath(pvDataLib)
-                epicsLibDir = os.path.dirname(pvDataLib)
-                dbdDir = os.path.realpath(f'{epicsLibDir}/../../dbd')
-                os.environ['EPICS_DB_INCLUDE_PATH'] = dbdDir
+                # Assume CA is the default protocol
+                if mPv.startswith('pva://'):
+                    self.pvaMetadataPvs.append(mPv.replace('pva://', ''))
+                else:
+                    self.caMetadataPvs.append(mPv.replace('ca://', ''))
+            self.metadataPvs = self.caMetadataPvs+self.pvaMetadataPvs
+
+        if self.scanPv:
+            self.startCaIoc()
+            dbFile = tempfile.NamedTemporaryFile(delete=False)
+            dbFile.write(b'record(longout, "$(NAME)") {\n')
+            dbFile.write(b'  field(VAL, "0")\n')
+            dbFile.write(b'}\n')
+            dbFile.close()
+            print(f'Creating CA current scan number record: {self.scanPv}')
+            self.ioc.loadRecords(dbFile.name, f'NAME={self.scanPv}')
+            os.unlink(dbFile.name)
 
         print(f'CA Metadata PVs: {self.caMetadataPvs}')
         if self.caMetadataPvs:
-            # Create database and start CA IOC
+            self.startCaIoc()
             dbFile = tempfile.NamedTemporaryFile(delete=False)
-            dbFile.write(b'record(ao, "$(NAME)") {}\n')
+            dbFile.write(b'record(ao, "$(NAME)") {\n')
+            dbFile.write(b'  field(VAL, "0")\n')
+            dbFile.write(b'}\n')
             dbFile.close()
-
-            self.metadataIoc = pva.CaIoc()
-            self.metadataIoc.loadDatabase('base.dbd', '', '')
-            self.metadataIoc.registerRecordDeviceDriver()
             for mPv in self.caMetadataPvs:
                 print(f'Creating CA metadata record: {mPv}')
-                self.metadataIoc.loadRecords(dbFile.name, f'NAME={mPv}')
-            self.metadataIoc.start()
+                self.ioc.loadRecords(dbFile.name, f'NAME={mPv}')
             os.unlink(dbFile.name)
+
+        if self.ioc:
+            self.ioc.start()
 
         print(f'PVA Metadata PVs: {self.pvaMetadataPvs}')
         if self.pvaMetadataPvs:
@@ -490,9 +571,24 @@ class AdSimServer:
         # Returns time when metadata is published
         # For CA metadata will be published before data timestamp
         # For PVA metadata will have the same timestamp as data
+        generatorId, _ = self.frameGeneratorMap.get(self.currentFrameId, (None, None))
+        if generatorId is not None:
+            # New simulated scan
+            self.nPublishedScanFrames = 0
+            if self.scanPv:
+                self.ioc.putField(self.scanPv, str(generatorId))
+            if self.maxScans > 0 and generatorId >= self.maxScans:
+                self.printReport(f'Reached maximum scan number {str(generatorId)} at frame {self.currentFrameId} @ {time.time():.3f}s')
+                self.isDone = True
+                return 0
+            else:
+                self.printReport(f'Scan {str(generatorId)} started with frame {self.currentFrameId} @ {time.time():.3f}s')
+            if self.scanDelay > 0:
+                time.sleep(self.scanDelay)
+
         for mPv in self.caMetadataPvs:
             value = metadataValueDict.get(mPv)
-            self.metadataIoc.putField(mPv, str(value))
+            self.ioc.putField(mPv, str(value))
         t = time.time()
         for mPv in self.pvaMetadataPvs:
             value = metadataValueDict.get(mPv)
@@ -507,7 +603,7 @@ class AdSimServer:
         else:
             # Using PvObjectQueue
             try:
-                waitTime = self.startDelay + self.cacheTimeout
+                waitTime = self.cacheTimeout
                 self.frameCache.put(ntnda, waitTime)
             except pva.QueueFull:
                 pass
@@ -528,9 +624,15 @@ class AdSimServer:
     def frameProducer(self, extraFieldsPvObject=None):
         frameId = 0
         frameData = None
+        self.printReport(f'Frame producer has {len(self.frameGeneratorList)} generators')
         while not self.isDone:
-            for fg in self.frameGeneratorList:
+            for i,fg in enumerate(self.frameGeneratorList):
+                if self.isDone:
+                    break
+                self.frameGeneratorMap[frameId] = (i, fg.getName())
+                fg.loadInputData()
                 nInputFrames, ny, nx, colorMode, dtype, compressorName = fg.getFrameInfo()
+                self.printReport(f'Frame generator {i} can generate {nInputFrames} frames')
                 for fgFrameId in range(0,nInputFrames):
                     if self.isDone or (self.nInputFrames > 0 and frameId >= self.nInputFrames):
                         break
@@ -543,6 +645,8 @@ class AdSimServer:
                         ntnda = AdImageUtility.generateNtNdArray(frameId, frameData, nx, ny, self.colorMode, dtype, compressorName, extraFieldsPvObject)
                     self.addFrameToCache(frameId, ntnda)
                     frameId += 1
+                fg.unloadInputData()
+                self.printReport(f'Frame producer so far generated {frameId} frames')
             if self.isDone or not self.usingQueue or frameData is None or (self.nInputFrames > 0 and frameId >= self.nInputFrames):
                 # All frames are in cache or we cannot generate any more data
                 break
@@ -553,8 +657,8 @@ class AdSimServer:
         frame = self.getFrameFromCache()
         if frame is not None:
             # Correct image id and timestamps
-            self.currentFrameId += 1
             frame['uniqueId'] = self.currentFrameId
+            self.currentFrameId += 1
             if t <= 0:
                 t = time.time()
             ts = pva.PvTimeStamp(t)
@@ -572,6 +676,8 @@ class AdSimServer:
 
             # Update metadata and take timestamp
             updateTime = self.updateMetadataPvs(metadataValueDict)
+            if not updateTime:
+                return
 
             # Prepare frame with a given timestamp
             # so that metadata and image times are as close as possible
@@ -590,6 +696,7 @@ class AdSimServer:
             self.pvaServer.updateUnchecked(self.channelName, frame)
             self.lastPublishedTime = time.time()
             self.nPublishedFrames += 1
+            self.nPublishedScanFrames += 1
             if self.usingQueue and self.nPublishedFrames >= self.nInputFrames:
                 self.printReport(f'Server exiting after publishing {self.nPublishedFrames}')
                 self.isDone = True
@@ -597,14 +704,27 @@ class AdSimServer:
 
             runtime = 0
             frameRate = 0
+            scanFrameRate = 0
+            scanRuntime = 0
             if self.nPublishedFrames > 1:
                 runtime = self.lastPublishedTime - self.startTime
                 deltaT = runtime/(self.nPublishedFrames - 1)
                 frameRate = 1.0/deltaT
             else:
                 self.startTime = self.lastPublishedTime
+
+            if self.nPublishedScanFrames > 1:
+                scanRuntime = self.lastPublishedTime - self.scanStartTime
+                scanDeltaT = scanRuntime/(self.nPublishedScanFrames - 1)
+                scanFrameRate = 1.0/scanDeltaT
+            else:
+                self.scanStartTime = self.lastPublishedTime
+
             if self.reportPeriod > 0 and (self.nPublishedFrames % self.reportPeriod) == 0:
                 report = f'Published frame id {self.currentFrameId:6d} @ {self.lastPublishedTime:.3f}s (frame rate: {frameRate:.4f}fps; runtime: {runtime:.3f}s)'
+                if self.scanDelay > 0:
+                    # Scan stats are different from overall stats
+                    report = f'Published frame id {self.currentFrameId:6d} @ {self.lastPublishedTime:.3f}s (scan frame rate: {scanFrameRate:.4f}fps, scan runtime: {scanRuntime:.3f}s, overall frame rate: {frameRate:.4f}fps; overall runtime: {runtime:.3f}s)'
                 self.printReport(report)
 
             if runtime > self.runtime:
@@ -612,7 +732,7 @@ class AdSimServer:
                 return
 
             if self.deltaT > 0:
-                nextPublishTime = self.startTime + self.nPublishedFrames*self.deltaT
+                nextPublishTime = self.scanStartTime + self.nPublishedScanFrames*self.deltaT
                 delay = nextPublishTime - time.time() - self.DELAY_CORRECTION
                 if delay > 0:
                     threading.Timer(delay, self.framePublisher).start()
@@ -660,6 +780,7 @@ def main():
     parser = argparse.ArgumentParser(description='PvaPy Area Detector Simulator')
     parser.add_argument('-v', '--version', action='version', version=f'%(prog)s {__version__}')
     parser.add_argument('-id', '--input-directory', type=str, dest='input_directory', default=None, help='Directory containing input files to be streamed; if input directory or input file are not provided, random images will be generated')
+    parser.add_argument('-fnp', '--file-name-pattern', type=str, dest='file_name_pattern', default='*.*', help='Input file name pattern used for the input directory.')
     parser.add_argument('-if', '--input-file', type=str, dest='input_file', default=None, help='Input file to be streamed; if input directory or input file are not provided, random images will be generated')
     parser.add_argument('-mm', '--mmap-mode', action='store_true', dest='mmap_mode', default=False, help='Use NumPy memory map to load the specified input file. This flag typically results in faster startup and lower memory usage for large files.')
     parser.add_argument('-hds', '--hdf-dataset', dest='hdf_dataset', default=None, help='HDF5 dataset path. This option must be specified if HDF5 files are used as input, but otherwise it is ignored.')
@@ -679,6 +800,9 @@ def main():
     parser.add_argument('-npv', '--notify-pv', type=str, dest='notify_pv', default=None, help='CA channel that should be notified on start; for the default Area Detector PVA driver PV that controls image acquisition is 13PVA1:cam1:Acquire')
     parser.add_argument('-nvl', '--notify-pv-value', type=str, dest='notify_pv_value', default='1', help='Value for the notification channel; for the Area Detector PVA driver PV this should be set to "Acquire" (default: 1)')
     parser.add_argument('-mpv', '--metadata-pv', type=str, dest='metadata_pv', default=None, help='Comma-separated list of CA channels that should be contain simulated image metadata values')
+    parser.add_argument('-spv', '--scan-pv', type=str, dest='scan_pv', default=None, help='CA channel that should simulated current scan number.')
+    parser.add_argument('-msc', '--max-scans', type=int, dest='max_scans',  default=0, help='Maximum number of simulated scans (files) to stream (default: 0, indicates no limit).')
+    parser.add_argument('-scd', '--scan-delay', type=float, dest='scan_delay',  default=0, help='New scan start delay in seconds (default: 0). This delay is added, for example, when switching between different source files.')
     parser.add_argument('-std', '--start-delay', type=float, dest='start_delay',  default=10.0, help='Server start delay in seconds (default: 10 seconds)')
     parser.add_argument('-shd', '--shutdown-delay', type=float, dest='shutdown_delay', default=10.0, help='Server shutdown delay in seconds (default: 10 seconds)')
     parser.add_argument('-rp', '--report-period', type=int, dest='report_period', default=1, help='Reporting period for publishing frames; if set to <=0 no frames will be reported as published (default: 1)')
@@ -691,7 +815,35 @@ def main():
 
     server = None
     try:
-        server = AdSimServer(inputDirectory=args.input_directory, inputFile=args.input_file, mmapMode=args.mmap_mode, hdfDataset=args.hdf_dataset, hdfCompressionMode=args.hdf_compression_mode, cfgFile=args.config_file, frameRate=args.frame_rate, nFrames=args.n_frames, cacheSize=args.cache_size, nx=args.n_x_pixels, ny=args.n_y_pixels, colorMode=args.color_mode, datatype=args.datatype, minimum=args.minimum, maximum=args.maximum, runtime=args.runtime, channelName=args.channel_name, notifyPv=args.notify_pv, notifyPvValue=args.notify_pv_value, metadataPv=args.metadata_pv, startDelay=args.start_delay, shutdownDelay=args.shutdown_delay, reportPeriod=args.report_period, disableCurses=args.disable_curses)
+        server = AdSimServer(
+            inputDirectory=args.input_directory,
+            fileNamePattern=args.file_name_pattern,
+            inputFile=args.input_file,
+            mmapMode=args.mmap_mode,
+            hdfDataset=args.hdf_dataset,
+            hdfCompressionMode=args.hdf_compression_mode,
+            cfgFile=args.config_file,
+            frameRate=args.frame_rate,
+            nFrames=args.n_frames,
+            cacheSize=args.cache_size,
+            nx=args.n_x_pixels,
+            ny=args.n_y_pixels,
+            colorMode=args.color_mode,
+            datatype=args.datatype,
+            minimum=args.minimum,
+            maximum=args.maximum,
+            runtime=args.runtime,
+            channelName=args.channel_name,
+            notifyPv=args.notify_pv,
+            notifyPvValue=args.notify_pv_value,
+            metadataPv=args.metadata_pv,
+            scanPv=args.scan_pv,
+            maxScans=args.max_scans,
+            scanDelay=args.scan_delay,
+            startDelay=args.start_delay,
+            shutdownDelay=args.shutdown_delay,
+            reportPeriod=args.report_period,
+            disableCurses=args.disable_curses)
 
         server.start()
         expectedRuntime = args.runtime+args.start_delay
