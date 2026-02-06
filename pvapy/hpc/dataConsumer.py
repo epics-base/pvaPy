@@ -101,13 +101,13 @@ class DataConsumer:
         if self.processingController and hasattr(self.processingController, 'ignoreFirstObject') and self.processingController.ignoreFirstObject:
             self.nReceivedOffset = 1
 
-        # Metadata channels
+        # Data receiver and metadata channels
         self.metadataChannelMap, self.metadataQueueMap = MetadataChannelFactory.createMetadataChannels(metadataChannels, serverQueueSize, receiverQueueSize, self)
-
+        self.dataReceiver = self.createDataReceiver()
         if self.processingController and self.processingController.userDataProcessor:
             self.processingController.userDataProcessor.metadataQueueMap = self.metadataQueueMap
-
-        self.dataReceiver = self.createDataReceiver()
+            self.processingController.userDataProcessor.dataReceiver = self.dataReceiver
+            self.processingController.dataReceiver = self.dataReceiver
         self.logger.debug('Created data consumer %s', consumerId)
 
     def createDataReceiver(self):
