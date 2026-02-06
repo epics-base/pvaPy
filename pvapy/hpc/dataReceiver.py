@@ -4,6 +4,7 @@
 Data receiver module.
 '''
 
+import time
 from ..utility.loggingManager import LoggingManager
 
 class DataReceiver:
@@ -16,6 +17,10 @@ class DataReceiver:
         self.nReceived = 0
         self.nRejected = 0
         self.nErrors = 0
+        self.startTime = 0
+        self.endTime = 0
+        self.runtime = 0
+        self.running = False
 
     def process(self, pv):
         return self.processingFunction(pv)
@@ -28,8 +33,26 @@ class DataReceiver:
     def getStats(self):
         return {'nReceived' : self.nReceived, 'nRejected' : self.nRejected, 'nErrors' : self.nErrors}
 
-    def start(self):
-        pass
+    def getStartTime(self):
+        return self.startTime
 
+    def isRunning(self):
+        return self.running
+
+    # Return false if receiver is running already
+    def start(self):
+        if self.running:
+            return False
+        self.running = True
+        self.startTime = time.time()
+        self.endTime = 0
+        return True
+
+    # Return false if receiver is stopped already
     def stop(self):
-        pass
+        if not self.running:
+            return False
+        self.running = False
+        self.endTime = time.time()
+        self.runtime += self.endTime - self.startTime
+        return True
