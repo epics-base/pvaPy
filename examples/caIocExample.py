@@ -5,6 +5,17 @@
 
 import time
 import pvaccess as pva
+import ctypes.util
+import os
+
+pvDataLib = ctypes.util.find_library('pvData')
+if not pvDataLib:
+    raise Exception('Cannot find dbd directory, please set EPICS_DB_INCLUDE_PATH environment variable to use CA metadata PVs.')
+pvDataLib = os.path.realpath(pvDataLib)
+epicsLibDir = os.path.dirname(pvDataLib)
+dbdDir = os.path.realpath(f'{epicsLibDir}/../../dbd')
+os.environ['EPICS_DB_INCLUDE_PATH'] = dbdDir
+
 print('Creating IOC')
 ioc = pva.CaIoc()
 print('Loading DB')
