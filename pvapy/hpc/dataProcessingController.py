@@ -47,6 +47,8 @@ class DataProcessingController:
         self.outputMode = configDict.get('outputMode')
         self.outputArgs = configDict.get('outputArgs')
         self.dataPublisher = None
+        self.dataReceiver = None
+        self.dataReceiverRestart = False
         self.pvaServerStarted = False
         self.pvaServer = None
 
@@ -186,6 +188,20 @@ class DataProcessingController:
             #   Consumer 3: (3) (7) (11)
             #   Consumer 4: (4) (8) (12)
             nMissed = (objectId-self.lastObjectId-self.objectIdOffset) // self.objectIdOffset
+
+        # Make sure receiver was not just restarted
+        # If that happens, calculation of missed frames will be
+        # skipped until restart flag is reset
+        if self.dataReceiverRestart:
+            self.dataReceiverRestart = False
+            nMissed = 0
+            self.logger.debug('Data receiver restart flag is set for object id %s, resetting nMissed from %s to 0', objectId, nMissed)
+        if nMissed > 0:
+            if self.dataReceiver and self.lastObjectTime < self.dataReceiver.getStartTime():
+                self.dataReceiverRestart = True
+                nMissed = 0
+                self.logger.debug('Data receiver was restarted before object id %s, resetting nMissed from %s to 0', objectId, nMissed)
+
         if nMissed > 0:
             self.nMissed += nMissed
         self.lastObjectId = objectId
