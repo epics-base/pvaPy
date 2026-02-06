@@ -4,7 +4,9 @@
 Monitor data receiver module.
 '''
 
+import copy
 import pvaccess as pva
+from ..utility.statsUtility import StatsUtility
 from .dataReceiver import DataReceiver
 
 class MonitorDataReceiver(DataReceiver):
@@ -13,7 +15,11 @@ class MonitorDataReceiver(DataReceiver):
     def __init__(self, inputChannel, processingFunction, pvObjectQueue=None, pvRequest='', providerType=pva.PVA):
         DataReceiver.__init__(self, inputChannel, processingFunction)
         self.logger.debug('Channel %s provider type: %s', inputChannel, providerType)
-        self.channel = pva.Channel(inputChannel, providerType)
+        self.inputChannel = inputChannel
+        self.providerType = providerType
+        self.channel = pva.Channel(self.inputChannel, self.providerType)
+        self.zeroStats = self.channel.getMonitorCounters()
+        self.savedStats = copy.copy(self.zeroStats)
         self.pvRequest = pvRequest
         self.pvObjectQueue = pvObjectQueue
         if self.pvObjectQueue is not None:
@@ -26,12 +32,22 @@ class MonitorDataReceiver(DataReceiver):
         return self.processingFunction(pv)
 
     def resetStats(self):
-        self.channel.resetMonitorCounters()
+        if self.channel:
+            self.channel.resetMonitorCounters()
+        self.savedStats = copy.copy(self.zeroStats)
 
     def getStats(self):
-        return self.channel.getMonitorCounters()
+        currentStats = {}
+        if self.channel:
+            currentStats = self.channel.getMonitorCounters()
+        return StatsUtility.addKeyValues(self.savedStats, currentStats)
 
     def start(self):
+        if not DataReceiver.start(self):
+            self.logger.debug('Monitor already running')
+            return False
+        if not self.channel:
+            self.channel = pva.Channel(self.inputChannel, self.providerType)
         self.logger.debug('Using request string: %s', self.pvRequest)
         if self.pvObjectQueue is not None:
             self.logger.debug('Starting queue monitor')
@@ -39,6 +55,15 @@ class MonitorDataReceiver(DataReceiver):
         else:
             self.logger.debug('Starting processing monitor')
             self.channel.monitor(self.process, self.pvRequest)
+        return True
 
     def stop(self):
+        if not DataReceiver.stop(self):
+            self.logger.debug('Monitor already stopped')
+            return False
+        self.logger.debug('Stopping monitor')
         self.channel.stopMonitor()
+        self.savedStats = self.getStats()
+        # Force disconnect
+        self.channel = None
+        return True
