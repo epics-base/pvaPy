@@ -18,6 +18,7 @@ class UserDataProcessor:
     \t\\- *outputChannel* (str)           : output channel\n
     \t\\- *objectIdField* (str)           : name of the object id field\n
     \t\\- *pvaServer* (PvaServer)         : PVA Server instance\n
+    \t\\- *dataReceiver* (DataReceiver)   : instance of a class responsible for receiving input objects\n
     \t\\- *dataPublisher* (DataPublisher) : instance of a class responsible for publishing output objects\n
     \t\\- *metadataQueueMap* (dict)       : dictionary of available PvObject queues for metadata channels\n
   
@@ -34,6 +35,7 @@ class UserDataProcessor:
 
         # The following will be set after processor gets instantiated.
         self.processorId = None
+        self.dataReceiver = None
         self.dataPublisher = None
         self.pvaServer = None
         self.inputChannel = None
