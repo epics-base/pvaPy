@@ -152,6 +152,9 @@ class EjfatDataReceiver(DataReceiver, EjfatSystemBase, threading.Thread):
         self.ejfatDataProcessor.notify()
 
     def run(self):
+        if self.isRunning():
+            return
+        self.isDone = False
         self.logger.debug('Starting EJFAT receiver for input channel %s', self.inputChannel)
         try:
             if self.useCp:
@@ -192,14 +195,20 @@ class EjfatDataReceiver(DataReceiver, EjfatSystemBase, threading.Thread):
         self.logger.debug('EJFAT server for input channel %s is done', self.inputChannel)
 
     def start(self):
+        if not DataReceiver.start(self):
+            return False
         threading.Thread.start(self)
         self.ejfatDataProcessor.start()
+        return True
 
     def stop(self):
-        self.logger.debug('Shutting down receiver')
+        if not DataReceiver.stop(self):
+            return False
+        self.logger.debug('Shutting down EJFAT receiver')
         self.isDone = True
         self.event.set()
         self.ejfatDataProcessor.stop()
+        return True
 
 class EjfatDataProcessor(threading.Thread):
     ''' EJFAT data processing thread. '''
@@ -213,6 +222,7 @@ class EjfatDataProcessor(threading.Thread):
     def run(self):
         self.logger.debug('Starting EJFAT data processor thread')
         lastProcessedEventNumber = 0
+        self.isDone = False
         while True:
             self.event.clear()
             if self.isDone:
