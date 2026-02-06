@@ -1,3 +1,17 @@
+## Release 5.6.1 (2026/02/DD)
+
+- Streaming Framework enhancements:
+  - Added support for simulated scan mode (new command line arguments include
+    scan number PV, max. number of scans and delay between scans)
+  - Added ability to serve data from input directory that has subfolders
+    and support for input filename pattern
+  - Allowed data processors to stop/start receivers as needed, which
+    opens possibility to receive/analyze entire scans using a set of
+    consumers without relying on a predefined number of images per scan
+    (once all scan images are received by a single consumer,
+    the consumer can disconnect from the channel and analyze received
+    images, while subsequent images go to a different consumer)
+
 ## Release 5.6.0 (2025/08/08)
 
 - Added support for BOOST_INCLUDE_DIR and BOOST_LIB_DIR environment variables
