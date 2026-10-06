@@ -73,6 +73,32 @@ class_<CaIoc>("CaIoc",
         "::\n\n"
         "    recordNames = caIoc.getRecordNames()\n\n")
 
+    .def("initAs",
+        static_cast<void(CaIoc::*)(const std::string&, const std::string&)>(&CaIoc::initAs),
+        (bp::arg("filePath"), bp::arg("substitutions") = ""),
+        "Initialize access security for this IOC using the given Access Security Configuration (ACF) file. This method is equivalent to calling asSetFilename() and asSetSubstitutions() from the iocsh. It must be called before the IOC is started, as access security is activated automatically as part of start()/iocInit().\n\n"
+        ":Parameter: *filePath* (str) - AS definitions file.\n\n"
+        ":Parameter: *substitutions* (str) - Macro substitutions (optional).\n\n"
+        ":Raises: *InvalidArgument* - in case of empty file name.\n\n"
+        ":Raises: *InvalidState* - in case the IOC has already been started.\n\n"
+        "::\n\n"
+        "    caIoc.initAs('exampleAcl.conf')\n\n"
+        "    caIoc.initAs('exampleAcl.conf', 'UAG=myUsers')\n\n")
+
+    .def("isAsActive",
+        static_cast<bool(CaIoc::*)()>(&CaIoc::isAsActive),
+        "Is access security active?\n\n"
+        ":Returns: true if AS is active\n\n"
+        "::\n\n"
+        "    isActive = caIoc.isAsActive()\n\n")
+
+    .def("isRunning",
+        static_cast<bool(CaIoc::*)()>(&CaIoc::isRunning),
+        "Check whether this IOC has been started (i.e., iocInit()/start() has been called).\n\n"
+        ":Returns: True if the IOC is running, False otherwise.\n\n"
+        "::\n\n"
+        "    isRunning = caIoc.isRunning()\n\n")
+
     .def("putField",
         static_cast<void(CaIoc::*)(const std::string&, const bp::object&)>(&CaIoc::putField),
         args("name", "value"),
@@ -204,6 +230,31 @@ class_<CaIoc>("CaIoc",
         ":Returns: exit status, where 0 indicates success and all other values indicate failure.\n\n"
         "::\n\n"
         "    status = caIoc.dbpf('I1', '5')\n\n")
+
+    .def("asSetFilename",
+        static_cast<int(CaIoc::*)(const std::string&)>(&CaIoc::asSetFilename),
+        args("file"),
+        "Set path and file name of the Access Security Configuration (ACF) file. This has no immediate effect; call asInit() (or start()/iocInit()) afterwards to (re)load it.\n\n"
+        ":Parameter: *file* (str) - Access security configuration file.\n\n"
+        ":Returns: exit status, where 0 indicates success and all other values indicate failure.\n\n"
+        "::\n\n"
+        "    status = caIoc.asSetFilename('exampleAcl.conf')\n\n")
+
+    .def("asSetSubstitutions",
+        static_cast<int(CaIoc::*)(const std::string&)>(&CaIoc::asSetSubstitutions),
+        args("substitutions"),
+        "Set macro substitutions used when reading the Access Security Configuration (ACF) file. This has no immediate effect; call asInit() (or start()/iocInit()) afterwards to (re)load it.\n\n"
+        ":Parameter: *substitutions* (str) - Macro substitutions string.\n\n"
+        ":Returns: exit status, where 0 indicates success and all other values indicate failure.\n\n"
+        "::\n\n"
+        "    status = caIoc.asSetSubstitutions('UAG=myUsers')\n\n")
+
+    .def("asInit",
+        static_cast<int(CaIoc::*)()>(&CaIoc::asInit),
+        "(Re)load the Access Security Configuration (ACF) file previously set via asSetFilename().\n\n"
+        ":Returns: exit status, where 0 indicates success and all other values indicate failure.\n\n"
+        "::\n\n"
+        "    status = caIoc.asInit()\n\n")
 
 ;
 } // wrapCaIoc()

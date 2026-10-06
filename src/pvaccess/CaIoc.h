@@ -7,6 +7,7 @@
 #include <boost/python/list.hpp>
 #include <iocInit.h>
 #include <dbAddr.h>
+#include <asLib.h>
 #include "PvaPyLogger.h"
 
 class CaIoc
@@ -22,6 +23,9 @@ public:
     virtual void registerRecordDeviceDriver();
     virtual void loadRecords(const std::string& fileName, const std::string& substitutions);
     virtual boost::python::list getRecordNames();
+    virtual void initAs(const std::string& fileName, const std::string& substitutions = "");
+    virtual bool isAsActive();
+    virtual bool isRunning();
     virtual void putField(const std::string& name, const boost::python::object& value);
     virtual void putField(const std::string& name, const std::string& value);
     virtual boost::python::object getField(const std::string& name);
@@ -37,6 +41,9 @@ public:
     virtual int dbpr(const std::string& name, int level);
     virtual int dbgf(const std::string& name);
     virtual int dbpf(const std::string& name, const std::string& value);
+    virtual int asSetFilename(const std::string& fileName);
+    virtual int asSetSubstitutions(const std::string& substitutions);
+    virtual int asInit();
 
 private:
     static PvaPyLogger logger;
