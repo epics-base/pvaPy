@@ -8,6 +8,8 @@
 #include <dbTest.h>
 #include <dbStaticLib.h>
 #include <dbConvertJSON.h>
+#include <asDbLib.h>
+#include <iocInit.h>
 
 #include "InvalidState.h"
 #include "InvalidArgument.h"
@@ -124,6 +126,34 @@ bp::list CaIoc::getRecordNames()
     }
     dbFinishEntry(pdbentry);
     return recordNames;
+}
+
+void CaIoc::initAs(const std::string& fileName, const std::string& substitutions)
+{
+    if (fileName.size() == 0) {
+        throw InvalidArgument("Access security file name cannot be empty.");
+    }
+
+    // Access security must be configured before the IOC is started: EPICS
+    // calls asInit() once, automatically, as part of iocInit()/start(), and
+    // that call only takes effect if asSetFilename()/asSetSubstitutions()
+    // have already been called beforehand.
+    if (isRunning()) {
+        throw InvalidState("Access security must be configured before the IOC is started.");
+    }
+
+    ::asSetFilename(fileName.c_str());
+    ::asSetSubstitutions(substitutions.c_str());
+}
+
+bool CaIoc::isAsActive()
+{
+    return asActive;
+}
+
+bool CaIoc::isRunning()
+{
+    return getIocState() != iocVoid;
 }
 
 void CaIoc::putField(const std::string& name, const bp::object& pyValue)
@@ -342,4 +372,19 @@ int CaIoc::dbgf(const std::string& name)
 int CaIoc::dbpf(const std::string& name, const std::string& value)
 {
     return ::dbpf(name.c_str(), value.c_str());
+}
+
+int CaIoc::asSetFilename(const std::string& fileName)
+{
+    return ::asSetFilename(fileName.c_str());
+}
+
+int CaIoc::asSetSubstitutions(const std::string& substitutions)
+{
+    return ::asSetSubstitutions(substitutions.c_str());
+}
+
+int CaIoc::asInit()
+{
+    return ::asInit();
 }
